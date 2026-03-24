@@ -35,9 +35,9 @@
     <!-- Right Side: Imagery -->
     <div class="w-full lg:w-1/2 relative bg-zinc-900 group">
         <img alt="Industrial Workwear Detail"
-            class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-700"
+            class="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-300"
             data-alt="Close up of high quality technical workwear fabric and stitching"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgP8uLp7eB6XfTynsWgwlqFLzm161lsuaW8Iw_V1n46SkAlUof34qX1KovcVuPGb-3BJ8fi8HBrLCWVtioFS3zZpMyXsTtdgSXSpWoZ9zQj7WYotNAitEyoZVTGu1j_PUJpZ4eIj01OUmzQTXcnjplka9159ZOa_TiknuG0D5xi0d-9Sgqns5kmQ0YJ_iwTuYkpz4rW2uaVC8E4iOiUrdq59l9jHfNrBo5ewhlnIPhdEnptXwxppgeEDcT6D8Ee7Hu5ewSO47ddQs" />
+            src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
         <!-- Overlay Elements -->
         <div class="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent"></div>
         <div class="absolute bottom-12 right-12 text-white text-right">

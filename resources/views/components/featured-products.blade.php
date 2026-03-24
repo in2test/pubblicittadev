@@ -12,7 +12,7 @@
                     class="relative aspect-[3/4] bg-white mb-4 overflow-hidden border border-surface-container-high transition-shadow group-hover:shadow-xl">
                     <img alt="Technical Jacket" class="w-full h-full object-cover mix-blend-multiply"
                         data-alt="Technical heavy duty black work jacket with reinforced shoulders"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgP8uLp7eB6XfTynsWgwlqFLzm161lsuaW8Iw_V1n46SkAlUof34qX1KovcVuPGb-3BJ8fi8HBrLCWVtioFS3zZpMyXsTtdgSXSpWoZ9zQj7WYotNAitEyoZVTGu1j_PUJpZ4eIj01OUmzQTXcnjplka9159ZOa_TiknuG0D5xi0d-9Sgqns5kmQ0YJ_iwTuYkpz4rW2uaVC8E4iOiUrdq59l9jHfNrBo5ewhlnIPhdEnptXwxppgeEDcT6D8Ee7Hu5ewSO47ddQs" />
+                        src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
                     <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase">
                         Top Seller</div>
                 </div>
@@ -31,7 +31,7 @@
                     class="relative aspect-[3/4] bg-white mb-4 overflow-hidden border border-surface-container-high transition-shadow group-hover:shadow-xl">
                     <img alt="Branded Polo" class="w-full h-full object-cover mix-blend-multiply"
                         data-alt="Navy blue corporate polo shirt with high quality embroidery detail"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgP8uLp7eB6XfTynsWgwlqFLzm161lsuaW8Iw_V1n46SkAlUof34qX1KovcVuPGb-3BJ8fi8HBrLCWVtioFS3zZpMyXsTtdgSXSpWoZ9zQj7WYotNAitEyoZVTGu1j_PUJpZ4eIj01OUmzQTXcnjplka9159ZOa_TiknuG0D5xi0d-9Sgqns5kmQ0YJ_iwTuYkpz4rW2uaVC8E4iOiUrdq59l9jHfNrBo5ewhlnIPhdEnptXwxppgeEDcT6D8Ee7Hu5ewSO47ddQs" />
+                        src="https://images.nwgmedia.com/standard/715864/028230_028231_BasicPolo_BasicPoloWomen_ss26_v8.jpg" />
                 </div>
                 <div class="px-2">
                     <div class="flex justify-between items-start mb-2">
@@ -48,7 +48,7 @@
                     class="relative aspect-[3/4] bg-white mb-4 overflow-hidden border border-surface-container-high transition-shadow group-hover:shadow-xl">
                     <img alt="Industrial Pants" class="w-full h-full object-cover mix-blend-multiply"
                         data-alt="Multi pocket heavy duty industrial work trousers gray"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgP8uLp7eB6XfTynsWgwlqFLzm161lsuaW8Iw_V1n46SkAlUof34qX1KovcVuPGb-3BJ8fi8HBrLCWVtioFS3zZpMyXsTtdgSXSpWoZ9zQj7WYotNAitEyoZVTGu1j_PUJpZ4eIj01OUmzQTXcnjplka9159ZOa_TiknuG0D5xi0d-9Sgqns5kmQ0YJ_iwTuYkpz4rW2uaVC8E4iOiUrdq59l9jHfNrBo5ewhlnIPhdEnptXwxppgeEDcT6D8Ee7Hu5ewSO47ddQs" />
+                        src="https://images.nwgmedia.com/standard/156339/022042_IM_CLIQUE_2019.jpg" />
                 </div>
                 <div class="px-2">
                     <div class="flex justify-between items-start mb-2">
@@ -65,7 +65,7 @@
                     class="relative aspect-[3/4] bg-white mb-4 overflow-hidden border border-surface-container-high transition-shadow group-hover:shadow-xl">
                     <img alt="Branding Pack" class="w-full h-full object-cover mix-blend-multiply"
                         data-alt="Premium corporate branding stationary pack mockup"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgP8uLp7eB6XfTynsWgwlqFLzm161lsuaW8Iw_V1n46SkAlUof34qX1KovcVuPGb-3BJ8fi8HBrLCWVtioFS3zZpMyXsTtdgSXSpWoZ9zQj7WYotNAitEyoZVTGu1j_PUJpZ4eIj01OUmzQTXcnjplka9159ZOa_TiknuG0D5xi0d-9Sgqns5kmQ0YJ_iwTuYkpz4rW2uaVC8E4iOiUrdq59l9jHfNrBo5ewhlnIPhdEnptXwxppgeEDcT6D8Ee7Hu5ewSO47ddQs" />
+                        src="https://images.nwgmedia.com/standard/333970/359418_354428_IMss24_WaunaCapSeabeckPolo.jpg" />
                 </div>
                 <div class="px-2">
                     <div class="flex justify-between items-start mb-2">
