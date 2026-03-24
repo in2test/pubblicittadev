@@ -7,7 +7,6 @@
 @source '../../vendor/livewire/flux/stubs/**/*.blade.php';
 
 @plugin "@tailwindcss/forms";
-@plugin "@tailwindcss/container-queries";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -16,6 +15,10 @@
         "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
+    --font-headline: "Inter", "sans-serif";
+    --font-body: "Inter", "sans-serif";
+    --font-label: "Inter", "sans-serif";
+    --font-mono: "Roboto Mono", "monospace";
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -32,6 +35,53 @@
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
+    --color-surface-bright: "#f9f9fc";
+    --color-on-secondary-fixed-variant: "#454749";
+    --color-inverse-on-surface: "#f0f0f3";
+    --color-surface: "#f9f9fc";
+    --color-surface-container-low: "#f3f3f6";
+    --color-secondary: "#5d5e61";
+    --color-secondary-container: "#e2e2e5";
+    --color-error: "#ba1a1a";
+    --color-surface-container-highest: "#e2e2e5";
+    --color-primary: "#750005";
+    --color-outline-variant: "#e3beb9";
+    --color-secondary-fixed: "#e2e2e5";
+    --color-surface-container: "#eeeef0";
+    --color-on-secondary-container: "#636467";
+    --color-surface-variant: "#e2e2e5";
+    --color-inverse-surface: "#2f3133";
+    --color-surface-container-high: "#e8e8ea";
+    --color-outline: "#8f706c";
+    --color-on-tertiary-fixed-variant: "#004494";
+    --color-secondary-fixed-dim: "#c6c6c9";
+    --color-surface-dim: "#dadadc";
+    --color-surface-tint: "#b7221e";
+    --color-tertiary-fixed: "#d8e2ff";
+    --color-on-primary-fixed: "#410002";
+    --color-inverse-primary: "#ffb4aa";
+    --color-on-secondary-fixed: "#1a1c1e";
+    --color-on-tertiary-container: "#a1beff";
+    --color-error-container: "#ffdad6";
+    --color-background: "#f9f9fc";
+    --color-tertiary: "#003475";
+    --color-on-tertiary: "#ffffff";
+    --color-primary-fixed: "#ffdad5";
+    --color-on-surface-variant: "#5b403d";
+    --color-on-error: "#ffffff";
+    --color-surface-container-lowest: "#ffffff";
+    --color-on-secondary: "#ffffff";
+    --color-on-error-container: "#93000a";
+    --color-tertiary-fixed-dim: "#adc6ff";
+    --color-on-surface: "#1a1c1e";
+    --color-tertiary-container: "#004aa1";
+    --color-on-tertiary-fixed: "#001a41";
+    --color-primary-container: "#9e0b0f";
+    --color-on-primary-container: "#ffa99f";
+    --color-on-primary: "#ffffff";
+    --color-primary-fixed-dim: "#ffb4aa";
+    --color-on-primary-fixed-variant: "#930009";
+    --color-on-background: "#1a1c1e";
 }
 
 @layer theme {
