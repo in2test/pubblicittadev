@@ -3,15 +3,14 @@
         "copilot"
     ],
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "filament/filament",
         "laravel/fortify"
     ],
     "sail": false,
     "skills": [
+        "laravel-best-practices",
         "fluxui-development",
         "livewire-development",
         "pest-testing",
