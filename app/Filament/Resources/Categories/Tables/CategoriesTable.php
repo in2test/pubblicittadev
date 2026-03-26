@@ -26,6 +26,18 @@ class CategoriesTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('parent.name')
+                    ->label('Parent Category')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('products_count')
+                    ->counts('products')
+                    ->label('Products Count')
+                    ->sortable(),
+                    TextColumn::make('children_count')
+                    ->counts('children')
+                    ->label('Subcategories Count')
+                    ->sortable(),
             ])
             ->filters([
                 //

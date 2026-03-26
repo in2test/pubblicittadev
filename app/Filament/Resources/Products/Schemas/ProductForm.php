@@ -2,13 +2,17 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
+
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Set;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Product;
+use App\Models\Category;
+use App\Support\SlugGenerator;
 
 class ProductForm
 {
@@ -18,7 +22,10 @@ class ProductForm
             ->components([
                 TextInput::make('name')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))
+                    ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
+                        $slug = SlugGenerator::unique(Product::class, $state, $record);
+                        $set('slug', $slug);
+                    })
                     ->required(),
                 TextInput::make('slug')
                     ->required(),
@@ -27,12 +34,34 @@ class ProductForm
                 TextInput::make('price')
                     ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('€'),
                 Select::make('category_id')
-    ->relationship('category', 'name') // Load categories
-    ->searchable()
-    ->preload()
-    ->required(),
-            ]);
+                    ->relationship('category', 'name') // Load categories
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->createOptionForm([
+                        TextInput::make('name')
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
+                            $slug = SlugGenerator::unique(Category::class, $state, $record);
+                            $set('slug', $slug);
+                        })
+                        ->required(),
+                        TextInput::make('slug')
+                            ->required(),
+                        Textarea::make('description'),
+                        Select::make('parent_id')
+                            ->label('Parent Category')
+                            ->relationship('parent', 'name') // Load parent categories
+                            ->searchable()
+                            ->preload()
+                            ->nullable(),
+                    ]) // Form for adding new category
+                    ->createOptionAction(function (Action $action) {
+                        $action->modalHeading('Create Category');
+                    })
+
+                ]);
     }
 }
