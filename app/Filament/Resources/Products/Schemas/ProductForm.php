@@ -64,9 +64,16 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
-                FileUpload::make('Immagini')
+                FileUpload::make('image')
+                    ->image()    
                     ->multiple()
                     ->panelLayout('grid')
+                    ->visibility('private')
+                    ->disk('local')  // storage/app
+                    ->directory('product_images')  // storage/app/uploaded-csv
+                    ->visibility('public')
+                    ->required()
+                    ->moveFiles() //move from temp folder, instead of copying. helps to save disk space.
                     ->reorderable(),
 
             ]);
