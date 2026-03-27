@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Products\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ProductsTable
@@ -41,16 +43,16 @@ class ProductsTable
                     ->relationship('category', 'name')
                     ->multiple()
                     ->preload(),
-                ],
+            ],
                 layout: FiltersLayout::BelowContent)
             ->recordActions([
                 EditAction::make(),
-                ])
-                ->toolbarActions([
-                    BulkActionGroup::make([
-                        DeleteBulkAction::make(),
-                        ]),
-                        ])
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->filtersFormColumns(3);
     }
 }

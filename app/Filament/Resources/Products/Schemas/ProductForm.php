@@ -1,20 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Products\Schemas;
 
-use Filament\Actions\Action;
-
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Utilities\Set;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 use App\Support\SlugGenerator;
-use Illuminate\Database\Eloquent\Factories\Relationship;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class ProductForm
 {
@@ -23,7 +23,7 @@ class ProductForm
         return $schema
             ->components([
                 TextInput::make('name')
-                   ->label("Nome Prodotto")
+                    ->label('Nome Prodotto')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
                         $slug = SlugGenerator::unique(Product::class, $state, $record);
@@ -45,12 +45,12 @@ class ProductForm
                     ->required()
                     ->createOptionForm([
                         TextInput::make('name')
-                        ->live(onBlur: true)
-                        ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
-                            $slug = SlugGenerator::unique(Category::class, $state, $record);
-                            $set('slug', $slug);
-                        })
-                        ->required(),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
+                                $slug = SlugGenerator::unique(Category::class, $state, $record);
+                                $set('slug', $slug);
+                            })
+                            ->required(),
                         TextInput::make('slug')
                             ->required(),
                         Textarea::make('description'),
@@ -67,8 +67,8 @@ class ProductForm
                 FileUpload::make('Immagini')
                     ->multiple()
                     ->panelLayout('grid')
-                    ->reorderable()
+                    ->reorderable(),
 
-                ]);
+            ]);
     }
 }

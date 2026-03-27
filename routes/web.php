@@ -9,7 +9,6 @@ Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/cart', 'cart')->name('cart');
 
-
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 });
