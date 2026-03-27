@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Product;
 use App\Models\Category;
 use App\Support\SlugGenerator;
+use Illuminate\Database\Eloquent\Factories\Relationship;
 
 class ProductForm
 {
@@ -22,6 +23,7 @@ class ProductForm
         return $schema
             ->components([
                 TextInput::make('name')
+                   ->label("Nome Prodotto")
                     ->live(onBlur: true)
                     ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
                         $slug = SlugGenerator::unique(Product::class, $state, $record);
@@ -62,7 +64,7 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
-                FileUpload::make('attachments')
+                FileUpload::make('Immagini')
                     ->multiple()
                     ->panelLayout('grid')
                     ->reorderable()
