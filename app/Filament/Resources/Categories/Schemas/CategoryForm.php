@@ -6,6 +6,8 @@ namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
 use App\Support\SlugGenerator;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,6 +38,21 @@ class CategoryForm
                     ->nullable(),
                 Textarea::make('description')
                     ->columnSpanFull(),
+                Repeater::make('image')
+                ->maxItems(1)
+                    ->relationship('image')
+                    ->label('Immagine')
+                    ->schema([
+                FileUpload::make('image_path')
+                    ->image()
+                    ->disk('public')
+                    ->directory('category_images')
+                    ->visibility('public')
+                    ->required(),
+                TextInput::make('image_description')
+                    ->nullable(),
+                ])
+                    
             ]);
     }
 }

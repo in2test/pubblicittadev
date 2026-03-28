@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -64,16 +65,21 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
-                FileUpload::make('images')
-                    ->image()    
-                    ->multiple()
-                    ->panelLayout('grid')
-                    ->visibility('public') // Ensure visibility is set to public
-                    ->disk('local')  // storage/app
-                    ->directory('product_images')  // storage/app/public/product_images
-                    ->visibility('public') // Ensure visibility is set to public
-                    ->required()
-                    ->reorderable(),
+                Repeater::make('images')
+                    ->relationship()
+                    ->grid()
+                    ->schema([
+                        FileUpload::make('image_path')
+                            ->image()
+                            ->disk('public')
+                            ->directory('product_images')
+                            ->visibility('public')
+                            ->required(),
+                        TextInput::make('image_description')
+                            ->nullable(),
+                    ])
+                    ->orderColumn('order_by')
+                    ->columnSpanFull(),
             ]);
     }
 }

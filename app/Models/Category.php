@@ -28,6 +28,6 @@ class Category extends Model
 
     public function image()
     {
-        return $this->belongsTo(Image::class, 'category_id');
+        return $this->hasOne(Image::class, 'category_id');
     }
 }
