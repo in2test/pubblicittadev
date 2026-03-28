@@ -64,18 +64,16 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
-                FileUpload::make('image')
+                FileUpload::make('images')
                     ->image()    
                     ->multiple()
                     ->panelLayout('grid')
-                    ->visibility('private')
+                    ->visibility('public') // Ensure visibility is set to public
                     ->disk('local')  // storage/app
-                    ->directory('product_images')  // storage/app/uploaded-csv
-                    ->visibility('public')
+                    ->directory('product_images')  // storage/app/public/product_images
+                    ->visibility('public') // Ensure visibility is set to public
                     ->required()
-                    ->moveFiles() //move from temp folder, instead of copying. helps to save disk space.
                     ->reorderable(),
-
             ]);
     }
 }
