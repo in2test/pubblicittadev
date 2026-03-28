@@ -14,6 +14,12 @@ class ListProducts extends ListRecords
     protected static string $resource = ProductResource::class;
 
     #[Override]
+    public function getTitle(): string
+    {
+        return 'Prodotti';
+    }
+
+    #[Override]
     protected function getHeaderActions(): array
     {
         return [

@@ -26,6 +26,12 @@ class ProductResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     #[Override]
+    public static function getNavigationLabel(): string
+    {
+        return 'Prodotti';
+    }
+
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return ProductForm::configure($schema);

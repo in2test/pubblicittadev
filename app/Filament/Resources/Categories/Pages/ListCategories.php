@@ -11,6 +11,12 @@ use Override;
 
 class ListCategories extends ListRecords
 {
+    #[Override]
+    public function getTitle(): string
+    {
+        return 'Categorie';
+    }
+
     protected static string $resource = CategoryResource::class;
 
     #[Override]

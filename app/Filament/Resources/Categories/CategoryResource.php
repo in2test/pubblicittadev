@@ -26,6 +26,12 @@ class CategoryResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     #[Override]
+    public static function getNavigationLabel(): string
+    {
+        return 'Categorie';
+    }
+
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return CategoryForm::configure($schema);

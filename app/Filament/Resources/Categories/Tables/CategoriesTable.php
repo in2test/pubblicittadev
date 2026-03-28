@@ -17,28 +17,32 @@ class CategoriesTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nome')
                     ->searchable(),
                 TextColumn::make('slug')
+                    ->label('Slug')
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->label('Data di Creazione')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Data di Modifica')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('parent.name')
-                    ->label('Parent Category')
+                    ->label('Categoria di Appartenenza')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('products_count')
                     ->counts('products')
-                    ->label('Products Count')
+                    ->label('N° Prodotti')
                     ->sortable(),
                 TextColumn::make('children_count')
                     ->counts('children')
-                    ->label('Subcategories Count')
+                    ->label('N° Sottocategorie')
                     ->sortable(),
             ])
             ->filters([
