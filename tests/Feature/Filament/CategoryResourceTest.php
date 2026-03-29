@@ -77,15 +77,20 @@ it('can edit a category', function () {
 
 it('can only select root categories as parent', function () {
     $rootCategory = Category::factory()->create(['parent_id' => null]);
-    $subCategory = Category::factory()->create(['parent_id' => $rootCategory->id]);
+    Category::factory()->create(['parent_id' => $rootCategory->id]);
+
+    // parent_id is optional — submitting without it should produce no errors
+    $newData = Category::factory()->make();
 
     Livewire::test(CreateCategory::class)
         ->assertFormExists()
         ->assertFormFieldExists('parent_id')
-        ->assertFormFieldIsOptional('parent_id');
-        // Note: assertCanSeeTableRecords is for tables, for select we'd need to check options, 
-        // but it's complex in multi-step relationship tests. 
-        // We'll trust the manual verification or try to fill it.
+        ->fillForm([
+            'name' => $newData->name,
+            'slug' => $newData->slug,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors(['parent_id']);
 });
 
 it('can delete a category', function () {
