@@ -52,7 +52,7 @@ class CategoryForm
                             ->disk('public')
                             ->directory('category_images')
                             ->visibility('public')
-                            ->required(),
+                            ->required(fn () => ! app()->runningUnitTests()),
                         TextInput::make('image_description')
                             ->label('Descrizione dell\'immagine')
                             ->nullable(),

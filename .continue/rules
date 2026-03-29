@@ -1,0 +1,12 @@
+# Project Architecture
+
+This is a Laravel application with:
+
+- Boost v2
+- Filament v5
+
+## Coding Standards
+
+- Follow the existing naming conventions
+- Write tests for all new features
+
