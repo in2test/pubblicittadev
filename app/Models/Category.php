@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
-#[Fillable(['name', 'slug', 'description'])]
+#[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model
 {
     use HasFactory;

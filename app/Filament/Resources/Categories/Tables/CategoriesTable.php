@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Categories\Tables;
 
+use App\Models\Category;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,9 +16,13 @@ class CategoriesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query
+                ->orderByRaw('COALESCE(parent_id, id) ASC, parent_id IS NOT NULL ASC, name ASC')
+            )
             ->columns([
                 TextColumn::make('name')
                     ->label('Nome')
+                    ->formatStateUsing(fn ($state, Category $record) => $record->parent_id ? "> {$state}" : $state)
                     ->searchable(),
                 TextColumn::make('slug')
                     ->label('Slug')
