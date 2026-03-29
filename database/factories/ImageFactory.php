@@ -19,7 +19,7 @@ class ImageFactory extends Factory
     {
         return [
             'image_path' => 'product_images/'.$this->faker->uuid().'.jpg',
-            'image_url' => $this->faker->imageUrl(),
+            'image_url' => 'https://picsum.photos/seed/'.$this->faker->uuid().'/800/600',
             'image_description' => $this->faker->sentence(),
             'product_id' => null,
             'category_id' => null,
