@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\HomePageController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::view('/categories', 'categories')->name('categories');
 Route::view('/product', 'product')->name('product');
 Route::view('/services', 'services')->name('services');

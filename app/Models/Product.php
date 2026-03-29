@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
-#[Fillable(['name', 'slug', 'description', 'price', 'category_id'])]
+#[Fillable(['name', 'slug', 'description', 'price', 'category_id', 'is_featured'])]
 class Product extends Model
 {
     use HasFactory;

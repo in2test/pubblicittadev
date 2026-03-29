@@ -2,9 +2,9 @@
     <!-- Hero Section -->
     <x-hero />
     <!-- Services Section: Bento Grid -->
-    <x-services />
+    <x-services :categories="$categories" />
     <!-- Featured Products -->
-    <x-featured-products />
+    <x-featured-products :products="$products" />
     <!-- Certifications -->
     <x-certifications />
     <!-- Footer -->
