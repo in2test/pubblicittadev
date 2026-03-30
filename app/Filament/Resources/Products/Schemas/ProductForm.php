@@ -41,6 +41,14 @@ class ProductForm
                     ->required()
                     ->numeric()
                     ->prefix('€'),
+                    Select::make('is_featured')
+                    ->label('Prodotto in Evidenza')
+                    ->options([
+                        true => 'Sì',
+                        false => 'No',
+                    ])
+                    ->default(false)
+                    ->required(),
                 Select::make('category_id')
                     ->label('Categoria')
                     ->relationship('category', 'name') // Load categories

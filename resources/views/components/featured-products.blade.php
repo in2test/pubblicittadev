@@ -1,7 +1,7 @@
 @props(['products'])
 
 <section class="py-24 bg-surface-container-low">
-    <div class="px-8 max-w-screen-2xl mx-auto">
+    <div class="px-8 mx-auto">
         <div class="flex justify-between items-center mb-16">
             <h2 class="text-3xl font-black uppercase tracking-tight">Prodotti in Evidenza</h2>
             <a class="text-primary font-bold text-sm tracking-widest uppercase border-b-2 border-primary pb-1"
@@ -19,7 +19,7 @@
                             src="{{ $imageUrl }}" />
                         @if ($product->is_featured)
                             <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase">
-                                Top Seller</div>
+                                Prodotto in Evidenza</div>
                         @endif
                     </div>
                     <div class="px-2">

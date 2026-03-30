@@ -30,7 +30,7 @@
                         <h3 class="text-3xl font-black mb-2">{{ $category->name }}</h3>
                         <p class="mb-6 max-w-xs opacity-80">{{ $category->description ?? 'Soluzioni su misura per il tuo business.' }}</p>
                         <a class="inline-flex items-center gap-2 font-bold tracking-widest text-xs uppercase hover:gap-4 transition-all"
-                            href="{{ route('categories', ['category' => $category->slug]) }}">Scoprili <span class="material-symbols-outlined text-sm">east</span></a>
+                            href="{{ route('category',  ['category' => $category->slug]) }}">Scoprili <span class="material-symbols-outlined text-sm">east</span></a>
                     </div>
                 </div>
             @elseif ($styleIndex === 1)
@@ -57,7 +57,7 @@
                     <div class="space-y-2 font-mono text-xs opacity-60">
                         <p>{{ $category->description ?? 'Servizi professionali dedicati.' }}</p>
                     </div>
-                    <a href="{{ route('categories', ['category' => $category->slug]) }}"
+                    <a href="{{ route('category', ['category' => $category->slug]) }}"
                         class="w-full py-3 border border-white/20 hover:bg-white hover:text-zinc-900 transition-colors text-center text-[10px] font-bold tracking-widest uppercase">Dettagli</a>
                 </div>
             @elseif ($styleIndex === 3)
