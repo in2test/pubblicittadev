@@ -23,12 +23,19 @@ class Product extends Model
             });
         });
     }
+    // Use slug instead of id as key
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
+    // Returns Parent Category
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
+    //Returns Images of tge product
     public function images()
     {
         return $this->hasMany(Image::class);

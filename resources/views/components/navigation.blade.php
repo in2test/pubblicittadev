@@ -7,7 +7,7 @@
         </div>
         <div class="hidden lg:flex items-center space-x-10">
             <a class="font-inter tracking-tight font-bold uppercase text-red-700 dark:text-red-500 border-b-2 border-red-700 pb-1"
-                href={{ route('categories') }}>Categorie</a>
+                href={{ route('category', ['category' => 'abbigliamento_da_lavoro']) }}>Categorie</a>
             <a class="font-inter tracking-tight font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 href={{ route('services') }}>Servizi</a>
             <a class="font-inter tracking-tight font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
