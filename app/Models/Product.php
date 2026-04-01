@@ -23,7 +23,9 @@ class Product extends Model
             });
         });
     }
+
     // Use slug instead of id as key
+    #[Override]
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -35,7 +37,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    //Returns Images of tge product
+    // Returns Images of tge product
     public function images()
     {
         return $this->hasMany(Image::class);

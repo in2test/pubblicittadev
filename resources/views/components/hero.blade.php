@@ -1,29 +1,33 @@
 <!-- Hero Section: Asymmetric Split -->
-<section class="relative min-h-[921px] flex flex-col lg:flex-row overflow-hidden">
+<section class="relative min-h-230 flex flex-col lg:flex-row overflow-hidden">
     <!-- Left Side: Typography Content -->
-    <div class="w-full lg:w-1/2 bg-surface-container-lowest flex items-center px-8 lg:px-20 py-24 relative z-10">
+    <div class="w-full lg:w-1/2 bg-surface-container-lowest flex items-center px-8 py-24 relative z-10">
         <div class="max-w-2xl">
             <div class="flex items-center gap-4 mb-8">
-                <span class="font-mono text-[10px] tracking-[0.3em] uppercase text-primary font-bold">Protocollo
-                    Industriale 0.24</span>
-                <div class="h-[1px] w-12 bg-primary/30"></div>
+                <span class="font-mono text-[10px] tracking-[0.3em] uppercase text-primary font-bold">Stampa, grafica e
+                    personalizzazione dal 1990</span>
+                <div class="h-px w-12 bg-primary/30"></div>
             </div>
-            <h1 class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-on-surface leading-[0.9] mb-10">
-                ECCELLENZA TECNICA: <span class="text-primary">DALLA DIVISA AL BRAND.</span>
+            <h1
+                class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-on-surface leading-[0.9] mb-10 text-balance">
+                STAMPA PERFETTA, FILE O NO <span class="text-primary">TI GUIDIAMO NOI.</span>
             </h1>
             <p class="text-lg lg:text-xl text-secondary mb-12 max-w-lg font-light leading-relaxed">
-                Soluzioni ingegnerizzate per l'abbigliamento da lavoro e la comunicazione visiva industriale.
-                Precisione svizzera, manifattura italiana.
+                Hai già il file pronto? Lo controlliamo gratuitamente e stampiamo in tempi rapidi. Non ce l’hai ancora?
+                Ti aiutiamo a creare la grafica giusta e a trasformarla in un prodotto pronto da usare.
+                <br>
+                Con PubbliCittà24 hai un riferimento diretto, umano e concreto: niente passaggi complicati, niente dubbi
+                tecnici lasciati a te, solo soluzioni chiare per stampare bene .
             </p>
             <div class="flex flex-wrap gap-4">
                 <button
                     class="bg-primary hover:bg-primary-container text-on-primary px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all flex items-center gap-3">
-                    SCOPRI I SERVIZI
+                    VEDI CATALOGO
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </button>
                 <button
                     class="bg-secondary-container hover:bg-surface-dim text-on-secondary-container px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all">
-                    CONTATTACI
+                    WhatsApp per preventivo
                 </button>
             </div>
         </div>
@@ -39,7 +43,7 @@
             data-alt="Close up of high quality technical workwear fabric and stitching"
             src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
         <!-- Overlay Elements -->
-        <div class="absolute inset-0 bg-gradient-to-t from-zinc-900/60 to-transparent"></div>
+        <div class="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent"></div>
         <div class="absolute bottom-12 right-12 text-white text-right">
             <div class="font-mono text-xs mb-2 opacity-60">REF_ID: INDUST-240</div>
             <div class="text-2xl font-black tracking-tight italic">FABRIC INNOVATION</div>

@@ -41,7 +41,7 @@ class ProductForm
                     ->required()
                     ->numeric()
                     ->prefix('€'),
-                    Select::make('is_featured')
+                Select::make('is_featured')
                     ->label('Prodotto in Evidenza')
                     ->options([
                         true => 'Sì',

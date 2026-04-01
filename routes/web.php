@@ -5,14 +5,14 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
-//template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
+// template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
 
 Route::view('/categories', 'categories')->name('categories');
 Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/cart', 'cart')->name('cart');
 
-//dynamic routes for products and categories, these will be replaced with dynamic routes in the future
+// dynamic routes for products and categories, these will be replaced with dynamic routes in the future
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 Route::get('/{category}/{slug}', [ProductController::class, 'index'])->name('product');
 Route::get('/{category}', [CategoryController::class, 'index'])->name('category');
