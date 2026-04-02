@@ -7,7 +7,7 @@
             <a class="text-primary  font-mono font-bold text-sm tracking-widest uppercase border-b-2 border-primary pb-1"
                 href="{{ route('categories') }}">Catalogo Completo</a>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-6 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-4 3xl:grid-cols-6 gap-8">
             @foreach ($products as $product)
             <div class="group flex flex-col">
                 <div

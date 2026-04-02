@@ -12,13 +12,14 @@ Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/cart', 'cart')->name('cart');
 
-// dynamic routes for products and categories, these will be replaced with dynamic routes in the future
 Route::get('/', [HomePageController::class, 'index'])->name('home');
-Route::get('/{category}/{slug}', [ProductController::class, 'index'])->name('product');
-Route::get('/{category}', [CategoryController::class, 'index'])->name('category');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 });
 
 require __DIR__.'/settings.php';
+
+// dynamic routes for products and categories, these will be replaced with dynamic routes in the future
+Route::get('/{category}/{slug}', [ProductController::class, 'index'])->name('product');
+Route::get('/{category}', [CategoryController::class, 'index'])->name('category');

@@ -46,6 +46,7 @@ it('can create a product', function () {
             'description' => $newData->description,
             'price' => $newData->price,
             'category_id' => $newData->category_id,
+            'is_featured' => $newData->is_featured,
         ])
         ->call('create')
         ->assertHasNoFormErrors();
