@@ -4,9 +4,9 @@
 <section class="py-24 bg-grid-subtle">
     <div class="mx-auto px-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            <div class="sticky top-32">
-                <h2 class="text-sm font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
-                    <span class="w-8 h-[1px] bg-primary mr-4"></span>
+            <div class="lg:sticky top-32">
+                <h2 class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
+                    <span class="w-8 h-px bg-primary mr-4"></span>
                     I Servizi più richiesti
                 </h2>
                 <p class="text-4xl font-bold tracking-tight text-on-surface leading-tight">
@@ -48,10 +48,10 @@
 
 <section class="py-24 px-8 mx-auto bg-surface-container-lowest">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-        <div>
-            <span class="font-mono text-xs text-primary font-bold uppercase tracking-widest mb-4 block">
-                PRODOTTO->TEMPLATE->CONTROLLO->SPEDIZIONE</span>
-            <h2 class="text-4xl font-black tracking-tight uppercase">COME FUNZIONA</h2>
+        <div class="">
+            <span class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
+                <span class="w-8 h-px bg-primary mr-4"></span>PRODOTTO->TEMPLATE->CONTROLLO->SPEDIZIONE</span>
+            <h2 class="text-4xl font-bold tracking-tight text-on-surface leading-tighttext-right md:text-left">Come funziona</h2>
         </div>
         <div class="max-w-md text-right">
             <p class="text-secondary font-mono text-sm leading-relaxed">Abbiamo reso tutto semplice, anche per chi non è
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-6 gap-4 h-full md:h-150">
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 h-full md:h-150">
 
         <div class="md:col-span-2 group relative overflow-hidden bg-zinc-100 flex flex-col justify-end p-8">
             <div class="absolute top-0 right-0 p-4 opacity-10">

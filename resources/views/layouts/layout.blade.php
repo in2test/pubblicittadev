@@ -16,17 +16,17 @@
 
     <!-- Google tag (gtag.js) -->
     @production
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGRZSCYNNX"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGRZSCYNNX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-            function gtag() {
-                dataLayer.push(arguments);
-            }
-            gtag('js', new Date());
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
 
-            gtag('config', 'G-YGRZSCYNNX');
-        </script>
+        gtag('config', 'G-YGRZSCYNNX');
+    </script>
     @endproduction
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -134,8 +134,8 @@
     <!-- Navigation -->
     <x-navigation />
     @if (request()->is('categories'))
-        <x-sidebar />
-        <!-- Sidebar -->
+    <x-sidebar />
+    <!-- Sidebar -->
     @endif
     <!-- Main Content -->
     <main class="pt-20">

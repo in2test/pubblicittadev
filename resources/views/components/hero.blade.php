@@ -1,18 +1,18 @@
 <!-- Hero Section: Asymmetric Split -->
-<section class="relative min-h-230 flex flex-col lg:flex-row overflow-hidden">
+<section class="relative min-h-230 flex flex-col lg:flex-row overflow-hidden h-[calc(100dvh-100px)]">
     <!-- Left Side: Typography Content -->
     <div class="w-full lg:w-1/2 bg-surface-container-lowest flex items-center px-8 py-24 relative z-10">
-        <div class="max-w-2xl">
+        <div class="max-w-4xl">
             <div class="flex items-center gap-4 mb-8">
-                <span class="font-mono text-[10px] tracking-[0.3em] uppercase text-primary font-bold">Stampa, grafica e
+                <span class="font-mono text-xs tracking-[0.3em] uppercase text-primary font-bold">Stampa, grafica e
                     personalizzazione dal 1990</span>
                 <div class="h-px w-12 bg-primary/30"></div>
             </div>
             <h1
-                class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-on-surface leading-[0.9] mb-10 text-balance">
+                class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-on-surface leading-[0.9] mb-10">
                 STAMPA PERFETTA, FILE O NO <span class="text-primary">TI GUIDIAMO NOI.</span>
             </h1>
-            <p class="text-lg lg:text-xl text-secondary mb-12 max-w-lg font-light leading-relaxed">
+            <p class="text-lg lg:text-xl text-secondary mb-12  font-light leading-relaxed">
                 Hai già il file pronto? Lo controlliamo gratuitamente e stampiamo in tempi rapidi. Non ce l’hai ancora?
                 Ti aiutiamo a creare la grafica giusta e a trasformarla in un prodotto pronto da usare.
                 <br>
@@ -39,7 +39,7 @@
     <!-- Right Side: Imagery -->
     <div class="w-full lg:w-1/2 relative bg-zinc-900 group">
         <img alt="Industrial Workwear Detail"
-            class="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-300"
+            class="object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-300 w-full h-full"
             data-alt="Close up of high quality technical workwear fabric and stitching"
             src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
         <!-- Overlay Elements -->
