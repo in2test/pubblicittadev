@@ -2,10 +2,10 @@
 <nav
     class="fixed top-0 w-full z-50 border-b-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-sm dark:shadow-none transition-all duration-300">
     <div class="flex justify-between items-center px-8 3xl:px-32 h-20 w-full mx-auto">
-        <div class="text-xl lg:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white font-headline"><a
+        <div class="text-xl xl:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white font-headline"><a
                 href={{ route('home') }}>PubbliCittà 24</a>
         </div>
-        <div class="hidden lg:flex items-center space-x-10">
+        <div class="hidden lg:flex items-center space-x-8 lg:text-xs xl:text-sm 2xl:text-md 3xl:text-lg">
             <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('services') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
                 href={{ route('services') }}>Chi Siamo</a>
             <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('cart') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
