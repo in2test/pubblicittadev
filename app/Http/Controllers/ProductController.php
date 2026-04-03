@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
@@ -15,14 +16,17 @@ class ProductController extends Controller
     {
         $product = Product::where('slug', $product->slug)->first();
 
-        return view('product', ['product' => $product]);
     }
-
+    
     /**
      * Display the specified resource.
-     */
-    public function show(Product $product): void
+    */
+    public function show($category,$slug)
     {
         //
+        
+        $product = Product::where('slug', $slug)->with('category','category.parent','images')->first();
+        return view('product', ['product' => $product,'category'=> $product->category]);
+        
     }
 }

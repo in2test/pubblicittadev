@@ -21,5 +21,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/settings.php';
 
 // dynamic routes for products and categories, these will be replaced with dynamic routes in the future
-Route::get('/{category}/{slug}', [ProductController::class, 'index'])->name('product');
+Route::get('/{category}/{slug}', [ProductController::class, 'show'])->name('product');
 Route::get('/{category}', [CategoryController::class, 'index'])->name('category');
