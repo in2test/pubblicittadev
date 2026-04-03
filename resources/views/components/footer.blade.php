@@ -1,5 +1,5 @@
 <footer class="bg-zinc-100 dark:bg-zinc-900 border-t-0">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 w-full mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 3xl:px-32 py-16 w-full mx-auto">
         <div>
             <div class="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-6 font-headline">PUBBLICITTÀ24
             </div>

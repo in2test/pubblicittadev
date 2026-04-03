@@ -1,7 +1,7 @@
 <!-- Hero Section: Asymmetric Split -->
-<section class="relative min-h-230 flex flex-col lg:flex-row overflow-hidden h-[calc(100dvh-100px)]">
+<section class="relative min-h-230 flex flex-col lg:flex-row overflow-hidden lg:h-[calc(100svh-100px)]">
     <!-- Left Side: Typography Content -->
-    <div class="w-full lg:w-1/2 bg-surface-container-lowest flex items-center px-8 py-24 relative z-10">
+    <div class="w-full lg:w-1/2 bg-surface-container-lowest flex items-center px-8 3xl:px-32 py-24 relative z-10">
         <div class="max-w-4xl">
             <div class="flex items-center gap-4 mb-8">
                 <span class="font-mono text-xs tracking-[0.3em] uppercase text-primary font-bold">Stampa, grafica e
@@ -44,7 +44,7 @@
             src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
         <!-- Overlay Elements -->
         <div class="absolute inset-0 bg-linear-to-t from-zinc-900/60 to-transparent"></div>
-        <div class="absolute bottom-12 right-12 text-white text-right">
+        <div class="absolute bottom-12 right-8 3xl:right-32 text-white text-right">
             <div class="font-mono text-xs mb-2 opacity-60">REF_ID: INDUST-240</div>
             <div class="text-2xl font-black tracking-tight italic">FABRIC INNOVATION</div>
         </div>

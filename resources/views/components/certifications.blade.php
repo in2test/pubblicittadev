@@ -1,5 +1,5 @@
 <section class="py-20 bg-surface-container-highest border-y border-surface-dim/20">
-    <div class="px-8 mx-auto flex flex-col lg:flex-row items-center gap-12">
+    <div class="px-8 3xl:px-32 mx-auto flex flex-col lg:flex-row items-center gap-12">
         <div class="xl:w-1/3">
             <h2 class="text-2xl font-black uppercase mb-4 tracking-tighter leading-tight balanced">Hai già il file
                 oppure devi ancora partire da zero?</h2>

@@ -1,21 +1,23 @@
 <!-- TopNavBar -->
 <nav
     class="fixed top-0 w-full z-50 border-b-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-sm dark:shadow-none transition-all duration-300">
-    <div class="flex justify-between items-center px-8 h-20 w-full mx-auto">
-        <div class="text-2xl font-black tracking-tighter text-zinc-900 dark:text-white font-headline"><a
+    <div class="flex justify-between items-center px-8 3xl:px-32 h-20 w-full mx-auto">
+        <div class="text-xl lg:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white font-headline"><a
                 href={{ route('home') }}>PubbliCittà 24</a>
         </div>
         <div class="hidden lg:flex items-center space-x-10">
-            <a class="font-inter tracking-tight font-bold uppercase text-red-700 dark:text-red-500 border-b-2 border-red-700 pb-1"
-                href={{ route('category', ['category' => 'abbigliamento_da_lavoro']) }}>Categorie</a>
-            <a class="font-inter tracking-tight font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                href={{ route('services') }}>Servizi</a>
-            <a class="font-inter tracking-tight font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('services') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
+                href={{ route('services') }}>Chi Siamo</a>
+            <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('cart') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
+                href={{ route('cart') }}>Servizi</a>
+            <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('contact') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
                 href={{ route('contact') }}>Contatti</a>
-            <a class="font-inter tracking-tight font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                href={{ route('cart') }}>Carrello</a>
+            <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('categories') ? 'text-zinc-900 dark:text-zinc-100 border-red-700' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-red-700/0 hover:border-red-700' }} border-b-2 pb-2.5 py-2 transition-colors"
+                href={{ route('categories') }}>Cataloghi Sfogliabili</a>
+            <a class="font-inter tracking-tight font-bold uppercase {{ request()->routeIs('category') ? 'bg-zinc-900 text-white' : 'bg-accent text-white hover:text-red-700 hover:bg-zinc-300' }} transition-colors px-8 py-2 dark:text-red-500 border-b-2 border-red-700/0 hover:border-red-700 pb-2.5"
+                href={{ route('category', ['category' => 'abbigliamento_da_lavoro']) }}>Catalogo</a>
         </div>
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center gap-2 lg:gap-6">
             <button
                 class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
                 <span class="material-symbols-outlined">shopping_cart</span>

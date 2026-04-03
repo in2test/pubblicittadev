@@ -2,7 +2,7 @@
 
 <!-- Sezione 1: Missione (Layout Audace) -->
 <section class="py-24 bg-grid-subtle">
-    <div class="mx-auto px-8">
+    <div class="mx-auto px-8 3xl:px-32">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div class="lg:sticky top-32">
                 <h2 class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
@@ -46,7 +46,7 @@
 
 
 
-<section class="py-24 px-8 mx-auto bg-surface-container-lowest">
+<section class="py-24 px-8 3xl:px-32 mx-auto bg-surface-container-lowest">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
         <div class="">
             <span class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
@@ -68,7 +68,7 @@
 
             <div class="absolute inset-0 bg-zinc-900/40 group-hover:bg-zinc-900/20 transition-colors"></div>
             <div class="relative z-10 text-white">
-                <h3 class="text-3xl font-black mb-2">1: Scegli il tuo prodotto</h3>
+                <h3 class="text-xl lg:text-3xl font-black mb-2">Scegli il tuo prodotto</h3>
                 <p class="mb-6 max-w-xs opacity-80">Consulta il catalogo e individua quello che ti serve davvero:
                     biglietti da visita, t-shirt, volantini, pannelli, insegne o altri materiali personalizzati .</p>
                 <div class="mt-auto">
@@ -85,7 +85,7 @@
                 <span class="text-6xl font-black">2</span>
             </div>
             <div class="relative z-10">
-                <h3 class="text-xl font-bold mb-4 uppercase">Scarica il template e aggiungi la tua grafica</h3>
+                <h3 class="text-xl lg:text-3xl font-black mb-2">Scarica il template e aggiungi la tua grafica</h3>
                 <p class="text-sm text-secondary leading-relaxed mb-6">Se hai già il materiale pronto, puoi usare il
                     template corretto per preparare il file con misure e impostazioni giuste. Se non hai ancora la
                     grafica, puoi contattarci direttamente e ti aiutiamo noi.</p>
@@ -98,7 +98,7 @@
             <div class="absolute top-0 right-0 p-4 opacity-10">
                 <span class="text-6xl font-black">3</span>
             </div>
-            <h3 class="text-xl font-bold uppercase">3: Invia il file e attendi la conferma</h3>
+            <h3 class="text-xl lg:text-3xl font-black mb-2">Invia il file e attendi la conferma</h3>
             <div class="space-y-2 font-mono text-xs opacity-60">
                 <p>Una volta caricato il file, il nostro team lo controlla gratuitamente. Se è tutto corretto, avviamo
                     la produzione. Altrimenti ti contatteremo per sistemare insieme eventuali problemi.</p>
@@ -107,12 +107,12 @@
         </div>
         <!-- Style 4: Bento Info (Wide) -->
         <div
-            class="md:col-span-2 group relative overflow-hidden bg-surface-container-lowest p-12 flex items-center border border-surface-container">
+            class="md:col-span-2 group relative overflow-hidden bg-surface-container-lowest p-8 flex items-center border border-surface-container">
             <div class="absolute top-0 right-0 p-4 opacity-10">
                 <span class="text-6xl font-black">4</span>
             </div>
             <div class="flex-1">
-                <h3 class="text-4xl font-black mb-6 uppercase tracking-tighter">Ricevi il tuo prodotto personalizzato
+                <h3 class="text-xl lg:text-3xl font-black mb-2">Ricevi il tuo prodotto personalizzato
                 </h3>
                 <p class="text-secondary max-w-sm mb-8">Dopo la conferma, passiamo alla produzione e spediamo in tutta
                     Italia. Per progetti più complessi in Centro Italia possiamo offrirti anche un supporto diretto sul
