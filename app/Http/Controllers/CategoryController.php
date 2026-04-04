@@ -25,7 +25,10 @@ class CategoryController extends Controller
     public function show($slug)
     {
         $category = Category::where('slug', $slug)->first();
-        $products = Product::where('category_id', $category->id)->with('images')->get();
+        $products = Product::where('category_id', $category->id)->with(['category', 'images'])->get();
+        if ($category->children->count() > 0) {
+            $products = Product::whereIn('category_id', $category->children->pluck('id'))->with(['category', 'images'])->get();
+        }
         return view('categories', ['category' => $category, 'products' => $products]);
     }
 }

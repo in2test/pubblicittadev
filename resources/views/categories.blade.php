@@ -5,7 +5,7 @@
             <div>
                 <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-on-background uppercase">
                     @if($category->parent)
-                    {{ $category->parent->name }}:
+                        {{ $category->parent->name }}:
                     @endif
                     <span class="text-primary">{{ $category->name }}</span>
                 </h1>
@@ -14,9 +14,9 @@
                     <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
                     <span class="material-symbols-outlined text-[10px]">chevron_right</span>
                     @if($category->parent)
-                    <a class="hover:text-primary transition-colors"
-                        href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
-                    <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                        <a class="hover:text-primary transition-colors"
+                            href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
+                        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
                     @endif
 
                     <span class="text-on-surface font-bold">{{ $category->name }}</span>
@@ -40,41 +40,42 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8 px-8 3xl:px-32">
         <!-- Product Card 1 -->
         @foreach ($products as $product)
-        <article
-            class="group bg-surface-container-lowest flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
-            <a href="{{ route('product', [$category->slug, $product->slug]) }}">
-                @php
-                $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
-                @endphp
-                <div class="aspect-[4/5] overflow-hidden bg-surface-container relative">
-                    <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
-                        data-alt="Technical high-visibility safety jacket industrial worker"
-                        src="{{ $imageUrl }}" />
-                    @if($product->is_featured)
-                    <div class="absolute top-4 right-4">
-                        <span class="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">Prodotto in Evidenza</span>
+            <article
+                class="group bg-surface-container-lowest flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
+                <a href="{{ route('product', [$product->category->slug, $product->slug]) }}">
+                    @php
+                        $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                    @endphp
+                    <div class="aspect-[4/5] overflow-hidden bg-surface-container relative">
+                        <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                            data-alt="Technical high-visibility safety jacket industrial worker" src="{{ $imageUrl }}" />
+                        @if($product->is_featured)
+                            <div class="absolute top-4 right-4">
+                                <span
+                                    class="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">Prodotto
+                                    in Evidenza</span>
+                            </div>
+                        @endif
                     </div>
-                    @endif
-                </div>
-                <div class="p-6 flex flex-col flex-1">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-lg font-bold leading-tight uppercase tracking-tight text-on-surface">
-                            {{ $product->name }}
-                        </h3>
-                        <span class="text-primary font-black text-lg">{{ $product->price }}</span>
+                    <div class="p-6 flex flex-col flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-bold leading-tight uppercase tracking-tight text-on-surface">
+                                {{ $product->name }}
+                            </h3>
+                            <span class="text-primary font-black text-lg">{{ $product->price }}</span>
+                        </div>
+                        <code class="text-[10px] font-mono text-secondary mb-4">SKU: 1234</code>
+                        <p class="text-sm text-secondary-container line-clamp-2 mb-6">{{ $product->description }}</p>
+                        <div class="mt-auto flex justify-between items-center">
+                            <span
+                                class="text-[10px] bg-secondary-container px-2 py-1 font-bold text-on-secondary-fixed-variant uppercase">EN
+                                ISO 20471</span>
+                            <button
+                                class="material-symbols-outlined text-primary hover:scale-110 transition-transform">add_circle</button>
+                        </div>
                     </div>
-                    <code class="text-[10px] font-mono text-secondary mb-4">SKU: 1234</code>
-                    <p class="text-sm text-secondary-container line-clamp-2 mb-6">{{ $product->description }}</p>
-                    <div class="mt-auto flex justify-between items-center">
-                        <span
-                            class="text-[10px] bg-secondary-container px-2 py-1 font-bold text-on-secondary-fixed-variant uppercase">EN
-                            ISO 20471</span>
-                        <button
-                            class="material-symbols-outlined text-primary hover:scale-110 transition-transform">add_circle</button>
-                    </div>
-                </div>
-            </a>
-        </article>
+                </a>
+            </article>
         @endforeach
         <!-- Product Card 2 -->
 
