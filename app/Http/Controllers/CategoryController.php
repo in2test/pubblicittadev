@@ -29,6 +29,7 @@ class CategoryController extends Controller
         if ($category->children->count() > 0) {
             $products = Product::whereIn('category_id', $category->children->pluck('id'))->with(['category', 'images'])->get();
         }
+
         return view('categories', ['category' => $category, 'products' => $products]);
     }
 }

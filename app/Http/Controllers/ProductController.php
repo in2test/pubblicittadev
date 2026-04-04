@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Product $product)
+    public function index(Product $product): void
     {
-        $product = Product::where('slug', $product->slug)->first();
+        Product::where('slug', $product->slug)->first();
     }
 
     /**
@@ -26,6 +26,7 @@ class ProductController extends Controller
 
         $product = Product::where('slug', $slug)->with('category', 'category.parent', 'images')->first();
         $category = Category::where('slug', $category)->first();
+
         return view('product', ['product' => $product, 'category' => $category]);
     }
 }
