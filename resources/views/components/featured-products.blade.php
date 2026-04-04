@@ -5,7 +5,7 @@
         <div class="flex justify-between items-center mb-16">
             <h2 class="text-3xl font-black uppercase tracking-tight">Prodotti in Evidenza</h2>
             <a class="text-primary  font-mono font-bold text-sm tracking-widest uppercase border-b-2 border-primary pb-1"
-                href="{{ route('categories') }}">Catalogo Completo</a>
+                href="{{ route('catalog') }}">Catalogo Completo</a>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-4 3xl:grid-cols-6 gap-8">
             @foreach ($products as $product)
@@ -39,7 +39,7 @@
                                     <span class="font-mono text-xs text-primary font-bold">SU RICHIESTA</span>
                                 @endif
                             </div>
-                            <code class="text-[10px] font-mono text-secondary mb-4">SKU: OP-POLO-BK</code>
+                            <code class="text-[10px] font-mono text-secondary mb-4">Clique: {{ $product->sku }}</code>
                             <p class="text-sm text-on-surface line-clamp-2 mb-6">{{$product->description}}</p>
                             <div class="mt-auto flex justify-between items-center">
                                 <span

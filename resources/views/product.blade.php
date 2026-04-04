@@ -6,38 +6,37 @@
         <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
         <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @if($category->parent)
-        <a class="hover:text-primary transition-colors"
-            href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
-        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <a class="hover:text-primary transition-colors"
+                href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         @if($category)
-        <a class="hover:text-primary transition-colors"
-            href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
-        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <a class="hover:text-primary transition-colors"
+                href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         <span class="text-on-surface font-bold">{{ $product->name }}</span>
     </nav>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
         <!-- Left Column: Gallery -->
         @php
-        $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+            $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
         @endphp
         <div class="lg:col-span-7 space-y-4">
             <div class="aspect-[4/5] bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
                 <img alt="{{ $product->images->first()->image_description}}" class="w-full h-full object-cover"
-                    data-alt="{{ $product->images->first()->image_description }}"
-                    src="{{ $imageUrl }}" />
+                    data-alt="{{ $product->images->first()->image_description }}" src="{{ $imageUrl }}" />
             </div>
             <div class="grid grid-cols-4 gap-4">
                 @foreach ($product->images as $image)
-                @php
-                $imageUrl = $image->image_url ?? ($image->image_path ? asset('storage/' . $image->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
-                @endphp
-                <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden">
-                    <img alt="{{ $image->image_description }}"
-                        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                        data-alt="{{ $image->image_description }}" src="{{ $imageUrl }}" />
-                </div>
+                    @php
+                        $imageUrl = $image->image_url ?? ($image->image_path ? asset('storage/' . $image->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                    @endphp
+                    <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden">
+                        <img alt="{{ $image->image_description }}"
+                            class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
+                            data-alt="{{ $image->image_description }}" src="{{ $imageUrl }}" />
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -45,7 +44,7 @@
         <div class="lg:col-span-5 flex flex-col">
             <div class="mb-2">
                 <span class="font-mono text-[10px] tracking-tighter text-secondary bg-surface-container px-2 py-1">SKU:
-                    OP-PRX-2024-BLK</span>
+                    {{ $product->sku }}</span>
             </div>
             <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-on-surface mb-4 leading-none uppercase">
                 {{ $product->name }}

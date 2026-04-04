@@ -13,6 +13,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
@@ -36,18 +37,17 @@ class ProductForm
                 Textarea::make('description')
                     ->label('Descrizione')
                     ->columnSpanFull(),
+                TextInput::make('sku')
+                    ->label('Codice Prodotto'),
                 TextInput::make('price')
                     ->label('Prezzo')
                     ->required()
                     ->numeric()
                     ->prefix('€'),
-                Select::make('is_featured')
+                Toggle::make('is_featured')
                     ->label('Prodotto in Evidenza')
-                    ->options([
-                        true => 'Sì',
-                        false => 'No',
-                    ])
                     ->default(false)
+                    ->columnSpanFull()
                     ->required(),
                 Select::make('category_id')
                     ->label('Categoria')

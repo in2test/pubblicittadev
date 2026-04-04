@@ -3,6 +3,8 @@
     <section class="mb-12 mt-24 px-8 3xl:px-32">
         <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
             <div>
+                @if($category->count() == 1)
+
                 <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-on-background uppercase">
                     @if($category->parent)
                         {{ $category->parent->name }}:
@@ -21,6 +23,7 @@
 
                     <span class="text-on-surface font-bold">{{ $category->name }}</span>
                 </nav>
+                @endisset
             </div>
             <div class="text-right">
                 <span class="text-3xl font-light tracking-tighter text-on-surface">48</span>
@@ -64,7 +67,7 @@
                             </h3>
                             <span class="text-primary font-black text-lg">{{ $product->price }}</span>
                         </div>
-                        <code class="text-[10px] font-mono text-secondary mb-4">SKU: 1234</code>
+                        <code class="text-[10px] font-mono text-secondary mb-4">SKU: {{ $product->sku }}</code>
                         <p class="text-sm text-secondary-container line-clamp-2 mb-6">{{ $product->description }}</p>
                         <div class="mt-auto flex justify-between items-center">
                             <span

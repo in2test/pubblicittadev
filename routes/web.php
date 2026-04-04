@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
 
-Route::view('/categories', 'categories')->name('categories');
 Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/cart', 'cart')->name('cart');
@@ -23,5 +22,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/settings.php';
 
 // dynamic routes for products and categories, these will be replaced with dynamic routes in the future
+Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/{category}/{slug}', [ProductController::class, 'show'])->name('product');
 Route::get('/{category}', [CategoryController::class, 'show'])->name('category');

@@ -51,7 +51,8 @@
         <div class="">
             <span class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
                 <span class="w-8 h-px bg-primary mr-4"></span>PRODOTTO->TEMPLATE->CONTROLLO->SPEDIZIONE</span>
-            <h2 class="text-4xl font-bold tracking-tight text-on-surface leading-tighttext-right md:text-left">Come funziona</h2>
+            <h2 class="text-4xl font-bold tracking-tight text-on-surface leading-tighttext-right md:text-left">Come
+                funziona</h2>
         </div>
         <div class="max-w-md text-right">
             <p class="text-secondary font-mono text-sm leading-relaxed">Abbiamo reso tutto semplice, anche per chi non è
@@ -72,7 +73,7 @@
                 <p class="mb-6 max-w-xs opacity-80">Consulta il catalogo e individua quello che ti serve davvero:
                     biglietti da visita, t-shirt, volantini, pannelli, insegne o altri materiali personalizzati .</p>
                 <div class="mt-auto">
-                    <a href="{{ route('categories') }}"
+                    <a href="{{ route('catalog') }}"
                         class="font-mono text-xs font-bold bg-white px-2 py-1 text-primary hover:bg-primary hover:text-white transition-colors uppercase">Catalogo
                         completo</a>
                 </div>
