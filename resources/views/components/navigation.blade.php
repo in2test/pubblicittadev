@@ -26,9 +26,13 @@
                 class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
                 <span class="material-symbols-outlined">account_circle</span>
             </button>
-            <button
+
+            <!-- Dark Mode Toggle Button -->
+            <button id="theme-toggle" aria-label="Toggle dark mode"
                 class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
-                <span class="material-symbols-outlined">computer</span>
+                <div id="icon-system" class=""><span class="material-symbols-outlined">computer</span></div>
+                <div id="icon-light" class="hidden"><span class="material-symbols-outlined">light_mode</span></div>
+                <div id="icon-dark" class="hidden"><span class="material-symbols-outlined">dark_mode</span></div>
             </button>
             <button class="lg:hidden p-2">
                 <span class="material-symbols-outlined">menu</span>
