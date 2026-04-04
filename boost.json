@@ -1,12 +1,12 @@
 {
     "agents": [
-        "copilot"
+        "opencode"
     ],
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
-        "laravel/fortify"
+        "filament/filament"
     ],
     "sail": false,
     "skills": [
@@ -14,7 +14,6 @@
         "fluxui-development",
         "livewire-development",
         "pest-testing",
-        "tailwindcss-development",
-        "fortify-development"
+        "tailwindcss-development"
     ]
 }
