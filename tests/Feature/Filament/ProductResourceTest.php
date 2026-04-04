@@ -92,3 +92,14 @@ it('can delete a product', function () {
 
     $this->assertModelMissing($product);
 });
+
+it('can bulk delete products', function () {
+    $products = Product::factory()->count(3)->create();
+
+    Livewire::test(ListProducts::class)
+        ->callTableBulkAction('delete', $products);
+
+    foreach ($products as $product) {
+        $this->assertModelMissing($product);
+    }
+});

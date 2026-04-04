@@ -18,8 +18,9 @@ class Category extends Model
     protected static function booted(): void
     {
         static::deleting(function (Category $category) {
-            if ($category->image) {
-                $category->image->delete();
+            $image = $category->image()->first();
+            if ($image) {
+                $image->delete();
             }
         });
     }

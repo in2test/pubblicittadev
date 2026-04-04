@@ -13,12 +13,13 @@ use Override;
 class Product extends Model
 {
     use HasFactory;
+    
 
     #[Override]
     protected static function booted(): void
     {
         static::deleting(function (Product $product) {
-            $product->images->each(function (Image $image) {
+            $product->images()->get()->each(function (Image $image) {
                 $image->delete();
             });
         });
