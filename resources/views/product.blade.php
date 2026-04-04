@@ -3,53 +3,42 @@
     <!-- Breadcrumbs -->
     <nav
         class="px-8 3xl:px-32 py-4 flex items-center gap-2 mb-12 text-xs font-mono uppercase tracking-widest text-secondary">
-        <a class="hover:text-primary transition-colors" href="#">Home</a>
+        <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
         <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @if($category->parent)
-            <a class="hover:text-primary transition-colors"
-                href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
-            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+        <a class="hover:text-primary transition-colors"
+            href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
+        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         @if($category)
-            <a class="hover:text-primary transition-colors"
-                href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
-            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+        <a class="hover:text-primary transition-colors"
+            href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
+        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         <span class="text-on-surface font-bold">{{ $product->name }}</span>
     </nav>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
         <!-- Left Column: Gallery -->
+        @php
+        $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+        @endphp
         <div class="lg:col-span-7 space-y-4">
             <div class="aspect-[4/5] bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
-                <img alt="Guscio Tecnico Pro-X Front View" class="w-full h-full object-cover"
-                    data-alt="Technical waterproof jacket front display on white"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyjIBjsVo9KXptLYQaeXsgShJSqmUGpwCgOR1WFrv_b3jIPJtHkBpTP5l_G2YalcFSPOeIzWgZ-xyEwsRrAgCrxQXnig_dhj85xDKjMjuzq0fk6aEdML_vpwKgYgZT449IsEkZ30EZVMvpWN4bBD_yKpDHJl4gp2-aGZiC0PzhBljOJl44KtVVFNiEgR1U7uls05_u44sV60mNpeLDKoFnB8e_5-atT4na5IChUK8lT89VzVFmBIa6MVpy79aaMf8H7XPurkbp6r0" />
+                <img alt="{{ $product->images->first()->image_description}}" class="w-full h-full object-cover"
+                    data-alt="{{ $product->images->first()->image_description }}"
+                    src="{{ $imageUrl }}" />
             </div>
             <div class="grid grid-cols-4 gap-4">
+                @foreach ($product->images as $image)
+                @php
+                $imageUrl = $image->image_url ?? ($image->image_path ? asset('storage/' . $image->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                @endphp
                 <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden">
-                    <img alt="Detail 1"
+                    <img alt="{{ $image->image_description }}"
                         class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                        data-alt="Technical jacket shoulder detail shot"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZmfG2xWocpKZvY70n0MR_9msd9cGJinDLWXrBri8HWFNCBhtWAInGV9joVljgNaGraiN9CmGm3CQ9xNTMnBOyS_DVsqXxAv8rRoIU41NH4IwH1hpl8GId6plkdeqp_4RWOuHoJ4ndJiOsQKJz3XDK-bpbWeBo9tYzOWpZscc_QOEM38LvMhrH85q5Gf5W1qRhrneq0ZFOHJ14IxMR6Qww9jGZKAPAAITXLMN_KPY5WEiPFIHxhV4PkhK0dJS2pjgkB-U8FaLS3Fs" />
+                        data-alt="{{ $image->image_description }}" src="{{ $imageUrl }}" />
                 </div>
-                <div class="aspect-square bg-surface-container overflow-hidden">
-                    <img alt="Detail 2"
-                        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                        data-alt="Waterproof membrane close up macro shot"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMIom4u_99mUNO5AdJ17_K7kcn0Mu2XcOJl18aAcGf_zNS4nUmEcbhZSSFpkgWlihxgdLAUDYrqhYVbbWg9rbwU1X2EfzE1TuROmsPNWnCyBBk2aOT-yPTMjuqTgFcfTQ5BSGNHuGr_iDbWENGCeSBVJhzCUKLnBEDUw6LLe9XU-HlgQsxb1Amt8fQxRme8d5tw7xd4wlvb08SJgaOTLw8G8L-7suKczdbugOET7a1n1-WvaGHT-_k90mWZ6wa4c8GjUSQY6gOrAA" />
-                </div>
-                <div class="aspect-square bg-surface-container overflow-hidden">
-                    <img alt="Detail 3"
-                        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                        data-alt="Jacket internal pocket and lining view"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDA4Ff94G1yY8oNag6NIqd7ABPVbs7zBZc3NLkJHe53GkR2q1bt7ZUw2uQXzLWjZfd-ZI_licmQF6hdudF3rWtfiS8DWI8w8l4j_nqpzK-qF7tIfZ6O9HwLRDbjbhMfzGWuQa-uzexshySuVJYJTRFaWl85Cek_PZXJnSlGxTqmhXD24EIOJf8XIP7EcglNo5ov4IwFzP_uRrmG20dxyrBGloVanVwA47LSs4TesrIamIr4_B0CEt6HzQ5SmEykPFiHllymofvAeew" />
-                </div>
-                <div class="aspect-square bg-surface-container overflow-hidden">
-                    <img alt="Detail 4"
-                        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                        data-alt="Jacket back view highlighting reflective strips"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuADFbJa2xGUYhU1bknO-QoqY5ghBfIyenZop-dLhJue-8s6EclK_vtPsoxZOJs7qPKmRl8ngesrkMiIxHGUHQ5NYeVZABKE4GyCUWvvsTk4I67K7fmRWZTwKLJbOlsJuNKWvXnlbyHJDFIQk2e9zR5Kw3F802eZgJEdqHMWUtZ7nv8jtdpay33RfBPoMjuT4ioM3X1PICOC44mtEa3P2tIFS0k41KWWGBzR21G2lVRPSGSHxIYifG05s2_v3vaGtT7aQA137TQIgBU" />
-                </div>
+                @endforeach
             </div>
         </div>
         <!-- Right Column: Info & Config -->
@@ -59,17 +48,15 @@
                     OP-PRX-2024-BLK</span>
             </div>
             <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-on-surface mb-4 leading-none uppercase">
-                Guscio Tecnico<br />Pro-X
+                {{ $product->name }}
             </h1>
             <div class="flex items-baseline gap-4 mb-8">
-                <span class="text-3xl font-light text-primary tracking-tight">€189,00</span>
-                <span class="text-xs font-mono text-secondary">IVA ESCLUSA</span>
+                <span class="text-3xl font-light text-primary tracking-tight">{{ $product->price }}</span>
+                <span class="text-xs font-mono text-secondary">IVA INCLUSA</span>
             </div>
             <div class="mb-8 p-6 bg-surface-container-low border-l-4 border-primary">
                 <p class="text-sm text-on-surface-variant leading-relaxed">
-                    Progettato per condizioni estreme, il Guscio Pro-X combina una membrana a tre strati ad alta
-                    traspirabilità con una resistenza all'abrasione industriale. Ideale per operatori tecnici in
-                    ambienti esterni e logistica specializzata.
+                    {{ $product->description }}
                 </p>
             </div>
             <!-- Configuration Options -->
@@ -156,7 +143,7 @@
         </div>
     </div>
     <!-- Technical Specs Section -->
-    <section class="mt-24">
+    <section class="my-24 px-8 3xl:px-32">
         <div class="mb-12">
             <h2 class="text-3xl font-black tracking-tighter uppercase mb-2">Specifiche Tecniche</h2>
             <div class="h-1 w-24 bg-primary"></div>

@@ -15,18 +15,17 @@ class ProductController extends Controller
     public function index(Product $product)
     {
         $product = Product::where('slug', $product->slug)->first();
-
     }
-    
+
     /**
      * Display the specified resource.
-    */
-    public function show($category,$slug)
+     */
+    public function show($category, $slug)
     {
         //
-        
-        $product = Product::where('slug', $slug)->with('category','category.parent','images')->first();
-        return view('product', ['product' => $product,'category'=> $product->category]);
-        
+
+        $product = Product::where('slug', $slug)->with('category', 'category.parent', 'images')->first();
+        $category = Category::where('slug', $category)->first();
+        return view('product', ['product' => $product, 'category' => $category]);
     }
 }
