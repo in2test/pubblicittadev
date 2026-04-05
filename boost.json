@@ -1,5 +1,7 @@
 {
-    "agents": ["opencode"],
+    "agents": [
+        "opencode"
+    ],
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,

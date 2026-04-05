@@ -4,7 +4,12 @@
         "laravel-boost": {
             "type": "local",
             "enabled": true,
-            "command": ["php", "artisan", "boost:mcp"]
+            "command": [
+                "wsl.exe",
+                "/usr/bin/php8.4",
+                "/mnt/c/sites/pubblicittadev/artisan",
+                "boost:mcp"
+            ]
         }
     },
     "provider": {

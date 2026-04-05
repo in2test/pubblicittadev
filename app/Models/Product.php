@@ -13,7 +13,6 @@ use Override;
 class Product extends Model
 {
     use HasFactory;
-    
 
     #[Override]
     protected static function booted(): void
