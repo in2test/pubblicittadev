@@ -9,6 +9,7 @@ use App\Support\SlugGenerator;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Set;
@@ -46,23 +47,13 @@ class CategoryForm
                 Textarea::make('description')
                     ->label('Descrizione')
                     ->columnSpanFull(),
-                Repeater::make('image')
+                SpatieMediaLibraryFileUpload::make('images')
                     ->label('Immagine')
-                    ->maxItems(1)
-                    ->relationship('image')
-                    ->label('Immagine')
-                    ->schema([
-                        FileUpload::make('image_path')
-                            ->label('Immagine')
-                            ->image()
-                            ->disk('public')
-                            ->directory('category_images')
-                            ->visibility('public')
-                            ->required(fn () => ! app()->runningUnitTests()),
-                        TextInput::make('image_description')
-                            ->label('Descrizione dell\'immagine')
-                            ->nullable(),
-                    ]),
+                    ->collection('images')
+                    ->image()
+                    ->imagePreviewHeight('150')
+                    ->maxFiles(1)
+                    ->columnSpanFull(),
 
             ]);
     }

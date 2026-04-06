@@ -23,5 +23,5 @@ require __DIR__.'/settings.php';
 
 // dynamic routes for products and categories, these will be replaced with dynamic routes in the future
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
-Route::get('/{category}/{slug}', [ProductController::class, 'show'])->name('product');
-Route::get('/{category}', [CategoryController::class, 'show'])->name('category');
+Route::get('/catalogo/{category}', [CategoryController::class, 'show'])->name('category');
+Route::get('/catalogo/{category}/{slug}', [ProductController::class, 'show'])->name('product');

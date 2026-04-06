@@ -10,11 +10,11 @@ class HomePageController extends Controller
 {
     public function index()
     {
-        $products = Product::where('is_featured', true)->with('images', 'category')->latest()->take(12)->get();
+        $products = Product::where('is_featured', true)->with('category')->latest()->take(12)->get();
         $count = $products->count();
 
         // If not enough featured products, take latest ones
-        $products = $products->merge(Product::where('is_featured', false)->with('images', 'category')->latest()->take(12 - $count)->get());
+        $products = $products->merge(Product::where('is_featured', false)->with('category')->latest()->take(12 - $count)->get());
 
         return view('welcome', ['products' => $products]);
     }

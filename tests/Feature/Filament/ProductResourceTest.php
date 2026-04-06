@@ -4,7 +4,6 @@ use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Models\Category;
-use App\Models\Image;
 use App\Models\Product;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
@@ -61,11 +60,13 @@ it('can create a product', function () {
     ])->exists())->toBeTrue();
 });
 
-it('can create a product with image url and description', function () {
+it('can create a product with image upload', function () {
     $category = Category::factory()->create();
     $newData = Product::factory()->make([
         'category_id' => $category->id,
     ]);
+
+    $file = \Illuminate\Http\UploadedFile::fake()->image('test-image.jpg');
 
     Livewire::test(CreateProduct::class)
         ->fillForm([
@@ -75,20 +76,13 @@ it('can create a product with image url and description', function () {
             'price' => $newData->price,
             'category_id' => $newData->category_id,
             'is_featured' => $newData->is_featured,
-            'images' => [
-                [
-                    'image_url' => 'https://example.com/image.png',
-                    'image_description' => 'Image description',
-                ],
-            ],
         ])
+        ->set('data.images', [$file])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(Image::where([
-        'image_url' => 'https://example.com/image.png',
-        'image_description' => 'Image description',
-    ])->exists())->toBeTrue();
+    $product = Product::where('name', $newData->name)->first();
+    expect($product->getMedia('images'))->toHaveCount(1);
 });
 
 it('can render edit product page', function () {

@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Image;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -25,14 +24,23 @@ class DatabaseSeeder extends Seeder
 
         // Create 4 root categories with images
         Category::factory(10)
-            ->has(Image::factory())
             ->create()
             ->each(function ($category) {
+                // Add media to category
+                $category->addMediaFromUrl('https://picsum.photos/800/600?random=' . rand(1, 1000))
+                    ->toMediaCollection('images');
+
                 // Create 4 products for each category
                 Product::factory(20)
                     ->for($category)
-                    ->has(Image::factory(5))
-                    ->create();
+                    ->create()
+                    ->each(function ($product) {
+                        // Add multiple media to product
+                        for ($i = 0; $i < rand(1, 5); $i++) {
+                            $product->addMediaFromUrl('https://picsum.photos/800/600?random=' . rand(1, 1000))
+                                ->toMediaCollection('images');
+                        }
+                    });
             });
     }
 }

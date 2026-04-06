@@ -8,20 +8,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable(['name', 'slug', 'description', 'sku', 'price', 'category_id', 'is_featured'])]
-class Product extends Model
+class Product extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     #[Override]
     protected static function booted(): void
     {
-        static::deleting(function (Product $product) {
-            $product->images()->get()->each(function (Image $image) {
-                $image->delete();
-            });
-        });
+        // Media library handles cleanup automatically
     }
 
     // Use slug instead of id as key
@@ -37,9 +36,28 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    // Returns Images of tge product
-    public function images()
+    // Register media conversions for image variants
+    public function registerMediaConversions(?Media $media = null): void
     {
-        return $this->hasMany(Image::class);
+        $this->addMediaConversion('thumbnail')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->format('webp')
+            ->nonQueued(); // Generate immediately for simplicity
+
+        $this->addMediaConversion('medium')
+            ->width(600)
+            ->height(600)
+            ->sharpen(10)
+            ->format('webp')
+            ->nonQueued();
+
+        $this->addMediaConversion('large')
+            ->width(1000)
+            ->height(1000)
+            ->sharpen(10)
+            ->format('webp')
+            ->nonQueued();
     }
 }

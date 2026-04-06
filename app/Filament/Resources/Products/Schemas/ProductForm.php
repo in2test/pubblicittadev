@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -80,43 +81,14 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
-                Repeater::make('images')
+                SpatieMediaLibraryFileUpload::make('images')
                     ->label('Immagini')
-                    ->relationship()
-                    ->grid()
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                Grid::make(1)
-                                    ->schema([
-                                        FileUpload::make('image_path')
-                                            ->label('Immagine')
-                                            ->image()
-                                            ->disk('public')
-                                            ->directory('product_images')
-                                            ->visibility('public')
-                                            ->fetchFileInformation(false)
-                                            ->imagePreviewHeight('150')
-                                            ->panelLayout('grid')
-                                            ->visible(fn (Get $get): bool => blank($get('image_url')))
-                                            ->nullable()
-                                            ->required(fn (Get $get): bool => blank($get('image_url'))),
-                                        TextInput::make('image_url')
-                                            ->label('URL immagine')
-                                            ->url()
-                                            ->nullable()
-                                            ->visible(fn (Get $get): bool => blank($get('image_path')))
-                                            ->required(fn (Get $get): bool => blank($get('image_path')))
-                                            ->helperText('Incolla un URL immagine per visualizzare un anteprima.'),
-                                    ])
-                                    ->columnSpan(1),
-                                TextInput::make('image_description')
-                                    ->label('Descrizione dell\'immagine')
-                                    ->nullable()
-                                    ->columnSpan(1),
-                            ]),
-                    ])
-                    ->orderColumn('order_by')
+                    ->collection('images')
+                    ->multiple()
+                    ->reorderable()
+                    ->image()
+                    ->imagePreviewHeight('150')
+                    ->panelLayout('grid')
                     ->columnSpanFull(),
             ]);
     }

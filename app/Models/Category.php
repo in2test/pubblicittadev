@@ -8,21 +8,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
-class Category extends Model
+class Category extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     #[Override]
     protected static function booted(): void
     {
-        static::deleting(function (Category $category) {
-            $image = $category->image()->first();
-            if ($image) {
-                $image->delete();
-            }
-        });
+        // Media library handles cleanup automatically
     }
 
     // Use slug as key
@@ -50,9 +48,21 @@ class Category extends Model
         return $this->hasMany(Product::class, 'category_id');
     }
 
-    // Returns Cateogrie's Image
-    public function image()
+    // Register media conversions for image variants
+    public function registerMediaConversions(?Media $media = null): void
     {
-        return $this->hasOne(Image::class, 'category_id');
+        $this->addMediaConversion('thumbnail')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->format('webp')
+            ->nonQueued();
+
+        $this->addMediaConversion('medium')
+            ->width(600)
+            ->height(600)
+            ->sharpen(10)
+            ->format('webp')
+            ->nonQueued();
     }
 }

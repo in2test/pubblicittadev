@@ -9,9 +9,10 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-4 3xl:grid-cols-6 gap-8">
             @foreach ($products as $product)
-
                 @php
-                    $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                    $imageUrl =
+                        $product->getFirstMediaUrl('images', 'medium') ?:
+                        'https://placehold.co/600x800?text=' . urlencode($product->name);
                 @endphp
 
 
@@ -40,7 +41,7 @@
                                 @endif
                             </div>
                             <code class="text-[10px] font-mono text-secondary mb-4">Clique: {{ $product->sku }}</code>
-                            <p class="text-sm text-on-surface line-clamp-2 mb-6">{{$product->description}}</p>
+                            <p class="text-sm text-on-surface line-clamp-2 mb-6">{{ $product->description }}</p>
                             <div class="mt-auto flex justify-between items-center">
                                 <span
                                     class="text-[10px] bg-secondary-container px-2 py-1 font-bold text-on-secondary-fixed-variant uppercase">Oeko-Tex

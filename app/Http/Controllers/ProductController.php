@@ -24,7 +24,7 @@ class ProductController extends Controller
     {
         //
 
-        $product = Product::where('slug', $slug)->with('category', 'category.parent', 'images')->first();
+        $product = Product::where('slug', $slug)->with('category', 'category.parent')->first();
         $category = Category::where('slug', $category)->first();
 
         return view('product', ['product' => $product, 'category' => $category]);

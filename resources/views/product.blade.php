@@ -20,20 +20,18 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
         <!-- Left Column: Gallery -->
         @php
-            $firstImage = $product->images->first();
-            $mainImageUrl =
-                $firstImage?->image_url ??
-                ($firstImage?->image_path
-                    ? asset('storage/' . $firstImage->large_path)
-                    : 'https://placehold.co/600x800?text=' . urlencode($product->name));
-            $mainImageAlt = $firstImage?->image_description ?? $product->name;
+            $firstMedia = $product->getFirstMedia('images');
+            $mainImageUrl = $firstMedia
+                ? $firstMedia->getUrl('large')
+                : 'https://placehold.co/600x800?text=' . urlencode($product->name);
+            $mainImageAlt = $firstMedia ? $firstMedia->name : $product->name;
         @endphp
         <div class="lg:col-span-7 space-y-4">
             <!-- Main Product Image -->
             <div class="aspect-4/5 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
                 <picture>
-                    @if ($firstImage?->image_path)
-                        <source media="(max-width: 768px)" srcset="{{ asset('storage/' . $firstImage->medium_path) }}">
+                    @if ($firstMedia)
+                        <source media="(max-width: 768px)" srcset="{{ $firstMedia->getUrl('medium') }}">
                     @endif
                     <img alt="{{ $mainImageAlt }}" class="w-full h-full object-cover product-main-image"
                         data-alt="{{ $mainImageAlt }}" src="{{ $mainImageUrl }}" />
@@ -41,29 +39,17 @@
             </div>
             <!-- Thumbnail Gallery -->
             <div class="grid grid-cols-4 gap-4">
-                @foreach ($product->images as $image)
+                @foreach ($product->getMedia('images') as $media)
                     @php
-                        $thumbUrl =
-                            $image->image_url ??
-                            ($image->image_path
-                                ? asset('storage/' . $image->thumbnail_path)
-                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
-                        $mediumUrl =
-                            $image->image_url ??
-                            ($image->image_path
-                                ? asset('storage/' . $image->medium_path)
-                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
-                        $largeUrl =
-                            $image->image_url ??
-                            ($image->image_path
-                                ? asset('storage/' . $image->large_path)
-                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                        $thumbUrl = $media->getUrl('thumbnail');
+                        $mediumUrl = $media->getUrl('medium');
+                        $largeUrl = $media->getUrl('large');
                     @endphp
                     <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
-                        onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $image->image_description ?? $product->name }}')">
-                        <img alt="{{ $image->image_description }}"
+                        onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $media->name ?? $product->name }}')">
+                        <img alt="{{ $media->name }}"
                             class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
-                            data-alt="{{ $image->image_description }}" src="{{ $thumbUrl }}" />
+                            data-alt="{{ $media->name }}" src="{{ $thumbUrl }}" />
                     </div>
                 @endforeach
             </div>
