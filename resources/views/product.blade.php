@@ -5,12 +5,12 @@
         class="px-8 3xl:px-32 py-4 flex items-center gap-2 mb-12 text-xs font-mono uppercase tracking-widest text-secondary">
         <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
         <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-        @if($category->parent)
+        @if ($category->parent)
             <a class="hover:text-primary transition-colors"
                 href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
             <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
-        @if($category)
+        @if ($category)
             <a class="hover:text-primary transition-colors"
                 href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
             <span class="material-symbols-outlined text-[10px]">chevron_right</span>
@@ -20,22 +20,50 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
         <!-- Left Column: Gallery -->
         @php
-            $imageUrl = $product->images->first()?->image_url ?? ($product->images->first()?->image_path ? asset('storage/' . $product->images->first()?->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+            $firstImage = $product->images->first();
+            $mainImageUrl =
+                $firstImage?->image_url ??
+                ($firstImage?->image_path
+                    ? asset('storage/' . $firstImage->large_path)
+                    : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+            $mainImageAlt = $firstImage?->image_description ?? $product->name;
         @endphp
         <div class="lg:col-span-7 space-y-4">
-            <div class="aspect-[4/5] bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
-                <img alt="{{ $product->images->first()->image_description}}" class="w-full h-full object-cover"
-                    data-alt="{{ $product->images->first()->image_description }}" src="{{ $imageUrl }}" />
+            <!-- Main Product Image -->
+            <div class="aspect-4/5 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
+                <picture>
+                    @if ($firstImage?->image_path)
+                        <source media="(max-width: 768px)" srcset="{{ asset('storage/' . $firstImage->medium_path) }}">
+                    @endif
+                    <img alt="{{ $mainImageAlt }}" class="w-full h-full object-cover product-main-image"
+                        data-alt="{{ $mainImageAlt }}" src="{{ $mainImageUrl }}" />
+                </picture>
             </div>
+            <!-- Thumbnail Gallery -->
             <div class="grid grid-cols-4 gap-4">
                 @foreach ($product->images as $image)
                     @php
-                        $imageUrl = $image->image_url ?? ($image->image_path ? asset('storage/' . $image->image_path) : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                        $thumbUrl =
+                            $image->image_url ??
+                            ($image->image_path
+                                ? asset('storage/' . $image->thumbnail_path)
+                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                        $mediumUrl =
+                            $image->image_url ??
+                            ($image->image_path
+                                ? asset('storage/' . $image->medium_path)
+                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
+                        $largeUrl =
+                            $image->image_url ??
+                            ($image->image_path
+                                ? asset('storage/' . $image->large_path)
+                                : 'https://placehold.co/600x800?text=' . urlencode($product->name));
                     @endphp
-                    <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden">
+                    <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
+                        onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $image->image_description ?? $product->name }}')">
                         <img alt="{{ $image->image_description }}"
-                            class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                            data-alt="{{ $image->image_description }}" src="{{ $imageUrl }}" />
+                            class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
+                            data-alt="{{ $image->image_description }}" src="{{ $thumbUrl }}" />
                     </div>
                 @endforeach
             </div>
@@ -65,12 +93,15 @@
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore
                         Disponibile</label>
                     <div class="flex gap-4">
-                        <button
-                            class="w-10 h-10 bg-black border-2 border-primary ring-2 ring-offset-2 ring-transparent transition-all"></button>
-                        <button
-                            class="w-10 h-10 bg-[#1B263B] border border-outline-variant/20 hover:border-primary transition-all"></button>
-                        <button
-                            class="w-10 h-10 bg-[#750005] border border-outline-variant/20 hover:border-primary transition-all"></button>
+                        <div
+                            class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer bg-black">
+                        </div>
+                        <div
+                            class="w-10 h-10 border border-outline-variant/20 hover:border-primary transition-all cursor-pointer bg-[#1B263B]">
+                        </div>
+                        <div
+                            class="w-10 h-10 border border-outline-variant/20 hover:border-primary transition-all cursor-pointer bg-[#750005]">
+                        </div>
                     </div>
                 </div>
                 <!-- Size Selection -->
@@ -184,23 +215,23 @@
                 <h4 class="font-bold text-lg border-b-2 border-surface-container inline-block pb-1">
                     Caratteristiche Costruttive</h4>
                 <ul class="space-y-3">
-                    <li class="flex items-start gap-3">
+                    <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
                         <span class="text-sm">Cuciture termonastrate a triplo strato per isolamento
                             totale.</span>
-                    </li>
-                    <li class="flex items-start gap-3">
+                    </div>
+                    <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
                         <span class="text-sm">Zip YKK® Aquaguard® idrorepellenti ad alta resistenza.</span>
-                    </li>
-                    <li class="flex items-start gap-3">
+                    </div>
+                    <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
                         <span class="text-sm">Rinforzi in Cordura® su gomiti e zone ad alta usura.</span>
-                    </li>
-                    <li class="flex items-start gap-3">
+                    </div>
+                    <div class="flex items-start gap-3">
                         <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
                         <span class="text-sm">Cappuccio regolabile compatibile con caschi di protezione.</span>
-                    </li>
+                    </div>
                 </ul>
             </div>
             <div class="bg-surface-container-low p-8 relative overflow-hidden">
@@ -221,5 +252,20 @@
             </div>
         </div>
     </section>
+
+    <script>
+        function changeMainImage(mediumSrc, largeSrc, altText) {
+            const mainImg = document.querySelector('.product-main-image');
+            const source = document.querySelector('source[media="(max-width: 768px)"]');
+
+            mainImg.src = largeSrc;
+            mainImg.alt = altText;
+            mainImg.setAttribute('data-alt', altText);
+
+            if (source) {
+                source.srcset = mediumSrc;
+            }
+        }
+    </script>
 
 </x-layout>

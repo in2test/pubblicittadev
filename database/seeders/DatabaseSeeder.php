@@ -24,14 +24,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Create 4 root categories with images
-        Category::factory(4)
+        Category::factory(10)
             ->has(Image::factory())
             ->create()
             ->each(function ($category) {
                 // Create 4 products for each category
-                Product::factory(4)
+                Product::factory(20)
                     ->for($category)
-                    ->has(Image::factory())
+                    ->has(Image::factory(5))
                     ->create();
             });
     }

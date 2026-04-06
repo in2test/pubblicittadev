@@ -4,14 +4,17 @@ use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Models\Category;
+use App\Models\Image;
 use App\Models\Product;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var User $this->user */
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
@@ -47,14 +50,45 @@ it('can create a product', function () {
             'price' => $newData->price,
             'category_id' => $newData->category_id,
             'is_featured' => $newData->is_featured,
+            'images' => [],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $this->assertDatabaseHas(Product::class, [
+    expect(Product::where([
         'name' => $newData->name,
         'slug' => $newData->slug,
+    ])->exists())->toBeTrue();
+});
+
+it('can create a product with image url and description', function () {
+    $category = Category::factory()->create();
+    $newData = Product::factory()->make([
+        'category_id' => $category->id,
     ]);
+
+    Livewire::test(CreateProduct::class)
+        ->fillForm([
+            'name' => $newData->name,
+            'slug' => $newData->slug,
+            'description' => $newData->description,
+            'price' => $newData->price,
+            'category_id' => $newData->category_id,
+            'is_featured' => $newData->is_featured,
+            'images' => [
+                [
+                    'image_url' => 'https://example.com/image.png',
+                    'image_description' => 'Image description',
+                ],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Image::where([
+        'image_url' => 'https://example.com/image.png',
+        'image_description' => 'Image description',
+    ])->exists())->toBeTrue();
 });
 
 it('can render edit product page', function () {
@@ -90,16 +124,17 @@ it('can delete a product', function () {
     ])
         ->callAction('delete');
 
-    $this->assertModelMissing($product);
+    expect(Product::find($product->id))->toBeNull();
 });
 
 it('can bulk delete products', function () {
     $products = Product::factory()->count(3)->create();
 
     Livewire::test(ListProducts::class)
-        ->callTableBulkAction('delete', $products);
+        ->selectTableRecords($products->pluck('id')->toArray())
+        ->callAction(TestAction::make('delete')->table()->bulk());
 
     foreach ($products as $product) {
-        $this->assertModelMissing($product);
+        expect(Product::find($product->id))->toBeNull();
     }
 });
