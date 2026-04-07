@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('product_colors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->string('color_name');
             $table->string('color_hex')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->unique(['product_id', 'color_name']);
+            $table->unique(['color_name']);
             $table->timestamps();
         });
     }

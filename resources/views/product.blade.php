@@ -82,15 +82,13 @@
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore
                         Disponibile</label>
                     <div class="flex gap-4">
-                        <div
-                            class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer bg-black">
-                        </div>
-                        <div
-                            class="w-10 h-10 border border-outline-variant/20 hover:border-primary transition-all cursor-pointer bg-[#1B263B]">
-                        </div>
-                        <div
-                            class="w-10 h-10 border border-outline-variant/20 hover:border-primary transition-all cursor-pointer bg-[#750005]">
-                        </div>
+                         @foreach($product->colors as $color)
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="color_id" value="{{ $color->id }}"
+                                        class="sr-only" {{ old('color_id') == $color->id ? 'checked' : '' }}>
+                                    <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer" style="background: {{ $color->color_hex ?: '#000' }}"></div>
+                                </label>
+                            @endforeach
                     </div>
                 </div>
                 <!-- Size Selection -->
@@ -141,19 +139,7 @@
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore</label>
-                        <div class="grid grid-cols-5 gap-3">
-                            @foreach($product->colors as $color)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="color_id" value="{{ $color->id }}"
-                                        class="sr-only" {{ old('color_id') == $color->id ? 'checked' : '' }}>
-                                    <div class="h-10 rounded-full border border-outline-variant/30 shadow-sm" style="background: {{ $color->color_hex ?: '#000' }}"></div>
-                                </label>
-                            @endforeach
-                        </div>
-                        @error('color_id') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
-                    </div>
+                    
 
                     <div>
                         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
