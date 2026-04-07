@@ -36,6 +36,16 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Category::class);
     }
 
+    public function colors()
+    {
+        return $this->hasMany(ProductColor::class);
+    }
+
+    public function pricingTiers()
+    {
+        return $this->hasMany(PricingTier::class);
+    }
+
     // Register media conversions for image variants
     public function registerMediaConversions(?Media $media = null): void
     {

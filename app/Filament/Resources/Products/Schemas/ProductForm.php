@@ -8,15 +8,11 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
@@ -81,6 +77,8 @@ class ProductForm
                     ->createOptionAction(function (Action $action) {
                         $action->modalHeading('Create Category');
                     }),
+                // Image Media Library
+
                 SpatieMediaLibraryFileUpload::make('images')
                     ->label('Immagini')
                     ->collection('images')
@@ -89,6 +87,14 @@ class ProductForm
                     ->image()
                     ->imagePreviewHeight('150')
                     ->panelLayout('grid')
+                    ->disk('public')
+
+                    ->conversionsDisk('public')
+                    ->customProperties(function (): array {
+                        return [
+                            'alt' => 'descrizione',
+                        ];
+                    })
                     ->columnSpanFull(),
             ]);
     }

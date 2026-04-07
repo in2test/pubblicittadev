@@ -6,8 +6,6 @@ namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
 use App\Support\SlugGenerator;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -47,12 +45,18 @@ class CategoryForm
                 Textarea::make('description')
                     ->label('Descrizione')
                     ->columnSpanFull(),
+                // Image Media Library
                 SpatieMediaLibraryFileUpload::make('images')
                     ->label('Immagine')
                     ->collection('images')
                     ->image()
-                    ->imagePreviewHeight('150')
+                    ->imagePreviewHeight('300')
                     ->maxFiles(1)
+                    ->customProperties(function (): array {
+                        return [
+                            'alt' => 'descrizione',
+                        ];
+                    })
                     ->columnSpanFull(),
 
             ]);
