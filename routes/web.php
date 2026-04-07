@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\QuoteController;
 use Illuminate\Support\Facades\Route;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
@@ -25,3 +26,4 @@ require __DIR__.'/settings.php';
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/catalogo/{category}', [CategoryController::class, 'show'])->name('category');
 Route::get('/catalogo/{category}/{slug}', [ProductController::class, 'show'])->name('product');
+Route::post('/quote', [QuoteController::class, 'store'])->name('quote.store');

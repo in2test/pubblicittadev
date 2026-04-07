@@ -33,8 +33,10 @@
                     @if ($firstMedia)
                         <source media="(max-width: 768px)" srcset="{{ $firstMedia->getUrl('medium') }}">
                     @endif
-                    <img alt="{{ $mainImageAlt }}" class="w-full h-full object-cover product-main-image"
-                        data-alt="{{ $mainImageAlt }}" src="{{ $mainImageUrl }}" />
+                    <img alt="{{ $firstMedia->custom_properties['alt'] ?? $mainImageAlt }}"
+                        class="w-full h-full object-cover product-main-image"
+                        data-alt="{{ $firstMedia->custom_properties['alt'] ?? $mainImageAlt }}"
+                        src="{{ $mainImageUrl }}" />
                 </picture>
             </div>
             <!-- Thumbnail Gallery -->
@@ -47,9 +49,10 @@
                     @endphp
                     <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
                         onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $media->name ?? $product->name }}')">
-                        <img alt="{{ $media->name }}"
+                        <img alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
                             class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
-                            data-alt="{{ $media->name }}" src="{{ $thumbUrl }}" />
+                            data-alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
+                            src="{{ $thumbUrl }}" />
                     </div>
                 @endforeach
             </div>
@@ -127,19 +130,77 @@
                     </div>
                 </div>
             </div>
-            <!-- CTAs -->
-            <div class="space-y-3">
-                <button
-                    class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase flex items-center justify-center gap-3 transition-transform active:scale-[0.98]">
-                    <span class="material-symbols-outlined text-lg" data-icon="shopping_cart">shopping_cart</span>
-                    Aggiungi al Carrello
-                </button>
-                <button
-                    class="w-full border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase flex items-center justify-center gap-3 hover:bg-surface-container transition-colors">
-                    <span class="material-symbols-outlined text-lg" data-icon="description">description</span>
-                    Scarica Scheda Tecnica
-                </button>
-            </div>
+            @if(session('quoteSuccess'))
+                <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    {{ session('quoteSuccess') }}
+                </div>
+            @endif
+
+            <form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                @csrf
+                <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore</label>
+                        <div class="grid grid-cols-5 gap-3">
+                            @foreach($product->colors as $color)
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="color_id" value="{{ $color->id }}"
+                                        class="sr-only" {{ old('color_id') == $color->id ? 'checked' : '' }}>
+                                    <div class="h-10 rounded-full border border-outline-variant/30 shadow-sm" style="background: {{ $color->color_hex ?: '#000' }}"></div>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('color_id') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
+                        <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}"
+                            class="w-32 h-12 rounded border border-outline-variant/20 bg-surface-container px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        @error('quantity') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Personalizzazione</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach(['Fronte Full','Fronte Petto','Retro Full','Maniche','Tasca'] as $option)
+                                <label class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
+                                    <input type="checkbox" name="customization_points[]" value="{{ $option }}" class="h-4 w-4 text-primary" {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
+                                    <span class="text-sm">{{ $option }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('customization_points') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Carica il tuo design</label>
+                        <input type="file" name="design_file" accept="image/*,.pdf"
+                            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
+                        @error('design_file') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Note aggiuntive</label>
+                        <textarea name="notes" rows="4"
+                            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
+                        @error('notes') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        <button type="submit"
+                            class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
+                            Richiedi Preventivo Personalizzato
+                        </button>
+                        <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20abbigliamento"
+                            class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
+                            Contattaci via email
+                        </a>
+                    </div>
+                </div>
+            </form>
             <!-- Trust Badges -->
             <div
                 class="mt-12 pt-8 border-t border-outline-variant/20 flex items-center gap-8 opacity-60 filter grayscale hover:grayscale-0 transition-all duration-500">
