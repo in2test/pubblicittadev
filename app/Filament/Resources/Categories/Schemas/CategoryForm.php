@@ -52,11 +52,9 @@ class CategoryForm
                     ->image()
                     ->imagePreviewHeight('300')
                     ->maxFiles(1)
-                    ->customProperties(function (): array {
-                        return [
-                            'alt' => 'descrizione',
-                        ];
-                    })
+                    ->customProperties(fn (): array => [
+                        'alt' => 'descrizione',
+                    ])
                     ->columnSpanFull(),
 
             ]);

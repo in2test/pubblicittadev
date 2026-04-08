@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Colors;
 
 use App\Filament\Resources\Colors\Pages\CreateColor;
@@ -13,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Override;
 
 class ColorResource extends Resource
 {
@@ -22,16 +25,19 @@ class ColorResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'color_name';
 
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return ColorForm::configure($schema);
     }
 
+    #[Override]
     public static function table(Table $table): Table
     {
         return ColorsTable::configure($table);
     }
 
+    #[Override]
     public static function getRelations(): array
     {
         return [
@@ -39,6 +45,7 @@ class ColorResource extends Resource
         ];
     }
 
+    #[Override]
     public static function getPages(): array
     {
         return [

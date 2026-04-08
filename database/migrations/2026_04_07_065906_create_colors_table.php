@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('color_hex')->nullable();
             $table->string('color_code')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->unique(['color_name','color_code']);
+            $table->unique(['color_name', 'color_code']);
             $table->timestamps();
         });
     }

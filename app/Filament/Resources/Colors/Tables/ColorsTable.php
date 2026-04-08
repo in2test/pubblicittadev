@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Colors\Tables;
 
 use Filament\Actions\BulkActionGroup;
@@ -14,7 +16,7 @@ class ColorsTable
     {
         return $table
             ->columns([
-                
+
                 TextColumn::make('color_name')
                     ->searchable(),
                 TextColumn::make('color_hex')

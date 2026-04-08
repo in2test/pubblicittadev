@@ -90,11 +90,9 @@ class ProductForm
                     ->disk('public')
 
                     ->conversionsDisk('public')
-                    ->customProperties(function (): array {
-                        return [
-                            'alt' => 'descrizione',
-                        ];
-                    })
+                    ->customProperties(fn (): array => [
+                        'alt' => 'descrizione',
+                    ])
                     ->columnSpanFull(),
             ]);
     }

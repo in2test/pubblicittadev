@@ -4,12 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Product;
-use App\Models\User;
-use App\Models\Size;
 use App\Models\Color;
+use App\Models\Product;
+use App\Models\Size;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,7 +29,7 @@ class DatabaseSeeder extends Seeder
             ->create()
             ->each(function ($category) {
                 // Add media to category
-                $category->addMediaFromUrl('https://picsum.photos/800/600?random=' . rand(1, 1000))
+                $category->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
                     ->toMediaCollection('images');
 
                 // Create 5 products for each category
@@ -40,7 +39,7 @@ class DatabaseSeeder extends Seeder
                     ->each(function ($product) {
                         // Add multiple media to product
                         for ($i = 0; $i < rand(1, 5); $i++) {
-                            $product->addMediaFromUrl('https://picsum.photos/800/600?random=' . rand(1, 1000))
+                            $product->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
                                 ->toMediaCollection('images');
                         }
                     });
@@ -117,8 +116,6 @@ class DatabaseSeeder extends Seeder
         Color::create(['color_name' => 'Grigio Metallo', 'color_hex' => '#00FF00', 'color_code' => '956', 'sort_order' => 55]);
         Color::create(['color_name' => 'Canna di Fucile', 'color_hex' => '#00FF00', 'color_code' => '96', 'sort_order' => 56]);
         Color::create(['color_name' => 'Nero', 'color_hex' => '#00FF00', 'color_code' => '99', 'sort_order' => 57]);
-
-
 
     }
 }

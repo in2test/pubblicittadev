@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\Category;
@@ -16,7 +18,7 @@ class MigrateImagesToMediaLibrary extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $this->info('Starting migration of images to media library...');
 
@@ -26,13 +28,14 @@ class MigrateImagesToMediaLibrary extends Command
 
         foreach ($productImages as $image) {
             $product = Product::find($image->product_id);
-            if (!$product) {
+            if (! $product) {
                 $this->warn("Product {$image->product_id} not found, skipping image {$image->id}");
+
                 continue;
             }
 
             if ($image->image_path) {
-                $product->addMedia(storage_path('app/public/' . $image->image_path))
+                $product->addMedia(storage_path('app/public/'.$image->image_path))
                     ->usingName($image->image_description ?? 'Product Image')
                     ->toMediaCollection('images');
             } elseif ($image->image_url) {
@@ -50,13 +53,14 @@ class MigrateImagesToMediaLibrary extends Command
 
         foreach ($categoryImages as $image) {
             $category = Category::find($image->category_id);
-            if (!$category) {
+            if (! $category) {
                 $this->warn("Category {$image->category_id} not found, skipping image {$image->id}");
+
                 continue;
             }
 
             if ($image->image_path) {
-                $category->addMedia(storage_path('app/public/' . $image->image_path))
+                $category->addMedia(storage_path('app/public/'.$image->image_path))
                     ->usingName($image->image_description ?? 'Category Image')
                     ->toMediaCollection('images');
             } elseif ($image->image_url) {

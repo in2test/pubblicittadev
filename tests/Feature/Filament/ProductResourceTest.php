@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -66,7 +67,7 @@ it('can create a product with image upload', function () {
         'category_id' => $category->id,
     ]);
 
-    $file = \Illuminate\Http\UploadedFile::fake()->image('test-image.jpg');
+    $file = UploadedFile::fake()->image('test-image.jpg');
 
     Livewire::test(CreateProduct::class)
         ->fillForm([
