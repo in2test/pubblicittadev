@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProductColor extends Model
+class Color extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'color_name',
         'color_hex',
+        'colode_code',
         'sort_order',
     ];
 

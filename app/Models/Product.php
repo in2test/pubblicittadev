@@ -38,7 +38,7 @@ class Product extends Model implements HasMedia
 
     public function colors()
     {
-        return $this->hasMany(ProductColor::class);
+        return $this->hasMany(Color::class);
     }
 
     public function pricingTiers()

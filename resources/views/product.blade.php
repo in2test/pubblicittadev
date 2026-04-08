@@ -82,13 +82,17 @@
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore
                         Disponibile</label>
                     <div class="flex gap-4">
-                         @foreach($product->colors as $color)
+                        <!-- Assuming $product->colors returns a collection of Color models with 'color_name' and 'color_hex' attributes -->
+                         
+                        {{--
+                            @foreach($product->colors as $color)
                                 <label class="cursor-pointer">
                                     <input type="radio" name="color_id" value="{{ $color->id }}"
                                         class="sr-only" {{ old('color_id') == $color->id ? 'checked' : '' }}>
                                     <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer" style="background: {{ $color->color_hex ?: '#000' }}"></div>
                                 </label>
                             @endforeach
+                            --}}
                     </div>
                 </div>
                 <!-- Size Selection -->
