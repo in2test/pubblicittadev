@@ -25,7 +25,15 @@ class ProductController extends Controller
         //
 
         $product = Product::where('slug', $slug)
-            ->with(['category', 'category.parent', 'pricingTiers'])
+            ->with([
+                'category',
+                'category.parent',
+                'pricingTiers',
+                'variations.color',
+                'variations.size',
+                'variations.printPlacement',
+                'variations.printSide',
+            ])
             ->firstOrFail();
 
         $category = Category::where('slug', $category)->firstOrFail();

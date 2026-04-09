@@ -4,22 +4,19 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\PrintPlacementFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Color extends Model
+#[Fillable(['name', 'description', 'sort_order'])]
+class PrintPlacement extends Model
 {
+    /** @use HasFactory<PrintPlacementFactory> */
     use HasFactory;
 
-    protected $fillable = [
-        'color_name',
-        'color_hex',
-        'colode_code',
-        'sort_order',
-    ];
-
-    public function variations(): HasMany
+    public function productVariations(): HasMany
     {
         return $this->hasMany(ProductVariation::class);
     }

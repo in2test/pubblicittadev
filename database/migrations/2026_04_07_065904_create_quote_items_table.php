@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('quote_id')->constrained('quotes')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('color_id')->nullable()->constrained('product_colors')->onDelete('set null');
+            $table->foreignId('color_id')->nullable()->constrained('colors')->onDelete('set null');
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 10, 2)->default(0);
             $table->decimal('subtotal', 10, 2)->default(0);

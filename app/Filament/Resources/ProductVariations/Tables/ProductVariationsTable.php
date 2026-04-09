@@ -2,33 +2,39 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\Colors\Tables;
+namespace App\Filament\Resources\ProductVariations\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\ColorColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class ColorsTable
+class ProductVariationsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->reorderable('sort_order')
             ->columns([
-
-                TextColumn::make('color_name')
+                TextColumn::make('product.name')
                     ->searchable(),
-                ColorColumn::make('color_hex')
-                    ->copyable()
+                TextColumn::make('color.id')
                     ->searchable(),
-                TextColumn::make('color_code')
+                TextColumn::make('size.id')
                     ->searchable(),
-                TextColumn::make('sort_order')
+                TextColumn::make('printPlacement.name')
+                    ->searchable(),
+                TextColumn::make('printSide.name')
+                    ->searchable(),
+                TextColumn::make('sku')
+                    ->label('SKU')
+                    ->searchable(),
+                TextColumn::make('quantity')
                     ->numeric()
                     ->sortable(),
+                IconColumn::make('is_available')
+                    ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

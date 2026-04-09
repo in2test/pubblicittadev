@@ -82,17 +82,21 @@
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore
                         Disponibile</label>
                     <div class="flex gap-4">
-                        <!-- Assuming $product->colors returns a collection of Color models with 'color_name' and 'color_hex' attributes -->
-                         
-                        {{--
-                            @foreach($product->colors as $color)
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="color_id" value="{{ $color->id }}"
-                                        class="sr-only" {{ old('color_id') == $color->id ? 'checked' : '' }}>
-                                    <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer" style="background: {{ $color->color_hex ?: '#000' }}"></div>
-                                </label>
-                            @endforeach
-                            --}}
+
+                        @php
+                            $availableColors = $product->variations->pluck('color')->unique('id')->filter();
+                        @endphp
+
+                        @foreach ($availableColors as $color)
+                            <label class="cursor-pointer">
+                                <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only"
+                                    {{ old('color_id') == $color->id ? 'checked' : '' }}>
+                                <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer"
+                                    style="background: {{ $color->color_hex ?: '#000' }}"
+                                    title="{{ $color->color_name }}"></div>
+                            </label>
+                        @endforeach
+
                     </div>
                 </div>
                 <!-- Size Selection -->
@@ -100,16 +104,22 @@
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Taglia
                         (EU Standard)</label>
                     <div class="grid grid-cols-5 gap-2">
-                        <button
-                            class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all">S</button>
-                        <button
-                            class="py-3 border-2 border-primary font-mono text-xs bg-surface-container-lowest text-on-surface">M</button>
-                        <button
-                            class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all">L</button>
-                        <button
-                            class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all">XL</button>
-                        <button
-                            class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all">XXL</button>
+                        @php
+                            $availableSizes = $product->variations
+                                ->pluck('size')
+                                ->unique('id')
+                                ->filter()
+                                ->sortBy('sort_order');
+                        @endphp
+                        @forelse ($availableSizes as $size)
+                            <button type="button"
+                                class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all size-button"
+                                data-size-id="{{ $size->id }}">
+                                {{ $size->size }}
+                            </button>
+                        @empty
+                            <p class="text-xs text-secondary col-span-5">No sizes available</p>
+                        @endforelse
                     </div>
                 </div>
                 <!-- Quantity -->
@@ -132,7 +142,7 @@
                     </div>
                 </div>
             </div>
-            @if(session('quoteSuccess'))
+            @if (session('quoteSuccess'))
                 <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                     {{ session('quoteSuccess') }}
                 </div>
@@ -143,40 +153,55 @@
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 
                 <div class="space-y-4">
-                    
+
 
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
+                        <label
+                            class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
                         <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}"
                             class="w-32 h-12 rounded border border-outline-variant/20 bg-surface-container px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                        @error('quantity') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('quantity')
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Personalizzazione</label>
+                        <label
+                            class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Personalizzazione</label>
                         <div class="grid grid-cols-2 gap-3">
-                            @foreach(['Fronte Full','Fronte Petto','Retro Full','Maniche','Tasca'] as $option)
-                                <label class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
-                                    <input type="checkbox" name="customization_points[]" value="{{ $option }}" class="h-4 w-4 text-primary" {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
+                            @foreach (['Fronte Full', 'Fronte Petto', 'Retro Full', 'Maniche', 'Tasca'] as $option)
+                                <label
+                                    class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
+                                    <input type="checkbox" name="customization_points[]" value="{{ $option }}"
+                                        class="h-4 w-4 text-primary"
+                                        {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
                                     <span class="text-sm">{{ $option }}</span>
                                 </label>
                             @endforeach
                         </div>
-                        @error('customization_points') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('customization_points')
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Carica il tuo design</label>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Carica
+                            il tuo design</label>
                         <input type="file" name="design_file" accept="image/*,.pdf"
                             class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
-                        @error('design_file') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('design_file')
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Note aggiuntive</label>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Note
+                            aggiuntive</label>
                         <textarea name="notes" rows="4"
                             class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
-                        @error('notes') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('notes')
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="grid grid-cols-1 gap-3">

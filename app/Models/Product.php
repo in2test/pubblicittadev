@@ -46,6 +46,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(PricingTier::class);
     }
 
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class);
+    }
+
     // Register media conversions for image variants
     public function registerMediaConversions(?Media $media = null): void
     {

@@ -22,6 +22,7 @@ class ProductFactory extends Factory
             'name' => $this->faker->words(3, true),
             'slug' => $this->faker->unique()->slug(),
             'description' => $this->faker->paragraph(),
+            'sku' => $this->faker->unique()->bothify('PRD-######'),
             'price' => $this->faker->randomFloat(2, 10, 1000),
             'category_id' => Category::factory(),
             'is_featured' => $this->faker->boolean(),
