@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[Fillable([
+    'quote_id',
+    'product_id',
+    'color_id',
+    'quantity',
+    'unit_price',
+    'subtotal',
+    'customization_json',
+    'design_file_path',
+])]
 class QuoteItem extends Model
 {
     use HasFactory;
-
-    protected $fillable = [
-        'quote_id',
-        'product_id',
-        'color_id',
-        'quantity',
-        'unit_price',
-        'subtotal',
-        'customization_json',
-        'design_file_path',
-    ];
 
     protected $casts = [
         'customization_json' => 'array',

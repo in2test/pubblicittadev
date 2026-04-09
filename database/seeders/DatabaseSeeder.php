@@ -49,16 +49,19 @@ class DatabaseSeeder extends Seeder
             });
 
         // Seed Print Placements
-        PrintPlacement::create(['name' => 'Front', 'description' => 'Print on front side', 'sort_order' => 1]);
-        PrintPlacement::create(['name' => 'Back', 'description' => 'Print on back side', 'sort_order' => 2]);
-        PrintPlacement::create(['name' => 'Left Sleeve', 'description' => 'Print on left sleeve', 'sort_order' => 3]);
-        PrintPlacement::create(['name' => 'Right Sleeve', 'description' => 'Print on right sleeve', 'sort_order' => 4]);
-        PrintPlacement::create(['name' => 'Chest', 'description' => 'Print on chest area', 'sort_order' => 5]);
+        PrintPlacement::create(['name' => 'Fronte', 'description' => 'Stampa sul fronte 23x30 cm', 'sort_order' => 1]);
+        PrintPlacement::create(['name' => 'Dietro', 'description' => 'Stampa sul dietro 23x30 cm', 'sort_order' => 2]);
+        PrintPlacement::create(['name' => 'Manica Sinistra', 'description' => 'Stampa sulla manica sinistra 9x9 cm', 'sort_order' => 3]);
+        PrintPlacement::create(['name' => 'Manica Destra', 'description' => 'Stampa sulla manica destra 9x9 cm', 'sort_order' => 4]);
+        PrintPlacement::create(['name' => 'Lato Cuore', 'description' => 'Stampa sul lato cuore 9x9 cm', 'sort_order' => 5]);
+        PrintPlacement::create(['name' => 'Tasca', 'description' => 'Stampa sulla tasca 9x9 cm', 'sort_order' => 6]);
+        PrintPlacement::create(['name' => 'Gamba sinistra', 'description' => 'Stampa sulla gamba sinistra 9x9 cm', 'sort_order' => 7]);
+        PrintPlacement::create(['name' => 'Gamba destra', 'description' => 'Stampa sulla gamba destra 9x9 cm', 'sort_order' => 8]);
 
         // Seed Print Sides
-        PrintSide::create(['name' => 'Front Only', 'description' => 'Print only on front', 'sort_order' => 1]);
-        PrintSide::create(['name' => 'Front & Back', 'description' => 'Print on both front and back', 'sort_order' => 2]);
-        PrintSide::create(['name' => 'All Over', 'description' => 'Print on all sides', 'sort_order' => 3]);
+        PrintSide::create(['name' => 'Stampa sul fronte', 'description' => 'Stampa solo sul fronte', 'sort_order' => 1]);
+        PrintSide::create(['name' => 'Fronte e retro uguali', 'description' => 'Stampa fronte e retro uguali', 'sort_order' => 2]);
+        PrintSide::create(['name' => 'Fronte e retro differenti', 'description' => 'Stampa fronte e retro differenti', 'sort_order' => 3]);
 
         // Seed Sizes
         Size::create(['size_name' => 'Extra Small', 'size' => 'XS', 'sort_order' => 1]);
