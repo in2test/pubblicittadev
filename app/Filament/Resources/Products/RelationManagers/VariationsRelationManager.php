@@ -9,14 +9,18 @@ use App\Models\Color;
 use App\Models\PrintPlacement;
 use App\Models\PrintSide;
 use App\Models\Size;
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -132,7 +136,94 @@ class VariationsRelationManager extends RelationManager
                     ->label('Available'),
             ])
             ->headerActions([
-                CreateAction::make(),
+                Action::make('generateVariations')
+                    ->label('Genera Varianti')
+                    ->icon('heroicon-o-plus-circle')
+                    ->modalWidth('4xl')
+                    ->schema([
+                        Section::make('Seleziona Attributi')
+                            ->description('Scegli quali attributi vuoi combinare per le varianti.')
+                            ->schema([
+                                Grid::make(4)
+                                    ->schema([
+                                        Toggle::make('use_color')->label('Colore')->live(),
+                                        Toggle::make('use_size')->label('Taglia')->live(),
+                                        Toggle::make('use_placement')->label('Posizione Stampa')->live(),
+                                        Toggle::make('use_side')->label('Lato Stampa')->live(),
+                                    ]),
+                            ]),
+                        Section::make('Opzioni Colore')
+                            ->visible(fn (Get $get) => $get('use_color'))
+                            ->schema([
+                                CheckboxList::make('colors')
+                                    ->hiddenLabel()
+                                    ->options(Color::pluck('color_name', 'id'))
+                                    ->columns(3)
+                                    ->searchable()
+                                    ->required(fn (Get $get) => $get('use_color')),
+                            ]),
+                        Section::make('Opzioni Taglia')
+                            ->visible(fn (Get $get) => $get('use_size'))
+                            ->schema([
+                                CheckboxList::make('sizes')
+                                    ->hiddenLabel()
+                                    ->options(Size::pluck('size', 'id'))
+                                    ->columns(4)
+                                    ->required(fn (Get $get) => $get('use_size')),
+                            ]),
+                        Section::make('Opzioni Posizione Stampa')
+                            ->visible(fn (Get $get) => $get('use_placement'))
+                            ->schema([
+                                CheckboxList::make('print_placements')
+                                    ->hiddenLabel()
+                                    ->options(PrintPlacement::pluck('name', 'id'))
+                                    ->columns(2)
+                                    ->required(fn (Get $get) => $get('use_placement')),
+                            ]),
+                        Section::make('Opzioni Lato Stampa')
+                            ->visible(fn (Get $get) => $get('use_side'))
+                            ->schema([
+                                CheckboxList::make('print_sides')
+                                    ->hiddenLabel()
+                                    ->options(PrintSide::pluck('name', 'id'))
+                                    ->columns(2)
+                                    ->required(fn (Get $get) => $get('use_side')),
+                            ]),
+                    ])
+                    ->action(function (array $data, RelationManager $livewire): void {
+                        $product = $livewire->getOwnerRecord();
+
+                        $colors = (! empty($data['use_color']) && ! empty($data['colors'])) ? $data['colors'] : [null];
+                        $sizes = (! empty($data['use_size']) && ! empty($data['sizes'])) ? $data['sizes'] : [null];
+                        $placements = (! empty($data['use_placement']) && ! empty($data['print_placements'])) ? $data['print_placements'] : [null];
+                        $sides = (! empty($data['use_side']) && ! empty($data['print_sides'])) ? $data['print_sides'] : [null];
+
+                        if (empty($data['use_color']) && empty($data['use_size']) && empty($data['use_placement']) && empty($data['use_side'])) {
+                            return;
+                        }
+
+                        foreach ($colors as $colorId) {
+                            foreach ($sizes as $sizeId) {
+                                foreach ($placements as $placementId) {
+                                    foreach ($sides as $sideId) {
+                                        if ($colorId === null && $sizeId === null && $placementId === null && $sideId === null) {
+                                            continue;
+                                        }
+
+                                        $product->variations()->firstOrCreate([
+                                            'color_id' => $colorId,
+                                            'size_id' => $sizeId,
+                                            'print_placement_id' => $placementId,
+                                            'print_side_id' => $sideId,
+                                        ], [
+                                            'is_available' => true,
+                                            'quantity' => 0,
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }),
             ])
             ->actions([
                 EditAction::make(),
