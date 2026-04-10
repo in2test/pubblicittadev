@@ -2,7 +2,7 @@
 
 **Status**: 🏗️ IN CORSO  
 **Scadenza MVP**: 2 settimane  
-**Ultimo aggiornamento**: 10 Aprile 2026  
+**Ultimo aggiornamento**: 10 Aprile 2026
 
 ---
 
@@ -13,7 +13,7 @@
 **Flusso**: Quote-based (No pagamento online) → Ordini manuali → Admin gestisce  
 **Lingua**: Italiano  
 **Team**: 1 developer  
-**Timeline**: 2 settimane  
+**Timeline**: 2 settimane
 
 ---
 
@@ -70,6 +70,7 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ### ⚡ SETTIMANA 1: Fondamenta & Core Backend (COMPLETATA)
 
 #### Giorni 1-2: Setup Database & Models
+
 - [x] Creare migrazioni (products, categories, colors, sizes, variations, pricing_tiers, quotes)
 - [x] Generare Models: `Product`, `Category`, `Color`, `Size`, `ProductVariation`, `PricingTier`, `Quote`, `QuoteItem`
 - [x] Setup relazioni Eloquent (Focus su `ProductVariation` come pivot)
@@ -78,6 +79,7 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 **✅ MILESTONE 1**: Database strutturato con sistema varianti avanzato.
 
 #### Giorni 3-5: Frontend - Catalogo & Richiesta Preventivo
+
 - [x] Creare vista catalogo e dettaglio prodotto (`ProductController`)
 - [x] Rotte dinamiche per categorie e prodotti
 - [x] Logica di calcolo prezzo basata sui `pricing_tiers` nel `QuoteController`
@@ -91,16 +93,18 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ### 📱 SETTIMANA 2: Admin Panel & Polish (IN CORSO)
 
 #### Giorni 8-10: Admin Panel (Filament)
+
 - [x] Creare Filament Resource: `ProductResource` (con VariationsRelationManager)
 - [x] Creare Filament Resource: `CategoryResource`
 - [x] Creare Filament Resource: `ColorResource`
 - [x] Creare Filament Resource: `ProductVariationResource`
 - [ ] Creare Filament Resource: `QuoteResource` (Pianificato)
-  - Gestione stati: pending, sent, accepted, rejected, etc.
+    - Gestione stati: pending, sent, accepted, rejected, etc.
 
 **✅ MILESTONE 3**: Gestione catalogo completa da pannello admin.
 
 #### Giorni 11-12: Notifiche & Automazione (DA FARE)
+
 - [ ] Mailable: `NewQuoteNotification` (Email admin e cliente)
 - [ ] Generazione PDF per i preventivi
 - [ ] Integrazione notifiche nel cambio stato da Filament
@@ -163,16 +167,17 @@ Storage: local/public (quote-designs)
 
 ## 🚨 Rischi & Mitigation
 
-| Rischio | Mitigation |
-|---------|-----------|
-| Upload file non funzionante | Test su staging con file grandi |
-| Email spam folder | Configurare SPF/DKIM correttamente |
-| Performance lenta DB | Aggiungere indici su quote.customer_email, quotes.created_at |
-| Mobile UI rotta | Testare su device reali, media-query Tailwind |
+| Rischio                     | Mitigation                                                   |
+| --------------------------- | ------------------------------------------------------------ |
+| Upload file non funzionante | Test su staging con file grandi                              |
+| Email spam folder           | Configurare SPF/DKIM correttamente                           |
+| Performance lenta DB        | Aggiungere indici su quote.customer_email, quotes.created_at |
+| Mobile UI rotta             | Testare su device reali, media-query Tailwind                |
 
 ---
 
 **Note Finali**:
+
 - Deploy incremental ogni milestone = riduce rischio breaking changes
 - Ogni giorno check → se blocco, risolvere subito
 - Week 2 = 50% new features + 50% testing e stabilità
