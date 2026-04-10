@@ -1,8 +1,8 @@
 # 📋 Piano di Implementazione - Abbigliamento Personalizzato
 
-**Status**: � IN CORSO  
+**Status**: 🏗️ IN CORSO  
 **Scadenza MVP**: 2 settimane  
-**Ultimo aggiornamento**: 7 Aprile 2026  
+**Ultimo aggiornamento**: 10 Aprile 2026  
 
 ---
 
@@ -17,234 +17,147 @@
 
 ---
 
-## 🗄️ Struttura Database Necessaria
+## 🗄️ Struttura Database (Aggiornata)
+
+Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di semplici tabelle piatte.
 
 ### Tabelle Principali
 
 ```
 📦 products
-├── id, name, slug, description, base_price
-├── material (100% cotone, poliestere, etc.)
-├── category (T-shirt, Hoodie, Polo, etc.)
-├── sku_prefix
-├── is_active
+├── id, name, slug, description, price (base), category_id, is_featured
 ├── created_at, updated_at
 
-📦 product_colors
-├── id, product_id, color_name, color_hex, sort_order
-├── unique: (product_id, color_name)
+📦 categories
+├── id, name, slug, parent_id, description
 
-📦 customization_points
-├── id, name (es. "Fronte - Full", "Fronte - Petto", "Retro - Full", "Maniche", "Gamba Pantaloni", "Tasca")
-├── category (es. "fronte", "retro", "maniche", "pantaloni")
-├── description
-├── display_order
+📦 colors
+├── id, color_name, color_hex, color_code, sort_order
+
+📦 sizes
+├── id, name, code, sort_order
+
+📦 print_placements (es. Petto, Schiena, Manica)
+├── id, name
+
+📦 print_sides (es. Fronte, Retro, Sinistra, Destra)
+├── id, name
+
+📦 product_variations (Pivot Centrale)
+├── id, product_id, color_id, size_id, print_placement_id, print_side_id
+├── sku, quantity, is_available
 
 📦 pricing_tiers
 ├── id, product_id, min_quantity, max_quantity, price_per_unit
-├── es: (1-5: €15, 6-10: €12, 11+: €10)
 
-📦 quotes (Ordini)
-├── id, quote_number, customer_name, customer_email, customer_phone, whatsapp
-├── total_items, total_price, notes
-├── status (pending, quote_sent, accepted, rejected, production, completed)
-├── created_at, updated_at
+📦 customization_points
+├── id, name, category, description, display_order
 
-📦 quote_items (Articoli per ordine)
-├── id, quote_id, product_id, color_id, quantity, subtotal
+📦 quotes (Preventivi)
+├── id, quote_number, customer_name, customer_email, customer_phone, customer_whatsapp
+├── total_items, total_price, status, notes
+
+📦 quote_items
+├── id, quote_id, product_id, color_id, quantity, unit_price, subtotal
 ├── customization_json (JSON con le opzioni selezionate)
-├── design_file_path (PDF/image caricato dal cliente)
-
-📦 quote_item_customizations (Dettagli per articolo)
-├── id, quote_item_id, customization_point_id, selected (true/false)
+├── design_file_path (Percorso file caricato)
 ```
 
 ---
 
 ## 🎯 Fasi Implementazione (Settimanale)
 
-### ⚡ SETTIMANA 1: Fondamenta & MVP Minimo
+### ⚡ SETTIMANA 1: Fondamenta & Core Backend (COMPLETATA)
 
 #### Giorni 1-2: Setup Database & Models
-- [x] Creare migrazioni per tutte le tabelle (products, colors, customization_points, pricing_tiers, quotes, quote_items)
-- [x] Generare Models: `Product`, `ProductColor`, `CustomizationPoint`, `PricingTier`, `Quote`, `QuoteItem`
-- [x] Setup relazioni Eloquent
-- [ ] Seed database con:
-  - 5-6 prodotti workwear (Basic Hoody, Basic Roundneck, etc.)
-  - 20 colori
-  - Punti personalizzazione standard
-  - Tier prezzi di default
+- [x] Creare migrazioni (products, categories, colors, sizes, variations, pricing_tiers, quotes)
+- [x] Generare Models: `Product`, `Category`, `Color`, `Size`, `ProductVariation`, `PricingTier`, `Quote`, `QuoteItem`
+- [x] Setup relazioni Eloquent (Focus su `ProductVariation` come pivot)
+- [x] Seed database con prodotti workwear e varianti
 
-**✅ MILESTONE 1 - Pronto per deploy**: Database strutturato, modelli funzionali
+**✅ MILESTONE 1**: Database strutturato con sistema varianti avanzato.
 
-#### Giorni 3-4: Frontend - Pagina Catalogo & Selezione Prodotto
-- [ ] Creare vista pubblica: `/abbigliamento` (lista prodotti)
-- [ ] Componente Livewire: `SelectProduct`
-  - Seleziona prodotto → mostra colori disponibili
-  - Seleziona colore → visualizza preview (immagine colore placeholder)
-  - Mostra punti personalizzazione selezionabili (checkbox)
-- [ ] Routing pubblico: `web.php` (nessun auth)
-- [ ] Styling Tailwind base per catalogo
+#### Giorni 3-5: Frontend - Catalogo & Richiesta Preventivo
+- [x] Creare vista catalogo e dettaglio prodotto (`ProductController`)
+- [x] Rotte dinamiche per categorie e prodotti
+- [x] Logica di calcolo prezzo basata sui `pricing_tiers` nel `QuoteController`
+- [x] Gestione upload file design nel form preventivo
+- [x] Memorizzazione preventivo e relativi articoli nel DB
 
-**✅ MILESTONE 2 - Pronto per deploy**: Catalogo visibile, selezione prodotto funzionante
-
-#### Giorni 5: Form Quote & Upload Design
-- [x] Componente Livewire / controller: `QuoteForm` / `QuoteController`
-  - Quantità (numero) → calcolo prezzo tramite tier di prezzo
-  - Caricamento file design (PDF/JPG/PNG)
-  - Form cliente: nome, email, telefono, WhatsApp
-  - Area note/special requests
-  - Validazione input
-- [ ] Store file in `storage/app/quote-designs` (privato)
-- [x] Aggiungere route POST `/quote`
-
-**✅ MILESTONE 3 - In corso**: Quote form integrato e request handler creato
-
-#### Giorni 6-7: Email & Admin Notifiche
-- [ ] Mailable: `NewQuoteNotification` 
-  - Email admin con dettagli ordine
-  - Email cliente con conferma ricevimento + numero quote
-- [ ] Aggiungere quote_number generato automaticamente (formato: `QT-20260407-001`)
-- [ ] Setup email `.env` per testing
-- [ ] Test manuale flusso completo
-
-**✅ MILESTONE 4 - PRONTO WEEK 1**: MVP base online, quote funzionante end-to-end
+**✅ MILESTONE 2**: Flusso utente dalla scelta prodotto all'invio preventivo funzionante.
 
 ---
 
-### 📱 SETTIMANA 2: Admin Panel & Polish
+### 📱 SETTIMANA 2: Admin Panel & Polish (IN CORSO)
 
-#### Giorni 8-9: Admin Panel - Vista Quote (Filament)
-- [ ] Creare Filament Resource: `QuoteResource`
-  - Tabella quote con filtri (status, date, customer)
-  - Dettagli quote con:
-    - Info cliente
-    - Lista articoli con customizzazioni
-    - Link download design file
-    - Campo note interno admin
-- [ ] Actions:
-  - Visualizza completo
-  - Cambia stato (pending → quote_sent → production → completed)
-  - Invia email conferma al cliente
-  - Scarica ordine PDF
+#### Giorni 8-10: Admin Panel (Filament)
+- [x] Creare Filament Resource: `ProductResource` (con VariationsRelationManager)
+- [x] Creare Filament Resource: `CategoryResource`
+- [x] Creare Filament Resource: `ColorResource`
+- [x] Creare Filament Resource: `ProductVariationResource`
+- [ ] Creare Filament Resource: `QuoteResource` (Pianificato)
+  - Gestione stati: pending, sent, accepted, rejected, etc.
 
-**✅ MILESTONE 5**: Admin può visualizzare e gestire quote
+**✅ MILESTONE 3**: Gestione catalogo completa da pannello admin.
 
-#### Giorni 10: Admin Panel - Gestione Prodotti (Filament)
-- [ ] Creare Filament Resource: `ProductResource`
-  - CRUD prodotti
-  - Gestisci colori per prodotto
-  - Gestisci tier prezzi
-- [ ] Creare Filament Resource: `CustomizationPointResource`
-  - CRUD punti personalizzazione (per future fasi)
+#### Giorni 11-12: Notifiche & Automazione (DA FARE)
+- [ ] Mailable: `NewQuoteNotification` (Email admin e cliente)
+- [ ] Generazione PDF per i preventivi
+- [ ] Integrazione notifiche nel cambio stato da Filament
+- [ ] Test finale responsive e cross-browser
 
-**✅ MILESTONE 6**: Admin può gestire inventario prodotti
-
-#### Giorni 11-12: Testing, Optimizzazione & Deploy
-- [ ] Test completo workflow:
-  - Cliente visita catalogo → seleziona prodotto+colore+custom → carica design → riceve email
-  - Admin accede panel → vede quote → scarica file → cambia stato → manda email
-- [ ] Cross-browser testing (desktop + mobile)
-- [ ] Performance check (load time, query optimization)
-- [ ] Testi UI in italiano completo
-- [ ] Setup `.env` production
-- [ ] **DEPLOY MVP LIVE** 🚀
-
-**✅ MILESTONE 7 - MVP LIVE**: Sito online, quote funzionante, admin attivo
+**✅ MILESTONE 4**: Sistema di notifiche e gestione preventivi completo.
 
 ---
 
-## 📅 Checkpoint Settimanali
+## 📅 Checkpoint Aggiornati
 
 ```
-SETTIMANA 1
-├─ Giorno 2: ✅ DB + Models (DEPLOY v0.1)
-├─ Giorno 4: ✅ Catalogo (DEPLOY v0.2)
-├─ Giorno 5: ✅ Quote Form (DEPLOY v0.3)
-└─ Giorno 7: ✅ Email Funzionante (DEPLOY v0.4-MVP)
+SETTIMANA 1 (Recap)
+├─ ✅ DB + Models (v0.1)
+├─ ✅ Catalogo & Dettaglio (v0.2)
+└─ ✅ Quote Form + Upload (v0.3)
 
-SETTIMANA 2
-├─ Giorno 9: ✅ Admin Quotes (DEPLOY v0.5)
-├─ Giorno 10: ✅ Admin Products (DEPLOY v0.6)
-└─ Giorno 12: ✅ MVP LIVE (DEPLOY v1.0) 🚀
+SETTIMANA 2 (Attuale)
+├─ ✅ Admin Prodotti (v0.6)
+├─ 🏗️ Admin Preventivi (v0.7) - IN CORSO
+├─ 🏗️ Email & PDF (v0.8) - DA FARE
+└─ 🚀 MVP LIVE (v1.0) - TARGET: 19 Aprile
 ```
 
 ---
 
-## 🛠️ Stack Tecnico Utilizzato
+## 🛠️ Stack Tecnico
 
 ```
-Backend: Laravel 13 + Livewire 4
+Backend: Laravel 13
+Frontend: Blade + Tailwind 4 + Flux UI
 Admin: Filament 5
-Frontend: Tailwind 4 + Flux UI 2
-Database: [Current DB configured]
-File Upload: Storage API (public/quote-designs)
-Email: Laravel Mail (SMTP configured)
-Testing: Pest 4
-Formatting: Pint
+Storage: local/public (quote-designs)
 ```
 
 ---
 
-## ⏭️ Phase 2 (Dopo MVP Live)
+## ⏭️ Prossimi Passi (Immediate)
 
-Once MVP è stabile e generando quote:
-
-1. **Portfolio Portfolio Grafica** (1-2 giorni)
-   - Creare sezione portfolio con galleria progetti passati
-   - Link da form custom design
-
-2. **Business Cards** (3-4 giorni)
-   - Aggiungere categoria business cards
-   - Personalizzazione: fronte/retro, tipo laminazione
-   - Calcolo prezzo per esigenze
-
-3. **Stampe Grandi** (3-4 giorni)
-   - Aggiungere prodotti large format
-   - Sistema personalizzazione custom dimensioni
-
-4. **Sistema Pagamento Online** (2-3 giorni)
-   - Aggiungere Stripe/PayPal para prodotti standard
-   - Mantenere quote per custom
-
-5. **Tracking Ordini** (1-2 giorni)
-   - Link tracking per cliente
-   - Notifiche via email/SMS
+1. Implementare **Filament QuoteResource** per visualizzare i preventivi ricevuti.
+2. Configurare **Mailables** per le notifiche automatiche.
+3. Aggiungere logica per la generazione di **PDF** dai dettagli del preventivo.
 
 ---
 
-## 📝 Checklist Implementazione
+## 📝 Checklist Stato Attuale
 
-### Pre-Development
-- [ ] Accesso server/deploy configurato
-- [ ] Email SMTP configurato (test@example.com)
-- [ ] Storage directory permissions OK
-- [ ] `.env` dev configurato
-- [ ] Database locale avviato e accessibile (MySQL attualmente non raggiungibile)
-
-### Development Week 1
-- [ ] Database migrations create ✓
-- [ ] Seed data prodotti/colori ✓
-- [ ] Frontend catalogo ✓
-- [ ] Componente selezione prodotto ✓
-- [ ] Form quote + upload ✓
-- [ ] Email notifiche ✓
-- [ ] Testing workflow completo ✓
-
-### Development Week 2
-- [ ] Admin panel Filament - Quote Resource ✓
-- [ ] Admin panel - Product Resource ✓
-- [ ] PDF generate ordini ✓
-- [ ] UI/UX polish ✓
-- [ ] Mobile responsive check ✓
-- [ ] Testi italiani completi ✓
-- [ ] Production deploy ✓
-
-### Post-Launch
-- [ ] Monitoraggio errori (Sentry/Logs)
-- [ ] User feedback collection
-- [ ] Performance monitoring
-- [ ] Plan Phase 2
+- [x] Database migrations create
+- [x] Logica Varianti Prodotto (Pivot table)
+- [x] Seed dati iniziali
+- [x] Frontend catalogo e prodotti
+- [x] Form invio preventivo con calcolo prezzi
+- [x] Upload design file
+- [x] Admin Prodotti/Categorie/Colori
+- [ ] Admin Preventivi (QuoteResource)
+- [ ] Notifiche Email
+- [ ] Generazione PDF
 
 ---
 
@@ -256,17 +169,6 @@ Once MVP è stabile e generando quote:
 | Email spam folder | Configurare SPF/DKIM correttamente |
 | Performance lenta DB | Aggiungere indici su quote.customer_email, quotes.created_at |
 | Mobile UI rotta | Testare su device reali, media-query Tailwind |
-| Quote form validation edge cases | Test dataset comprensivo prima deploy |
-
----
-
-## 📞 Comunicazione Cliente
-
-**Email automatiche (Template italiano)**:
-1. Quote ricevuta: "Grazie per il vostro interesse..."
-2. Quote pronta: "La vostra quotazione è pronta..."
-3. Ordine confermato: "Proceediamo con la produzione..."
-4. Ordine spedito: "Il vostro ordine è in viaggio..."
 
 ---
 

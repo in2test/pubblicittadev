@@ -34,7 +34,7 @@
                 </label>
             </div>
         </div>
-        <div class="bg-slate-200 dark:bg-slate-800 h-[1px]"></div>
+        <div class="bg-slate-200 dark:bg-slate-800 h-px"></div>
         <!-- Materials -->
         <div class="space-y-3">
             <div class="flex items-center gap-2 text-primary font-bold">
@@ -59,7 +59,7 @@
                 </label>
             </div>
         </div>
-        <div class="bg-slate-200 dark:bg-slate-800 h-[1px]"></div>
+        <div class="bg-slate-200 dark:bg-slate-800 h-px"></div>
         <!-- Certifications -->
         <div class="space-y-3">
             <div class="flex items-center gap-2 text-primary font-bold">

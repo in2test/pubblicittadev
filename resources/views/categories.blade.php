@@ -51,7 +51,7 @@
                         $product->getFirstMediaUrl('images', 'medium') ?:
                         'https://placehold.co/600x800?text=' . urlencode($product->name);
                 @endphp
-                <div class="aspect-[4/5] overflow-hidden bg-surface-container relative">
+                <div class="aspect-4/5 overflow-hidden bg-surface-container relative">
                     <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
                         data-alt="Technical high-visibility safety jacket industrial worker"
                         src="{{ $imageUrl }}" />

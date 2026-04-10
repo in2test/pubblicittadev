@@ -39,6 +39,6 @@ class QuoteItem extends Model
 
     public function color(): BelongsTo
     {
-        return $this->belongsTo(ProductColor::class);
+        return $this->belongsTo(Color::class);
     }
 }
