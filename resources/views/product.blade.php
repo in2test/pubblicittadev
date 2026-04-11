@@ -6,32 +6,32 @@
         <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
         <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @if ($category->parent)
-        <a class="hover:text-primary transition-colors"
-            href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
-        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <a class="hover:text-primary transition-colors"
+                href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         @if ($category)
-        <a class="hover:text-primary transition-colors"
-            href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
-        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <a class="hover:text-primary transition-colors"
+                href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
         @endif
         <span class="text-on-surface font-bold">{{ $product->name }}</span>
     </nav>
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
         <!-- Left Column: Gallery -->
         @php
-        $firstMedia = $product->getFirstMedia('images');
-        $mainImageUrl = $firstMedia
-        ? $firstMedia->getUrl('large')
-        : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-        $mainImageAlt = $firstMedia ? $firstMedia->name : $product->name;
+            $firstMedia = $product->getFirstMedia('images');
+            $mainImageUrl = $firstMedia
+                ? $firstMedia->getUrl('large')
+                : 'https://placehold.co/600x800?text=' . urlencode($product->name);
+            $mainImageAlt = $firstMedia ? $firstMedia->name : $product->name;
         @endphp
         <div class="lg:col-span-7 space-y-4">
             <!-- Main Product Image -->
             <div class="aspect-4/5 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
                 <picture>
                     @if ($firstMedia)
-                    <source media="(max-width: 768px)" srcset="{{ $firstMedia->getUrl('medium') }}">
+                        <source media="(max-width: 768px)" srcset="{{ $firstMedia->getUrl('medium') }}">
                     @endif
                     <img alt="{{ $firstMedia->custom_properties['alt'] ?? $mainImageAlt }}"
                         class="w-full h-full object-cover product-main-image"
@@ -42,18 +42,17 @@
             <!-- Thumbnail Gallery -->
             <div class="grid grid-cols-4 gap-4">
                 @foreach ($product->getMedia('images') as $media)
-                @php
-                $thumbUrl = $media->getUrl('thumbnail');
-                $mediumUrl = $media->getUrl('medium');
-                $largeUrl = $media->getUrl('large');
-                @endphp
-                <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
-                    onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $media->name ?? $product->name }}')">
-                    <img alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
-                        class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
-                        data-alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
-                        src="{{ $thumbUrl }}" />
-                </div>
+                    @php
+                        $thumbUrl = $media->getUrl('thumbnail');
+                        $mediumUrl = $media->getUrl('medium');
+                        $largeUrl = $media->getUrl('large');
+                    @endphp
+                    <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
+                        onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $media->name ?? $product->name }}')">
+                        <img alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
+                            class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
+                            data-alt="{{ $media->custom_properties['alt'] ?? $media->name }}" src="{{ $thumbUrl }}" />
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -84,16 +83,17 @@
                     <div class="flex gap-4">
 
                         @php
-                        $availableColors = $product->variations->pluck('color')->unique('id')->filter();
+                            $availableColors = $product->variations->pluck('color')->unique('id')->filter();
                         @endphp
 
                         @foreach ($availableColors as $color)
-                        <label class="cursor-pointer">
-                            <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only"
-                                {{ old('color_id') == $color->id ? 'checked' : '' }}>
-                            <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer bg-[{{ $color->color_hex ?: '#000' }}]"
-                                title="{{ $color->color_name }}"></div>
-                        </label>
+                            <label class="cursor-pointer font-mono text-xs">
+                                <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only">
+                                <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer mb-2"
+                                    style="background-color: {{ $color->color_hex ?: '#000' }}"
+                                    title="{{ $color->color_name }}"></div>
+                                {{ $color->color_name }}
+                            </label>
                         @endforeach
 
                     </div>
@@ -104,20 +104,20 @@
                         (EU Standard)</label>
                     <div class="grid grid-cols-5 gap-2">
                         @php
-                        $availableSizes = $product->variations
-                        ->pluck('size')
-                        ->unique('id')
-                        ->filter()
-                        ->sortBy('sort_order');
+                            $availableSizes = $product->variations
+                                ->pluck('size')
+                                ->unique('id')
+                                ->filter()
+                                ->sortBy('sort_order');
                         @endphp
                         @forelse ($availableSizes as $size)
-                        <button type="button"
-                            class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all size-button"
-                            data-size-id="{{ $size->id }}">
-                            {{ $size->size }}
-                        </button>
+                            <button type="button"
+                                class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all size-button"
+                                data-size-id="{{ $size->id }}">
+                                {{ $size->size }}
+                            </button>
                         @empty
-                        <p class="text-xs text-secondary col-span-5">No sizes available</p>
+                            <p class="text-xs text-secondary col-span-5">No sizes available</p>
                         @endforelse
                     </div>
                 </div>
@@ -142,9 +142,9 @@
                 </div>
             </div>
             @if (session('quoteSuccess'))
-            <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                {{ session('quoteSuccess') }}
-            </div>
+                <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    {{ session('quoteSuccess') }}
+                </div>
             @endif
 
             <form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -160,7 +160,7 @@
                         <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}"
                             class="w-32 h-12 rounded border border-outline-variant/20 bg-surface-container px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
                         @error('quantity')
-                        <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -169,17 +169,16 @@
                             class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Personalizzazione</label>
                         <div class="grid grid-cols-2 gap-3">
                             @foreach (['Fronte Full', 'Fronte Petto', 'Retro Full', 'Maniche', 'Tasca'] as $option)
-                            <label
-                                class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
-                                <input type="checkbox" name="customization_points[]" value="{{ $option }}"
-                                    class="h-4 w-4 text-primary"
-                                    {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
-                                <span class="text-sm">{{ $option }}</span>
-                            </label>
+                                <label
+                                    class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
+                                    <input type="checkbox" name="customization_points[]" value="{{ $option }}"
+                                        class="h-4 w-4 text-primary" {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
+                                    <span class="text-sm">{{ $option }}</span>
+                                </label>
                             @endforeach
                         </div>
                         @error('customization_points')
-                        <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -189,7 +188,7 @@
                         <input type="file" name="design_file" accept="image/*,.pdf"
                             class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
                         @error('design_file')
-                        <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -199,7 +198,7 @@
                         <textarea name="notes" rows="4"
                             class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
                         @error('notes')
-                        <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
