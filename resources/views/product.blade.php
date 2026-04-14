@@ -1,331 +1,84 @@
 <x-layout>
 
-    <!-- Breadcrumbs -->
-    <nav
-        class="px-8 3xl:px-32 py-4 flex items-center gap-2 mb-12 text-xs font-mono uppercase tracking-widest text-secondary">
-        <a class="hover:text-primary transition-colors" href="{{ route('home') }}">Home</a>
-        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-        @if ($category->parent)
-            <a class="hover:text-primary transition-colors"
-                href="{{ route('category', $category->parent->slug) }}">{{ $category->parent->name }}</a>
-            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-        @endif
-        @if ($category)
-            <a class="hover:text-primary transition-colors"
-                href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
-            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-        @endif
-        <span class="text-on-surface font-bold">{{ $product->name }}</span>
-    </nav>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32">
-        <!-- Left Column: Gallery -->
+    <x-product.breadcrumbs :$product :$category />
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32" x-data="{
+        productName: '{{ addslashes($product->name) }}',
+        activeColorId: '{{ old('color_id') ?: '' }}',
+        colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
         @php
-            $firstMedia = $product->getFirstMedia('images');
+            $mediaList = $product->getMedia('images');
+            $firstMedia = $mediaList->first();
             $mainImageUrl = $firstMedia
                 ? $firstMedia->getUrl('large')
                 : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-            $mainImageAlt = $firstMedia ? $firstMedia->name : $product->name;
+            $mainImageMed = $firstMedia ? $firstMedia->getUrl('medium') : '';
+            $mainImageAlt = $firstMedia ? ($firstMedia->custom_properties['alt'] ?? $firstMedia->name) : $product->name;
         @endphp
-        <div class="lg:col-span-7 space-y-4">
-            <!-- Main Product Image -->
-            <div class="aspect-4/5 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden">
-                <picture>
-                    @if ($firstMedia)
-                        <source media="(max-width: 768px)" srcset="{{ $firstMedia->getUrl('medium') }}">
-                    @endif
-                    <img alt="{{ $firstMedia->custom_properties['alt'] ?? $mainImageAlt }}"
-                        class="w-full h-full object-cover product-main-image"
-                        data-alt="{{ $firstMedia->custom_properties['alt'] ?? $mainImageAlt }}"
-                        src="{{ $mainImageUrl }}" />
-                </picture>
-            </div>
-            <!-- Thumbnail Gallery -->
-            <div class="grid grid-cols-4 gap-4">
-                @foreach ($product->getMedia('images') as $media)
-                    @php
-                        $thumbUrl = $media->getUrl('thumbnail');
-                        $mediumUrl = $media->getUrl('medium');
-                        $largeUrl = $media->getUrl('large');
-                    @endphp
-                    <div class="aspect-square bg-surface-container border-2 border-primary overflow-hidden image-thumbnail cursor-pointer"
-                        onclick="changeMainImage('{{ $mediumUrl }}', '{{ $largeUrl }}', '{{ $media->name ?? $product->name }}')">
-                        <img alt="{{ $media->custom_properties['alt'] ?? $media->name }}"
-                            class="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity thumbnail-image"
-                            data-alt="{{ $media->custom_properties['alt'] ?? $media->name }}" src="{{ $thumbUrl }}" />
-                    </div>
-                @endforeach
-            </div>
-        </div>
+        mainImage: '{{ $mainImageUrl }}',
+        mainImageMed: '{{ $mainImageMed }}',
+        mainAlt: '{{ $mainImageAlt }}',
+        images: [
+            @foreach ($mediaList as $media)
+                {
+                    id: {{ $media->id }},
+                    thumb: '{{ $media->getUrl('thumbnail') }}',
+                    medium: '{{ $media->getUrl('medium') }}',
+                    large: '{{ $media->getUrl('large') }}',
+                    alt: '{{ $media->custom_properties['alt'] ?? '' }}',
+                    color_ids: {{ json_encode(array_map('intval', (array) ($media->custom_properties['color_ids'] ?? []))) }}
+                },
+            @endforeach
+        ],
+        getComputedAlt(image) {
+            let colorName = '';
+            if (this.activeColorId && image.color_ids.includes(parseInt(this.activeColorId))) {
+                colorName = this.colorNames[this.activeColorId];
+            } else if (image.color_ids.length > 0) {
+                colorName = this.colorNames[image.color_ids[0]];
+            }
+
+            let base = this.productName;
+            if (colorName) base += ' colore ' + colorName;
+
+            return image.alt ? (image.alt + ' ' + base) : base;
+        },
+        updateMain(img) {
+            this.mainImage = img.large;
+            this.mainImageMed = img.medium;
+            this.mainAlt = img.alt;
+        },
+        basePrice: {{ (float) ($product->price ?? 0) }},
+        selectedPlacements: [],
+        get selectedPlacementPrice() {
+            return this.selectedPlacements.reduce((sum, p) => sum + parseFloat(p.price), 0);
+        },
+        quantity: {{ old('quantity', 1) }}
+    }" x-init="$watch('activeColorId', (val) => {
+        if (!val) return;
+        const match = images.find(img => img.color_ids.some(cid => cid == val));
+        if (match) updateMain(match);
+    })">
+        <x-product.gallery />
+
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 flex flex-col">
-            <div class="mb-2">
-                <span class="font-mono text-[10px] tracking-tighter text-secondary bg-surface-container px-2 py-1">SKU:
-                    {{ $product->sku }}</span>
-            </div>
-            <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-on-surface mb-4 leading-none uppercase">
-                {{ $product->name }}
-            </h1>
-            <div class="flex items-baseline gap-4 mb-8">
-                <span class="text-3xl font-light text-primary tracking-tight">{{ $product->price }}</span>
-                <span class="text-xs font-mono text-secondary">IVA INCLUSA</span>
-            </div>
-            <div class="mb-8 p-6 bg-surface-container-low border-l-4 border-primary">
-                <p class="text-sm text-on-surface-variant leading-relaxed">
-                    {{ $product->description }}
-                </p>
-            </div>
+            <x-product.info :$product />
+
             <!-- Configuration Options -->
             <div class="space-y-8 mb-10">
-                <!-- Color Selection -->
-                <div>
-                    <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Colore
-                        Disponibile</label>
-                    <div class="flex gap-4">
-
-                        @php
-                            $availableColors = $product->variations->pluck('color')->unique('id')->filter();
-                        @endphp
-
-                        @foreach ($availableColors as $color)
-                            <label class="cursor-pointer font-mono text-xs">
-                                <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only">
-                                <div class="w-10 h-10 border-2 border-primary ring-2 ring-transparent transition-all cursor-pointer mb-2"
-                                    style="background-color: {{ $color->color_hex ?: '#000' }}"
-                                    title="{{ $color->color_name }}"></div>
-                                {{ $color->color_name }}
-                            </label>
-                        @endforeach
-
-                    </div>
-                </div>
-                <!-- Size Selection -->
-                <div>
-                    <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Taglia
-                        (EU Standard)</label>
-                    <div class="grid grid-cols-5 gap-2">
-                        @php
-                            $availableSizes = $product->variations
-                                ->pluck('size')
-                                ->unique('id')
-                                ->filter()
-                                ->sortBy('sort_order');
-                        @endphp
-                        @forelse ($availableSizes as $size)
-                            <button type="button"
-                                class="py-3 border border-outline-variant/20 font-mono text-xs hover:bg-primary hover:text-white hover:border-primary transition-all size-button"
-                                data-size-id="{{ $size->id }}">
-                                {{ $size->size }}
-                            </button>
-                        @empty
-                            <p class="text-xs text-secondary col-span-5">No sizes available</p>
-                        @endforelse
-                    </div>
-                </div>
-                <!-- Quantity -->
-                <div class="flex items-center gap-6">
-                    <div class="flex-1">
-                        <label
-                            class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
-                        <div class="flex items-center border border-outline-variant/20 w-32 h-12">
-                            <button
-                                class="w-10 h-full flex items-center justify-center hover:bg-surface-container transition-colors">
-                                <span class="material-symbols-outlined text-sm">remove</span>
-                            </button>
-                            <input class="flex-1 border-none bg-transparent text-center font-mono text-sm focus:ring-0"
-                                type="number" value="1" />
-                            <button
-                                class="w-10 h-full flex items-center justify-center hover:bg-surface-container transition-colors">
-                                <span class="material-symbols-outlined text-sm">add</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <x-product.color-selector :$product />
+                <x-product.size-selector :$product />
+                <x-product.quantity-selector />
             </div>
-            @if (session('quoteSuccess'))
-                <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                    {{ session('quoteSuccess') }}
-                </div>
-            @endif
 
-            <form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
+            <x-product.quote-form :$product />
 
-                <div class="space-y-4">
-
-
-                    <div>
-                        <label
-                            class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Quantità</label>
-                        <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}"
-                            class="w-32 h-12 rounded border border-outline-variant/20 bg-surface-container px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                        @error('quantity')
-                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Personalizzazione</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            @foreach (['Fronte Full', 'Fronte Petto', 'Retro Full', 'Maniche', 'Tasca'] as $option)
-                                <label
-                                    class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer">
-                                    <input type="checkbox" name="customization_points[]" value="{{ $option }}"
-                                        class="h-4 w-4 text-primary" {{ in_array($option, old('customization_points', [])) ? 'checked' : '' }}>
-                                    <span class="text-sm">{{ $option }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                        @error('customization_points')
-                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Carica
-                            il tuo design</label>
-                        <input type="file" name="design_file" accept="image/*,.pdf"
-                            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
-                        @error('design_file')
-                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Note
-                            aggiuntive</label>
-                        <textarea name="notes" rows="4"
-                            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
-                        @error('notes')
-                            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3">
-                        <button type="submit"
-                            class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
-                            Richiedi Preventivo Personalizzato
-                        </button>
-                        <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20abbigliamento"
-                            class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
-                            Contattaci via email
-                        </a>
-                    </div>
-                </div>
-            </form>
-            <!-- Trust Badges -->
-            <div
-                class="mt-12 pt-8 border-t border-outline-variant/20 flex items-center gap-8 opacity-60 filter grayscale hover:grayscale-0 transition-all duration-500">
-                <div class="flex items-center gap-2">
-                    <div
-                        class="w-8 h-8 border border-on-surface/40 flex items-center justify-center text-[8px] font-bold">
-                        ISO 9001</div>
-                    <span class="text-[10px] font-mono leading-tight">Certificazione<br />Qualità</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div
-                        class="w-8 h-8 border border-on-surface/40 flex items-center justify-center text-[8px] font-bold">
-                        EN 20471</div>
-                    <span class="text-[10px] font-mono leading-tight">Standard<br />Sicurezza</span>
-                </div>
-            </div>
+            <x-product.trust-badges />
         </div>
     </div>
-    <!-- Technical Specs Section -->
-    <section class="my-24 px-8 3xl:px-32">
-        <div class="mb-12">
-            <h2 class="text-3xl font-black tracking-tighter uppercase mb-2">Specifiche Tecniche</h2>
-            <div class="h-1 w-24 bg-primary"></div>
-        </div>
-        <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-outline-variant/20 border border-outline-variant/20">
-            <div class="bg-surface p-8">
-                <span class="material-symbols-outlined text-primary mb-4" data-icon="water_drop">water_drop</span>
-                <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest mb-2">Impermeabilità
-                </h3>
-                <p class="font-mono text-xl font-bold">20.000 MM</p>
-                <p class="text-xs text-secondary mt-2">Testato secondo standard ISO 811</p>
-            </div>
-            <div class="bg-surface p-8">
-                <span class="material-symbols-outlined text-primary mb-4" data-icon="air">air</span>
-                <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest mb-2">Traspirabilità
-                </h3>
-                <p class="font-mono text-xl font-bold">15.000 G/M²</p>
-                <p class="text-xs text-secondary mt-2">Tecnologia Pro-Vent Active</p>
-            </div>
-            <div class="bg-surface p-8">
-                <span class="material-symbols-outlined text-primary mb-4" data-icon="layers">layers</span>
-                <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest mb-2">Composizione
-                </h3>
-                <p class="font-mono text-xl font-bold">100% NYLON RIPSTOP</p>
-                <p class="text-xs text-secondary mt-2">Membrana in PTFE espanso</p>
-            </div>
-            <div class="bg-surface p-8">
-                <span class="material-symbols-outlined text-primary mb-4"
-                    data-icon="local_laundry_service">local_laundry_service</span>
-                <h3 class="text-[10px] font-mono text-secondary uppercase tracking-widest mb-2">Manutenzione
-                </h3>
-                <p class="font-mono text-xl font-bold">40°C LAVAGGIO</p>
-                <p class="text-xs text-secondary mt-2">Non utilizzare ammorbidenti</p>
-            </div>
-        </div>
-        <div class="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div class="space-y-4">
-                <h4 class="font-bold text-lg border-b-2 border-surface-container inline-block pb-1">
-                    Caratteristiche Costruttive</h4>
-                <ul class="space-y-3">
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
-                        <span class="text-sm">Cuciture termonastrate a triplo strato per isolamento
-                            totale.</span>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
-                        <span class="text-sm">Zip YKK® Aquaguard® idrorepellenti ad alta resistenza.</span>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
-                        <span class="text-sm">Rinforzi in Cordura® su gomiti e zone ad alta usura.</span>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="material-symbols-outlined text-primary text-sm mt-1">check_circle</span>
-                        <span class="text-sm">Cappuccio regolabile compatibile con caschi di protezione.</span>
-                    </div>
-                </ul>
-            </div>
-            <div class="bg-surface-container-low p-8 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-5">
-                    <span class="material-symbols-outlined text-9xl">architecture</span>
-                </div>
-                <h4 class="font-bold text-lg mb-4">Note per la Personalizzazione</h4>
-                <p class="text-sm leading-relaxed mb-6">
-                    Il Guscio Pro-X supporta la stampa a caldo e il ricamo tecnico. Consigliamo il
-                    posizionamento dei loghi aziendali sul petto sinistro o sulla schiena per mantenere
-                    l'integrità della membrana impermeabile.
-                </p>
-                <a class="text-primary font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all"
-                    href="#">
-                    Configura Logo Aziendale
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                </a>
-            </div>
-        </div>
-    </section>
 
-    <script>
-        function changeMainImage(mediumSrc, largeSrc, altText) {
-            const mainImg = document.querySelector('.product-main-image');
-            const source = document.querySelector('source[media="(max-width: 768px)"]');
-
-            mainImg.src = largeSrc;
-            mainImg.alt = altText;
-            mainImg.setAttribute('data-alt', altText);
-
-            if (source) {
-                source.srcset = mediumSrc;
-            }
-        }
-    </script>
+    <x-product.technical-specs />
 
 </x-layout>
+

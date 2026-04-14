@@ -33,6 +33,18 @@ class ProductResource extends Resource
     }
 
     #[Override]
+    public static function getModelLabel(): string
+    {
+        return 'Prodotto';
+    }
+
+    #[Override]
+    public static function getPluralModelLabel(): string
+    {
+        return 'Prodotti';
+    }
+
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return ProductForm::configure($schema);

@@ -51,6 +51,19 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariation::class);
     }
 
+    public function printPlacements()
+    {
+        return $this->belongsToMany(PrintPlacement::class, 'product_print_placement')
+            ->withPivot('additional_price')
+            ->withTimestamps();
+    }
+
+    public function printSides()
+    {
+        return $this->belongsToMany(PrintSide::class, 'product_print_side')
+            ->withTimestamps();
+    }
+
     // Register media conversions for image variants
     public function registerMediaConversions(?Media $media = null): void
     {

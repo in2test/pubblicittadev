@@ -32,6 +32,18 @@ class CategoryResource extends Resource
     }
 
     #[Override]
+    public static function getModelLabel(): string
+    {
+        return 'Categoria';
+    }
+
+    #[Override]
+    public static function getPluralModelLabel(): string
+    {
+        return 'Categorie';
+    }
+
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return CategoryForm::configure($schema);

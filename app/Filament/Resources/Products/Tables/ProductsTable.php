@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Product;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -39,13 +41,21 @@ class ProductsTable
             ])
             ->filters([
                 SelectFilter::make('category_id')
-                    ->label('Category')
+                    ->label('Categoria')
                     ->relationship('category', 'name')
                     ->multiple()
                     ->preload(),
             ],
                 layout: FiltersLayout::BelowContent)
             ->recordActions([
+                Action::make('view')
+                    ->label('Vedi')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Product $record): string => route('product', [
+                        'category' => $record->category->slug,
+                        'slug' => $record->slug,
+                    ]))
+                    ->openUrlInNewTab(),
                 EditAction::make(),
             ])
             ->toolbarActions([

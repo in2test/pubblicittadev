@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\Category;
+use App\Models\Color;
+use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 class ProductForm
 {
@@ -75,12 +81,11 @@ class ProductForm
                             ->nullable(),
                     ]) // Form for adding new category
                     ->createOptionAction(function (Action $action) {
-                        $action->modalHeading('Create Category');
+                        $action->modalHeading('Crea Categoria');
                     }),
                 // Image Media Library
-
                 SpatieMediaLibraryFileUpload::make('images')
-                    ->label('Immagini')
+                    ->label('Caricamento Rapido Immagini')
                     ->collection('images')
                     ->multiple()
                     ->reorderable()
@@ -88,10 +93,73 @@ class ProductForm
                     ->imagePreviewHeight('150')
                     ->panelLayout('grid')
                     ->disk('public')
-
                     ->conversionsDisk('public')
                     ->customProperties(fn (): array => [
                         'alt' => 'descrizione',
+                    ])
+                    ->columnSpanFull(),
+
+                Section::make('Organizzazione Galleria per Colore')
+                    ->description('Associa le immagini caricate sopra ai colori disponibili per questo prodotto.')
+                    ->collapsible()
+                    ->schema([
+                        Repeater::make('media')
+                            ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
+                            ->schema([
+                                TextEntry::make('preview')
+                                    ->label('Immagine')
+                                    ->state(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),
+                                Select::make('custom_properties.color_ids')
+                                    ->label('Associa a uno o più colori')
+                                    ->multiple()
+                                    ->options(fn ($record) => Color::pluck('color_name', 'id'))
+                                    ->preload()
+                                    ->searchable()
+                                    ->columnSpan(2),
+                                TextInput::make('custom_properties.alt')
+                                    ->label('Testo Alt / Descrizione Immagine')
+                                    ->placeholder('es. Vista laterale T-shirt Rosa')
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(3)
+                            ->grid(2)
+                            ->addable(false) // Only manage existing ones uploaded above
+                            ->deletable(false) // Use the uploader above for deletion
+                            ->reorderable(false),
+                    ])
+                    ->columnSpanFull(),
+
+                Section::make('Personalizzazione Stampa')
+                    ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
+                    ->collapsible()
+                    ->schema([
+                        Repeater::make('printPlacements')
+                            ->relationship('printPlacements')
+                            ->label('Posizioni di Stampa')
+                            ->schema([
+                                Select::make('print_placement_id')
+                                    ->label('Posizione')
+                                    ->options(PrintPlacement::pluck('name', 'id'))
+                                    ->required()
+                                    ->distinct()
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                                TextInput::make('additional_price')
+                                    ->label('Sovrapprezzo (€)')
+                                    ->numeric()
+                                    ->prefix('+ €')
+                                    ->default(0)
+                                    ->required(),
+                            ])
+                            ->columns(2)
+                            ->grid(2)
+                            ->addActionLabel('Aggiungi Posizione'),
+
+                        Select::make('printSides')
+                            ->relationship('printSides', 'name')
+                            ->label('Lati di Stampa Disponibili')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                     ])
                     ->columnSpanFull(),
             ]);

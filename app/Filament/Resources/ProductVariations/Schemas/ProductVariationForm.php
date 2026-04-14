@@ -20,35 +20,35 @@ class ProductVariationForm
         return $schema
             ->components([
                 Select::make('product_id')
-                    ->label('Product')
+                    ->label('Prodotto')
                     ->relationship('product', 'name')
                     ->required(),
                 Select::make('color_id')
-                    ->label('Color')
+                    ->label('Colore')
                     ->options(Color::query()->pluck('color_name', 'id'))
                     ->nullable(),
                 Select::make('size_id')
-                    ->label('Size')
+                    ->label('Taglia')
                     ->options(Size::query()->pluck('size', 'id'))
                     ->nullable(),
                 Select::make('print_placement_id')
-                    ->label('Print Placement')
+                    ->label('Posizione Stampa')
                     ->options(PrintPlacement::query()->pluck('name', 'id'))
                     ->nullable(),
                 Select::make('print_side_id')
-                    ->label('Print Side')
+                    ->label('Lato Stampa')
                     ->options(PrintSide::query()->pluck('name', 'id'))
                     ->nullable(),
                 TextInput::make('sku')
                     ->label('SKU')
                     ->unique(ignoreRecord: true),
                 TextInput::make('quantity')
-                    ->label('Stock Quantity')
+                    ->label('Giacenza in Stock')
                     ->required()
                     ->numeric()
                     ->default(0),
                 Toggle::make('is_available')
-                    ->label('Available')
+                    ->label('Disponibile')
                     ->default(true),
             ]);
     }

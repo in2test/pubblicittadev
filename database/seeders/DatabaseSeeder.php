@@ -27,27 +27,6 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('adelante'),
         ]);
 
-        // Create 4 root categories with images
-        Category::factory(4)
-            ->create()
-            ->each(function ($category) {
-                // Add media to category
-                $category->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
-                    ->toMediaCollection('images');
-
-                // Create 5 products for each category
-                Product::factory(5)
-                    ->for($category)
-                    ->create()
-                    ->each(function ($product) {
-                        // Add multiple media to product
-                        for ($i = 0; $i < rand(1, 5); $i++) {
-                            $product->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
-                                ->toMediaCollection('images');
-                        }
-                    });
-            });
-
         // Seed Print Placements
         PrintPlacement::create(['name' => 'Fronte', 'description' => 'Stampa sul fronte 23x30 cm', 'sort_order' => 1]);
         PrintPlacement::create(['name' => 'Dietro', 'description' => 'Stampa sul dietro 23x30 cm', 'sort_order' => 2]);
@@ -62,6 +41,39 @@ class DatabaseSeeder extends Seeder
         PrintSide::create(['name' => 'Stampa sul fronte', 'description' => 'Stampa solo sul fronte', 'sort_order' => 1]);
         PrintSide::create(['name' => 'Fronte e retro uguali', 'description' => 'Stampa fronte e retro uguali', 'sort_order' => 2]);
         PrintSide::create(['name' => 'Fronte e retro differenti', 'description' => 'Stampa fronte e retro differenti', 'sort_order' => 3]);
+
+        $placements = PrintPlacement::all();
+        $sides = PrintSide::all();
+
+        // Create 4 root categories with images
+        Category::factory(4)
+            ->create()
+            ->each(function ($category) use ($placements, $sides) {
+                // Add media to category
+                $category->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
+                    ->toMediaCollection('images');
+
+                // Create 5 products for each category
+                Product::factory(5)
+                    ->for($category)
+                    ->create()
+                    ->each(function ($product) use ($placements, $sides) {
+                        // Assign random print placements and sides
+                        $product->printPlacements()->attach(
+                            $placements->random(rand(2, 4))->pluck('id')->toArray(),
+                            ['additional_price' => rand(2, 12)]
+                        );
+                        $product->printSides()->attach(
+                            $sides->random(rand(1, 2))->pluck('id')->toArray()
+                        );
+
+                        // Add multiple media to product
+                        for ($i = 0; $i < rand(1, 5); $i++) {
+                            $product->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
+                                ->toMediaCollection('images');
+                        }
+                    });
+            });
 
         // Seed Sizes
         Size::create(['size_name' => 'Extra Small', 'size' => 'XS', 'sort_order' => 1]);

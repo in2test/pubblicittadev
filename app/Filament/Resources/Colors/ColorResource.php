@@ -26,6 +26,24 @@ class ColorResource extends Resource
     protected static ?string $recordTitleAttribute = 'color_name';
 
     #[Override]
+    public static function getNavigationLabel(): string
+    {
+        return 'Colori';
+    }
+
+    #[Override]
+    public static function getModelLabel(): string
+    {
+        return 'Colore';
+    }
+
+    #[Override]
+    public static function getPluralModelLabel(): string
+    {
+        return 'Colori';
+    }
+
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return ColorForm::configure($schema);

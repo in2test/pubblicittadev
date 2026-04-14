@@ -20,4 +20,10 @@ class PrintSide extends Model
     {
         return $this->hasMany(ProductVariation::class);
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'product_print_side')
+            ->withTimestamps();
+    }
 }

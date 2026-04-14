@@ -1,5 +1,18 @@
 {
     "$schema": "https://opencode.ai/config.json",
+    "permission": {
+        "bash": {
+            "*": "ask",
+            "git *": "allow",
+            "npm *": "allow",
+            "rm *": "deny",
+            "grep *": "allow"
+        },
+        "edit": {
+            "*": "deny",
+            "packages/web/src/content/docs/*.mdx": "allow"
+        }
+ },
     "mcp": {
         "laravel-boost": {
             "type": "local",
@@ -17,11 +30,14 @@
             "npm": "@ai-sdk/openai-compatible",
             "name": "Ollama",
             "options": {
-                "baseURL": "http://192.168.0.16:11434/v1"
+                "baseURL": "http://127.0.0.1:11434"
             },
             "models": {
                 "gemma4:e2b": {
                     "name": "gemma4:e2b"
+                },
+                "qwen3.5:9b": {
+                    "name": "qwen3.5:9b"
                 }
             }
         }
