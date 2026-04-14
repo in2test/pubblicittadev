@@ -12,11 +12,13 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    publicDir: false,
     server: {
         cors: true,
         watch: {
             ignored: [
                 '**/storage/framework/views/**',
+                '**/public/storage',
                 '**/public/storage/**',
             ],
         },

@@ -6,12 +6,15 @@
     </div>
 @endif
 
-<form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+<form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">
-    <input type="hidden" name="quantity" :value="quantity">
+    <input type="hidden" name="quantity" :value="totalQuantity">
 
-    <div class="space-y-4">
+    <x-product.color-selector :$product />
+    <x-product.size-selector :$product />
+
+    <div class="space-y-4 pt-4 border-t border-outline-variant/10">
         @if ($product->printPlacements->count() > 0)
             <div>
                 <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">Posizioni

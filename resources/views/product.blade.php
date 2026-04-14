@@ -5,6 +5,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32" x-data="{
         productName: '{{ addslashes($product->name) }}',
         activeColorId: '{{ old('color_id') ?: '' }}',
+        activeSizeId: '{{ old('size_id') ?: '' }}',
+        colorToSizes: {{ json_encode($product->variations->groupBy('color_id')->map(fn($v) => $v->pluck('size_id')->unique()->values())) }},
         colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
         @php
             $mediaList = $product->getMedia('images');
@@ -53,24 +55,25 @@
         get selectedPlacementPrice() {
             return this.selectedPlacements.reduce((sum, p) => sum + parseFloat(p.price), 0);
         },
-        quantity: {{ old('quantity', 1) }}
+        quantities: {},
+        get totalQuantity() {
+            return Object.values(this.quantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
+        }
     }" x-init="$watch('activeColorId', (val) => {
         if (!val) return;
         const match = images.find(img => img.color_ids.some(cid => cid == val));
         if (match) updateMain(match);
+
+        // Reset size if not compatible with new color
+        if (activeSizeId && !colorToSizes[val].includes(parseInt(activeSizeId))) {
+            activeSizeId = '';
+        }
     })">
         <x-product.gallery />
 
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 flex flex-col">
             <x-product.info :$product />
-
-            <!-- Configuration Options -->
-            <div class="space-y-8 mb-10">
-                <x-product.color-selector :$product />
-                <x-product.size-selector :$product />
-                <x-product.quantity-selector />
-            </div>
 
             <x-product.quote-form :$product />
 
