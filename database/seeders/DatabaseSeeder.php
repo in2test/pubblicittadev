@@ -46,34 +46,34 @@ class DatabaseSeeder extends Seeder
         $sides = PrintSide::all();
 
         // Create 4 root categories with images
-        Category::factory(4)
-            ->create()
-            ->each(function ($category) use ($placements, $sides) {
-                // Add media to category
-                $category->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
-                    ->toMediaCollection('images');
+        // Category::factory(4)
+        //     ->create()
+        //     ->each(function ($category) use ($placements, $sides) {
+        //         // Add media to category
+        //         $category->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
+        //             ->toMediaCollection('images');
 
-                // Create 5 products for each category
-                Product::factory(5)
-                    ->for($category)
-                    ->create()
-                    ->each(function ($product) use ($placements, $sides) {
-                        // Assign random print placements and sides
-                        $product->printPlacements()->attach(
-                            $placements->random(rand(2, 4))->pluck('id')->toArray(),
-                            ['additional_price' => rand(2, 12)]
-                        );
-                        $product->printSides()->attach(
-                            $sides->random(rand(1, 2))->pluck('id')->toArray()
-                        );
+        //         // Create 5 products for each category
+        //         Product::factory(5)
+        //             ->for($category)
+        //             ->create()
+        //             ->each(function ($product) use ($placements, $sides) {
+        //                 // Assign random print placements and sides
+        //                 $product->printPlacements()->attach(
+        //                     $placements->random(rand(2, 4))->pluck('id')->toArray(),
+        //                     ['additional_price' => rand(2, 12)]
+        //                 );
+        //                 $product->printSides()->attach(
+        //                     $sides->random(rand(1, 2))->pluck('id')->toArray()
+        //                 );
 
-                        // Add multiple media to product
-                        for ($i = 0; $i < rand(1, 5); $i++) {
-                            $product->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
-                                ->toMediaCollection('images');
-                        }
-                    });
-            });
+        //                 // Add multiple media to product
+        //                 for ($i = 0; $i < rand(1, 5); $i++) {
+        //                     $product->addMediaFromUrl('https://picsum.photos/800/600?random='.rand(1, 1000))
+        //                         ->toMediaCollection('images');
+        //                 }
+        //             });
+        //     });
 
         // Seed Sizes
         Size::create(['size_name' => 'Extra Small', 'size' => 'XS', 'sort_order' => 1]);
@@ -150,29 +150,30 @@ class DatabaseSeeder extends Seeder
 
         // Seed Product Variations
         // Create variations for each product (limited to avoid excessive data)
-        $variationCounter = 0;
-        Product::all()->each(function ($product) use (&$variationCounter) {
-            $colors = Color::inRandomOrder()->take(2)->pluck('id');
-            $sizes = Size::inRandomOrder()->take(2)->pluck('id');
-            $placements = PrintPlacement::all()->pluck('id');
-            $sides = PrintSide::all()->pluck('id');
+        // $variationCounter = 0;
+        // Product::all()->each(function ($product) use (&$variationCounter) {
+        //     $colors = Color::inRandomOrder()->take(2)->pluck('id');
+        //     $sizes = Size::inRandomOrder()->take(2)->pluck('id');
+        //     $placements = PrintPlacement::all()->pluck('id');
+        //     $sides = PrintSide::all()->pluck('id');
 
-            foreach ($colors as $colorId) {
-                foreach ($sizes as $sizeId) {
-                    $variationCounter++;
-                    ProductVariation::create([
-                        'product_id' => $product->id,
-                        'color_id' => $colorId,
-                        'size_id' => $sizeId,
-                        'print_placement_id' => $placements->random(),
-                        'print_side_id' => $sides->random(),
-                        'sku' => $product->sku.'-VAR-'.str_pad($variationCounter, 4, '0', STR_PAD_LEFT),
-                        'quantity' => rand(10, 500),
-                        'is_available' => true,
-                    ]);
-                }
-            }
-        });
+        //     foreach ($colors as $colorId) {
+        //         foreach ($sizes as $sizeId) {
+        //             $variationCounter++;
+        //             ProductVariation::create([
+        //                 'product_id' => $product->id,
+        //                 'color_id' => $colorId,
+        //                 'size_id' => $sizeId,
+        //                 'print_placement_id' => $placements->random(),
+        //                 'print_side_id' => $sides->random(),
+        //                 'sku' => $product->sku.'-VAR-'.str_pad($variationCounter, 4, '0', STR_PAD_LEFT),
+        //                 'quantity' => rand(10, 500),
+        //                 'is_available' => true,
+        //             ]);
+        //         }
+        //     }
+        // });
 
+        $this->call(ProductSeeder::class);
     }
 }

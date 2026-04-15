@@ -16,10 +16,14 @@
 @endphp
 
 <article class="group relative bg-surface-container-lowest flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
-    <a href="{{ route('product', [$product->category->slug, $product->slug]) }}" class="flex flex-col h-full">
+    <a href="{{ route('product', ['category'=>$product->category->slug?:'category', 'slug' => $product->slug]) }}" class="flex flex-col h-full">
         @if ($product->is_featured)
             <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase z-10">
                 Prodotto in Evidenza
+            </div>
+            @else
+            <div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase z-10">
+                {{ $product->category->slug }}
             </div>
         @endif
         
