@@ -20,6 +20,9 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        // Increase memory limit to handle large JSON response
+        ini_set('memory_limit', '512M');
+
         // Truncate tables for a clean state
         Schema::disableForeignKeyConstraints();
         Product::truncate();
@@ -28,7 +31,7 @@ class ProductSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         $url = 'https://connect.gateway.nwg.se/api/jPEELCU7kORztJHwtz6Iw';
-        $response = Http::get($url);
+        $response = Http::withoutVerifying()->get($url);
 
         if (!$response->successful()) {
             return;
@@ -43,30 +46,33 @@ class ProductSeeder extends Seeder
             $categoryNameIt = $data['productCategory']['it'] ?? 'Uncategorized';
             $category = $this->getOrCreateCategoryHierarchy($categoryNameIt);
 
+            // Find minimum price among variations
+            $minPrice = collect($data['variations'] ?? [])
+                ->flatMap(fn($v) => $v['skus'] ?? [])
+                ->pluck('retailPrice.value')
+                ->filter()
+                ->min() ?? ($data['retailPrice']['value'] ?? 0);
+
             $product = Product::create([
                 'name' => $data['productName']['it'],
                 'slug' => Str::slug($data['productName']['it'].'-'.$data['productNumber']),
                 'description' => $data['description']['it'] ?? '',
                 'sku' => $data['productNumber'],
-                'price' => $data['retailPrice']['value'] ?? 0,
+                'price' => $minPrice,
                 'category_id' => $category->id,
                 'is_featured' => false,
             ]);
 
-            // Attach first 30 images to product
-            $images = array_slice($data['images'] ?? [], 0, 30);
-            foreach ($images as $imageData) {
-                if (isset($imageData['preview'])) {
-                    try {
-                        $product->addMediaFromUrl($imageData['preview'])
-                            ->toMediaCollection('images');
-                    } catch (\Exception $e) {
-                        // Log or handle failed download
-                    }
+            $imageToColors = [];
+
+            // Add main images with no specific color defaults
+            foreach (array_slice($data['images'] ?? [], 0, 30) as $img) {
+                if (isset($img['preview'])) {
+                    $imageToColors[$img['preview']] = [];
                 }
             }
 
-            // Seed Variations
+            // Seed Variations & Collect Colors mapping to images
             if (isset($data['variations']) && is_array($data['variations'])) {
                 foreach ($data['variations'] as $variationData) {
                     $colorCode = $variationData['colorCode'] ?? null;
@@ -76,8 +82,25 @@ class ProductSeeder extends Seeder
 
                     // Find matching Color based on color_code
                     $color = Color::where('color_code', $colorCode)->first();
+                    if (!$color) {
+                        continue;
+                    }
 
-                    if ($color && isset($variationData['skus']) && is_array($variationData['skus'])) {
+                    // Map images to this color
+                    if (isset($variationData['images']) && is_array($variationData['images'])) {
+                        foreach ($variationData['images'] as $img) {
+                            if (isset($img['preview'])) {
+                                if (!isset($imageToColors[$img['preview']])) {
+                                    $imageToColors[$img['preview']] = [];
+                                }
+                                if (!in_array($color->id, $imageToColors[$img['preview']])) {
+                                    $imageToColors[$img['preview']][] = $color->id;
+                                }
+                            }
+                        }
+                    }
+
+                    if (isset($variationData['skus']) && is_array($variationData['skus'])) {
                         foreach ($variationData['skus'] as $skuData) {
                             $sizeName = $skuData['name'] ?? null;
                             if (!$sizeName) {
@@ -100,6 +123,24 @@ class ProductSeeder extends Seeder
                             ]);
                         }
                     }
+                }
+            }
+
+            // Download up to 30 images with color tracking
+            $imageCount = 0;
+            foreach ($imageToColors as $url => $colorIds) {
+                if ($imageCount >= 30) {
+                    break;
+                }
+                try {
+                    $mediaAdder = $product->addMediaFromUrl($url);
+                    if (!empty($colorIds)) {
+                        $mediaAdder->withCustomProperties(['color_ids' => $colorIds]);
+                    }
+                    $mediaAdder->toMediaCollection('images');
+                    $imageCount++;
+                } catch (\Exception $e) {
+                    // Log or handle failed download
                 }
             }
         }

@@ -1,0 +1,207 @@
+[
+    {
+        "productNumber": "010177",
+        "productBrandName": "Clique",
+        "productCategory": {
+            "it": "Softshell Jacket"
+        },
+        "productSize": "S\u2013XXL (99: S\u20134XL)",
+        "productFit": {
+            "it": ""
+        },
+        "description": {
+            "it": "Giacca tecnica imbottita. Tessuto softshell morbidissimo resinato in poliuretano. Fodera e imbottitura in poliestere. Cappuccio removibile. Cuciture termonastrate. Maniche con profili riflettenti. Polsini regolabili con interno in maglia. Fodera con apertura per agevolare stampe e ricami."
+        },
+        "images": [
+            {
+                "type": "Productpicture",
+                "angle": "front",
+                "preview": "https:\/\/images.nwgmedia.com\/preview\/76475\/010177_55_Sanders_F.jpg"
+            },
+            {
+                "type": "Imagepicture",
+                "angle": "none",
+                "preview": "https:\/\/images.nwgmedia.com\/preview\/243610\/010177_010179_IM_CLIQUE_2021.jpg"
+            }
+        ],
+        "productName": {
+            "it": "Sanders"
+        },
+        "variations": [
+            {
+                "colorCode": "55",
+                "images": [
+                    {
+                        "type": "Productpicture",
+                        "angle": "front",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76475\/010177_55_Sanders_F.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "back",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76474\/010177_55_Sanders_B.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "left",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76476\/010177_55_Sanders_L.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "right",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76477\/010177_55_Sanders_R.jpg"
+                    }
+                ],
+                "skus": [
+                    {
+                        "size": "4",
+                        "name": "S",
+                        "sku": "010177-55-4",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "5",
+                        "name": "M",
+                        "sku": "010177-55-5",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "6",
+                        "name": "L",
+                        "sku": "010177-55-6",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "7",
+                        "name": "XL",
+                        "sku": "010177-55-7",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "8",
+                        "name": "XXL",
+                        "sku": "010177-55-8",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    }
+                ]
+            },
+            {
+                "colorCode": "99",
+                "images": [
+                    {
+                        "type": "Productpicture",
+                        "angle": "front",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76479\/010177_99_Sanders_F.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "back",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76478\/010177_99_Sanders_B.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "left",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76480\/010177_99_Sanders_L.jpg"
+                    },
+                    {
+                        "type": "Productpicture",
+                        "angle": "right",
+                        "preview": "https:\/\/images.nwgmedia.com\/preview\/76481\/010177_99_Sanders_R.jpg"
+                    }
+                ],
+                "skus": [
+                    {
+                        "size": "4",
+                        "name": "S",
+                        "sku": "010177-99-4",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "5",
+                        "name": "M",
+                        "sku": "010177-99-5",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "6",
+                        "name": "L",
+                        "sku": "010177-99-6",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "7",
+                        "name": "XL",
+                        "sku": "010177-99-7",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "8",
+                        "name": "XXL",
+                        "sku": "010177-99-8",
+                        "retailPrice": {
+                            "value": 199,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "9",
+                        "name": "3XL",
+                        "sku": "010177-99-9",
+                        "retailPrice": {
+                            "value": 238.8,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    },
+                    {
+                        "size": "10",
+                        "name": "4XL",
+                        "sku": "010177-99-10",
+                        "retailPrice": {
+                            "value": 238.8,
+                            "currency": "EUR"
+                        },
+                        "active": true
+                    }
+                ]
+            }
+        ]
+    }
+]
