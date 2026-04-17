@@ -20,75 +20,169 @@
     --font-label: "Inter", "sans-serif";
     --font-mono: "Roboto Mono", "monospace";
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    /*Highstyle*/
+    --color-highstyle-50: #eeeff7;
+    --color-highstyle-100: #dce0ef;
+    --color-highstyle-200: #b9c0df;
+    --color-highstyle-300: #96a1cf;
+    --color-highstyle-400: #7382bf;
+    --color-highstyle-500: #5062af;
+    --color-highstyle-600: #404f8c;
+    --color-highstyle-700: #303b69;
+    --color-highstyle-800: #202746;
+    --color-highstyle-900: #101423;
+    --color-highstyle-950: #080a11;
+    /*Peach souffle*/
+    --color-peachsouffle-50: #faedeb;
+    --color-peachsouffle-100: #f5dbd6;
+    --color-peachsouffle-200: #ebb8ad;
+    --color-peachsouffle-300: #e19484;
+    --color-peachsouffle-400: #d7715b;
+    --color-peachsouffle-500: #cd4d32;
+    --color-peachsouffle-600: #a43e28;
+    --color-peachsouffle-700: #7b2e1e;
+    --color-peachsouffle-800: #521f14;
+    --color-peachsouffle-900: #290f0a;
+    --color-peachsouffle-950: #140805;
+    /*Summer day*/
 
-    --color-accent: var(--color-primary);
-    --color-accent-content: var(--color-primary-content);
-    --color-accent-foreground: var(--color-primary-foreground);
-    --color-surface-bright: #f9f9fc;
-    --color-on-secondary-fixed-variant: #454749;
-    --color-inverse-on-surface: #f0f0f3;
-    --color-surface: #f9f9fc;
-    --color-surface-container-low: #f3f3f6;
-    --color-secondary: #5d5e61;
-    --color-secondary-container: #e2e2e5;
-    --color-error: #ba1a1a;
-    --color-surface-container-highest: #e2e2e5;
-    --color-primary: #750005;
-    --color-outline-variant: #e3beb9;
-    --color-secondary-fixed: #e2e2e5;
-    --color-surface-container: #eeeef0;
-    --color-on-secondary-container: #636467;
-    --color-surface-variant: #e2e2e5;
-    --color-inverse-surface: #2f3133;
-    --color-surface-container-high: #e8e8ea;
-    --color-outline: #8f706c;
-    --color-on-tertiary-fixed-variant: #004494;
-    --color-secondary-fixed-dim: #c6c6c9;
-    --color-surface-dim: #dadadc;
-    --color-surface-tint: #b7221e;
-    --color-tertiary-fixed: #d8e2ff;
-    --color-on-primary-fixed: #410002;
-    --color-inverse-primary: #ffb4aa;
-    --color-on-secondary-fixed: #1a1c1e;
-    --color-on-tertiary-container: #a1beff;
-    --color-error-container: #ffdad6;
-    --color-background: #f9f9fc;
-    --color-tertiary: #003475;
-    --color-on-tertiary: #ffffff;
-    --color-primary-fixed: #ffdad5;
-    --color-on-surface-variant: #5b403d;
-    --color-on-error: #ffffff;
-    --color-surface-container-lowest: #ffffff;
-    --color-on-secondary: #ffffff;
-    --color-on-error-container: #93000a;
-    --color-tertiary-fixed-dim: #adc6ff;
-    --color-on-surface: #1a1c1e;
-    --color-tertiary-container: #004aa1;
-    --color-on-tertiary-fixed: #001a41;
-    --color-primary-container: #9e0b0f;
-    --color-on-primary-container: #ffa99f;
-    --color-on-primary: #ffffff;
-    --color-primary-fixed-dim: #ffb4aa;
-    --color-on-primary-fixed-variant: #930009;
-    --color-on-background: #1a1c1e;
+    --color-summerday-50: #fcf3e9;
+    --color-summerday-100: #f9e7d2;
+    --color-summerday-200: #f3cea5;
+    --color-summerday-300: #edb678;
+    --color-summerday-400: #e79e4b;
+    --color-summerday-500: #e1851e;
+    --color-summerday-600: #b46b18;
+    --color-summerday-700: #875012;
+    --color-summerday-800: #5a350c;
+    --color-summerday-900: #2d1b06;
+    --color-summerday-950: #160d03;
+    /*Deep cove*/
+    --color-deepcove-50: #e7ebfd;
+    --color-deepcove-100: #d0d8fb;
+    --color-deepcove-200: #a0b1f8;
+    --color-deepcove-300: #899df6;
+    --color-deepcove-400: #4262f0;
+    --color-deepcove-500: #123bed;
+    --color-deepcove-600: #0f2fbd;
+    --color-deepcove-700: #0b238e;
+    --color-deepcove-800: #07185f;
+    --color-deepcove-900: #040c2f;
+    --color-deepcove-950: #020618;
+    /*Vivid auburn*/
+    --color-vividauburn-50: #faebeb;
+    --color-vividauburn-100: #f5d7d6;
+    --color-vividauburn-200: #ebafad;
+    --color-vividauburn-300: #e18784;
+    --color-vividauburn-400: #d75f5b;
+    --color-vividauburn-500: #cd3732;
+    --color-vividauburn-600: #a42c28;
+    --color-vividauburn-700: #7b211e;
+    --color-vividauburn-800: #521614;
+    --color-vividauburn-900: #290b0a;
+    --color-vividauburn-950: #140505;
+    /*Gray*/
+    --color-gray-50: #f4f1f2;
+    --color-gray-100: #e8e3e6;
+    --color-gray-200: #d1c7cc;
+    --color-gray-300: #baabb3;
+    --color-gray-400: #a38f99;
+    --color-gray-500: #8c7380;
+    --color-gray-600: #705c66;
+    --color-gray-700: #54454d;
+    --color-gray-800: #382e33;
+    --color-gray-900: #1c171a;
+    --color-gray-950: #0e0b0d;
+
 
     --breakpoint-3xl: 128rem;
 }
 
+@layer theme {
+    .dark {
+        /*Highstyle*/
+        --color-highstyle-950: #eeeff7;
+        --color-highstyle-900: #dce0ef;
+        --color-highstyle-800: #b9c0df;
+        --color-highstyle-700: #96a1cf;
+        --color-highstyle-600: #7382bf;
+        --color-highstyle-500: #5062af;
+        --color-highstyle-400: #404f8c;
+        --color-highstyle-300: #303b69;
+        --color-highstyle-200: #202746;
+        --color-highstyle-100: #101423;
+        --color-highstyle-50: #080a11;
+        /*Peach souffle*/
+        --color-peachsouffle-950: #faedeb;
+        --color-peachsouffle-900: #f5dbd6;
+        --color-peachsouffle-800: #ebb8ad;
+        --color-peachsouffle-700: #e19484;
+        --color-peachsouffle-600: #d7715b;
+        --color-peachsouffle-500: #cd4d32;
+        --color-peachsouffle-400: #a43e28;
+        --color-peachsouffle-300: #7b2e1e;
+        --color-peachsouffle-200: #521f14;
+        --color-peachsouffle-100: #290f0a;
+        --color-peachsouffle-50: #140805;
+        /*Summer day*/
+
+        --color-summerday-950: #fcf3e9;
+        --color-summerday-900: #f9e7d2;
+        --color-summerday-800: #f3cea5;
+        --color-summerday-700: #edb678;
+        --color-summerday-600: #e79e4b;
+        --color-summerday-500: #e1851e;
+        --color-summerday-400: #b46b18;
+        --color-summerday-300: #875012;
+        --color-summerday-200: #5a350c;
+        --color-summerday-100: #2d1b06;
+        --color-summerday-50: #160d03;
+        /*Deep cove*/
+        --color-deepcove-950: #e7ebfd;
+        --color-deepcove-900: #d0d8fb;
+        --color-deepcove-800: #a0b1f8;
+        --color-deepcove-700: #899df6;
+        --color-deepcove-600: #4262f0;
+        --color-deepcove-500: #123bed;
+        --color-deepcove-400: #0f2fbd;
+        --color-deepcove-300: #0b238e;
+        --color-deepcove-200: #07185f;
+        --color-deepcove-100: #040c2f;
+        --color-deepcove-50: #020618;
+        /*Vivid auburn*/
+        --color-vividauburn-950: #faebeb;
+        --color-vividauburn-900: #f5d7d6;
+        --color-vividauburn-800: #ebafad;
+        --color-vividauburn-700: #e18784;
+        --color-vividauburn-600: #d75f5b;
+        --color-vividauburn-500: #cd3732;
+        --color-vividauburn-400: #a42c28;
+        --color-vividauburn-300: #7b211e;
+        --color-vividauburn-200: #521614;
+        --color-vividauburn-100: #290b0a;
+        --color-vividauburn-50: #140505;
+        /*Gray*/
+        --color-gray-950: #f4f1f2;
+        --color-gray-900: #e8e3e6;
+        --color-gray-800: #d1c7cc;
+        --color-gray-700: #baabb3;
+        --color-gray-600: #a38f99;
+        --color-gray-500: #8c7380;
+        --color-gray-400: #705c66;
+        --color-gray-300: #54454d;
+        --color-gray-200: #382e33;
+        --color-gray-100: #1c171a;
+        --color-gray-50: #0e0b0d;
+    }
+}
 
 .bg-grid-subtle {
     background-image: radial-gradient(circle, #e2e2e5 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+.dark .bg-grid-subtle {
+    background-image: radial-gradient(circle, #020205 1px, transparent 1px);
     background-size: 32px 32px;
 }
 
@@ -104,4 +198,3 @@
 .text-vertical {
     writing-mode: vertical-rl;
 }
- 

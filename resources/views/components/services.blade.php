@@ -1,15 +1,15 @@
 @props(['categories'])
 
 <!-- Sezione 1: Missione (Layout Audace) -->
-<section class="py-24 bg-grid-subtle">
+<section class="py-24 bg-grid-subtle bg-gray-200">
     <div class="mx-auto px-8 3xl:px-32">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div class="lg:sticky top-32">
-                <h2 class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
-                    <span class="w-8 h-px bg-primary mr-4"></span>
+                <h2 class="text-sm font-mono font-bold uppercase tracking-widest text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-px bg-vividauburn-500 mr-4"></span>
                     I Servizi più richiesti
                 </h2>
-                <p class="text-4xl font-bold tracking-tight text-on-surface leading-tight">
+                <p class="text-4xl font-bold tracking-tight text-gray-900 leading-tight">
                     Partiamo da ciò che i clienti cercano più spesso: materiali semplici da ordinare, facili da capire e
                     subito utili per lavorare o promuoversi.
                 </p>

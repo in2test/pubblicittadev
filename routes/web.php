@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/cart', 'cart')->name('cart');
+Route::view('/palette', 'palette')->name('palette');
 
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 
