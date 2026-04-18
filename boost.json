@@ -1,13 +1,16 @@
 {
     "agents": [
         "opencode",
-        "copilot"
+        "copilot",
+        "gemini",
+        "cursor"
     ],
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "packages": [
         "filament/filament",
+        "spatie/laravel-medialibrary",
         "fruitcake/laravel-debugbar"
     ],
     "sail": false,
@@ -18,6 +21,7 @@
         "livewire-development",
         "pest-testing",
         "tailwindcss-development",
+        "medialibrary-development",
         "debug-using-debugbar"
     ]
 }
