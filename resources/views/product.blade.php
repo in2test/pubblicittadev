@@ -2,7 +2,7 @@
 
     <x-product.breadcrumbs :$product :$category />
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 3xl:px-32" x-data="{
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 py-12 3xl:px-32 bg-gray-200 text-gray-900" x-data="{
         productName: '{{ addslashes($product->name) }}',
         activeColorId: '{{ old('color_id') ?: '' }}',
         activeSizeId: '{{ old('size_id') ?: '' }}',
@@ -84,4 +84,3 @@
     <x-product.technical-specs />
 
 </x-layout>
-

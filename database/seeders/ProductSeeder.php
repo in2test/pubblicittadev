@@ -2,13 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\ProductVariation;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\Product;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\Size;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -33,12 +32,12 @@ class ProductSeeder extends Seeder
         $url = 'https://connect.gateway.nwg.se/api/jPEELCU7kORztJHwtz6Iw';
         $response = Http::withoutVerifying()->get($url);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return;
         }
 
         $productsData = $response->json();
-        
+
         // Take only the first 20 products as requested
         $productsToSeed = array_slice($productsData, 0, 50);
 
@@ -48,7 +47,7 @@ class ProductSeeder extends Seeder
 
             // Find minimum price among variations
             $minPrice = collect($data['variations'] ?? [])
-                ->flatMap(fn($v) => $v['skus'] ?? [])
+                ->flatMap(fn ($v) => $v['skus'] ?? [])
                 ->pluck('retailPrice.value')
                 ->filter()
                 ->min() ?? ($data['retailPrice']['value'] ?? 0);
@@ -76,13 +75,13 @@ class ProductSeeder extends Seeder
             if (isset($data['variations']) && is_array($data['variations'])) {
                 foreach ($data['variations'] as $variationData) {
                     $colorCode = $variationData['colorCode'] ?? null;
-                    if (!$colorCode) {
+                    if (! $colorCode) {
                         continue;
                     }
 
                     // Find matching Color based on color_code
                     $color = Color::where('color_code', $colorCode)->first();
-                    if (!$color) {
+                    if (! $color) {
                         continue;
                     }
 
@@ -90,10 +89,10 @@ class ProductSeeder extends Seeder
                     if (isset($variationData['images']) && is_array($variationData['images'])) {
                         foreach ($variationData['images'] as $img) {
                             if (isset($img['preview'])) {
-                                if (!isset($imageToColors[$img['preview']])) {
+                                if (! isset($imageToColors[$img['preview']])) {
                                     $imageToColors[$img['preview']] = [];
                                 }
-                                if (!in_array($color->id, $imageToColors[$img['preview']])) {
+                                if (! in_array($color->id, $imageToColors[$img['preview']])) {
                                     $imageToColors[$img['preview']][] = $color->id;
                                 }
                             }
@@ -103,7 +102,7 @@ class ProductSeeder extends Seeder
                     if (isset($variationData['skus']) && is_array($variationData['skus'])) {
                         foreach ($variationData['skus'] as $skuData) {
                             $sizeName = $skuData['name'] ?? null;
-                            if (!$sizeName) {
+                            if (! $sizeName) {
                                 continue;
                             }
 
@@ -119,7 +118,7 @@ class ProductSeeder extends Seeder
                                 'size_id' => $size->id,
                                 'sku' => $skuData['sku'],
                                 'quantity' => rand(10, 100), // Default random quantity
-                                'is_available' => !empty($skuData['active']),
+                                'is_available' => ! empty($skuData['active']),
                             ]);
                         }
                     }
@@ -134,7 +133,7 @@ class ProductSeeder extends Seeder
                 }
                 try {
                     $mediaAdder = $product->addMediaFromUrl($url);
-                    if (!empty($colorIds)) {
+                    if (! empty($colorIds)) {
                         $mediaAdder->withCustomProperties(['color_ids' => $colorIds]);
                     }
                     $mediaAdder->toMediaCollection('images');

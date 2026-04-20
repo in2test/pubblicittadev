@@ -1,6 +1,6 @@
 <!-- TopNavBar -->
 <nav
-    class="fixed top-0 w-full z-50 border-b-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-sm dark:shadow-none transition-all duration-300">
+    class="fixed top-0 w-full z-50 border-b border-gray-500bg-gray-200/80 backdrop-blur-md shadow-sm transition-all duration-300">
     <div class="flex justify-between items-center px-8 3xl:px-32 h-20 w-full mx-auto">
         <div class="text-xl xl:text-2xl font-black tracking-tighter text-zinc-900 dark:text-white font-headline"><a
                 href={{ route('home') }}>PubbliCittà 24</a>
