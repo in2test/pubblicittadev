@@ -37,4 +37,9 @@ return [
         ],
     ],
 
+    'nwg' => [
+        'endpoint' => env('NWG_GATEWAY_GRAPHQL_ENDPOINT'),
+        'token' => env('NWG_GATEWAY_TOKEN'),
+    ],
+
 ];

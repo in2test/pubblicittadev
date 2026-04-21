@@ -51,10 +51,11 @@ class ProductsTable
                 Action::make('view')
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (Product $record): string => route('product', [
+                    ->url(fn (Product $record): ?string => $record->category?->slug ? route('product', [
                         'category' => $record->category->slug,
                         'slug' => $record->slug,
-                    ]))
+                    ]) : null)
+                    ->visible(fn (Product $record): bool => (bool) $record->category_id)
                     ->openUrlInNewTab(),
                 EditAction::make(),
             ])

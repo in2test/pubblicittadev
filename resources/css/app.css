@@ -177,12 +177,7 @@
 }
 
 .bg-grid-subtle {
-    background-image: radial-gradient(circle, #e2e2e5 1px, transparent 1px);
-    background-size: 32px 32px;
-}
-
-.dark .bg-grid-subtle {
-    background-image: radial-gradient(circle, #020205 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--color-gray-100) 1px, transparent 1px);
     background-size: 32px 32px;
 }
 

@@ -29,6 +29,10 @@ class ProductForm
     {
         return $schema
             ->components([
+                TextInput::make('type')
+                    ->default(Product::TYPE_STANDARD)
+                    ->dehydrated()
+                    ->hidden(),
                 TextInput::make('name')
                     ->label('Nome Prodotto')
                     ->live(onBlur: true)

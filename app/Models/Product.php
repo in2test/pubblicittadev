@@ -12,10 +12,14 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'category_id', 'is_featured'])]
+#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'category_id', 'is_featured', 'type'])]
 class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
+
+    public const TYPE_STANDARD = 'standard';
+
+    public const TYPE_NEWWAVE = 'newwave';
 
     #[Override]
     protected static function booted(): void
