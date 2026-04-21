@@ -33,6 +33,7 @@ query Query($productNumber: String!, $language: String!) {
   productById(productNumber: $productNumber, language: $language) {
     productNumber
     productName
+    description
     pictures {
       imageUrl
       thumbnailUrl
@@ -129,6 +130,7 @@ GRAPHQL;
         return [
             'name' => $metadata['productName'] ?? ($variations[0]['description'] ?? null),
             'price' => ! empty($variations) ? $variations[0]['retailPrice']['price'] : null,
+            'description' => $metadata['description'] ?? null,
         ];
     }
 
@@ -153,6 +155,7 @@ GRAPHQL;
             $product->update([
                 'name' => $productName ?: ($firstItem['description'] ?? $product->name),
                 'price' => $firstItem['retailPrice']['price'] ?? $product->price,
+                'description' => $metadata['description'] ?? $product->description,
             ]);
 
             // Sync Images if empty

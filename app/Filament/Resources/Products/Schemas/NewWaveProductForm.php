@@ -42,6 +42,7 @@ class NewWaveProductForm
                         if ($info && ! empty($info['name'])) {
                             $set('name', $info['name']);
                             $set('price', $info['price']);
+                            $set('description', $info['description'] ?? '');
 
                             // Generate slug from the REAL name instead of the SKU
                             if (! $record?->slug) {
@@ -143,8 +144,8 @@ class NewWaveProductForm
                     ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
                     ->collapsible()
                     ->schema([
-                        Repeater::make('printPlacements')
-                            ->relationship('printPlacements')
+                        Repeater::make('productPrintPlacements')
+                            ->relationship('productPrintPlacements')
                             ->label('Posizioni di Stampa')
                             ->schema([
                                 Select::make('print_placement_id')

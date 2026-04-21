@@ -62,6 +62,11 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    public function productPrintPlacements()
+    {
+        return $this->hasMany(ProductPrintPlacement::class);
+    }
+
     public function printSides()
     {
         return $this->belongsToMany(PrintSide::class, 'product_print_side')
