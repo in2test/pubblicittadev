@@ -10,6 +10,7 @@ use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -121,9 +122,12 @@ class ProductForm
                                     ->searchable()
                                     ->columnSpan(2),
                                 TextInput::make('custom_properties.alt')
-                                    ->label('Testo Alt / Descrizione Immagine')
-                                    ->placeholder('es. Vista laterale T-shirt Rosa')
-                                    ->columnSpanFull(),
+                                    ->label('Testo Alt')
+                                    ->placeholder('es. Vista laterale')
+                                    ->columnSpan(2),
+                                Checkbox::make('custom_properties.is_manual')
+                                    ->label('Manuale')
+                                    ->inline(false),
                             ])
                             ->columns(3)
                             ->grid(2)

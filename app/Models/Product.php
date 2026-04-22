@@ -12,10 +12,20 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'category_id', 'is_featured', 'type'])]
+#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors'])]
 class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
+
+    #[Override]
+    protected function casts(): array
+    {
+        return [
+            'override_price' => 'boolean',
+            'override_description' => 'boolean',
+            'disabled_colors' => 'array',
+        ];
+    }
 
     public const TYPE_STANDARD = 'standard';
 

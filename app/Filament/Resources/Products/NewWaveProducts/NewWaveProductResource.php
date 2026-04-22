@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Products\NewWaveProducts;
 
 use App\Filament\Resources\Products\NewWaveProducts\Pages\CreateNewWaveProduct;
@@ -14,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Override;
 use UnitEnum;
 
 class NewWaveProductResource extends Resource
@@ -32,21 +35,25 @@ class NewWaveProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCloudArrowDown;
 
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return NewWaveProductForm::configure($schema);
     }
 
+    #[Override]
     public static function table(Table $table): Table
     {
         return ProductsTable::configure($table);
     }
 
+    #[Override]
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('type', Product::TYPE_NEWWAVE);
     }
 
+    #[Override]
     public static function getRelations(): array
     {
         return [
@@ -54,6 +61,7 @@ class NewWaveProductResource extends Resource
         ];
     }
 
+    #[Override]
     public static function getPages(): array
     {
         return [

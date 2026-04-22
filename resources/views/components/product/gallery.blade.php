@@ -27,7 +27,7 @@
             <template x-for="image in images" :key="image.id">
                 <div class="flex-shrink-0 w-20 h-20 lg:w-full lg:aspect-square bg-surface-container border-2 overflow-hidden cursor-pointer transition-all snap-center"
                     :class="mainImage === image.large ? 'border-primary ring-1 ring-primary/20' : 'border-outline-variant/10 hover:border-outline-variant'"
-                    x-show="!activeColorId || image.color_ids.some(cid => cid == activeColorId) || image.color_ids.length === 0"
+                    x-show="(!activeColorId && image.color_ids.length === 0) || (activeColorId && image.color_ids.some(cid => cid == activeColorId))"
                     @click="updateMain(image)">
                     <img :alt="getComputedAlt(image)"
                         class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
@@ -46,7 +46,7 @@
 
         <!-- Indicators (Mobile only) -->
         <div class="lg:hidden absolute bottom-[-1.5rem] left-1/2 -translate-x-1/2 flex gap-1">
-             <template x-for="(image, index) in images.filter(i => !activeColorId || i.color_ids.some(cid => cid == activeColorId) || i.color_ids.length === 0)">
+             <template x-for="(image, index) in images.filter(i => (!activeColorId && i.color_ids.length === 0) || (activeColorId && i.color_ids.some(cid => cid == activeColorId)))">
                 <div class="w-1.5 h-1.5 rounded-full transition-all"
                      :class="mainImage === image.large ? 'bg-primary w-4' : 'bg-outline-variant/30'"></div>
              </template>

@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Schemas;
 
-use App\Models\Category;
+use App\Models\Color;
 use App\Models\PrintPlacement;
-use App\Models\Product;
 use App\Services\ProductAvailabilityService;
-use App\Support\SlugGenerator;
-use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
+use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 class NewWaveProductForm
 {
@@ -27,150 +31,160 @@ class NewWaveProductForm
     {
         return $schema
             ->components([
-                TextInput::make('sku')
-                    ->label('Codice Prodotto (NWG Product Number)')
-                    ->required()
-                    ->live(onBlur: true)
-                    ->placeholder('es. sanders')
-                    ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record, ProductAvailabilityService $service) {
-                        if (! $state) {
-                            return;
-                        }
-
-                        $info = $service->fetchBasicInfo($state);
-
-                        if ($info && ! empty($info['name'])) {
-                            $set('name', $info['name']);
-                            $set('price', $info['price']);
-                            $set('description', $info['description'] ?? '');
-
-                            // Generate slug from the REAL name instead of the SKU
-                            if (! $record?->slug) {
-                                $set('slug', SlugGenerator::unique(Product::class, $info['name'], $record));
-                            }
-
-                            Notification::make()
-                                ->title('Prodotto trovato: '.$info['name'])
-                                ->success()
-                                ->send();
-                        } else {
-                            if (! $record?->slug) {
-                                $set('slug', SlugGenerator::unique(Product::class, $state, $record));
-                            }
-
-                            Notification::make()
-                                ->title('Codice non trovato o API non raggiungibile')
-                                ->warning()
-                                ->send();
-                        }
-                    }),
-                TextInput::make('slug')
-                    ->required(),
-
-                Select::make('category_id')
-                    ->label('Categoria')
-                    ->relationship('category', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    ->createOptionForm([
-                        TextInput::make('name')
-                            ->label('Nome Categoria')
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
-                                $slug = SlugGenerator::unique(Category::class, $state, $record);
-                                $set('slug', $slug);
-                            })
-                            ->required(),
-                        TextInput::make('slug')
-                            ->required(),
-                        Textarea::make('description')
-                            ->label('Descrizione'),
-                        Select::make('parent_id')
-                            ->label('Categoria di appartenenza')
-                            ->relationship('parent', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->nullable(),
-                    ])
-                    ->createOptionAction(function (Action $action) {
-                        $action->modalHeading('Crea Categoria');
-                    }),
-
-                TextInput::make('type')
-                    ->default(Product::TYPE_NEWWAVE)
-                    ->dehydrated()
-                    ->hidden(),
-
-                Section::make('Informazioni NWG (Sincronizzate automaticamente)')
-                    ->description('Questi dati vengono recuperati dall\'API NewWave ogni volta che il prodotto viene visualizzato sul sito.')
-                    ->collapsible()
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nome Prodotto')
-                            ->disabled()
-                            ->dehydrated()
-                            ->placeholder('Sincronizzato dall\'API...'),
-                        TextInput::make('price')
-                            ->label('Prezzo Base API')
-                            ->disabled()
-                            ->dehydrated()
-                            ->numeric()
-                            ->prefix('€')
-                            ->placeholder('Sincronizzato dall\'API...'),
-                        Textarea::make('description')
-                            ->label('Descrizione')
-                            ->disabled()
-                            ->dehydrated()
-                            ->columnSpanFull()
-                            ->placeholder('Sincronizzata dall\'API...'),
-                    ]),
-
-                Section::make('Anteprima Immagini NWG')
-                    ->description('Immagini scaricate automaticamente dall\'API.')
-                    ->collapsible()
-                    ->schema([
-                        SpatieMediaLibraryFileUpload::make('images')
-                            ->label('Immagini Cache')
-                            ->collection('images')
-                            ->multiple()
-                            ->image()
-                            ->disabled()
-                            ->deletable(false)
-                            ->columnSpanFull(),
-                    ]),
-
-                Section::make('Personalizzazione Stampa')
-                    ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
-                    ->collapsible()
-                    ->schema([
-                        Repeater::make('productPrintPlacements')
-                            ->relationship('productPrintPlacements')
-                            ->label('Posizioni di Stampa')
+                Tabs::make('Prodotto NewWave')
+                    ->tabs([
+                        Tab::make('Configurazione Generale')
+                            ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
-                                Select::make('print_placement_id')
-                                    ->label('Posizione')
-                                    ->options(PrintPlacement::pluck('name', 'id'))
-                                    ->required()
-                                    ->distinct()
-                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
-                                TextInput::make('additional_price')
-                                    ->label('Sovrapprezzo (€)')
-                                    ->numeric()
-                                    ->prefix('+ €')
-                                    ->default(0)
-                                    ->required(),
-                            ])
-                            ->columns(2)
-                            ->grid(2)
-                            ->addActionLabel('Aggiungi Posizione'),
+                                Grid::make(3)
+                                    ->schema([
+                                        Section::make('Identificazione')
+                                            ->columnSpan(1)
+                                            ->schema([
+                                                TextInput::make('sku')
+                                                    ->label('Codice NWG')
+                                                    ->required()
+                                                    ->live(onBlur: true)
+                                                    ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record, ProductAvailabilityService $service) {
+                                                        if (! $state) {
+                                                            return;
+                                                        }
+                                                        $info = $service->fetchBasicInfo($state);
+                                                        if ($info && ! empty($info['name'])) {
+                                                            $set('name', $info['name']);
+                                                            $set('price', $info['price']);
+                                                            $set('description', $info['description'] ?? '');
+                                                        }
+                                                    }),
+                                                TextInput::make('slug')
+                                                    ->required(),
+                                                Select::make('category_id')
+                                                    ->label('Categoria')
+                                                    ->relationship('category', 'name')
+                                                    ->required(),
+                                            ]),
 
-                        Select::make('printSides')
-                            ->relationship('printSides', 'name')
-                            ->label('Lati di Stampa Disponibili')
-                            ->multiple()
-                            ->preload()
-                            ->searchable(),
+                                        Section::make('Dati API & Overrides')
+                                            ->columnSpan(2)
+                                            ->schema([
+                                                Grid::make(2)
+                                                    ->schema([
+                                                        TextInput::make('name')
+                                                            ->label('Nome Prodotto')
+                                                            ->disabled()
+                                                            ->dehydrated(),
+                                                        TextInput::make('price')
+                                                            ->label('Prezzo Base (€)')
+                                                            ->disabled(fn (Get $get) => ! $get('override_price'))
+                                                            ->dehydrated()
+                                                            ->numeric()
+                                                            ->prefix('€'),
+                                                        TextInput::make('offer_price')
+                                                            ->label('Prezzo Offerta (€)')
+                                                            ->numeric()
+                                                            ->prefix('€')
+                                                            ->helperText('Lascia vuoto se non c\'è offerta. Se impostato, verrà mostrato come prezzo principale.'),
+                                                        Toggle::make('override_price')
+                                                            ->label('Sovrascrivi Prezzo Base')
+                                                            ->live(),
+                                                        Toggle::make('override_description')
+                                                            ->label('Sovrascrivi Descrizione')
+                                                            ->live(),
+                                                        Select::make('disabled_colors')
+                                                            ->label('Disabilita Colori')
+                                                            ->multiple()
+                                                            ->options(fn (Model $record) => Color::whereHas('variations', fn ($q) => $q->where('product_id', $record->id))
+                                                                ->pluck('color_name', 'id'))
+                                                            ->preload(),
+                                                    ]),
+                                                Textarea::make('description')
+                                                    ->label('Descrizione')
+                                                    ->disabled(fn (Get $get) => ! $get('override_description'))
+                                                    ->dehydrated()
+                                                    ->rows(4),
+                                            ]),
+
+                                        Section::make('Personalizzazione Stampa')
+                                            ->columnSpanFull()
+                                            ->schema([
+                                                Repeater::make('productPrintPlacements')
+                                                    ->relationship('productPrintPlacements')
+                                                    ->schema([
+                                                        Select::make('print_placement_id')
+                                                            ->label('Posizione')
+                                                            ->options(PrintPlacement::pluck('name', 'id'))
+                                                            ->required(),
+                                                        TextInput::make('additional_price')
+                                                            ->label('Sovrapprezzo')
+                                                            ->numeric()
+                                                            ->prefix('+ €'),
+                                                    ])
+                                                    ->columns(2)
+                                                    ->grid(3),
+
+                                                Select::make('printSides')
+                                                    ->relationship('printSides', 'name')
+                                                    ->label('Lati di Stampa')
+                                                    ->multiple()
+                                                    ->preload(),
+                                            ]),
+                                    ]),
+                            ]),
+
+                        Tab::make('Galleria & Colori')
+                            ->icon('heroicon-o-photo')
+                            ->schema([
+                                Section::make('Caricamento / Cache Immagini')
+                                    ->schema([
+                                        SpatieMediaLibraryFileUpload::make('images')
+                                            ->label('')
+                                            ->collection('images')
+                                            ->multiple()
+                                            ->reorderable()
+                                            ->image()
+                                            ->imageEditor()
+                                            ->panelLayout('grid')
+                                            ->preserveFilenames()
+                                            ->responsiveImages()
+                                            ->columnSpanFull(),
+                                    ]),
+
+                                Section::make('Organizzazione per Colore')
+                                    ->description('Associa ogni immagine ai rispettivi colori per permettere il cambio immagine dinamico sul sito.')
+                                    ->schema([
+                                        Repeater::make('media')
+                                            ->label('')
+                                            ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
+                                            ->schema([
+                                                Grid::make(3)
+                                                    ->schema([
+                                                        TextEntry::make('preview')
+                                                            ->label('Anteprima')
+                                                            ->state(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
+                                                        Grid::make(1)
+                                                            ->schema([
+                                                                Select::make('custom_properties.color_ids')
+                                                                    ->label('Associa a Colori')
+                                                                    ->multiple()
+                                                                    ->options(fn () => Color::pluck('color_name', 'id'))
+                                                                    ->preload()
+                                                                    ->searchable(),
+                                                                TextInput::make('custom_properties.alt')
+                                                                    ->label('Testo Alt')
+                                                                    ->placeholder('es. Vista laterale'),
+                                                                Checkbox::make('custom_properties.is_manual')
+                                                                    ->label('Gestione Manuale (Blocca Sync API)')
+                                                                    ->inline(false),
+                                                            ])
+                                                            ->columnSpan(2),
+                                                    ]),
+                                            ])
+                                            ->grid(2)
+                                            ->addable(false)
+                                            ->deletable(false)
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);

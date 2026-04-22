@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Products\NewWaveProducts\Pages;
 
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
@@ -8,11 +10,13 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Override;
 
 class EditNewWaveProduct extends EditRecord
 {
     protected static string $resource = NewWaveProductResource::class;
 
+    #[Override]
     protected function getHeaderActions(): array
     {
         return [

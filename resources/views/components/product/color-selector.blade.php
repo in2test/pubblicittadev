@@ -1,7 +1,11 @@
 @props(['product'])
 
 @php
-$availableColors = $product->variations->pluck('color')->unique('id')->filter();
+$availableColors = $product->variations
+    ->filter(fn($v) => $v->quantity > 0 && $v->is_available)
+    ->pluck('color')
+    ->unique('id')
+    ->filter(fn($c) => ! in_array($c->id, (array) ($product->disabled_colors ?? [])));
 @endphp
 
 @if ($availableColors->count() > 0)
@@ -13,7 +17,8 @@ $availableColors = $product->variations->pluck('color')->unique('id')->filter();
         @foreach ($availableColors as $color)
         <label class="cursor-pointer relative group">
             <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only"
-                x-model="activeColorId">
+                :checked="activeColorId == {{ $color->id }}"
+                @click="activeColorId = (activeColorId == {{ $color->id }} ? '' : '{{ $color->id }}')">
             <div class="w-10 h-10 border ring ring-offset-2 ring-transparent transition-all cursor-pointer"
                 :class="activeColorId == {{ $color->id }} ? 'border-vividauburn-700 ring-vividauburn-700' : 'border-gray-600/20'"
                 @style(['background-color: ' . ($color->color_hex ?: ' #000')])

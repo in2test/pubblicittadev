@@ -8,6 +8,7 @@ use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Size;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -24,19 +25,38 @@ class ProductAvailabilityService
     }
 
     /**
-     * Get basic metadata for a product.
+     * Get full product data including metadata and variations.
      */
-    public function getBaseMetadata(string $productNumber): ?array
+    public function getFullProductData(string $productNumber): ?array
     {
         $query = <<<'GRAPHQL'
-query Query($productNumber: String!, $language: String!) {
+query Query($productNumber: String!, $language:String!) {
   productById(productNumber: $productNumber, language: $language) {
-    productNumber
     productName
-    description
+    productCatalogText
+    productBrand
+    outlet
+    retailPrice {
+      price
+    }
     pictures {
-      imageUrl
-      thumbnailUrl
+      highResUrl
+    }
+    variations {
+      itemColorCode
+      itemWebColor
+      pictures {
+        highResUrl
+      }
+      skus {
+        sku
+        availability
+        active
+        description
+        skuSize {
+          webtext
+        }
+      }
     }
   }
 }
@@ -54,63 +74,16 @@ GRAPHQL;
                 ]);
 
             if (! $response->successful()) {
+                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
+
                 return null;
             }
 
             return $response->json()['data']['productById'] ?? null;
-        } catch (\Exception $e) {
-            Log::error("NWG API Exception (Metadata): {$e->getMessage()}");
-
-            return null;
-        }
-    }
-
-    /**
-     * Get full details for variations.
-     */
-    public function getVariationDetails(string $productNumber): array
-    {
-        $query = <<<'GRAPHQL'
-query Query($productNumber: String) {
-  allSkusByProductNumber(productNumber: $productNumber) {
-    sku
-    availability
-    active
-    description
-    skucolor
-    skuSize {
-      webtext
-    }
-    retailPrice {
-      price
-    }
-  }
-}
-GRAPHQL;
-
-        try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
-                ->post($this->endpoint, [
-                    'query' => $query,
-                    'variables' => [
-                        'productNumber' => $productNumber,
-                    ],
-                ]);
-
-            if (! $response->successful()) {
-                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
-
-                return [];
-            }
-
-            $data = $response->json();
-
-            return $data['data']['allSkusByProductNumber'] ?? [];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("NWG API Exception: {$e->getMessage()}");
 
-            return [];
+            return null;
         }
     }
 
@@ -120,17 +93,16 @@ GRAPHQL;
      */
     public function fetchBasicInfo(string $productNumber): ?array
     {
-        $metadata = $this->getBaseMetadata($productNumber);
-        $variations = $this->getVariationDetails($productNumber);
+        $data = $this->getFullProductData($productNumber);
 
-        if (! $metadata && empty($variations)) {
+        if (! $data) {
             return null;
         }
 
         return [
-            'name' => $metadata['productName'] ?? ($variations[0]['description'] ?? null),
-            'price' => ! empty($variations) ? $variations[0]['retailPrice']['price'] : null,
-            'description' => $metadata['description'] ?? null,
+            'name' => $data['productName'] ?? null,
+            'price' => $data['retailPrice']['price'] ?? null,
+            'description' => $data['productCatalogText'] ?? null,
         ];
     }
 
@@ -139,76 +111,141 @@ GRAPHQL;
      */
     public function syncProduct(Product $product): void
     {
-        $metadata = $this->getBaseMetadata($product->sku);
-        $details = $this->getVariationDetails($product->sku);
+        $data = $this->getFullProductData($product->sku);
 
-        if (empty($details)) {
+        if (! $data) {
             return;
         }
 
         // For NewWave products, we cache/update the product metadata as well
         if ($product->type === Product::TYPE_NEWWAVE) {
-            $productName = $metadata['productName'] ?? $this->extractProductName($details);
-            $firstItem = $details[0];
-
             // Update basic info
-            $product->update([
-                'name' => $productName ?: ($firstItem['description'] ?? $product->name),
-                'price' => $firstItem['retailPrice']['price'] ?? $product->price,
-                'description' => $metadata['description'] ?? $product->description,
-            ]);
+            $updateData = [
+                'name' => $data['productName'] ?? $product->name,
+            ];
 
-            // Sync Images if empty
-            if ($product->getMedia('images')->isEmpty() && ! empty($metadata['pictures'])) {
-                foreach (array_slice($metadata['pictures'], 0, 10) as $img) {
-                    try {
-                        $product->addMediaFromUrl($img['imageUrl'])
-                            ->toMediaCollection('images');
-                    } catch (\Exception $e) {
-                        Log::warning("Failed to download image for SKU {$product->sku}: {$e->getMessage()}");
+            if (! $product->override_price) {
+                $updateData['price'] = $data['retailPrice']['price'] ?? $product->price;
+            }
+
+            if (! $product->override_description) {
+                $updateData['description'] = $data['productCatalogText'] ?? $product->description;
+            }
+
+            $product->update($updateData);
+
+            $existingMedia = $product->getMedia('images');
+
+            // Sync Main Pictures
+            if (! empty($data['pictures'])) {
+                foreach (array_slice($data['pictures'], 0, 5) as $img) {
+                    $url = $img['imageSource'] ?? '';
+                    if (! $url) {
+                        continue;
+                    }
+                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
+
+                    if (! $existingMedia->contains('file_name', $fileName)) {
+                        try {
+                            $product->addMediaFromUrl($url)
+                                ->toMediaCollection('images');
+                        } catch (Exception $e) {
+                            Log::warning("Failed to download main image for SKU {$product->sku}: {$e->getMessage()}");
+                        }
                     }
                 }
             }
         }
 
-        foreach ($details as $item) {
-            $actualAvailability = (int) $item['availability'];
-            // Apply halving logic: floor(actual / 2)
-            $halvedQuantity = (int) floor($actualAvailability / 2);
+        if (empty($data['variations'])) {
+            return;
+        }
 
-            // Find or create Color
-            $colorCode = (string) ($item['skucolor'] ?? '');
+        foreach ($data['variations'] as $variationData) {
+            // Find or create Color for this variation
+            $colorCode = (string) ($variationData['itemColorCode'] ?? '');
+            $colorName = is_array($variationData['itemWebColor'] ?? null)
+                ? ($variationData['itemWebColor'][0] ?? '')
+                : (string) ($variationData['itemWebColor'] ?? '');
             $color = null;
-            if ($colorCode) {
+
+            if ($colorCode !== '' && $colorCode !== '0') {
                 $color = Color::firstOrCreate(
                     ['color_code' => $colorCode],
-                    ['color_name' => $this->guessColorNameFromDescription($item['description'], $colorCode)]
+                    ['color_name' => $colorName ?: 'Color '.$colorCode]
                 );
             }
 
-            // Find or create Size
-            $sizeName = $item['skuSize']['webtext'] ?? null;
-            $size = null;
-            if ($sizeName) {
-                $size = Size::firstOrCreate(
-                    ['size' => $sizeName],
-                    ['size_name' => $sizeName]
-                );
+            // Sync Variation Images associated with this color
+            if ($product->type === Product::TYPE_NEWWAVE && ! empty($variationData['pictures']) && $color) {
+                $existingMedia = $product->getMedia('images'); // Refresh list
+                foreach ($variationData['pictures'] as $img) {
+                    $url = $img['highResUrl'] ?? '';
+                    if (! $url) {
+                        continue;
+                    }
+                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
+
+                    $match = $existingMedia->firstWhere('file_name', $fileName);
+
+                    if (! $match) {
+                        try {
+                            $product->addMediaFromUrl($url)
+                                ->withCustomProperties(['color_ids' => [$color->id]])
+                                ->toMediaCollection('images');
+                        } catch (Exception) {
+                            // Silently skip
+                        }
+                    } else {
+                        // If image exists but lacks this color ID, add it
+                        // ONLY if it's not manually managed
+                        $props = $match->custom_properties;
+                        if (! ($props['is_manual'] ?? false)) {
+                            $colorIds = (array) ($props['color_ids'] ?? []);
+                            if (! in_array($color->id, $colorIds)) {
+                                $colorIds[] = $color->id;
+                                $props['color_ids'] = $colorIds;
+                                $match->custom_properties = $props;
+                                $match->save();
+                            }
+                        }
+                    }
+                }
             }
 
-            if ($color && $size) {
-                ProductVariation::updateOrCreate(
-                    [
-                        'sku' => $item['sku'],
-                        'product_id' => $product->id,
-                    ],
-                    [
-                        'color_id' => $color->id,
-                        'size_id' => $size->id,
-                        'quantity' => $halvedQuantity,
-                        'is_available' => $item['active'] && $halvedQuantity > 0,
-                    ]
-                );
+            if (empty($variationData['skus'])) {
+                continue;
+            }
+
+            foreach ($variationData['skus'] as $item) {
+                $actualAvailability = (int) $item['availability'];
+                // Apply halving logic: floor(actual / 2)
+                $halvedQuantity = (int) floor($actualAvailability / 2);
+
+                // Find or create Size
+                $sizeName = $item['skuSize']['webtext'] ?? null;
+                $size = null;
+                if ($sizeName) {
+                    $size = Size::firstOrCreate(
+                        ['size' => $sizeName],
+                        ['size_name' => $sizeName]
+                    );
+                }
+
+                if ($color && $size) {
+                    ProductVariation::updateOrCreate(
+                        [
+                            'sku' => $item['sku'],
+                            'product_id' => $product->id,
+                        ],
+                        [
+                            'color_id' => $color->id,
+                            'size_id' => $size->id,
+                            'quantity' => $halvedQuantity,
+                            'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
+                        ]
+                    );
+                }
             }
         }
 
@@ -217,46 +254,5 @@ GRAPHQL;
             'variations.color',
             'variations.size',
         ]);
-    }
-
-    /**
-     * Extract a clean product name by finding the common prefix of all SKU descriptions.
-     */
-    private function extractProductName(array $details): string
-    {
-        $descriptions = collect($details)->pluck('description')->filter()->values();
-
-        if ($descriptions->isEmpty()) {
-            return '';
-        }
-
-        $prefix = $descriptions[0];
-        $len = strlen($prefix);
-
-        foreach ($descriptions as $string) {
-            while ($len > 0 && strpos($string, substr($prefix, 0, $len)) !== 0) {
-                $len--;
-            }
-            if ($len === 0) {
-                break;
-            }
-        }
-
-        return trim(substr($prefix, 0, $len));
-    }
-
-    /**
-     * Try to guess color name from description (e.g. "SANDERS JACKET ROSSO S" -> "ROSSO")
-     */
-    private function guessColorNameFromDescription(string $description, string $code): string
-    {
-        // This is a heuristic. Usually it's Product + Color + Size
-        $parts = explode(' ', $description);
-        if (count($parts) >= 3) {
-            // Take the part before the last one (size)
-            return $parts[count($parts) - 2];
-        }
-
-        return 'Color '.$code;
     }
 }

@@ -12,7 +12,7 @@
         colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
         @php
             $mediaList = $product->getMedia('images');
-            $firstMedia = $mediaList->first();
+            $firstMedia = $mediaList->first(fn($m) => empty($m->custom_properties['color_ids'])) ?? $mediaList->first();
             $mainImageUrl = $firstMedia
                 ? $firstMedia->getUrl('large')
                 : 'https://placehold.co/600x800?text=' . urlencode($product->name);
@@ -53,6 +53,7 @@
             this.mainAlt = img.alt;
         },
         basePrice: {{ (float) ($product->price ?? 0) }},
+        offerPrice: {{ (float) ($product->offer_price ?? 0) }},
         selectedPlacements: [],
         get selectedPlacementPrice() {
             return this.selectedPlacements.reduce((sum, p) => sum + parseFloat(p.price), 0);
@@ -62,9 +63,18 @@
             return Object.values(this.quantities).reduce((a, b) => a + (parseInt(b) || 0), 0);
         }
     }" x-init="$watch('activeColorId', (val) => {
-        if (!val) return;
+        if (! val) {
+            const firstGeneral = images.find(img => img.color_ids.length === 0);
+            if (firstGeneral) {
+                updateMain(firstGeneral);
+            }
+
+            return;
+        }
         const match = images.find(img => img.color_ids.some(cid => cid == val));
-        if (match) updateMain(match);
+        if (match) {
+            updateMain(match);
+        }
 
         // Reset size if not compatible with new color
         if (activeSizeId && !colorToSizes[val].includes(parseInt(activeSizeId))) {
