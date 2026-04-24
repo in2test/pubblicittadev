@@ -93,8 +93,12 @@ class NewWaveProductForm
                                                         Select::make('disabled_colors')
                                                             ->label('Disabilita Colori')
                                                             ->multiple()
-                                                            ->options(fn (Model $record) => Color::whereHas('variations', fn ($q) => $q->where('product_id', $record->id))
-                                                                ->pluck('color_name', 'id'))
+                                                            ->options(fn (?Model $record) => $record
+                                                                ? Color::whereHas('variations', fn ($q) => $q->where('product_id', $record->id))
+                                                                    ->pluck('color_name', 'id')
+                                                                    ->all()
+                                                                : []
+                                                            )
                                                             ->preload(),
                                                     ]),
                                                 Textarea::make('description')
