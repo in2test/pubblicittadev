@@ -28,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ini_set('memory_limit', '4G');
+
         $this->configureDefaults();
 
         // Prevent lazy loading to catch potential N+1 query issues.

@@ -1,0 +1,294 @@
+# Claude AI Rules for Abbigliamento Personalizzato
+
+## Project Overview
+
+**Abbigliamento Personalizzato** - Custom Apparel E-commerce Platform
+
+- **Purpose**: Quote-based custom apparel ordering (no online payments)
+- **Architecture**: Laravel 13 + Livewire 4 + Filament 5 + Tailwind CSS 4
+- **Status**: MVP Week 2 - Admin Panel & Polish
+
+## Core Architecture
+
+### Data Model
+
+The `product_variations` table is the heart of the system:
+- Links: Product → Color → Size → PrintPlacement → PrintSide
+- Fields: `product_id`, `color_id`, `size_id`, `print_placement_id`, `print_side_id`, `sku`, `quantity`, `is_available`
+
+### Product Types
+
+- **Standard**: Manually created via Filament (`Product::TYPE_STANDARD`)
+- **NewWave**: Synced from external NWG GraphQL API (`Product::TYPE_NEWWAVE`)
+
+### Pricing System
+
+- `pricing_tiers` table enables quantity-based pricing
+- Structure: `product_id`, `min_quantity`, `max_quantity`, `price_per_unit`
+- Automatic tier selection in `QuoteController@store`
+- Override prices supported via `override_price` field
+
+### Quote System
+
+Quote-based (no payment processing):
+- `quotes` table: customer info, total items, total price, status
+- `quote_items` table: line items with customization JSON, design file path
+- Unique quote numbers: `QT-YYYYMMDD-XXX`
+
+## External Integration
+
+- **NewWave GraphQL API**: Product sync via `ProductAvailabilityService`
+- **Job**: `SyncNewWaveProductJob` handles sync workflow
+- **Status Tracking**: `sync_status` enum (`pending` → `syncing` → `synced`/`failed`)
+
+## Essential Commands
+
+```bash
+# Development
+composer run dev          # php artisan serve + queue:listen + npm run dev
+npm run dev               # Vite HMR
+
+# Testing
+php artisan test          # All tests
+php artisan test --compact
+php artisan test --filter=testName
+
+# Code Quality
+vendor/bin/pint --format agent
+vendor/bin/rector
+
+# Build
+npm run build             # Production build
+```
+
+## Filament Patterns
+
+### Conditional Field Visibility
+```php
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+
+Select::make('type')
+    ->options(CompanyType::class)
+    ->required()
+    ->live(),
+
+TextInput::make('company_name')
+    ->required()
+    ->visible(fn (Get $get): bool => $get('type') === 'business'),
+```
+
+### Reactive Fields
+```php
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Str;
+
+TextInput::make('title')
+    ->required()
+    ->live(onBlur: true)
+    ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+        'slug',
+        Str::slug($state ?? ''),
+    )),
+
+TextInput::make('slug')
+    ->required(),
+```
+
+### Grid Layout
+```php
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+
+Section::make('Details')
+    ->schema([
+        Grid::make(2)->schema([
+            TextInput::make('first_name')->columnSpan(1),
+            TextInput::make('last_name')->columnSpan(1),
+            TextInput::make('bio')->columnSpanFull(),
+        ]),
+    ]),
+```
+
+### Repeater for HasMany
+```php
+use Filament\Forms\Components\Repeater;
+
+Repeater::make('qualifications')
+    ->relationship()
+    ->schema([
+        TextInput::make('institution')->required(),
+        TextInput::make('qualification')->required(),
+    ])
+    ->columns(2),
+```
+
+### Computed Table Column
+```php
+use Filament\Tables\Columns\TextColumn;
+
+TextColumn::make('full_name')
+    ->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
+```
+
+### Table Filters
+```php
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+
+SelectFilter::make('status')->options(UserStatus::class),
+SelectFilter::make('author')->relationship('author', 'name'),
+Filter::make('verified')
+    ->query(fn (Builder $query) => $query->whereNotNull('email_verified_at')),
+```
+
+### Actions
+```php
+use Filament\Actions\Action;
+
+Action::make('updateEmail')
+    ->schema([
+        TextInput::make('email')->email()->required(),
+    ])
+    ->action(fn (array $data, User $record) => $record->update($data)),
+```
+
+## Common Mistakes to Avoid
+
+- **Never assume public file visibility.** File visibility is `private` by default. Always use `->visibility('public')` when public access is needed.
+- **Never assume full-width layout.** `Grid`, `Section`, `Fieldset`, and `Repeater` do not span all columns by default.
+- **Use `Select::make('author_id')->relationship('author', 'name')` for BelongsTo fields.** `BelongsToSelect` does not exist in v4.
+- **`Repeater` uses `->schema()`, not `->fields()`.**
+- **Never add `->dehydrated(false)` to fields that need to be saved.** It strips the value from form state before `->action()` or the save handler runs. Only use it for helper/UI-only fields.
+- **Use correct property types when overriding `Page`, `Resource`, and `Widget` properties.**
+  - `$navigationIcon`: `protected static string | BackedEnum | null` (not `?string`)
+  - `$navigationGroup`: `protected static string | UnitEnum | null` (not `?string`)
+  - `$view`: `protected string` (not `protected static string`) on `Page` and `Widget` classes
+
+## Testing Patterns
+
+### Feature Tests with RefreshDatabase
+```php
+use function Pest\Livewire\livewire;
+
+livewire(ListUsers::class)
+    ->assertCanSeeTableRecords($users)
+    ->searchTable($users->first()->name)
+    ->assertCanSeeTableRecords($users->take(1))
+    ->assertCanNotSeeTableRecords($users->skip(1));
+```
+
+### Create Resource Test
+```php
+use function Pest\Laravel\assertDatabaseHas;
+
+livewire(CreateUser::class)
+    ->fillForm([
+        'name' => 'Test',
+        'email' => 'test@example.com',
+    ])
+    ->call('create')
+    ->assertNotified()
+    ->assertHasNoFormErrors()
+    ->assertRedirect();
+
+assertDatabaseHas(User::class, [
+    'name' => 'Test',
+    'email' => 'test@example.com',
+]);
+```
+
+### Edit Resource Test
+```php
+livewire(EditUser::class, ['record' => $user->id])
+    ->fillForm(['name' => 'Updated'])
+    ->call('save')
+    ->assertNotified()
+    ->assertHasNoFormErrors();
+
+assertDatabaseHas(User::class, [
+    'id' => $user->id,
+    'name' => 'Updated',
+]);
+```
+
+### Testing Validation
+```php
+livewire(CreateUser::class)
+    ->fillForm([
+        'name' => null,
+        'email' => 'invalid-email',
+    ])
+    ->call('create')
+    ->assertHasFormErrors([
+        'name' => 'required',
+        'email' => 'email',
+    ])
+    ->assertNotNotified();
+```
+
+### Calling Actions
+```php
+use Filament\Actions\Testing\TestAction;
+
+livewire(ListUsers::class)
+    ->callAction(TestAction::make('promote')->table($user), [
+        'role' => 'admin',
+    ])
+    ->assertNotified();
+```
+
+## Database Schema
+
+### Core Tables
+- `users`, `categories`, `products`, `colors`, `sizes`
+- `print_placements`, `print_sides`
+- `product_variations` (central pivot)
+- `pricing_tiers`, `quotes`, `quote_items`
+- `images`, `media` (Spatie Media Library)
+
+### Key Relationships
+- **ProductVariation**: Central pivot linking Product → Color → Size → PrintPlacement → PrintSide
+- **PricingTier**: Enables tiered pricing based on quantity
+- **Quote**: Quote-based system (no online payment)
+
+## Routes
+
+- `/` - Home page
+- `/catalogo` - Product catalog
+- `/catalogo/{category}` - Category view
+- `/catalogo/{category}/{slug}` - Product detail
+- `/quote` - Create quote
+- `/services`, `/contact`, `/cart`, `/palette`
+
+## Authentication
+
+- Uses Laravel Fortify v1
+- Routes: `/login`, `/register`, `/forgot-password`, `/reset-password`
+- Password rules in `PasswordValidationRules` trait
+- Production: 12+ chars, mixed case, letters, numbers, symbols
+- Development: No restrictions
+
+## Media Library
+
+- Collection: `images` on Product and Category models
+- Conversions: `thumbnail` (150x150), `medium` (600x600), `large` (1000x1000)
+- Automatic cleanup via `registerMediaConversions()`
+
+## Documentation
+
+- [PIANO_IMPLEMENTAZIONE.md](./PIANO_IMPLEMENTAZIONE.md) - Implementation plan
+- [README.md](./README.md) - Project overview
+- [AGENTS.md](./AGENTS.md) - Detailed agent instructions
+
+## Version Info
+
+- PHP: 8.5
+- Laravel: 13
+- Filament: 5
+- Livewire: 4
+- Tailwind CSS: 4
+- Spatie Media Library: 11
+- Pest: 4

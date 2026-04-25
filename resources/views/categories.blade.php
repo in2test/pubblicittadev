@@ -26,7 +26,7 @@
                 @endisset
         </div>
         <div class="text-right">
-            <span class="text-3xl font-light tracking-tighter text-on-surface">48</span>
+            <span class="text-3xl font-light tracking-tighter text-on-surface">{{ $products->count() }}</span>
             <span class="text-xs uppercase tracking-widest text-secondary block">Prodotti trovati</span>
         </div>
     </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SyncStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors'])]
+#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors', 'sync_status', 'synced_at', 'is_active'])]
 class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
@@ -24,6 +25,9 @@ class Product extends Model implements HasMedia
             'override_price' => 'boolean',
             'override_description' => 'boolean',
             'disabled_colors' => 'array',
+            'sync_status' => SyncStatus::class,
+            'synced_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -83,6 +87,13 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    // Register media collections
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('images')
+            ->useDisk('public');
+    }
+
     // Register media conversions for image variants
     public function registerMediaConversions(?Media $media = null): void
     {
@@ -90,21 +101,19 @@ class Product extends Model implements HasMedia
             ->width(150)
             ->height(150)
             ->sharpen(10)
-            ->format('webp')
-            ->nonQueued(); // Generate immediately for simplicity
+
+            ->format('webp');
 
         $this->addMediaConversion('medium')
             ->width(600)
             ->height(600)
             ->sharpen(10)
-            ->format('webp')
-            ->nonQueued();
+            ->format('webp');
 
         $this->addMediaConversion('large')
             ->width(1000)
             ->height(1000)
             ->sharpen(10)
-            ->format('webp')
-            ->nonQueued();
+            ->format('webp');
     }
 }

@@ -48,9 +48,15 @@ $availableSizes = $product->variations
         @endforeach
     </div>
 
-    <div class="mt-4 p-4 bg-peachsouffle-200 rounded border border-primary/20 flex justify-between items-center" x-show="totalQuantity > 0">
-        <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
-        <span class="text-lg font-bold text-primary" x-text="totalQuantity"></span>
+    <div class="mt-4 p-4 bg-peachsouffle-200 rounded border border-primary/20 flex flex-col gap-2" x-show="totalQuantity > 0">
+        <div class="flex justify-between items-center">
+            <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
+            <span class="text-lg font-bold text-primary" x-text="totalQuantity"></span>
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t border-primary/20" x-show="totalPrice > 0">
+            <span class="text-xs font-mono uppercase tracking-widest text-primary">Prezzo Totale (Stampe incluse)</span>
+            <span class="text-lg font-bold text-primary font-mono">€<span x-text="totalPrice"></span></span>
+        </div>
     </div>
 </div>
 @endif

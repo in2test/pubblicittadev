@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\ProductAvailabilityService;
 
 class ProductController extends Controller
 {
@@ -21,9 +20,9 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $category, string $slug, ProductAvailabilityService $availabilityService)
+    public function show(string $category, string $slug)
     {
-        $product = Product::where('slug', $slug)
+        $product = Product::where('is_active', true)->where('slug', $slug)
             ->with([
                 'category',
                 'category.parent',
@@ -35,8 +34,7 @@ class ProductController extends Controller
             ])
             ->firstOrFail();
 
-        // Sync availability from API on each show
-        $availabilityService->syncProduct($product);
+        // Syncing is now handled via background jobs from the admin panel.
 
         $category = Category::where('slug', $category)->firstOrFail();
 

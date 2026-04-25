@@ -117,6 +117,8 @@ GRAPHQL;
             return;
         }
 
+        $product->update(['sync_progress' => 10]);
+
         // For NewWave products, we cache/update the product metadata as well
         if ($product->type === Product::TYPE_NEWWAVE) {
             // Update basic info
@@ -132,6 +134,7 @@ GRAPHQL;
                 $updateData['description'] = $data['productCatalogText'] ?? $product->description;
             }
 
+            $updateData['sync_progress'] = 20;
             $product->update($updateData);
 
             $existingMedia = $product->getMedia('images');
@@ -139,7 +142,7 @@ GRAPHQL;
             // Sync Main Pictures
             if (! empty($data['pictures'])) {
                 foreach (array_slice($data['pictures'], 0, 5) as $img) {
-                    $url = $img['imageSource'] ?? '';
+                    $url = $img['highResUrl'] ?? '';
                     if (! $url) {
                         continue;
                     }
@@ -148,6 +151,7 @@ GRAPHQL;
                     if (! $existingMedia->contains('file_name', $fileName)) {
                         try {
                             $product->addMediaFromUrl($url)
+                                ->withCustomProperties(['color_ids' => [], 'alt' => null, 'is_manual' => false])
                                 ->toMediaCollection('images');
                         } catch (Exception $e) {
                             Log::warning("Failed to download main image for SKU {$product->sku}: {$e->getMessage()}");
@@ -157,11 +161,17 @@ GRAPHQL;
             }
         }
 
+        $product->update(['sync_progress' => 40]);
+
         if (empty($data['variations'])) {
             return;
         }
 
-        foreach ($data['variations'] as $variationData) {
+        $totalVariations = count($data['variations']);
+        foreach ($data['variations'] as $index => $variationData) {
+            $progress = 40 + (int) (($index / $totalVariations) * 55);
+            $product->update(['sync_progress' => $progress]);
+
             // Find or create Color for this variation
             $colorCode = (string) ($variationData['itemColorCode'] ?? '');
             $colorName = is_array($variationData['itemWebColor'] ?? null)

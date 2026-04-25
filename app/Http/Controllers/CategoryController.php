@@ -15,7 +15,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $products = Product::with(['category', 'variations.color'])->get();
+        $products = Product::where('is_active', true)->with(['category', 'variations.color', 'media'])->get();
 
         return view('categories', [
             'category' => $categories,
@@ -29,9 +29,9 @@ class CategoryController extends Controller
     {
 
         $category = Category::where('slug', $slug)->first();
-        $products = Product::where('category_id', $category->id)->with(['category', 'variations.color'])->get();
+        $products = Product::where('is_active', true)->where('category_id', $category->id)->with(['category', 'variations.color', 'media'])->get();
         if ($category->children->count() > 0) {
-            $products = Product::whereIn('category_id', $category->children->pluck('id'))->with(['category', 'variations.color'])->get();
+            $products = Product::where('is_active', true)->whereIn('category_id', $category->children->pluck('id'))->with(['category', 'variations.color', 'media'])->get();
         }
 
         return view('categories', ['category' => $category, 'products' => $products]);

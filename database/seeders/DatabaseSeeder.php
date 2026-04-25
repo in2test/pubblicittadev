@@ -28,14 +28,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Seed Print Placements
-        PrintPlacement::create(['name' => 'Fronte', 'description' => 'Stampa sul fronte 23x30 cm', 'sort_order' => 1]);
-        PrintPlacement::create(['name' => 'Dietro', 'description' => 'Stampa sul dietro 23x30 cm', 'sort_order' => 2]);
-        PrintPlacement::create(['name' => 'Manica Sinistra', 'description' => 'Stampa sulla manica sinistra 9x9 cm', 'sort_order' => 3]);
-        PrintPlacement::create(['name' => 'Manica Destra', 'description' => 'Stampa sulla manica destra 9x9 cm', 'sort_order' => 4]);
-        PrintPlacement::create(['name' => 'Lato Cuore', 'description' => 'Stampa sul lato cuore 9x9 cm', 'sort_order' => 5]);
-        PrintPlacement::create(['name' => 'Tasca', 'description' => 'Stampa sulla tasca 9x9 cm', 'sort_order' => 6]);
-        PrintPlacement::create(['name' => 'Gamba sinistra', 'description' => 'Stampa sulla gamba sinistra 9x9 cm', 'sort_order' => 7]);
-        PrintPlacement::create(['name' => 'Gamba destra', 'description' => 'Stampa sulla gamba destra 9x9 cm', 'sort_order' => 8]);
+        PrintPlacement::create(['name' => 'Fronte', 'description' => 'Stampa sul fronte 23x30 cm', 'sort_order' => 1, 'default_price' => 3]);
+        PrintPlacement::create(['name' => 'Dietro', 'description' => 'Stampa sul dietro 23x30 cm', 'sort_order' => 2, 'default_price' => 3]);
+        PrintPlacement::create(['name' => 'Manica Sinistra', 'description' => 'Stampa sulla manica sinistra 9x9 cm', 'sort_order' => 3, 'default_price' => 2]);
+        PrintPlacement::create(['name' => 'Manica Destra', 'description' => 'Stampa sulla manica destra 9x9 cm', 'sort_order' => 4, 'default_price' => 2]);
+        PrintPlacement::create(['name' => 'Lato Cuore', 'description' => 'Stampa sul lato cuore 9x9 cm', 'sort_order' => 5, 'default_price' => 1.80]);
+        PrintPlacement::create(['name' => 'Tasca', 'description' => 'Stampa sulla tasca 9x9 cm', 'sort_order' => 6, 'default_price' => 2]);
+        PrintPlacement::create(['name' => 'Gamba sinistra', 'description' => 'Stampa sulla gamba sinistra 9x9 cm', 'sort_order' => 7, 'default_price' => 2]);
+        PrintPlacement::create(['name' => 'Gamba destra', 'description' => 'Stampa sulla gamba destra 9x9 cm', 'sort_order' => 8, 'default_price' => 2]);
 
         // Seed Print Sides
         PrintSide::create(['name' => 'Stampa sul fronte', 'description' => 'Stampa solo sul fronte', 'sort_order' => 1]);
@@ -74,6 +74,16 @@ class DatabaseSeeder extends Seeder
         //                 }
         //             });
         //     });
+
+        // Categories
+        Category::create(['name' => 'Abbigliamento da lavoro', 'slug' => 'abbigliamento-da-lavoro', 'parent_id' => null]);
+        Category::create(['name' => 'T-Shirt', 'slug' => 't-shirt', 'parent_id' => 1]);
+        Category::create(['name' => 'Polo', 'slug' => 'polo', 'parent_id' => 1]);
+        Category::create(['name' => 'Felpe', 'slug' => 'felpe', 'parent_id' => 1]);
+        Category::create(['name' => 'Pantaloni', 'slug' => 'pantaloni', 'parent_id' => 1]);
+        Category::create(['name' => 'Giacche', 'slug' => 'giacche', 'parent_id' => 1]);
+        Category::create(['name' => 'Gilet', 'slug' => 'gilet', 'parent_id' => 1]);
+        Category::create(['name' => 'Calzature', 'slug' => 'calzature', 'parent_id' => 1]);
 
         // Seed Sizes
         Size::create(['size_name' => 'Extra Small', 'size' => 'XS', 'sort_order' => 1]);

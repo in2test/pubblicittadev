@@ -149,6 +149,15 @@ class ProductForm
                                     ->label('Posizione')
                                     ->options(PrintPlacement::pluck('name', 'id'))
                                     ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function (\Filament\Forms\Set $set, $state) {
+                                        if ($state) {
+                                            $placement = PrintPlacement::find($state);
+                                            if ($placement) {
+                                                $set('additional_price', $placement->default_price);
+                                            }
+                                        }
+                                    })
                                     ->distinct()
                                     ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                                 TextInput::make('additional_price')

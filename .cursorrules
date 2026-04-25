@@ -1,0 +1,146 @@
+# Cursor AI Rules for Abbigliamento Personalizzato
+
+## Project Context
+
+- **Type**: Laravel 13 + Livewire 4 + Filament 5 e-commerce platform
+- **Purpose**: Custom apparel quote-based ordering (no online payments)
+- **Language**: Italian (locale: 'it')
+- **Status**: MVP Week 2 - Admin Panel & Polish
+
+## Key Architecture
+
+### Central Data Model
+- `product_variations` is the central pivot table linking: Product → Color → Size → PrintPlacement → PrintSide
+- `pricing_tiers` enables quantity-based pricing
+- `quotes` and `quote_items` handle customer orders (no payment processing)
+
+### Product Types
+- `standard`: Manually created via Filament
+- `newwave`: Synced from external NWG GraphQL API
+
+### External Integration
+- NewWave GraphQL API sync via `ProductAvailabilityService`
+- Job: `SyncNewWaveProductJob` with `sync_status` enum tracking
+
+## Essential Commands
+
+```bash
+# Development
+composer run dev          # php artisan serve + queue:listen + npm run dev
+npm run dev               # Vite HMR
+
+# Testing
+php artisan test          # All tests
+php artisan test --compact
+php artisan test --filter=testName
+
+# Code Quality
+vendor/bin/pint --format agent
+vendor/bin/rector
+
+# Build
+npm run build             # Production build
+```
+
+## Filament Patterns
+
+### Conditional Field Visibility
+```php
+TextInput::make('company_name')
+    ->visible(fn (Get $get): bool => $get('type') === 'business'),
+```
+
+### Reactive Fields
+```php
+TextInput::make('title')
+    ->live(onBlur: true)
+    ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+        'slug',
+        Str::slug($state ?? ''),
+    )),
+```
+
+### Grid Layout
+```php
+Section::make('Details')
+    ->schema([
+        Grid::make(2)->schema([
+            TextInput::make('first_name')->columnSpan(1),
+            TextInput::make('last_name')->columnSpan(1),
+            TextInput::make('bio')->columnSpanFull(),
+        ]),
+    ]),
+```
+
+### Common Mistakes to Avoid
+- Always use `->visibility('public')` for Filament resources
+- Always specify `->columnSpan()` or `->columnSpanFull()` for Grid children
+- Never add `->dehydrated(false)` to fields that need saving
+- Use `->relationship()` for Repeater, not `->fields()`
+
+## Testing Patterns
+
+### Feature Tests with RefreshDatabase
+```php
+use function Pest\Livewire\livewire;
+
+livewire(ListUsers::class)
+    ->assertCanSeeTableRecords($users)
+    ->searchTable($users->first()->name);
+```
+
+### Livewire Component Tests
+```php
+livewire(CreateUser::class)
+    ->fillForm(['name' => 'Test', 'email' => 'test@example.com'])
+    ->call('create')
+    ->assertRedirect();
+
+assertDatabaseHas(User::class, ['email' => 'test@example.com']);
+```
+
+## Database Schema
+
+### Core Tables
+- `users`, `categories`, `products`, `colors`, `sizes`
+- `print_placements`, `print_sides`
+- `product_variations` (central pivot)
+- `pricing_tiers`, `quotes`, `quote_items`
+- `images`, `media` (Spatie Media Library)
+
+## Routes
+
+- `/` - Home page
+- `/catalogo` - Product catalog
+- `/catalogo/{category}` - Category view
+- `/catalogo/{category}/{slug}` - Product detail
+- `/quote` - Create quote
+- `/services`, `/contact`, `/cart`, `/palette`
+
+## Authentication
+
+- Uses Laravel Fortify v1
+- Routes: `/login`, `/register`, `/forgot-password`, `/reset-password`
+- Password rules in `PasswordValidationRules` trait
+
+## Media Library
+
+- Collection: `images` on Product and Category models
+- Conversions: `thumbnail` (150x150), `medium` (600x600), `large` (1000x1000)
+- Automatic cleanup via `registerMediaConversions()`
+
+## Documentation
+
+- [PIANO_IMPLEMENTAZIONE.md](./PIANO_IMPLEMENTAZIONE.md) - Implementation plan
+- [README.md](./README.md) - Project overview
+- [AGENTS.md](./AGENTS.md) - Detailed agent instructions
+
+## Version Info
+
+- PHP: 8.5
+- Laravel: 13
+- Filament: 5
+- Livewire: 4
+- Tailwind CSS: 4
+- Spatie Media Library: 11
+- Pest: 4

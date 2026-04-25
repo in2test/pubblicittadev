@@ -7,8 +7,8 @@ namespace App\Filament\Resources\Products\NewWaveProducts;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\CreateNewWaveProduct;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\ListNewWaveProducts;
+use App\Filament\Resources\Products\NewWaveProducts\Tables\NewWaveProductsTable;
 use App\Filament\Resources\Products\Schemas\NewWaveProductForm;
-use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -44,7 +44,7 @@ class NewWaveProductResource extends Resource
     #[Override]
     public static function table(Table $table): Table
     {
-        return ProductsTable::configure($table);
+        return NewWaveProductsTable::configure($table);
     }
 
     #[Override]
