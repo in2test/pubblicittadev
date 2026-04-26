@@ -6,34 +6,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $categories = Category::all();
-        $products = Product::where('is_active', true)->with(['category', 'variations.color', 'media'])->get();
+        $products = Product::where('is_active', true)
+            ->with(['category', 'variations.color', 'media'])
+            ->orderBy('name')
+            ->paginate(12)
+            ->appends($request->query());
 
         return view('categories', [
             'category' => $categories,
-            'products' => $products]);
+            'products' => $products,
+        ]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($slug)
+    public function show(Request $request, string $slug)
     {
+        $category = Category::where('slug', $slug)->firstOrFail();
 
-        $category = Category::where('slug', $slug)->first();
-        $products = Product::where('is_active', true)->where('category_id', $category->id)->with(['category', 'variations.color', 'media'])->get();
-        if ($category->children->count() > 0) {
-            $products = Product::where('is_active', true)->whereIn('category_id', $category->children->pluck('id'))->with(['category', 'variations.color', 'media'])->get();
-        }
+        $categoryIds = $category->children->pluck('id')->toArray();
+        $categoryIds[] = $category->id;
 
-        return view('categories', ['category' => $category, 'products' => $products]);
+        $products = Product::where('is_active', true)
+            ->whereIn('category_id', $categoryIds)
+            ->with(['category', 'variations.color', 'media'])
+            ->orderBy('name')
+            ->paginate(12)
+            ->appends($request->query());
+
+        return view('categories', [
+            'category' => $category,
+            'products' => $products,
+        ]);
     }
 }

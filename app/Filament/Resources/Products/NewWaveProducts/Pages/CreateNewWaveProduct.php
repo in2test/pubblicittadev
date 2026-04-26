@@ -26,6 +26,6 @@ class CreateNewWaveProduct extends CreateRecord
 
     protected function afterCreate(): void
     {
-        SyncNewWaveProductJob::dispatch($this->record);
+        SyncNewWaveProductJob::dispatch($this->record->id);
     }
 }

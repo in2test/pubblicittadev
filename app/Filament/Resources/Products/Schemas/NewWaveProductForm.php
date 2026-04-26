@@ -104,6 +104,18 @@ class NewWaveProductForm
                                         TextInput::make('slug')
                                             ->required()
                                             ->unique(Category::class, 'slug'),
+                                        Select::make('parent_id')
+                                            ->label('Categoria di appartenenza')
+                                            ->relationship(
+                                                name: 'parent',
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: fn ($query, ?Model $record) => $query
+                                                    ->whereNull('parent_id')
+                                                    ->when($record, fn ($query) => $query->where('id', '!=', $record->id)),
+                                            )
+                                            ->searchable()
+                                            ->preload()
+                                            ->nullable(),
                                         Textarea::make('description')
                                             ->label('Descrizione'),
                                         Toggle::make('is_active')

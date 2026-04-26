@@ -87,10 +87,32 @@
                 class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
                 Richiedi Preventivo Personalizzato
             </button>
+            <button type="button" 
+                :disabled="totalQuantity < 1"
+                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''"
+                @click="if(totalQuantity > 0) $refs.cartForm.submit()"
+                class="w-full bg-secondary-container text-on-secondary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
+                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span x-text="totalPrice">0.00</span>)
+            </button>
             <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20abbigliamento"
                 class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
                 Contattaci via email
             </a>
         </div>
-    </div>
+    </form>
+</div>
+
+<!-- Cart Form (separate form outside the quote form) -->
+<form x-ref="cartForm" action="{{ route('cart.add') }}" method="POST" class="hidden">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+    <input type="hidden" name="product_name" value="{{ $product->name }}">
+    <input type="hidden" name="product_slug" value="{{ $product->slug }}">
+    <input type="hidden" name="image_url" value="{{ $product->getFirstMediaUrl('images', 'thumbnail') }}">
+    <input type="hidden" name="quantity" :value="totalQuantity">
+    <input type="hidden" name="price" :value="(offerPrice > 0 ? offerPrice : basePrice) + selectedPlacementPrice">
+    <input type="hidden" name="color_id" :value="activeColorId">
+    <input type="hidden" name="color_name" :value="activeColorId ? colorNames[activeColorId] : ''">
+    <input type="hidden" name="size_id" :value="activeSizeId">
+    <input type="hidden" name="print_placements" :value="JSON.stringify(selectedPlacements.map(p => p.id))">
 </form>

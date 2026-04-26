@@ -18,10 +18,18 @@
                 href={{ route('catalog') }}>Catalogo</a>
         </div>
         <div class="flex items-center gap-2 lg:gap-6">
-            <button
-                class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
+            @php
+                $cartCount = \Illuminate\Support\Facades\Session::get('cart_items', []);
+                $count = is_array($cartCount) ? array_sum(array_column($cartCount, 'quantity')) : 0;
+            @endphp
+            <a href="{{ route('cart') }}" class="relative p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
                 <span class="material-symbols-outlined">shopping_cart</span>
-            </button>
+                @if($count > 0)
+                    <span class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                        {{ $count }}
+                    </span>
+                @endif
+            </a>
             <button
                 class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-sm transition-all active:scale-95 duration-150">
                 <span class="material-symbols-outlined">account_circle</span>

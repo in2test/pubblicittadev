@@ -39,28 +39,50 @@
             per: Rilevanza</button>
     </div>
 </section>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  2xl:grid-cols-4 3xl:grid-cols-6 gap-8 px-8 3xl:px-32">
-    @foreach ($products as $product)
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-6 gap-8 px-8 3xl:px-32">
+    @forelse ($products as $product)
         <x-product.card :$product />
-    @endforeach
-    <!-- Product Card 2 -->
+    @empty
+        <div class="col-span-full text-center py-16">
+            <p class="text-xl text-secondary">Nessun prodotto trovato</p>
+        </div>
+    @endforelse
 
-    <!-- Pagination (Architectural style) -->
-    <div class="mt-16 flex items-center justify-center gap-2">
-        <button
-            class="w-10 h-10 border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-            <span class="material-symbols-outlined text-sm">chevron_left</span>
-        </button>
-        <button class="w-10 h-10 bg-primary text-white font-bold text-xs">01</button>
-        <button class="w-10 h-10 border border-slate-200 font-bold text-xs hover:bg-slate-50">02</button>
-        <button class="w-10 h-10 border border-slate-200 font-bold text-xs hover:bg-slate-50">03</button>
-        <span class="px-2 text-secondary">...</span>
-        <button class="w-10 h-10 border border-slate-200 font-bold text-xs hover:bg-slate-50">12</button>
-        <button
-            class="w-10 h-10 border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-            <span class="material-symbols-outlined text-sm">chevron_right</span>
-        </button>
+    @if ($products->hasPages())
+    <div class="col-span-full mt-16">
+        <nav class="flex items-center justify-center gap-2">
+            @if ($products->onFirstPage())
+                <span class="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-300">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                </span>
+            @else
+                <a href="{{ $products->previousPageUrl() }}" 
+                   class="w-10 h-10 border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                </a>
+            @endif
+
+            @foreach ($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                @if ($page == $products->currentPage())
+                    <span class="w-10 h-10 bg-primary text-white font-bold text-xs flex items-center justify-center">{{ str_pad($page, 2, '0', STR_PAD_LEFT) }}</span>
+                @else
+                    <a href="{{ $url }}" class="w-10 h-10 border border-slate-200 font-bold text-xs hover:bg-slate-50 flex items-center justify-center">{{ str_pad($page, 2, '0', STR_PAD_LEFT) }}</a>
+                @endif
+            @endforeach
+
+            @if ($products->hasMorePages())
+                <a href="{{ $products->nextPageUrl() }}" 
+                   class="w-10 h-10 border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </a>
+            @else
+                <span class="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-300">
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </span>
+            @endif
+        </nav>
     </div>
+    @endif
 </div>
 
 </x-layout>

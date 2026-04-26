@@ -32,8 +32,8 @@
         </div>
 
 
-        <div class="aspect-4/5 overflow-hidden bg-surface-container relative bg-white border border-gray-200">
-            <img class="max-w-full h-full object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105 mx-auto "
+        <div class="overflow-hidden bg-surface-container relative bg-white border border-gray-200">
+            <img class="w-full h-auto object-contain grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105 mx-auto "
                 src="{{ $imageUrl }}" alt="{{ $product->name }}" />
         </div>
 

@@ -107,6 +107,35 @@ GRAPHQL;
     }
 
     /**
+     * Validate multiple SKUs from the API.
+     * Returns array with valid and invalid SKU codes.
+     */
+    public function validateSkus(array $skus): array
+    {
+        $valid = [];
+        $invalid = [];
+
+        foreach ($skus as $sku) {
+            $sku = trim($sku);
+            if (empty($sku)) {
+                continue;
+            }
+
+            $data = $this->getFullProductData($sku);
+            if ($data && ! empty($data['productName'])) {
+                $valid[$sku] = [
+                    'name' => $data['productName'],
+                    'price' => $data['retailPrice']['price'] ?? null,
+                ];
+            } else {
+                $invalid[] = $sku;
+            }
+        }
+
+        return ['valid' => $valid, 'invalid' => $invalid];
+    }
+
+    /**
      * Synchronize product variations in the database with the API data.
      */
     public function syncProduct(Product $product): void
@@ -168,9 +197,15 @@ GRAPHQL;
         }
 
         $totalVariations = count($data['variations']);
-        foreach ($data['variations'] as $index => $variationData) {
-            $progress = 40 + (int) (($index / $totalVariations) * 55);
+        $processedVariations = 0;
+
+        foreach ($data['variations'] as $variationData) {
+            $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
             $product->update(['sync_progress' => $progress]);
+
+            $processedVariations++;
+
+            // Rest of the code...
 
             // Find or create Color for this variation
             $colorCode = (string) ($variationData['itemColorCode'] ?? '');

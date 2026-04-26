@@ -24,13 +24,13 @@
             class="flex-1 flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto scrollbar-hide no-scrollbar snap-x lg:snap-y select-none max-h-[100px] lg:max-h-[600px] w-full"
             style="scrollbar-width: none; -ms-overflow-style: none;">
             <template x-for="image in images" :key="image.id">
-                <div class="shrink-0 w-20 h-20 lg:w-full lg:aspect-square bg-surface-container border-2 overflow-hidden cursor-pointer transition-all snap-center"
+                <div class="shrink-0 w-20 h-20 lg:w-20 lg:h-auto bg-surface-container border-2 overflow-hidden cursor-pointer transition-all snap-center"
                     :class="mainImage === image.large ? 'border-primary ring-1 ring-primary/20' :
                         'border-outline-variant/10 hover:border-outline-variant'"
                     x-show="(!activeColorId && image.color_ids.length === 0) || (activeColorId && image.color_ids.some(cid => cid == activeColorId))"
                     @click="updateMain(image)">
                     <img :alt="getComputedAlt(image)"
-                        class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
+                        class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity"
                         :src="image.thumb" />
                 </div>
             </template>
@@ -54,18 +54,15 @@
     </div>
 
     <!-- Main Display Section -->
-    <div class="flex-1">
-        <div
-            class="aspect-4/5 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white">
-            <picture class="">
-                <source media="(max-width: 768px)" :srcset="mainImageMed">
-                <img :alt="getComputedAlt(images.find(i => i.large === mainImage) || { alt: '', color_ids: [] })"
-                    class="h-full  max-w-full product-main-image transition-transform duration-500 group-hover:scale-110 mx-auto object-cover"
-                    :src="mainImage" />
-            </picture>
+    <div class="flex-1 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white min-h-[200px]">
+        <picture class="">
+            <source media="(max-width: 768px)" :srcset="mainImageMed">
+            <img :alt="getComputedAlt(images.find(i => i.large === mainImage) || { alt: '', color_ids: [] })"
+                class="h-auto max-w-full product-main-image transition-transform duration-500 group-hover:scale-110 mx-auto object-contain"
+                :src="mainImage" />
+        </picture>
 
-            <!-- Zoom overlay / Navigation hint (optional) -->
-            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none"></div>
-        </div>
+        <!-- Zoom overlay / Navigation hint (optional) -->
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none"></div>
     </div>
 </div>
