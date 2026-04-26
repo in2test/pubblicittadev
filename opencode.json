@@ -9,7 +9,7 @@
             "grep *": "allow"
         },
         "edit": {
-            "*": "deny",
+            "*": "allow",
             "packages/web/src/content/docs/*.mdx": "allow"
         }
     },
@@ -18,8 +18,9 @@
             "type": "local",
             "enabled": true,
             "command": [
-                "php",
-                "artisan",
+                "wsl.exe",
+                "/usr/bin/php8.4",
+                "/mnt/c/sites/pubblicittadev/artisan",
                 "boost:mcp"
             ]
         }
