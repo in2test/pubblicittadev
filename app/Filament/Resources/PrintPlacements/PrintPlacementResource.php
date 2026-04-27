@@ -28,6 +28,8 @@ class PrintPlacementResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Configurazione';
 
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $modelLabel = 'Posizione Stampa';
 
     protected static ?string $pluralModelLabel = 'Posizioni di Stampa';

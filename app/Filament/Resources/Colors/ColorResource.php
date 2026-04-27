@@ -16,14 +16,17 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Override;
+use UnitEnum;
 
 class ColorResource extends Resource
 {
     protected static ?string $model = Color::class;
 
+    protected static string|UnitEnum|null $navigationGroup = 'Configurazione';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'color_name';
+    protected static ?int $navigationSort = 2;
 
     #[Override]
     public static function getNavigationLabel(): string

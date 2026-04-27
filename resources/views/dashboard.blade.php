@@ -1,4 +1,11 @@
 <x-layouts::app :title="__('Dashboard')">
+    @if(auth()->user()?->isAdmin())
+        <div class="mb-4">
+            <a href="{{ url('/admin') }}" class="rounded-lg bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">
+                Pannello Admin
+            </a>
+        </div>
+    @endif
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="grid auto-rows-min gap-4 md:grid-cols-3">
             <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">

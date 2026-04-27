@@ -36,6 +36,7 @@
             @php
                 $cartCount = \Illuminate\Support\Facades\Session::get('cart_items', []);
                 $count = is_array($cartCount) ? array_sum(array_column($cartCount, 'quantity')) : 0;
+                $user = Illuminate\Support\Facades\Auth::user();
             @endphp
             <a href="{{ route('cart') }}"
                 class="relative p-2 hover:bg-gray-100  rounded-sm transition-all active:scale-95 duration-150">
@@ -47,10 +48,40 @@
                     </span>
                 @endif
             </a>
-            <button id="account-button" aria-label="Account"
-                class="p-2 hover:bg-gray-100  rounded-sm transition-all active:scale-95 duration-150">
-                <span class="material-symbols-outlined">account_circle</span>
-            </button>
+
+@if($user)
+                <div class="relative" x-data="{ open: false }">
+                    <button id="user-menu-button" aria-label="Account menu" @click="open = !open" @mouseenter="open = true"
+                        class="p-2 hover:bg-gray-100 rounded-sm transition-all active:scale-95 duration-150">
+                        <span class="material-symbols-outlined text-green-600">verified_user</span>
+                    </button>
+                    <div id="user-dropdown" x-show="open" @click.away="open = false" x-transition.opacity
+                        class="absolute right-0 top-full mt-1 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                        <div class="px-4 py-2 border-b border-gray-100">
+                            <p class="text-sm font-medium text-gray-900">{{ $user->name }}</p>
+                            <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
+                        </div>
+                        <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Dashboard
+                        </a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            I tuoi ordini
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" class="block">
+                            @csrf
+                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                Esci
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <button id="account-button" aria-label="Account"
+                    class="p-2 hover:bg-gray-100  rounded-sm transition-all active:scale-95 duration-150"
+                    onclick="openAuthModal()">
+                    <span class="material-symbols-outlined">account_circle</span>
+                </button>
+            @endif
 
 
             <!-- Dark Mode Toggle Button -->

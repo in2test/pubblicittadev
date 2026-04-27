@@ -143,16 +143,20 @@ Product::search('query')
 ## 📅 Checkpoint Aggiornati
 
 ```
-SETTIMANA 1 (Recap)
-├─ ✅ DB + Models (v0.1)
-├─ ✅ Catalogo & Dettaglio (v0.2)
-└─ ✅ Quote Form + Upload (v0.3)
-
-SETTIMANA 2 (Attuale)
+SETTIMANA 2 (Recap)
 ├─ ✅ Admin Prodotti (v0.6)
 ├─ ✅ Ricerca Scout (v0.7)
 ├─ ✅ Carrello + Sconti (v0.8)
 └- ✅ Test Suite (v0.9)
+
+SETTIMANA 3 (Apr 28, 2026)
+├─ ✅ User Management (role=admin/client, is_active)
+├─ ✅ Filament UserResource - manage users
+├─ ✅ AuthenticateAdmin middleware - restrict Filament access
+├─ ✅ Livewire AuthModal - login/register modal
+├─ ✅ User dropdown menu with logout
+├─ ✅ Admin menu organization (Catalogo/Configurazione/Impostazioni)
+├─ ✅ SizeResource + PrintSideResource
 ```
 
 ---
@@ -208,6 +212,11 @@ Testing: Pest 4
 - [x] Ricerca Laravel Scout (database driver)
 - [x] Carrello con sconti quantità
 - [x] Test suite completa
+- [x] User Management con ruoli (admin/client) e is_active
+- [x] Filament UserResource per gestione utenti
+- [x] AuthenticateAdmin middleware
+- [x] Login/Register modal Livewire
+- [x] Admin menu organizzato
 - [ ] Admin Preventivi (QuoteResource)
 - [ ] Notifiche Email
 - [ ] Generazione PDF

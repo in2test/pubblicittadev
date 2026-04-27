@@ -48,7 +48,7 @@ class CategoryQuantityDiscountResource extends Resource
         if (class_exists(ViewAction::class)) {
             $recordActions[] = ViewAction::make('view')
                 ->label('Vedi')
-                ->icon('heroicon-o-eye')
+                ->icon('heroicon-o-tag')
                 ->url(fn (CategoryQuantityDiscount $record): string => route('category-quantity-discount.show', ['record' => $record]))
                 ->visible(fn (CategoryQuantityDiscount $record): bool => (bool) $record->id)
                 ->openUrlInNewTab();

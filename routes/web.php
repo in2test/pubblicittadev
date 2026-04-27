@@ -28,6 +28,13 @@ Route::get('/', [HomePageController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::post('/logout', function () {
+        auth()->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect('/');
+    })->name('logout');
 });
 
 require __DIR__.'/settings.php';

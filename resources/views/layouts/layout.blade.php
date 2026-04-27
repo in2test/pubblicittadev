@@ -60,6 +60,12 @@
     </main>
     <x-footer />
     @livewireScripts
+    <script>
+        function openAuthModal() {
+            window.dispatchEvent(new CustomEvent('open-auth-modal'));
+        }
+    </script>
+    @livewire(\App\Livewire\AuthModal::class)
 </body>
 
 </html>
