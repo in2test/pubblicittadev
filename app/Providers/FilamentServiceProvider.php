@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Filament\Facades\Filament;
 use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
+use Filament\Facades\Filament;
+use Illuminate\Support\ServiceProvider;
+use Override;
 
 class FilamentServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,7 @@ class FilamentServiceProvider extends ServiceProvider
         }
     }
 
+    #[Override]
     public function register(): void
     {
         // no bindings required

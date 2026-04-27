@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Throwable;
 
 class BatchImportController extends Controller
 {
@@ -42,13 +43,13 @@ class BatchImportController extends Controller
 
         $categoryId = $request->input('category_id');
         $skus = array_filter(
-            array_map('trim', preg_split('/[\s,;]+/', $request->input('skus', ''))));
+            array_map(trim(...), preg_split('/[\s,;]+/', (string) $request->input('skus', ''))));
 
         $service = app(ProductAvailabilityService::class);
         $validatedProducts = [];
         $invalidSkus = [];
 
-        if (! empty($skus)) {
+        if ($skus !== []) {
             $results = $service->validateSkus(array_values($skus));
 
             foreach ($results['valid'] as $sku => $info) {
@@ -127,7 +128,7 @@ class BatchImportController extends Controller
                 SyncNewWaveProductJob::dispatch($product);
 
                 $imported[] = $sku;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $errors[] = $sku.': '.$e->getMessage();
             }
         }

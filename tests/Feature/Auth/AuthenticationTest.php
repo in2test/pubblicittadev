@@ -38,7 +38,11 @@ test('users can not authenticate with invalid password', function () {
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
-    $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
+    if (method_exists($this, 'skipUnlessFortifyFeature')) {
+        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
+    } else {
+        $this->markTestSkipped('Fortify testing helpers not available.');
+    }
 
     Features::twoFactorAuthentication([
         'confirm' => true,

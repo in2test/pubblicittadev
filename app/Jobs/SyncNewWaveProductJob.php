@@ -21,15 +21,10 @@ class SyncNewWaveProductJob implements ShouldQueue
 
     public $timeout = 600;
 
-    public int $productId;
-
     /**
      * Create a new job instance.
      */
-    public function __construct(int $productId)
-    {
-        $this->productId = $productId;
-    }
+    public function __construct(public int $productId) {}
 
     /**
      * Execute the job.

@@ -36,12 +36,12 @@ class QuoteController extends Controller
             'quote_number' => $quoteNumber,
             'customer_name' => $validated['customer_name'],
             'customer_email' => $validated['customer_email'],
-            'customer_phone' => $validated['customer_phone'],
-            'customer_whatsapp' => $validated['customer_whatsapp'],
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'customer_whatsapp' => $validated['customer_whatsapp'] ?? null,
             'total_items' => $quantity,
             'total_price' => $subtotal,
             'status' => 'pending',
-            'notes' => $validated['notes'],
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         $designFilePath = null;

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
 use Carbon\CarbonImmutable;
+use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Override;
-use Filament\Facades\Filament;
-use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
 
 class AppServiceProvider extends ServiceProvider
 {

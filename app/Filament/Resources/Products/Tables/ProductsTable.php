@@ -13,6 +13,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class ProductsTable
 {
@@ -21,7 +22,17 @@ class ProductsTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->tooltip(function (Product $record): ?HtmlString {
+                        $url = $record->getThumbnailUrl();
+                        if (! $url) {
+                            return null;
+                        }
+
+                        return new HtmlString(
+                            "<img src='$url' style='width:150px;height:150px;object-fit:cover;border-radius:8px;' />"
+                        );
+                    }),
                 TextColumn::make('slug')
                     ->searchable(),
                 TextColumn::make('price')

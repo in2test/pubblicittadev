@@ -83,6 +83,20 @@
         </div>
 
         <div class="grid grid-cols-1 gap-3">
+            @php
+                $discounts = \App\Models\CategoryQuantityDiscount::where('category_id', $product->category_id)
+                    ->where('min_quantity', '>', 1)
+                    ->orderBy('min_quantity')
+                    ->get();
+            @endphp
+            @if($discounts->count() > 0)
+                <div class="p-3 bg-surface-container rounded text-xs">
+                    <span class="font-bold">Sconti quantità:</span>
+                    @foreach($discounts as $d)
+                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi = -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
+                    @endforeach
+                </div>
+            @endif
             <button type="submit"
                 class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
                 Richiedi Preventivo Personalizzato
@@ -90,7 +104,7 @@
             <button type="button" 
                 :disabled="totalQuantity < 1"
                 :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''"
-                @click="if(totalQuantity > 0) $refs.cartForm.submit()"
+                @click="addToCart()"
                 class="w-full bg-secondary-container text-on-secondary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
                 Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span x-text="totalPrice">0.00</span>)
             </button>
@@ -109,10 +123,10 @@
     <input type="hidden" name="product_name" value="{{ $product->name }}">
     <input type="hidden" name="product_slug" value="{{ $product->slug }}">
     <input type="hidden" name="image_url" value="{{ $product->getFirstMediaUrl('images', 'thumbnail') }}">
-    <input type="hidden" name="quantity" :value="totalQuantity">
-    <input type="hidden" name="price" :value="(offerPrice > 0 ? offerPrice : basePrice) + selectedPlacementPrice">
     <input type="hidden" name="color_id" :value="activeColorId">
     <input type="hidden" name="color_name" :value="activeColorId ? colorNames[activeColorId] : ''">
-    <input type="hidden" name="size_id" :value="activeSizeId">
     <input type="hidden" name="print_placements" :value="JSON.stringify(selectedPlacements.map(p => p.id))">
+    <input type="hidden" name="quantity" :value="totalQuantity">
+    <input type="hidden" name="size_id" :value="activeSizeId">
+    <input type="hidden" name="size_name" :value="activeSizeId ? sizeNames[activeSizeId] : ''">
 </form>

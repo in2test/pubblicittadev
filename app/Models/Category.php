@@ -51,6 +51,7 @@ class Category extends Model implements HasMedia
             $current = $current->parent;
             $ids[] = $current->id;
         }
+
         return $ids;
     }
 

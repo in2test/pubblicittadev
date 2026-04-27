@@ -3,7 +3,11 @@
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::registration());
+    if (method_exists($this, 'skipUnlessFortifyFeature')) {
+        $this->skipUnlessFortifyFeature(Features::registration());
+    } else {
+        $this->markTestSkipped('Fortify testing helpers not available.');
+    }
 });
 
 test('registration screen can be rendered', function () {

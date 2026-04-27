@@ -16,7 +16,7 @@
 @endphp
 
 <article
-    class="group relative bg-surface-container-lowest flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
+    class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
     <a href="{{ route('product', ['category' => optional($product->category)->slug ?: 'uncategorized', 'slug' => $product->slug]) }}"
         class="flex flex-col h-full">
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
@@ -32,8 +32,8 @@
         </div>
 
 
-        <div class="overflow-hidden bg-surface-container relative bg-white border border-gray-200">
-            <img class="w-full h-auto object-contain grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105 mx-auto "
+        <div class=" aspect-4/5 overflow-hidden relative bg-white border border-gray-200 flex">
+            <img class="m-auto object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105  "
                 src="{{ $imageUrl }}" alt="{{ $product->name }}" />
         </div>
 
@@ -43,9 +43,18 @@
                     {{ $product->name }}
                 </h3>
                 <div class="flex flex-col items-end">
-                    @if ($product->price > 0)
+                    @php
+                        $discountedPrice = $product->getPriceForQuantity(1);
+                        $basePrice = (float) $product->price;
+                    @endphp
+                    @if ($discountedPrice > 0 && $discountedPrice < $basePrice)
                         <span
-                            class="font-mono text-sm font-bold text-primary">€{{ number_format((float) $product->price, 2) }}</span>
+                            class="font-mono text-sm font-bold text-primary">€{{ number_format((float) $discountedPrice, 2) }}</span>
+                        <span
+                            class="text-xs line-through text-gray-500 ml-2">€{{ number_format((float) $basePrice, 2) }}</span>
+                    @elseif ($basePrice > 0)
+                        <span
+                            class="font-mono text-sm font-bold text-primary">€{{ number_format((float) $basePrice, 2) }}</span>
                     @else
                         <span
                             class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">Su

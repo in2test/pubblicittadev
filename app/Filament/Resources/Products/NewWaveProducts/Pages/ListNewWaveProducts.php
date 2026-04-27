@@ -20,6 +20,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Override;
+use Throwable;
 
 class ListNewWaveProducts extends ListRecords
 {
@@ -64,9 +65,9 @@ class ListNewWaveProducts extends ListRecords
                 ])
                 ->action(function (array $data) {
                     $skus = array_filter(
-                        array_map('trim', preg_split('/[\s,;]+/', $data['skus'])));
+                        array_map(trim(...), preg_split('/[\s,;]+/', (string) $data['skus'])));
 
-                    if (empty($skus)) {
+                    if ($skus === []) {
                         Notification::make()->title('Errore')->body('Inserisci almeno un codice SKU.')->danger()->send();
 
                         return;
@@ -110,7 +111,7 @@ class ListNewWaveProducts extends ListRecords
 
                             SyncNewWaveProductJob::dispatch($product->id);
                             $imported++;
-                        } catch (\Throwable $e) {
+                        } catch (Throwable $e) {
                             $errors[] = $sku.': '.$e->getMessage();
                         }
                     }
@@ -123,7 +124,7 @@ class ListNewWaveProducts extends ListRecords
                             ->send();
                     }
 
-                    if (! empty($errors)) {
+                    if ($errors !== []) {
                         Notification::make()
                             ->title('Errori')
                             ->body(implode(', ', $errors))

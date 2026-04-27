@@ -7,19 +7,21 @@
 <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950    mb-4 leading-none uppercase">
     {{ $product->name }}
 </h1>
+@php
+$disc = $product->getPriceForQuantity(1);
+$base = (float) $product->price;
+$offer = (float) ($product->offer_price ?? 0);
+@endphp
 <div class="flex items-baseline gap-4 mb-8">
-    <template x-if="offerPrice > 0">
-        <div class="flex items-baseline gap-3">
-            <span class="text-3xl font-black text-vividauburn-600 tracking-tight"
-                x-text="'€' + (offerPrice + selectedPlacementPrice).toFixed(2)">€{{ number_format((float) $product->offer_price, 2) }}</span>
-            <span class="text-lg font-light text-gray-500 line-through tracking-tight"
-                x-text="'€' + (basePrice + selectedPlacementPrice).toFixed(2)">€{{ number_format((float) $product->price, 2) }}</span>
-        </div>
-    </template>
-    <template x-if="offerPrice <= 0">
-        <span class="text-3xl font-light text-gray-900 tracking-tight"
-            x-text="'€' + (basePrice + selectedPlacementPrice).toFixed(2)">€{{ number_format((float) $product->price, 2) }}</span>
-    </template>
+    @if ($disc > 0 && $disc < $base)
+        <span class="text-3xl font-black text-vividauburn-600">€{{ number_format((float) $disc, 2) }}</span>
+        <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format((float) $base, 2) }}</span>
+    @elseif ($offer > 0)
+        <span class="text-3xl font-black text-vividauburn-600">€{{ number_format((float) $offer, 2) }}</span>
+        <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format((float) $base, 2) }}</span>
+    @else
+        <span class="text-3xl font-light text-gray-900 tracking-tight">€{{ number_format((float) $base, 2) }}</span>
+    @endif
     <span class="text-xs font-mono text-gray-800">IVA INCLUSA</span>
 </div>
 <div class="mb-8 p-6 bg-surface-container-low border-l-4 border-vividauburn-600">

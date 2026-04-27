@@ -14,6 +14,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
@@ -26,13 +27,27 @@ class NewWaveProductsTable
             ->poll('2s')
             ->modifyQueryUsing(fn (Builder $query) => $query->with('category'))
             ->columns([
-                TextColumn::make('sku')
-                    ->label('SKU')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('name')
                     ->label('Nome')
                     ->searchable()
+                    ->sortable()
+                    ->tooltip(function (Product $record): ?HtmlString {
+                        $url = $record->getThumbnailUrl();
+                        if (! $url) {
+                            return null;
+                        }
+
+                        return new HtmlString(
+                            "<img src='$url' style='width:150px;height:150px;object-fit:cover;border-radius:8px;' />"
+                        );
+                    }),
+                TextColumn::make('category.name')
+                    ->label('Categoria')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('price')
+                    ->label('Prezzo')
+                    ->formatStateUsing(fn ($state) => '€'.number_format((float) $state, 2))
                     ->sortable(),
                 TextColumn::make('sync_status')
                     ->label('Sync')
@@ -64,7 +79,9 @@ class NewWaveProductsTable
                     ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('category')
+                    ->relationship('category', 'name')
+                    ->label('Categoria'),
             ])
             ->recordUrl(fn (Product $record): string => EditNewWaveProduct::getUrl(['record' => $record]))
             ->recordActions([

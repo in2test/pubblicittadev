@@ -11,6 +11,8 @@ use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Filament\Notifications\Notification;
 use Livewire\Component;
+use Override;
+use Throwable;
 
 class BatchImportNewWave extends Component
 {
@@ -29,10 +31,10 @@ class BatchImportNewWave extends Component
     public function validateSkus(ProductAvailabilityService $service): void
     {
         $skuList = array_filter(
-            array_map('trim', preg_split('/[\s,;]+/', $this->skus))
+            array_map(trim(...), preg_split('/[\s,;]+/', $this->skus))
         );
 
-        if (empty($skuList)) {
+        if ($skuList === []) {
             Notification::make()
                 ->title('Errore')
                 ->body('Inserisci almeno un codice SKU.')
@@ -66,10 +68,10 @@ class BatchImportNewWave extends Component
     {
         $selectedSkus = array_keys(array_filter(
             $this->validatedProducts,
-            fn ($p) => ($p['selected'] ?? false) && ! ($p['exists'] ?? false)
+            fn (array $p) => ($p['selected'] ?? false) && ! ($p['exists'] ?? false)
         ));
 
-        if (empty($selectedSkus)) {
+        if ($selectedSkus === []) {
             Notification::make()
                 ->title('Errore')
                 ->body('Seleziona almeno un prodotto da importare.')
@@ -103,7 +105,7 @@ class BatchImportNewWave extends Component
                 SyncNewWaveProductJob::dispatch($product);
 
                 $imported[] = $sku;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $errors[] = $sku.': '.$e->getMessage();
             }
         }
@@ -122,6 +124,7 @@ class BatchImportNewWave extends Component
             ->send();
     }
 
+    #[Override]
     public function reset(): void
     {
         $this->skus = '';

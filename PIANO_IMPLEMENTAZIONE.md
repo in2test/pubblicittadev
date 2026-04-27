@@ -1,18 +1,18 @@
 # 📋 Piano di Implementazione - Abbigliamento Personalizzato
 
-**Status**: 🏗️ IN CORSO  
-**Scadenza MVP**: 2 settimane  
-**Ultimo aggiornamento**: 10 Aprile 2026
+**Status**: 🏗️ IN CORSO
+**Scadenza MVP**: 2 settimane
+**Ultimo aggiornamento**: 27 Aprile 2026
 
 ---
 
 ## 📊 Panoramica Progetto
 
-**Nome**: Plataforma di E-commerce per stampe personalizzate su abbigliamento  
-**MVP Focus**: Abbigliamento (Workwear - Basic Hoody, Basic Roundneck, etc.)  
-**Flusso**: Quote-based (No pagamento online) → Ordini manuali → Admin gestisce  
-**Lingua**: Italiano  
-**Team**: 1 developer  
+**Nome**: Plataforma di E-commerce per stampe personalizzate su abbigliamento
+**MVP Focus**: Abbigliamento (Workwear - Basic Hoody, Basic Roundneck, etc.)
+**Flusso**: Quote-based (No pagamento online) → Ordini manuali → Admin gestisce
+**Lingua**: Italiano
+**Team**: 1 developer
 **Timeline**: 2 settimane
 
 ---
@@ -26,7 +26,7 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ```
 📦 products
 ├── id, name, slug, description, price (base), category_id, is_featured
-├── created_at, updated_at
+├── is_active, created_at, updated_at
 
 📦 categories
 ├── id, name, slug, parent_id, description
@@ -50,6 +50,10 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 📦 pricing_tiers
 ├── id, product_id, min_quantity, max_quantity, price_per_unit
 
+📦 category_quantity_discounts (NUOVO - Sconti quantità per categoria)
+├── id, category_id, min_quantity, max_quantity
+├── discount_type (percent|fixed), discount_value, description
+
 📦 customization_points
 ├── id, name, category, description, display_order
 
@@ -65,9 +69,9 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 
 ---
 
-## 🎯 Fasi Implementazione (Settimanale)
+## 🎯 Funzionalità Implementate
 
-### ⚡ SETTIMANA 1: Fondamenta & Core Backend (COMPLETATA)
+### ✅ SETTIMANA 1: Fondamenta & Core Backend (COMPLETATA)
 
 #### Giorni 1-2: Setup Database & Models
 
@@ -90,7 +94,7 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 
 ---
 
-### 📱 SETTIMANA 2: Admin Panel & Polish (IN CORSO)
+### 📱 SETTIMANA 2: Admin Panel & Polish (COMPLETATA)
 
 #### Giorni 8-10: Admin Panel (Filament)
 
@@ -101,17 +105,38 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 - [x] Batch Import via Filament modal for NewWave products (Import da SKU) with category selection and print placements
 - [x] Print placements in batch import (multi-select) attached to all imported products
 - [x] Gestione stati: pending, syncing, synced, failed
+- [x] **Thumbnail on hover** per product name in Filament tables
 
 **✅ MILESTONE 3**: Gestione catalogo completa da pannello admin (incluso Batch Import)
 
-#### Giorni 11-12: Notifiche & Automazione (DA FARE)
+#### 🔍 Ricerca (Laravel Scout) - NUOVO
 
-- [ ] Mailable: `NewQuoteNotification` (Email admin e cliente)
-- [ ] Generazione PDF per i preventivi
-- [ ] Integrazione notifiche nel cambio stato da Filament
-- [ ] Test finale responsive e cross-browser
+- [x] Installato `laravel/scout` v11
+- [x] Configurato database driver (ricerca locale, no servizi esterni)
+- [x] Aggiunto `Searchable` trait al modello `Product`
+- [x] Implementato `toSearchableArray()` con name, sku, description
+- [x] Ricerca full-text nel catalogo (`CategoryController`)
+- [x] Ricerca scoped per categoria
 
-**✅ MILESTONE 4**: Sistema di notifiche e gestione preventivi completo.
+**⚠️ Nota Tecnica**: Il callback `query()` di Scout riceve `Illuminate\Database\Eloquent\Builder`, NON `Laravel\Scout\Builder`. Usare:
+```php
+Product::search('query')
+    ->query(fn ($query) => $query->with(['category', 'media']))
+    ->get();
+```
+
+#### 🛒 Carrello con Sconti Quantità - NUOVO
+
+- [x] `CartManager` service per gestione session-based cart
+- [x] Raggruppamento per product_id + color + size + print_placements
+- [x] Merge quantity per stesso prodotto
+- [x] `Product::getPriceForQuantity($qty)` con sconti da `category_quantity_discounts`
+- [x] `QuantityDiscountService` per calcolo sconti (cerca su category tree)
+- [x] Sconti percentuali e fissi
+- [x] AJAX endpoint `/cart/price` per calcolo prezzo real-time
+- [x] Filamento per visualizzazione sconti nel carrello ("Sconto del X%")
+
+**✅ MILESTONE 4**: Sistema carrello completo con sconti quantità.
 
 ---
 
@@ -125,10 +150,28 @@ SETTIMANA 1 (Recap)
 
 SETTIMANA 2 (Attuale)
 ├─ ✅ Admin Prodotti (v0.6)
-├─ 🏗️ Admin Preventivi (v0.7) - IN CORSO
-├─ 🏗️ Email & PDF (v0.8) - DA FARE
-└─ 🚀 MVP LIVE (v1.0) - TARGET: 19 Aprile
+├─ ✅ Ricerca Scout (v0.7)
+├─ ✅ Carrello + Sconti (v0.8)
+└- ✅ Test Suite (v0.9)
 ```
+
+---
+
+## 🧪 Test Suite
+
+Creati **131 test** (Pest) che coprono:
+
+### Feature Tests
+- `CartTest` - Aggiunta, update, rimozione items, merge quantità
+- `CartPriceAjaxTest` - Calcolo prezzo AJAX
+- `SearchTest` - Ricerca catalogo con Scout
+- `ProductPageTest` - Dettaglio prodotto
+- `QuoteTest` - Creazione preventivi
+
+### Unit Tests
+- `CartManagerTest` - Logica gestione carrello
+- `QuantityDiscountServiceTest` - Calcolo sconti, category tree
+- `ProductDiscountTest` - Applicazione sconti su prodotto
 
 ---
 
@@ -138,16 +181,18 @@ SETTIMANA 2 (Attuale)
 Backend: Laravel 13
 Frontend: Blade + Tailwind 4 + Flux UI
 Admin: Filament 5
-Storage: local/public (quote-designs)
+Search: Laravel Scout 11 (database driver)
+Testing: Pest 4
 ```
 
 ---
 
-## ⏭️ Prossimi Passi (Immediate)
+## ⏭️ Prossimi Passi (Future)
 
-1. Implementare **Filament QuoteResource** per visualizzare i preventivi ricevuti.
-2. Configurare **Mailables** per le notifiche automatiche.
-3. Aggiungere logica per la generazione di **PDF** dai dettagli del preventivo.
+1. Implementare **Filament QuoteResource** per visualizzare i preventivi ricevuti
+2. Configurare **Mailables** per le notifiche automatiche
+3. Aggiungere logica per la generazione di **PDF** dai dettagli del preventivo
+4. Dashboard con statistiche preventivi
 
 ---
 
@@ -160,6 +205,9 @@ Storage: local/public (quote-designs)
 - [x] Form invio preventivo con calcolo prezzi
 - [x] Upload design file
 - [x] Admin Prodotti/Categorie/Colori
+- [x] Ricerca Laravel Scout (database driver)
+- [x] Carrello con sconti quantità
+- [x] Test suite completa
 - [ ] Admin Preventivi (QuoteResource)
 - [ ] Notifiche Email
 - [ ] Generazione PDF
@@ -184,4 +232,4 @@ Storage: local/public (quote-designs)
 - Week 2 = 50% new features + 50% testing e stabilità
 - Post-launch: priorità = bug fixing e feature feedback
 
-🚀 **TARGET LIVE**: Fine Settimana 2 (19 Aprile 2026)
+🚀 **TARGET LIVE**: Fine Aprile 2026

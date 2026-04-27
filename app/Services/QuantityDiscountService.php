@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\CategoryQuantityDiscount;
 use App\Models\Category;
-use Illuminate\Database\Query\Builder;
+use App\Models\CategoryQuantityDiscount;
 
 class QuantityDiscountService
 {
@@ -44,24 +43,22 @@ class QuantityDiscountService
         }
         // Ensure we test starting category first
         array_unshift($path, $startCategoryId);
+
         return $path;
     }
 
     // Compute final price given a base price and a discount
     public function computeDiscountedPrice(float $basePrice, ?CategoryQuantityDiscount $discount): float
     {
-        if (! $discount) {
+        if (! $discount instanceof CategoryQuantityDiscount) {
             return $basePrice;
         }
         $value = (float) $discount->discount_value;
-        if ($discount->discount_type === 'percent') {
-            $final = $basePrice * (1.0 - $value / 100.0);
-        } else {
-            $final = $basePrice - $value;
-        }
+        $final = $discount->discount_type === 'percent' ? $basePrice * (1.0 - $value / 100.0) : $basePrice - $value;
         if ($final < 0) {
             $final = 0;
         }
+
         return (float) number_format($final, 2, '.', '');
     }
 }

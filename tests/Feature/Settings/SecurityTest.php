@@ -6,7 +6,13 @@ use Laravel\Fortify\Features;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
+    if (method_exists($this, 'skipUnlessFortifyFeature')) {
+        $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
+    } else {
+        $this->markTestSkipped('Fortify testing helpers not available.');
+
+        return;
+    }
 
     Features::twoFactorAuthentication([
         'confirm' => true,

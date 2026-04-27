@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\URL;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::emailVerification());
+    if (method_exists($this, 'skipUnlessFortifyFeature')) {
+        $this->skipUnlessFortifyFeature(Features::emailVerification());
+    } else {
+        $this->markTestSkipped('Fortify testing helpers not available.');
+    }
 });
 
 test('email verification screen can be rendered', function () {

@@ -4,15 +4,29 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Laravel\Fortify\Features;
+use Override;
+use Tests\Support\FortifyTestHelpers;
 
 abstract class TestCase extends BaseTestCase
 {
-    protected function skipUnlessFortifyFeature(string $feature, ?string $message = null): void
+    use FortifyTestHelpers;
+    use RefreshDatabase;
+
+    protected function setUp(): void
     {
-        if (! Features::enabled($feature)) {
-            $this->markTestSkipped($message ?? "Fortify feature [{$feature}] is not enabled.");
-        }
+        parent::setUp();
+    }
+
+    // Bootstrapping the Laravel application for tests
+    #[Override]
+    public function createApplication()
+    {
+        $app = require __DIR__.'/../bootstrap/app.php';
+        $app->make(Kernel::class)->bootstrap();
+
+        return $app;
     }
 }

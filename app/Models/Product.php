@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\SyncStatus;
+use App\Services\QuantityDiscountService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Throwable;
 
 #[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors', 'sync_status', 'synced_at', 'is_active'])]
 class Product extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, Searchable;
 
     #[Override]
     protected function casts(): array
@@ -36,19 +39,14 @@ class Product extends Model implements HasMedia
     public const TYPE_NEWWAVE = 'newwave';
 
     #[Override]
-    protected static function booted(): void
-    {
-        // Media library handles cleanup automatically
-    }
+    protected static function booted(): void {}
 
-    // Use slug instead of id as key
     #[Override]
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    // Returns Parent Category
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -87,9 +85,6 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
-    /**
-     * Get unit price for a given quantity considering cascading category discounts.
-     */
     public function getPriceForQuantity(int $quantity): float
     {
         $base = (float) $this->price;
@@ -97,29 +92,49 @@ class Product extends Model implements HasMedia
             return 0.0;
         }
         try {
-            $service = app(\App\Services\QuantityDiscountService::class);
+            $service = app(QuantityDiscountService::class);
             $discount = $service->getDiscountForCategoryTree($this->category_id, $quantity);
+
             return $service->computeDiscountedPrice($base, $discount);
-        } catch (\Throwable $e) {
+        } catch (Throwable) {
             return $base;
         }
     }
 
-    // Register media collections
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('images')
             ->useDisk('public');
     }
 
-    // Register media conversions for image variants
+    public function getThumbnailUrl(): ?string
+    {
+        return $this->getFirstMediaUrl('images', 'thumbnail');
+    }
+
+    public function getLargeImageUrl(): ?string
+    {
+        return $this->getFirstMediaUrl('images', 'large');
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'sku' => $this->sku,
+            'description' => $this->description,
+            'price' => $this->price,
+            'category_id' => $this->category_id,
+        ];
+    }
+
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumbnail')
             ->width(150)
             ->height(150)
             ->sharpen(10)
-
             ->format('webp');
 
         $this->addMediaConversion('medium')

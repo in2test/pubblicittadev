@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Product;
 use Illuminate\Support\Facades\Session;
 
 class CartManager
@@ -22,6 +23,12 @@ class CartManager
 
         if (isset($items[$key])) {
             $items[$key]['quantity'] += $item['quantity'] ?? 1;
+            if (! empty($item['color_id'])) {
+                $items[$key]['color_id'] = $item['color_id'];
+            }
+            if (! empty($item['color_name'])) {
+                $items[$key]['color_name'] = $item['color_name'];
+            }
         } else {
             $items[$key] = array_merge($item, ['quantity' => $item['quantity'] ?? 1]);
         }
@@ -51,6 +58,15 @@ class CartManager
         Session::put(self::CART_KEY, $items);
     }
 
+    public function removeMultiple(array $keys): void
+    {
+        $items = $this->getItems();
+        foreach ($keys as $key) {
+            unset($items[$key]);
+        }
+        Session::put(self::CART_KEY, $items);
+    }
+
     public function clear(): void
     {
         Session::forget(self::CART_KEY);
@@ -63,7 +79,23 @@ class CartManager
 
     public function total(): float
     {
-        return array_sum(array_map(fn (array $item) => ($item['price'] ?? 0) * ($item['quantity'] ?? 1), $this->getItems()));
+        $total = 0.0;
+        foreach ($this->getItems() as $item) {
+            $price = (float) ($item['price'] ?? 0);
+            if (! empty($item['product_id'])) {
+                $product = Product::find((int) $item['product_id']);
+                if ($product) {
+                    $disc = $product->getPriceForQuantity((int) ($item['quantity'] ?? 1));
+                    if ($disc > 0) {
+                        $price = (float) $disc;
+                    }
+                }
+            }
+            $qty = (int) ($item['quantity'] ?? 1);
+            $total += $price * max(0, $qty);
+        }
+
+        return (float) number_format($total, 2, '.', '');
     }
 
     private function generateKey(array $item): string

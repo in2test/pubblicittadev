@@ -116,8 +116,11 @@ GRAPHQL;
         $invalid = [];
 
         foreach ($skus as $sku) {
-            $sku = trim($sku);
-            if (empty($sku)) {
+            $sku = trim((string) $sku);
+            if ($sku === '') {
+                continue;
+            }
+            if ($sku === '0') {
                 continue;
             }
 
