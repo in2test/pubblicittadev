@@ -98,10 +98,11 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 - [x] Creare Filament Resource: `CategoryResource`
 - [x] Creare Filament Resource: `ColorResource`
 - [x] Creare Filament Resource: `ProductVariationResource`
-- [ ] Creare Filament Resource: `QuoteResource` (Pianificato)
-    - Gestione stati: pending, sent, accepted, rejected, etc.
+- [x] Batch Import via Filament modal for NewWave products (Import da SKU) with category selection and print placements
+- [x] Print placements in batch import (multi-select) attached to all imported products
+- [x] Gestione stati: pending, syncing, synced, failed
 
-**✅ MILESTONE 3**: Gestione catalogo completa da pannello admin.
+**✅ MILESTONE 3**: Gestione catalogo completa da pannello admin (incluso Batch Import)
 
 #### Giorni 11-12: Notifiche & Automazione (DA FARE)
 

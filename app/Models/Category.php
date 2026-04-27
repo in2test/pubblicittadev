@@ -42,6 +42,18 @@ class Category extends Model implements HasMedia
         return $this->hasMany(Category::class, 'parent_id');
     }
 
+    // Return all ancestor category IDs (closest first)
+    public function ancestors(): array
+    {
+        $ids = [];
+        $current = $this;
+        while ($current && $current->parent) {
+            $current = $current->parent;
+            $ids[] = $current->id;
+        }
+        return $ids;
+    }
+
     // Returns Cateogrie's Products
     public function products()
     {

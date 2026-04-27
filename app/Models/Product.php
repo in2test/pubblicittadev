@@ -87,6 +87,24 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    /**
+     * Get unit price for a given quantity considering cascading category discounts.
+     */
+    public function getPriceForQuantity(int $quantity): float
+    {
+        $base = (float) $this->price;
+        if ($base <= 0) {
+            return 0.0;
+        }
+        try {
+            $service = app(\App\Services\QuantityDiscountService::class);
+            $discount = $service->getDiscountForCategoryTree($this->category_id, $quantity);
+            return $service->computeDiscountedPrice($base, $discount);
+        } catch (\Throwable $e) {
+            return $base;
+        }
+    }
+
     // Register media collections
     public function registerMediaCollections(): void
     {

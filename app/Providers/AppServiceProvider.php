@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Override;
+use Filament\Facades\Filament;
+use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +36,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Prevent lazy loading to catch potential N+1 query issues.
         Model::preventLazyLoading();
+
+        // Register Filament resources (global menu)
+        if (class_exists(Filament::class)) {
+            Filament::registerResources([
+                CategoryQuantityDiscountResource::class,
+            ]);
+        }
     }
 
     /**
