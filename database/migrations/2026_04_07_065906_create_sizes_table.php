@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('size_name');
             $table->string('size');
+            $table->string('size_code')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->unique(['size_name']);
+            $table->unique(['size_name', 'size_code']);
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ use App\Models\Color;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Size;
+use App\Support\SlugGenerator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -54,7 +55,7 @@ class ProductSeeder extends Seeder
 
             $product = Product::create([
                 'name' => $data['productName']['it'],
-                'slug' => Str::slug($data['productName']['it'].'-'.$data['productNumber']),
+                'slug' => SlugGenerator::unique(Product::class, $data['productName']['it']),
                 'description' => $data['description']['it'] ?? '',
                 'sku' => $data['productNumber'],
                 'price' => $minPrice,
@@ -86,7 +87,7 @@ class ProductSeeder extends Seeder
                     }
 
                     // Map images to this color
-                    if (isset($variationData['images']) && is_array($variationData['images'])) {
+                    if ($color && isset($variationData['images']) && is_array($variationData['images'])) {
                         foreach ($variationData['images'] as $img) {
                             if (isset($img['preview'])) {
                                 if (! isset($imageToColors[$img['preview']])) {
@@ -99,27 +100,36 @@ class ProductSeeder extends Seeder
                         }
                     }
 
-                    if (isset($variationData['skus']) && is_array($variationData['skus'])) {
+                    if ($color && isset($variationData['skus']) && is_array($variationData['skus'])) {
                         foreach ($variationData['skus'] as $skuData) {
                             $sizeName = $skuData['name'] ?? null;
-                            if (! $sizeName) {
+                            $sizeCode = (string) ($skuData['size'] ?? '');
+
+                            if ($sizeCode === '') {
                                 continue;
                             }
 
-                            // Find or create Size based on 'size' column (e.g. 'S', 'M', 'L')
-                            $size = Size::firstOrCreate(
-                                ['size' => $sizeName],
-                                ['size_name' => $sizeName]
-                            );
+                            // Find or create Size based on size_code
+                            $size = Size::where('size_code', $sizeCode)->first();
 
-                            ProductVariation::create([
-                                'product_id' => $product->id,
-                                'color_id' => $color->id,
-                                'size_id' => $size->id,
-                                'sku' => $skuData['sku'],
-                                'quantity' => rand(10, 100), // Default random quantity
-                                'is_available' => ! empty($skuData['active']),
-                            ]);
+                            if (! $size && $sizeName) {
+                                $size = Size::create([
+                                    'size_code' => $sizeCode,
+                                    'size' => $sizeName,
+                                    'size_name' => $sizeName,
+                                ]);
+                            }
+
+                            if ($size) {
+                                ProductVariation::create([
+                                    'product_id' => $product->id,
+                                    'color_id' => $color->id,
+                                    'size_id' => $size->id,
+                                    'sku' => $skuData['sku'],
+                                    'quantity' => rand(10, 100), // Default random quantity
+                                    'is_available' => ! empty($skuData['active']),
+                                ]);
+                            }
                         }
                     }
                 }

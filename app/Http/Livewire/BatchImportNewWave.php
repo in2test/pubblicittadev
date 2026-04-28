@@ -95,7 +95,7 @@ class BatchImportNewWave extends Component
                 $product = Product::create([
                     'name' => $productData['name'],
                     'sku' => $sku,
-                    'slug' => SlugGenerator::unique(Product::class, $sku),
+                    'slug' => SlugGenerator::unique(Product::class, $productData['name']),
                     'type' => Product::TYPE_NEWWAVE,
                     'price' => $productData['price'] ?? 0,
                     'sync_status' => SyncStatus::Pending,

@@ -131,22 +131,29 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Always generate thumbnail for every image
         $this->addMediaConversion('thumbnail')
             ->width(150)
             ->height(150)
             ->sharpen(10)
             ->format('webp');
 
-        $this->addMediaConversion('medium')
-            ->width(600)
-            ->height(600)
-            ->sharpen(10)
-            ->format('webp');
+        // Only generate medium and large conversions for main pictures (no color association)
+        // This avoids processing hundreds of variation images during sync
+        $isColorLinked = $media && ! empty($media->getCustomProperty('color_ids'));
 
-        $this->addMediaConversion('large')
-            ->width(1000)
-            ->height(1000)
-            ->sharpen(10)
-            ->format('webp');
+        if (! $isColorLinked) {
+            $this->addMediaConversion('medium')
+                ->width(600)
+                ->height(600)
+                ->sharpen(10)
+                ->format('webp');
+
+            $this->addMediaConversion('large')
+                ->width(1000)
+                ->height(1000)
+                ->sharpen(10)
+                ->format('webp');
+        }
     }
 }

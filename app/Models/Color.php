@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'color_name',
     'color_hex',
-    'colode_code',
+    'color_code',
     'sort_order',
 ])]
 class Color extends Model

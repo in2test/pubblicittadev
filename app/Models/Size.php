@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'size_name',
     'size',
+    'size_code',
     'sort_order',
 ])]
 class Size extends Model

@@ -89,7 +89,7 @@ class ListNewWaveProducts extends ListRecords
                             $product = Product::create([
                                 'name' => $info['name'],
                                 'sku' => $sku,
-                                'slug' => SlugGenerator::unique(Product::class, $sku),
+                                'slug' => SlugGenerator::unique(Product::class, $info['name']),
                                 'type' => Product::TYPE_NEWWAVE,
                                 'price' => $info['price'] ?? 0,
                                 'category_id' => $data['category_id'] ?? null,

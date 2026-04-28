@@ -55,6 +55,7 @@ query Query($productNumber: String!, $language:String!) {
         description
         skuSize {
           webtext
+          size
         }
       }
     }
@@ -199,14 +200,26 @@ GRAPHQL;
             return;
         }
 
+        // 1. Pre-load all existing media once for lookup
+        $existingMedia = $product->getMedia('images');
+        $mediaLookup = $existingMedia->keyBy('file_name');
+
+        // 2. Pre-load Colors and Sizes into local cache for 1-to-1 mapping
+        $colorsCache = Color::all()->keyBy('color_code');
+        $sizesCache = Size::all()->keyBy('size_code');
+
+        $variationsToUpsert = [];
         $totalVariations = count($data['variations']);
         $processedVariations = 0;
 
         foreach ($data['variations'] as $variationData) {
-            $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
-            $product->update(['sync_progress' => $progress]);
-
             $processedVariations++;
+
+            // Only update progress every 10 variations to reduce DB writes
+            if ($processedVariations % 10 === 0 || $processedVariations === $totalVariations) {
+                $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
+                $product->update(['sync_progress' => $progress]);
+            }
 
             // Rest of the code...
 
@@ -218,15 +231,20 @@ GRAPHQL;
             $color = null;
 
             if ($colorCode !== '' && $colorCode !== '0') {
-                $color = Color::firstOrCreate(
-                    ['color_code' => $colorCode],
-                    ['color_name' => $colorName ?: 'Color '.$colorCode]
-                );
+                $color = $colorsCache->get($colorCode);
+
+                if (! $color) {
+                    $color = Color::create([
+                        'color_code' => $colorCode,
+                        'color_name' => $colorName ?: 'Color '.$colorCode,
+                        'color_hex' => '#CCCCCC',
+                    ]);
+                    $colorsCache->put($colorCode, $color);
+                }
             }
 
             // Sync Variation Images associated with this color
             if ($product->type === Product::TYPE_NEWWAVE && ! empty($variationData['pictures']) && $color) {
-                $existingMedia = $product->getMedia('images'); // Refresh list
                 foreach ($variationData['pictures'] as $img) {
                     $url = $img['highResUrl'] ?? '';
                     if (! $url) {
@@ -234,19 +252,20 @@ GRAPHQL;
                     }
                     $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
 
-                    $match = $existingMedia->firstWhere('file_name', $fileName);
+                    $match = $mediaLookup->get($fileName);
 
                     if (! $match) {
                         try {
-                            $product->addMediaFromUrl($url)
+                            $newMedia = $product->addMediaFromUrl($url)
                                 ->withCustomProperties(['color_ids' => [$color->id]])
                                 ->toMediaCollection('images');
+
+                            $mediaLookup->put($fileName, $newMedia);
                         } catch (Exception) {
                             // Silently skip
                         }
                     } else {
                         // If image exists but lacks this color ID, add it
-                        // ONLY if it's not manually managed
                         $props = $match->custom_properties;
                         if (! ($props['is_manual'] ?? false)) {
                             $colorIds = (array) ($props['color_ids'] ?? []);
@@ -272,29 +291,44 @@ GRAPHQL;
 
                 // Find or create Size
                 $sizeName = $item['skuSize']['webtext'] ?? null;
+                $sizeCode = (string) ($item['skuSize']['size'] ?? '');
                 $size = null;
-                if ($sizeName) {
-                    $size = Size::firstOrCreate(
-                        ['size' => $sizeName],
-                        ['size_name' => $sizeName]
-                    );
+
+                if ($sizeCode !== '') {
+                    $size = $sizesCache->get($sizeCode);
+
+                    if (! $size && $sizeName) {
+                        $size = Size::create([
+                            'size_code' => $sizeCode,
+                            'size' => $sizeName,
+                            'size_name' => $sizeName,
+                        ]);
+                        $sizesCache->put($sizeCode, $size);
+                    }
                 }
 
                 if ($color && $size) {
-                    ProductVariation::updateOrCreate(
-                        [
-                            'sku' => $item['sku'],
-                            'product_id' => $product->id,
-                        ],
-                        [
-                            'color_id' => $color->id,
-                            'size_id' => $size->id,
-                            'quantity' => $halvedQuantity,
-                            'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
-                        ]
-                    );
+                    $variationsToUpsert[] = [
+                        'sku' => $item['sku'],
+                        'product_id' => $product->id,
+                        'color_id' => $color->id,
+                        'size_id' => $size->id,
+                        'quantity' => $halvedQuantity,
+                        'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                 }
             }
+        }
+
+        // 3. Batch upsert variations for high performance
+        if (! empty($variationsToUpsert)) {
+            ProductVariation::upsert(
+                $variationsToUpsert,
+                ['sku'],
+                ['color_id', 'size_id', 'quantity', 'is_available', 'updated_at']
+            );
         }
 
         // Re-load variations
