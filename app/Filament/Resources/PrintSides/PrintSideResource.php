@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Override;
 use UnitEnum;
 
 class PrintSideResource extends Resource
@@ -31,6 +32,7 @@ class PrintSideResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -40,6 +42,7 @@ class PrintSideResource extends Resource
         ]);
     }
 
+    #[Override]
     public static function table(Table $table): Table
     {
         return $table
@@ -64,6 +67,7 @@ class PrintSideResource extends Resource
             ]);
     }
 
+    #[Override]
     public static function getPages(): array
     {
         return [

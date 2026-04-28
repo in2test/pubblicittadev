@@ -17,9 +17,11 @@
 $mediaList = $product->getMedia('images');
             $firstMedia = $mediaList->first(fn($m) => empty($m->custom_properties['color_ids'])) ?? $mediaList->first();
             $mainImageUrl = $firstMedia
-                ? $firstMedia->getUrl('large')
+                ? ($firstMedia->hasGeneratedConversion('large') ? $firstMedia->getUrl('large') : $firstMedia->getUrl())
                 : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-            $mainImageMed = $firstMedia ? $firstMedia->getUrl('medium') : '';
+            $mainImageMed = $firstMedia 
+                ? ($firstMedia->hasGeneratedConversion('medium') ? $firstMedia->getUrl('medium') : $firstMedia->getUrl()) 
+                : '';
             $mainImageAlt = $firstMedia ? ($firstMedia->custom_properties['alt'] ?? $firstMedia->name) : $product->name; @endphp
             mainImage: '{{ $mainImageUrl }}',
             mainImageMed: '{{ $mainImageMed }}',
@@ -29,8 +31,8 @@ $mediaList = $product->getMedia('images');
                 {
                     id: {{ $media->id }},
                     thumb: '{{ $media->getUrl('thumbnail') }}',
-                    medium: '{{ $media->getUrl('medium') }}',
-                    large: '{{ $media->getUrl('large') }}',
+                    medium: '{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}',
+                    large: '{{ $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl() }}',
                     alt: '{{ $media->custom_properties['alt'] ?? '' }}',
                     color_ids: {{ json_encode(array_map('intval', (array) ($media->custom_properties['color_ids'] ?? []))) }}
                 }, @endforeach

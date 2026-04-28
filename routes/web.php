@@ -7,6 +7,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteController;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
@@ -28,7 +30,7 @@ Route::get('/', [HomePageController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
-    Route::post('/logout', function () {
+    Route::post('/logout', function (): Redirector|RedirectResponse {
         auth()->logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();

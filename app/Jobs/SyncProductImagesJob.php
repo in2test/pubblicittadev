@@ -32,11 +32,6 @@ class SyncProductImagesJob implements ShouldQueue
         Product::with('category')->chunk(50, function ($products) {
             foreach ($products as $product) {
                 foreach ($product->getMedia('images') as $media) {
-                    // If the image is linked to colors, skip for Phase 1
-                    $colorIds = $media->getCustomProperty('color_ids');
-                    if (! empty($colorIds)) {
-                        continue;
-                    }
                     // Trigger conversions by accessing the URLs (will create conversions lazily)
                     try {
                         $media->getUrl('thumbnail');

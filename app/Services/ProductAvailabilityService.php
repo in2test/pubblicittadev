@@ -323,7 +323,7 @@ GRAPHQL;
         }
 
         // 3. Batch upsert variations for high performance
-        if (! empty($variationsToUpsert)) {
+        if ($variationsToUpsert !== []) {
             ProductVariation::upsert(
                 $variationsToUpsert,
                 ['sku'],
