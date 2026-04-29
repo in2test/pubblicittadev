@@ -104,7 +104,110 @@ GRAPHQL;
             'name' => $data['productName'] ?? null,
             'price' => $data['retailPrice']['price'] ?? null,
             'description' => $data['productCatalogText'] ?? null,
+            'brand' => $data['productBrand'] ?? null,
+            'gender' => null,
         ];
+    }
+
+    // Fetch full GraphQL payload using the exact provided query
+    public function fetchFullGraphQLProductData(string $productNumber, string $language): ?array
+    {
+        $query = <<<'GQL'
+query Query($productNumber: String!, $language: String!) {
+  productById(productNumber: $productNumber, language: $language) {
+    productName
+    productCatalogText
+    productBrand
+    productGender {
+      value
+      key
+    }
+    retailPrice {
+      price
+    }
+    pictures {
+      thumbnailUrl
+      largeThumbnailUrl
+      standardUrl
+    }
+    variations {
+      itemColorCode
+      itemWebColor
+      pictures {
+        thumbnailUrl
+        largeThumbnailUrl
+        standardUrl
+      }
+      skus {
+        availability
+        skuSize {
+          webtext
+          size
+        }
+      }
+    }
+  }
+}
+GQL;
+
+        try {
+            $response = Http::withoutVerifying()
+                ->withToken($this->token)
+                ->post($this->endpoint, [
+                    'query' => $query,
+                    'variables' => [
+                        'productNumber' => $productNumber,
+                        'language' => $language,
+                    ],
+                ]);
+            if (!$response->successful()) {
+                Log::error("NWG API Error (full GraphQL): {$response->status()} - {$response->body()}");
+                return null;
+            }
+            return $response->json()['data']['productById'] ?? null;
+        } catch (Exception $e) {
+            Log::error("NWG API Exception (full GraphQL): {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    // Map a full GraphQL payload to remote_images structure
+    public function mapFullProductPayloadToRemoteImages(array $payload): array
+    {
+        $remoteImages = [];
+        // top-level pictures
+        if (! empty($payload['pictures'] ?? [])) {
+            foreach ($payload['pictures'] as $idx => $img) {
+                $url = $img['standardUrl'] ?? $img['largeThumbnailUrl'] ?? $img['thumbnailUrl'] ?? '';
+                if (!$url) continue;
+                $remoteImages[] = [
+                    'id' => 'top_'.$idx,
+                    'url' => $url,
+                    'medium' => $img['largeThumbnailUrl'] ?? $img['standardUrl'] ?? '',
+                    'thumb' => $img['thumbnailUrl'] ?? $img['largeThumbnailUrl'] ?? '',
+                    'color_ids' => [],
+                ];
+            }
+        }
+
+        // variations
+        foreach ($payload['variations'] ?? [] as $v) {
+            $colorCode = $v['itemColorCode'] ?? '';
+            if (! empty($v['pictures'])) {
+                foreach ($v['pictures'] as $idx => $vImg) {
+                    $url = $vImg['standardUrl'] ?? $vImg['largeThumbnailUrl'] ?? $vImg['thumbnailUrl'] ?? '';
+                    if (!$url) continue;
+                    $remoteImages[] = [
+                        'id' => 'var_'.($colorCode ?: 'nc').'_'.$idx,
+                        'url' => $url,
+                        'medium' => $vImg['largeThumbnailUrl'] ?? $vImg['standardUrl'] ?? '',
+                        'thumb' => $vImg['thumbnailUrl'] ?? $vImg['largeThumbnailUrl'] ?? '',
+                        'color_ids' => [],
+                    ];
+                }
+            }
+        }
+        return $remoteImages;
     }
 
     /**
