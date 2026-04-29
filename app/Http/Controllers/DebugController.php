@@ -14,7 +14,7 @@ class DebugController extends Controller
     public function remoteImages(string $sku, Request $request)
     {
         $product = Product::where('sku', $sku)->first();
-        if (!$product) {
+        if (! $product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
         return response()->json([
