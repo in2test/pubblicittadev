@@ -623,4 +623,6 @@ class DatabaseSeeder extends Seeder
         Color::updateOrCreate(['color_code' => 'B999000'], ['color_name' => 'Black', 'color_hex' => '#CCCCCC', 'sort_order' => 427]);
         Color::updateOrCreate(['color_code' => 'X999995'], ['color_name' => 'Black-Asphalt', 'color_hex' => '#CCCCCC', 'sort_order' => 428]);
     }
+        $this->call(NewWaveProductSeeder::class);
+    }
 }

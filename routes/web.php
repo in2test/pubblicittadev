@@ -46,3 +46,9 @@ Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/catalogo/{category}', [CategoryController::class, 'show'])->name('category');
 Route::get('/catalogo/{category}/{slug}', [ProductController::class, 'show'])->name('product');
 Route::post('/quote', [QuoteController::class, 'store'])->name('quote.store');
+use App\\Http\\Controllers\\Admin\\ImageCacheController;
+
+Route::middleware(['web'])->group(function () {
+    Route::get('/admin/cache-images/{product}', [ImageCacheController::class, 'show'])->name('admin.cache.images');
+    Route::post('/admin/cache-images/{product}', [ImageCacheController::class, 'store'])->name('admin.cache.images.store');
+});

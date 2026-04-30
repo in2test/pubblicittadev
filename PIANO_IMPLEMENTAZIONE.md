@@ -140,6 +140,15 @@ Product::search('query')
 
 ---
 
+### 🟢 SETTIMANA 3: Admin Quotes, Email, PDF (IN PROGRESS)
+
+- [ ] Filament QuoteResource per gestione dei preventivi
+- [ ] Mailables configurate per notifiche sui preventivi
+- [ ] Generazione PDF dai dettagli del preventivo
+- [ ] Admin dashboard/analytics per metriche preventivi
+- [ ] Aggiornare test e copertura per nuove risorse admin
+
+
 ## 📅 Checkpoint Aggiornati
 
 ```
@@ -150,13 +159,13 @@ SETTIMANA 2 (Recap)
 └- ✅ Test Suite (v0.9)
 
 SETTIMANA 3 (Apr 28, 2026)
-├─ ✅ User Management (role=admin/client, is_active)
-├─ ✅ Filament UserResource - manage users
-├─ ✅ AuthenticateAdmin middleware - restrict Filament access
-├─ ✅ Livewire AuthModal - login/register modal
-├─ ✅ User dropdown menu with logout
-├─ ✅ Admin menu organization (Catalogo/Configurazione/Impostazioni)
-├─ ✅ SizeResource + PrintSideResource
+├─ ☐ User Management (role=admin/client, is_active) — in progress
+├─ ☐ Filament UserResource - manage users — in progress
+├─ ☐ AuthenticateAdmin middleware - restrict Filament access — in progress
+├─ ☐ Livewire AuthModal - login/register modal — in progress
+├─ ☐ User dropdown menu with logout — in progress
+├─ ☐ Admin menu organization (Catalogo/Configurazione/Impostazioni) — in progress
+├─ ☐ SizeResource + PrintSideResource — in progress
 ```
 
 ---

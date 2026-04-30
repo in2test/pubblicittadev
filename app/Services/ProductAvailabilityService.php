@@ -29,6 +29,11 @@ class ProductAvailabilityService
      */
     public function getFullProductData(string $productNumber): ?array
     {
+        // If global NWG sync is turned off, do not call external NWG API
+        if (filter_var(env('NWG_SYNC_OFF', 'false'), FILTER_VALIDATE_BOOLEAN)) {
+            Log::info("NWG_SYNC_OFF: getFullProductData skipped for product {$productNumber}");
+            return null;
+        }
         $query = <<<'GRAPHQL'
 query Query($productNumber: String!, $language:String!) {
   productById(productNumber: $productNumber, language: $language) {
@@ -253,47 +258,24 @@ GQL;
             return;
         }
 
+        // Global guard: optionally disable automatic NWG sync on product creation
+        $nwgSyncOff = filter_var(env('NWG_SYNC_OFF', 'false'), FILTER_VALIDATE_BOOLEAN);
+        if ($nwgSyncOff) {
+            Log::info("NWG_SYNC_OFF is enabled; skipping NWG sync for product id {$product->id}");
+            return;
+        }
+
         $product->update(['sync_progress' => 10]);
 
-        // For NewWave products, we cache/update the product metadata as well
+        // For NewWave products, switch to remote_images as canonical source (CDN-first)
+        // Respect NWG_SYNC_OFF to skip the import of remote images as local media
+        $nwgSyncOffLocal = filter_var(env('NWG_SYNC_OFF', 'false'), FILTER_VALIDATE_BOOLEAN);
         if ($product->type === Product::TYPE_NEWWAVE) {
-            // Update basic info
-            $updateData = [
-                'name' => $data['productName'] ?? $product->name,
-            ];
-
-            if (! $product->override_price) {
-                $updateData['price'] = $data['retailPrice']['price'] ?? $product->price;
-            }
-
-            if (! $product->override_description) {
-                $updateData['description'] = $data['productCatalogText'] ?? $product->description;
-            }
-
-            $updateData['sync_progress'] = 20;
-            $product->update($updateData);
-
-            $existingMedia = $product->getMedia('images');
-
-            // Sync Main Pictures
-            if (! empty($data['pictures'])) {
-                foreach (array_slice($data['pictures'], 0, 5) as $img) {
-                    $url = $img['highResUrl'] ?? '';
-                    if (! $url) {
-                        continue;
-                    }
-                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
-
-                    if (! $existingMedia->contains('file_name', $fileName)) {
-                        try {
-                            $product->addMediaFromUrl($url)
-                                ->withCustomProperties(['color_ids' => [], 'alt' => null, 'is_manual' => false])
-                                ->toMediaCollection('images');
-                        } catch (Exception $e) {
-                            Log::warning("Failed to download main image for SKU {$product->sku}: {$e->getMessage()}");
-                        }
-                    }
-                }
+            if ($nwgSyncOffLocal) {
+                $product->update(['sync_progress' => 60]);
+            } else {
+                $remoteImages = $this->mapFullProductPayloadToRemoteImages($data);
+                $product->update(['remote_images' => $remoteImages, 'sync_progress' => 60]);
             }
         }
 
@@ -303,19 +285,19 @@ GQL;
             return;
         }
 
-        // 1. Pre-load all existing media once for lookup
-        $existingMedia = $product->getMedia('images');
-        $mediaLookup = $existingMedia->keyBy('file_name');
+            // 1. Pre-load all existing media once for lookup (for non-NewWave imports we may still use local media)
+            $existingMedia = $product->getMedia('images');
+            $mediaLookup = $existingMedia->keyBy('file_name');
 
-        // 2. Pre-load Colors and Sizes into local cache for 1-to-1 mapping
-        $colorsCache = Color::all()->keyBy('color_code');
-        $sizesCache = Size::all()->keyBy('size_code');
+            // 2. Pre-load Colors and Sizes into local cache for 1-to-1 mapping
+            $colorsCache = Color::all()->keyBy('color_code');
+            $sizesCache = Size::all()->keyBy('size_code');
 
-        $variationsToUpsert = [];
-        $totalVariations = count($data['variations']);
-        $processedVariations = 0;
+            $variationsToUpsert = [];
+            $totalVariations = count($data['variations']);
+            $processedVariations = 0;
 
-        foreach ($data['variations'] as $variationData) {
+            foreach ($data['variations'] as $variationData) {
             $processedVariations++;
 
             // Only update progress every 10 variations to reduce DB writes
@@ -346,42 +328,7 @@ GQL;
                 }
             }
 
-            // Sync Variation Images associated with this color
-            if ($product->type === Product::TYPE_NEWWAVE && ! empty($variationData['pictures']) && $color) {
-                foreach ($variationData['pictures'] as $img) {
-                    $url = $img['highResUrl'] ?? '';
-                    if (! $url) {
-                        continue;
-                    }
-                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
-
-                    $match = $mediaLookup->get($fileName);
-
-                    if (! $match) {
-                        try {
-                            $newMedia = $product->addMediaFromUrl($url)
-                                ->withCustomProperties(['color_ids' => [$color->id]])
-                                ->toMediaCollection('images');
-
-                            $mediaLookup->put($fileName, $newMedia);
-                        } catch (Exception) {
-                            // Silently skip
-                        }
-                    } else {
-                        // If image exists but lacks this color ID, add it
-                        $props = $match->custom_properties;
-                        if (! ($props['is_manual'] ?? false)) {
-                            $colorIds = (array) ($props['color_ids'] ?? []);
-                            if (! in_array($color->id, $colorIds)) {
-                                $colorIds[] = $color->id;
-                                $props['color_ids'] = $colorIds;
-                                $match->custom_properties = $props;
-                                $match->save();
-                            }
-                        }
-                    }
-                }
-            }
+            // (Note: Removed per-variation image downloads to use remote_images instead)
 
             if (empty($variationData['skus'])) {
                 continue;

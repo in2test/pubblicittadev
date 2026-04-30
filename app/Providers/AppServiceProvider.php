@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Override;
+use Illuminate\Support\Facades\Event;
+use Spatie\MediaLibrary\Events\MediaUpdated;
+use App\Listeners\CacheMediaOnUpdate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,6 +45,11 @@ class AppServiceProvider extends ServiceProvider
             Filament::registerResources([
                 CategoryQuantityDiscountResource::class,
             ]);
+        }
+
+        // Listen for media updates to trigger on-demand caching for the updated image
+        if (class_exists(Event::class) && class_exists(MediaUpdated::class)) {
+            Event::listen(MediaUpdated::class, CacheMediaOnUpdate::class);
         }
     }
 
