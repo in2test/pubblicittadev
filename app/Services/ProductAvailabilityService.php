@@ -88,13 +88,56 @@ GRAPHQL;
         }
     }
 
+    public function getBasicProductData(string $productNumber): ?array
+    {
+        $query = <<<'GRAPHQL'
+            query Query($productNumber: String!, $language:String!) {
+                productById(productNumber: $productNumber, language: $language) {
+                    productName
+                    productCatalogText
+                    productBrand
+                    productGender {
+                        key
+                        value
+                    }
+                    retailPrice {
+                        price
+                    }
+                }
+            }
+        GRAPHQL;
+
+        try {
+            $response = Http::withoutVerifying()
+                ->withToken($this->token)
+                ->post($this->endpoint, [
+                    'query' => $query,
+                    'variables' => [
+                        'productNumber' => $productNumber,
+                        'language' => 'it',
+                    ],
+                ]);
+
+            if (! $response->successful()) {
+                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
+
+                return null;
+            }
+
+            return $response->json()['data']['productById'] ?? null;
+        } catch (Exception $e) {
+            Log::error("NWG API Exception: {$e->getMessage()}");
+
+            return null;
+        }
+    }
     /**
      * Fetch basic info (name and price) for a SKU.
      * Useful for real-time verification in admin.
      */
     public function fetchBasicInfo(string $productNumber): ?array
     {
-        $data = $this->getFullProductData($productNumber);
+        $data = $this->getBasicProductData($productNumber);
 
         if (! $data) {
             return null;
@@ -105,7 +148,7 @@ GRAPHQL;
             'price' => $data['retailPrice']['price'] ?? null,
             'description' => $data['productCatalogText'] ?? null,
             'brand' => $data['productBrand'] ?? null,
-            'gender' => null,
+            'gender' => $data['productGender']['value'] ?? null,
         ];
     }
 

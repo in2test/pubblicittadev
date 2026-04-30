@@ -29,6 +29,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
+use Livewire\Attributes\Validate;
 
 class NewWaveProductForm
 {
@@ -47,6 +48,7 @@ class NewWaveProductForm
                                 TextInput::make('sku')
                                     ->label('Codice NWG')
                                     ->required()
+                                    ->unique()
                                     ->live(onBlur: true)
                                     ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record, ProductAvailabilityService $service) {
                                         if (! $state) {
@@ -56,11 +58,13 @@ class NewWaveProductForm
                                         if ($info && ! empty($info['name'])) {
                                             $set('name', $info['name']);
                                             $set('price', $info['price'] ?? 0);
+                                            $set('description', $info['description'] ?? null);
 
                                             // Ensure slug is generated
                                             if (empty($record?->slug)) {
                                                 $set('slug', SlugGenerator::unique(Product::class, $info['name'], $record));
                                             }
+
                                         }
                                     }),
                                 TextInput::make('slug')
