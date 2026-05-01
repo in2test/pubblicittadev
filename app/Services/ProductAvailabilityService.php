@@ -25,86 +25,33 @@ class ProductAvailabilityService
     }
 
     /**
-     * Get full product data including metadata and variations.
+     * Fetch basic info (name and price) for a SKU.
+     * Useful for real-time verification in admin.
      */
-    public function getFullProductData(string $productNumber): ?array
-    {
-        $query = <<<'GRAPHQL'
-query Query($productNumber: String!, $language:String!) {
-  productById(productNumber: $productNumber, language: $language) {
-    productName
-    productCatalogText
-    productBrand
-    outlet
-    retailPrice {
-      price
-    }
-    pictures {
-      highResUrl
-    }
-    variations {
-      itemColorCode
-      itemWebColor
-      pictures {
-        highResUrl
-      }
-      skus {
-        sku
-        availability
-        active
-        description
-        skuSize {
-          webtext
-          size
-        }
-      }
-    }
-  }
-}
-GRAPHQL;
-
-        try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
-                ->post($this->endpoint, [
-                    'query' => $query,
-                    'variables' => [
-                        'productNumber' => $productNumber,
-                        'language' => 'it',
-                    ],
-                ]);
-
-            if (! $response->successful()) {
-                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
-
-                return null;
-            }
-
-            return $response->json()['data']['productById'] ?? null;
-        } catch (Exception $e) {
-            Log::error("NWG API Exception: {$e->getMessage()}");
-
-            return null;
-        }
-    }
-
     public function getBasicProductData(string $productNumber): ?array
     {
         $query = <<<'GRAPHQL'
-            query Query($productNumber: String!, $language:String!) {
+            query getBasicProductInfo($productNumber: String!, $language: String!) {
                 productById(productNumber: $productNumber, language: $language) {
                     productName
                     productCatalogText
                     productBrand
                     productGender {
-                        key
-                        value
+                    value
+                    key
                     }
                     retailPrice {
-                        price
+                    price
+                    }
+                    pictures {
+                    thumbnailUrl
+                    largeThumbnailUrl
+                    standardUrl
+                    resourcePictureType
+                    resourceFileId
                     }
                 }
-            }
+                }
         GRAPHQL;
 
         try {
@@ -131,10 +78,6 @@ GRAPHQL;
             return null;
         }
     }
-    /**
-     * Fetch basic info (name and price) for a SKU.
-     * Useful for real-time verification in admin.
-     */
     public function fetchBasicInfo(string $productNumber): ?array
     {
         $data = $this->getBasicProductData($productNumber);
@@ -149,49 +92,63 @@ GRAPHQL;
             'description' => $data['productCatalogText'] ?? null,
             'brand' => $data['productBrand'] ?? null,
             'gender' => $data['productGender']['value'] ?? null,
+            'images' => array_map(function ($pic) {
+                return [
+                    'thumbnail' => $pic['thumbnailUrl'] ?? null,
+                    'largeThumbnail' => $pic['largeThumbnailUrl'] ?? null,
+                    'standard' => $pic['standardUrl'] ?? null,
+                    'type' => $pic['resourcePictureType'] ?? null,
+                    'fileId' => $pic['resourceFileId'] ?? null,
+                ];
+            }, $data['pictures'] ?? []),
         ];
     }
 
     // Fetch full GraphQL payload using the exact provided query
-    public function fetchFullGraphQLProductData(string $productNumber, string $language): ?array
+    /**
+     * Validate multiple SKUs from the API.
+     * Returns array with valid and invalid SKU codes.
+     */
+    public function getFullProductData(string $productNumber): ?array
     {
-        $query = <<<'GQL'
-query Query($productNumber: String!, $language: String!) {
-  productById(productNumber: $productNumber, language: $language) {
-    productName
-    productCatalogText
-    productBrand
-    productGender {
-      value
-      key
-    }
-    retailPrice {
-      price
-    }
-    pictures {
-      thumbnailUrl
-      largeThumbnailUrl
-      standardUrl
-    }
-    variations {
-      itemColorCode
-      itemWebColor
-      pictures {
-        thumbnailUrl
-        largeThumbnailUrl
-        standardUrl
-      }
-      skus {
-        availability
-        skuSize {
-          webtext
-          size
-        }
-      }
-    }
-  }
-}
-GQL;
+        $query = <<<'GRAPHQL'
+            query getFullProductInfo($productNumber: String!, $language: String!) {
+                productById(productNumber: $productNumber, language: $language) {
+                    productName
+                    productCatalogText
+                    productBrand
+                    productGender {
+                    value
+                    key
+                    }
+                    retailPrice {
+                    price
+                    }
+                    pictures {
+                    thumbnailUrl
+                    largeThumbnailUrl
+                    standardUrl
+                    }
+                    variations {
+                    itemColorCode
+                    itemWebColor
+                    pictures {
+                        thumbnailUrl
+                        largeThumbnailUrl
+                        standardUrl
+                    }
+                    skus {
+                        availability
+                        skuSize {
+                        webtext
+                        size
+                        }
+                    }
+                    }
+                }
+                }
+
+        GRAPHQL;
 
         try {
             $response = Http::withoutVerifying()
@@ -200,72 +157,68 @@ GQL;
                     'query' => $query,
                     'variables' => [
                         'productNumber' => $productNumber,
-                        'language' => $language,
+                        'language' => 'it',
                     ],
                 ]);
-            if (!$response->successful()) {
-                Log::error("NWG API Error (full GraphQL): {$response->status()} - {$response->body()}");
+
+            if (! $response->successful()) {
+                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
+
                 return null;
             }
+
             return $response->json()['data']['productById'] ?? null;
         } catch (Exception $e) {
-            Log::error("NWG API Exception (full GraphQL): {$e->getMessage()}");
+            Log::error("NWG API Exception: {$e->getMessage()}");
+
             return null;
         }
     }
-
-    // Map a full GraphQL payload to remote_images structure
-    public function mapFullProductPayloadToRemoteImages(array $payload): array
+    public function fetchFullInfo(string $productNumber): ?array
     {
-        $remoteImages = [];
-        // top-level pictures
-        if (! empty($payload['pictures'] ?? [])) {
-            foreach ($payload['pictures'] as $idx => $img) {
-                $base = $img['highResUrl'] ?? '';
-                if (!$base) continue;
-                // Derive API-friendly sizes from the highResUrl path when possible
-                $thumb = str_replace('/highres/', '/thumbnail/', $base);
-                $large = str_replace('/highres/', '/largethumbnail/', $base);
-                $standard = str_replace('/highres/', '/standard/', $base);
-                $remoteImages[] = [
-                    'id' => 'top_'.$idx,
-                    'url' => $standard ?? $base,
-                    'thumbnail' => $thumb,
-                    'medium' => $large,
-                    'large' => $base,
-                    'color_ids' => [],
+        $data = $this->getFullProductData($productNumber);
+
+        if (! $data) {
+            return null;
+        }
+
+        return [
+            'name' => $data['productName'] ?? null,
+            'price' => $data['retailPrice']['price'] ?? null,
+            'description' => $data['productCatalogText'] ?? null,
+            'brand' => $data['productBrand'] ?? null,
+            'gender' => $data['productGender']['value'] ?? null,
+            'images' => array_map(function ($pic) {
+                return [
+                    'thumbnail' => $pic['thumbnailUrl'] ?? null,
+                    'largeThumbnail' => $pic['largeThumbnailUrl'] ?? null,
+                    'standard' => $pic['standardUrl'] ?? null,
+                    'type' => $pic['resourcePictureType'] ?? null,
+                    'fileId' => $pic['resourceFileId'] ?? null,
                 ];
-            }
-        }
-
-        // variations
-        foreach ($payload['variations'] ?? [] as $v) {
-            $colorCode = $v['itemColorCode'] ?? '';
-            if (! empty($v['pictures'])) {
-                foreach ($v['pictures'] as $idx => $vImg) {
-                    $base = $vImg['highResUrl'] ?? '';
-                    if (!$base) continue;
-                    $thumb = str_replace('/highres/', '/thumbnail/', $base);
-                    $large = str_replace('/highres/', '/largethumbnail/', $base);
-                    $standard = str_replace('/highres/', '/standard/', $base);
-                    $remoteImages[] = [
-                        'id' => 'var_'.($colorCode ?: 'nc').'_'.$idx,
-                        'url' => $standard ?? $base,
-                        'thumbnail' => $thumb,
-                        'medium' => $large,
-                        'large' => $base,
-                        'color_ids' => [],
-                    ];
-                }
-            }
-        }
-        return $remoteImages;
+            }, $data['pictures'] ?? []),
+            'variations' => array_map(function ($variation) {
+                return [
+                    'colorCode' => $variation['itemColorCode'] ?? null,
+                    'colorName' => $variation['itemWebColor'] ?? null,
+                    'images' => array_map(function ($pic) {
+                        return [
+                            'thumbnail' => $pic['thumbnailUrl'] ?? null,
+                            'largeThumbnail' => $pic['largeThumbnailUrl'] ?? null,
+                            'standard' => $pic['standardUrl'] ?? null,
+                        ];
+                    }, $variation['pictures'] ?? []),
+                    'skus' => array_map(function ($sku) {
+                        return [
+                            'availability' => $sku['availability'] ?? null,
+                            'sizeWebText' => $sku['skuSize']['webtext'] ?? null,
+                            'sizeValue' => $sku['skuSize']['size'] ?? null,
+                        ];
+                    }, $variation['skus'] ?? []),
+                ];
+            }, $data['variations'] ?? []),
+        ];
     }
-
-    /**
-     * Validate multiple SKUs from the API.
-     * Returns array with valid and invalid SKU codes.
-     */
     public function validateSkus(array $skus): array
     {
         $valid = [];
@@ -280,7 +233,7 @@ GQL;
                 continue;
             }
 
-            $data = $this->getFullProductData($sku);
+            $data = $this->getBasicProductData($sku);
             if ($data && ! empty($data['productName'])) {
                 $valid[$sku] = [
                     'name' => $data['productName'],
@@ -299,189 +252,86 @@ GQL;
      */
     public function syncProduct(Product $product): void
     {
-        $data = $this->getFullProductData($product->sku);
-        $remoteImages = [];
-
+        $data = $this->fetchFullInfo($product->sku);
         if (! $data) {
-            return;
+            throw new Exception("Failed to fetch data for SKU {$product->sku}");
         }
 
-        $product->update(['sync_progress' => 10]);
+        $product->update([
+            'name' => $data['name'] ?? $product->name,
+            'price' => $data['price'] ?? $product->price,
+            'description' => $data['description'] ?? $product->description,
+            'brand' => $data['brand'] ?? $product->brand,
+            'gender' => $data['gender'] ?? $product->gender,
+        ]); 
 
-        // For NewWave products, we cache/update the product metadata as well
-        if ($product->type === Product::TYPE_NEWWAVE) {
-            // Update basic info
-            $updateData = [
-                'name' => $data['productName'] ?? $product->name,
-            ];
+        $existingVariations = $product->variations()->get()->keyBy('color_code');
+        $apiVariations = collect($data['variations'] ?? [])->keyBy('colorCode');
 
-            if (! $product->override_price) {
-                $updateData['price'] = $data['retailPrice']['price'] ?? $product->price;
+        // Update or create variations
+        foreach ($apiVariations as $colorCode => $variationData) {
+            $variation = $existingVariations->get($colorCode);
+            if ($variation) {
+                $variation->update([
+                    'color_name' => $variationData['colorName'] ?? $variation->color_name,
+                    
+                ]);
+            } else {
+                $variation = $product->variations()->create([
+                    'color_code' => $colorCode,
+                    'color_name' => $variationData['colorName'] ?? null,
+                ]);
             }
 
-            if (! $product->override_description) {
-                $updateData['description'] = $data['productCatalogText'] ?? $product->description;
-            }
+            // Sync sizes and availability
+            $existingSizes = $variation->sizes()->get()->keyBy('size_value');
+            $apiSizes = collect($variationData['skus'] ?? [])->keyBy('
+sizeValue');
 
-            $updateData['sync_progress'] = 20;
-            $product->update($updateData);
-
-            $existingMedia = $product->getMedia('images');
-
-            // Sync Main Pictures: prefer API-provided remote URLs and store them for display
-            if (! empty($data['pictures']) || ! empty($data['variations'])) {
-                $remoteImages = $this->mapFullProductPayloadToRemoteImages($data);
-                if (!empty($remoteImages)) {
-                    $product->update(['remote_images' => $remoteImages]);
-                }
-            }
-        }
-
-        $product->update(['sync_progress' => 40]);
-
-        if (empty($data['variations'])) {
-            return;
-        }
-
-        // 1. Pre-load all existing media once for lookup
-        $existingMedia = $product->getMedia('images');
-        $mediaLookup = $existingMedia->keyBy('file_name');
-
-        // 2. Pre-load Colors and Sizes into local cache for 1-to-1 mapping
-        $colorsCache = Color::all()->keyBy('color_code');
-        $sizesCache = Size::all()->keyBy('size_code');
-
-        $variationsToUpsert = [];
-        $totalVariations = count($data['variations']);
-        $processedVariations = 0;
-
-        foreach ($data['variations'] as $variationData) {
-            $processedVariations++;
-
-            // Only update progress every 10 variations to reduce DB writes
-            if ($processedVariations % 10 === 0 || $processedVariations === $totalVariations) {
-                $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
-                $product->update(['sync_progress' => $progress]);
-            }
-
-            // Rest of the code...
-
-            // Find or create Color for this variation
-            $colorCode = (string) ($variationData['itemColorCode'] ?? '');
-            $colorName = is_array($variationData['itemWebColor'] ?? null)
-                ? ($variationData['itemWebColor'][0] ?? '')
-                : (string) ($variationData['itemWebColor'] ?? '');
-            $color = null;
-
-            if ($colorCode !== '' && $colorCode !== '0') {
-                $color = $colorsCache->get($colorCode);
-
-                if (! $color) {
-                    $color = Color::create([
-                        'color_code' => $colorCode,
-                        'color_name' => $colorName ?: 'Color '.$colorCode,
-                        'color_hex' => '#CCCCCC',
+            foreach ($apiSizes as $sizeValue => $sizeData) {
+                $size = $existingSizes->get($sizeValue);
+                if ($size) {
+                    $size->update([
+                        'web_text' => $sizeData['sizeWebText'] ?? $size->web_text,
+                        'is_available' => ($sizeData['availability'] ?? false) === true,
                     ]);
-                    $colorsCache->put($colorCode, $color);
+                } else {
+                    $variation->sizes()->create([
+                        'size_value' => $sizeValue,
+                        'web_text' => $sizeData['sizeWebText'] ?? null,
+                        'is_available' => ($sizeData['availability'] ?? false) === true,
+                    ]);
                 }
             }
 
-            // Sync Variation Images associated with this color
-            if ($product->type === Product::TYPE_NEWWAVE && ! empty($variationData['pictures']) && $color) {
-                // If there are remote images derived from API payload, skip downloading variation images
-                if (!empty($remoteImages)) {
-                    continue;
-                }
-                foreach ($variationData['pictures'] as $img) {
-                    $url = $img['highResUrl'] ?? '';
-                    if (! $url) {
-                        continue;
+            // Optionally, handle images for variations here
+        }
+
+        // Optionally, remove variations/sizes that no longer exist in the API
+        foreach ($existingVariations as $colorCode => $variation) {
+            if (! $apiVariations->has($colorCode)) {
+                $variation->delete();
+            } else {
+                $apiSizes = collect($apiVariations[$colorCode]['skus'] ?? [])->pluck('sizeValue')->all();
+                foreach ($variation->sizes as $size) {
+                    if (! in_array($size->size_value, $apiSizes, true)) {
+                        $size->delete();
                     }
-                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
-
-                    $match = $mediaLookup->get($fileName);
-
-                    if (! $match) {
-                        try {
-                            $newMedia = $product->addMediaFromUrl($url)
-                                ->withCustomProperties(['color_ids' => [$color->id]])
-                                ->toMediaCollection('images');
-
-                            $mediaLookup->put($fileName, $newMedia);
-                        } catch (Exception) {
-                            // Silently skip
-                        }
-                    } else {
-                        // If image exists but lacks this color ID, add it
-                        $props = $match->custom_properties;
-                        if (! ($props['is_manual'] ?? false)) {
-                            $colorIds = (array) ($props['color_ids'] ?? []);
-                            if (! in_array($color->id, $colorIds)) {
-                                $colorIds[] = $color->id;
-                                $props['color_ids'] = $colorIds;
-                                $match->custom_properties = $props;
-                                $match->save();
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (empty($variationData['skus'])) {
-                continue;
-            }
-
-            foreach ($variationData['skus'] as $item) {
-                $actualAvailability = (int) $item['availability'];
-                // Apply halving logic: floor(actual / 2)
-                $halvedQuantity = (int) floor($actualAvailability / 2);
-
-                // Find or create Size
-                $sizeName = $item['skuSize']['webtext'] ?? null;
-                $sizeCode = (string) ($item['skuSize']['size'] ?? '');
-                $size = null;
-
-                if ($sizeCode !== '') {
-                    $size = $sizesCache->get($sizeCode);
-
-                    if (! $size && $sizeName) {
-                        $size = Size::create([
-                            'size_code' => $sizeCode,
-                            'size' => $sizeName,
-                            'size_name' => $sizeName,
-                        ]);
-                        $sizesCache->put($sizeCode, $size);
-                    }
-                }
-
-                if ($color && $size) {
-                    $variationsToUpsert[] = [
-                        'sku' => $item['sku'],
-                        'product_id' => $product->id,
-                        'color_id' => $color->id,
-                        'size_id' => $size->id,
-                        'quantity' => $halvedQuantity,
-                        'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
                 }
             }
         }
 
-        // 3. Batch upsert variations for high performance
-        if ($variationsToUpsert !== []) {
-            ProductVariation::upsert(
-                $variationsToUpsert,
-                ['sku'],
-                ['color_id', 'size_id', 'quantity', 'is_available', 'updated_at']
-            );
+        // Best-effort: mark as synced after completing sync pass
+        try {
+            if (class_exists(\App\Enums\SyncStatus::class)) {
+                $product->update(['sync_status' => \App\Enums\SyncStatus::Synced, 'synced_at' => now()]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('NWG sync status update failed: '.$e->getMessage());
         }
 
-        // Re-load variations
-        $product->load([
-            'variations.color',
-            'variations.size',
-        ]);
     }
+
+        
+    
 }
