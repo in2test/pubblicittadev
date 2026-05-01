@@ -210,9 +210,9 @@ class ProductAvailabilityService
                     }, $variation['pictures'] ?? []),
                     'skus' => array_map(function ($sku) {
                         return [
-                            'availability' => $sku['availability'] ?? null,
-                            'sizeWebText' => $sku['skuSize']['webtext'] ?? null,
                             'sizeValue' => $sku['skuSize']['size'] ?? null,
+                            'sizeWebText' => $sku['skuSize']['webtext'] ?? null,
+                            'availability' => $sku['availability'] ?? null,
                         ];
                     }, $variation['skus'] ?? []),
                 ];
@@ -264,7 +264,7 @@ class ProductAvailabilityService
             'brand' => $data['brand'] ?? $product->brand,
             'gender' => $data['gender'] ?? $product->gender,
         ]); 
-
+        Log::info("Updated product {$product->sku} with basic info from NWG API.");
         $existingVariations = $product->variations()->get()->keyBy('color_code');
         $apiVariations = collect($data['variations'] ?? [])->keyBy('colorCode');
 
@@ -276,17 +276,18 @@ class ProductAvailabilityService
                     'color_name' => $variationData['colorName'] ?? $variation->color_name,
                     
                 ]);
+                Log::info("Updated variation {$colorCode} for product {$product->sku}.");
             } else {
                 $variation = $product->variations()->create([
                     'color_code' => $colorCode,
                     'color_name' => $variationData['colorName'] ?? null,
                 ]);
+                Log::info("Created variation {$colorCode} for product {$product->sku}.");
             }
 
             // Sync sizes and availability
             $existingSizes = $variation->sizes()->get()->keyBy('size_value');
-            $apiSizes = collect($variationData['skus'] ?? [])->keyBy('
-sizeValue');
+            $apiSizes = collect($variationData['skus'] ?? [])->keyBy('sizeValue');
 
             foreach ($apiSizes as $sizeValue => $sizeData) {
                 $size = $existingSizes->get($sizeValue);

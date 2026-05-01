@@ -29,7 +29,6 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
-use Livewire\Attributes\Validate;
 
 class NewWaveProductForm
 {
@@ -245,12 +244,16 @@ class NewWaveProductForm
                                     ->schema([
                                         Placeholder::make('preview')
                                             ->label('Anteprima')
-                                        ->content(function ($record) {
-                                            if (!$record) return 'N/A';
-                                            $first = method_exists($record, 'getMedia') ? $record->getMedia('images')->first() : null;
-                                            $url = $first ? ($first->hasGeneratedConversion('thumbnail') ? $first->getUrl('thumbnail') : $first->getUrl()) : '';
-                                            return new HtmlString("<img src='{$url}' class='h-32 w-auto rounded border shadow-sm mx-auto'>");
-                                        }),
+                                            ->content(function ($record) {
+                                                if (! $record) {
+                                                    return 'N/A';
+                                                }
+                                                $url = method_exists($record, 'getUrl') ? (
+                                                    $record->hasGeneratedConversion('thumbnail') ? $record->getUrl('thumbnail') : $record->getUrl()
+                                                ) : '';
+
+                                                return new HtmlString("<img src='{$url}' class='h-32 w-auto rounded border shadow-sm mx-auto'>");
+                                            }),
                                         Grid::make(1)
                                             ->schema([
                                                 Select::make('custom_properties.color_ids')
