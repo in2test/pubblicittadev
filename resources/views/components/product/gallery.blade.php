@@ -30,8 +30,9 @@
                     x-show="(!activeColorId && image.color_ids.length === 0) || (activeColorId && image.color_ids.some(cid => cid == activeColorId))"
                     @click="updateMain(image)">
                     <img :alt="getComputedAlt(image)"
-                        class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity"
-                        :src="image.thumb" />
+                        class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity lazyload"
+                        data-src="" + image.thumb
+                        src=""/>
                 </div>
             </template>
         </div>
@@ -51,9 +52,9 @@
                     :class="mainImage === image.large ? 'bg-primary w-4' : 'bg-outline-variant/30'"></div>
             </template>
         </div>
-    </div>
+</div>
 
-    <!-- Main Display Section -->
+<!-- Main Display Section -->
     <div class="flex-1 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white min-h-[200px]">
         <picture class="">
             <source media="(max-width: 768px)" :srcset="mainImageMed">
@@ -66,3 +67,18 @@
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none"></div>
     </div>
 </div>
+
+<script>
+(function(){
+  const imgs = document.querySelectorAll('img[data-src]');
+  const preload = (img) => { if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); } };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => { if (e.isIntersecting) { preload(e.target); io.unobserve(e.target); } });
+    });
+    imgs.forEach(img => io.observe(img));
+  } else {
+    imgs.forEach(img => preload(img));
+  }
+})();
+</script>

@@ -142,6 +142,10 @@ class ProductSeeder extends Seeder
                     break;
                 }
                 try {
+                    // Skip seeding images when API URLs are provided for the product
+                    if (!empty($product->external_image_urls)) {
+                        continue;
+                    }
                     $mediaAdder = $product->addMediaFromUrl($url);
                     if (! empty($colorIds)) {
                         $mediaAdder->withCustomProperties(['color_ids' => $colorIds]);

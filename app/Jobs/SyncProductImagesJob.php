@@ -34,7 +34,7 @@ class SyncProductImagesJob implements ShouldQueue
                 foreach ($product->getMedia('images') as $media) {
                     // Trigger conversions by accessing the URLs (will create conversions lazily)
                     try {
-                        $media->getUrl('thumbnail');
+                        $product->mediaUrl($media, 'thumbnail');
                         $media->getUrl('medium');
                         $media->getUrl('large');
                     } catch (Throwable $e) {

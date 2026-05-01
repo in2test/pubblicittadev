@@ -113,7 +113,12 @@ class ProductForm
                             ->schema([
                                 TextEntry::make('preview')
                                     ->label('Immagine')
-                                    ->state(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),
+                                    ->state(function ($record) {
+                                        if (!$record) return 'Sconosciuta';
+                                        $first = $record->getMedia('images')->first();
+                                        $url = $first ? $record->mediaUrl($first, 'thumbnail') : '';
+                                        return new HtmlString("<img src='{$url}' class='h-20 w-auto rounded border shadow-sm'>");
+                                    }),
                                 Select::make('custom_properties.color_ids')
                                     ->label('Associa a uno o più colori')
                                     ->multiple()

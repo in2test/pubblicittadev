@@ -8,9 +8,9 @@
 
 ## 📊 Panoramica Progetto
 
-**Nome**: Plataforma di E-commerce per stampe personalizzate su abbigliamento
-**MVP Focus**: Abbigliamento (Workwear - Basic Hoody, Basic Roundneck, etc.)
-**Flusso**: Quote-based (No pagamento online) → Ordini manuali → Admin gestisce
+**Nome**: Piattaforma di E-commerce per stampe personalizzate su abbigliamento
+**MVP Focus**: Abbigliamento (es. Basic Hoody, Basic Roundneck, ecc.)
+**Flusso**: Preventivi (senza pagamento online) → Ordini manuali → Admin gestisce
 **Lingua**: Italiano
 **Team**: 1 developer
 **Timeline**: 2 settimane
@@ -102,7 +102,7 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 - [x] Creare Filament Resource: `CategoryResource`
 - [x] Creare Filament Resource: `ColorResource`
 - [x] Creare Filament Resource: `ProductVariationResource`
-- [x] Batch Import via Filament modal for NewWave products (Import da SKU) with category selection and print placements
+- [x] Batch Import tramite Filament modal per nuovi prodotti (Import da SKU) con selezione categoria e posizioni di stampa
 - [x] Print placements in batch import (multi-select) attached to all imported products
 - [x] Gestione stati: pending, syncing, synced, failed
 - [x] **Thumbnail on hover** per product name in Filament tables

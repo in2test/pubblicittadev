@@ -13,6 +13,10 @@ class Kernel extends ConsoleKernel
 {
     protected $commands = [
         SyncProductImagesCommand::class,
+        \App\Console\Commands\ConvertProductImagesCommand::class,
+        \App\Console\Commands\RefreshRemoteImagesCommand::class,
+        \App\Console\Commands\SyncAllRemoteImagesCommand::class,
+        \App\Console\Commands\DiagnoseNwgSku::class,
     ];
 
     #[Override]

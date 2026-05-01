@@ -1,4 +1,20 @@
-# OpenCode Agent Instructions
+ - Yes: Prioritize high-signal sources from this repo: README*, root manifests (composer.json, package.json), workspace config, lockfiles, build/test/lint/configs, CI/pre-commit hooks, existing instruction files, and repo-local OpenCode settings (opencode.json).
+- Yes: Trust executable config/scripts over prose when they conflict; the source-of-truth is in code and config, not in prose docs.
+- Yes: Identify architecture by inspecting a small set of representative wiring files (service providers, bootstrapping, routing) before leaf components.
+- Yes: Extract exact developer commands and the required command order (eg, lint -> typecheck -> test) and keep them up to date in this file.
+- Yes: Note monorepo or multi-package boundaries and real entrypoints (where the app actually runs) to avoid scope misreads.
+- Yes: Rely on project conventions (Filament Livewire patterns, Pest tests, Laravel Scout notes) when guiding tasks; refer to dedicated docs only if ambiguous.
+- Yes: Exact developer commands to bake into sessions:
+- Yes: - vendor/bin/pint --dirty --format agent for formatting checks before commits.
+- Yes: - pint --parallel for general lint/style checks.
+- Yes: - php artisan test --compact for running tests; use --filter for focused tests.
+- Yes: Frontend/build steps:
+- Yes: - npm run build to regenerate Vite assets; npm run dev for local dev; composer run dev for combined tasks if frontend assets are out of date.
+- Yes: If a Vite manifest error occurs, follow the project rule to run the build, or suggest npm run build; if asked, run npm run dev or composer run dev.
+- Yes: Check and respect repo conventions from .github/workflows, pre-commit hooks, and the opencode.json guidance; do not bypass checks.
+- Yes: If architecture is unclear or a rule conflicts with current code, ask with the ? tool (one concise batch).
+- Yes: Improve AGENTS.md in place when needed; prune stale guidance and align with current codebase without rewriting from scratch.
+- Yes: Use the Boost tooling notes (database-query, database-schema, get-absolute-url, browser-logs) for repo-wide checks when applicable.
 
 ## Project Overview
 
@@ -169,6 +185,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
 - Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 - To check environment variables, read the `.env` file directly.
+- Manual image conversion trigger: Use `php artisan products:convert-images {product_id}` to dispatch a background job that converts images for a product using external URLs if provided, or local images otherwise. This is the preferred way to trigger conversion outside of the UI.
 
 ## Tinker
 

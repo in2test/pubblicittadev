@@ -30,7 +30,7 @@ $mediaList = $product->getMedia('images');
                 @foreach ($mediaList as $media)
                 {
                     id: {{ $media->id }},
-                    thumb: '{{ $media->getUrl('thumbnail') }}',
+                    thumb: '{{ $product->mediaUrl($media, 'thumbnail') }}',
                     medium: '{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}',
                     large: '{{ $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl() }}',
                     alt: '{{ $media->custom_properties['alt'] ?? '' }}',

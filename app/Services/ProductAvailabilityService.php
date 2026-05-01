@@ -221,13 +221,18 @@ GQL;
         // top-level pictures
         if (! empty($payload['pictures'] ?? [])) {
             foreach ($payload['pictures'] as $idx => $img) {
-                $url = $img['standardUrl'] ?? $img['largeThumbnailUrl'] ?? $img['thumbnailUrl'] ?? '';
-                if (!$url) continue;
+                $base = $img['highResUrl'] ?? '';
+                if (!$base) continue;
+                // Derive API-friendly sizes from the highResUrl path when possible
+                $thumb = str_replace('/highres/', '/thumbnail/', $base);
+                $large = str_replace('/highres/', '/largethumbnail/', $base);
+                $standard = str_replace('/highres/', '/standard/', $base);
                 $remoteImages[] = [
                     'id' => 'top_'.$idx,
-                    'url' => $url,
-                    'medium' => $img['largeThumbnailUrl'] ?? $img['standardUrl'] ?? '',
-                    'thumb' => $img['thumbnailUrl'] ?? $img['largeThumbnailUrl'] ?? '',
+                    'url' => $standard ?? $base,
+                    'thumbnail' => $thumb,
+                    'medium' => $large,
+                    'large' => $base,
                     'color_ids' => [],
                 ];
             }
@@ -238,13 +243,17 @@ GQL;
             $colorCode = $v['itemColorCode'] ?? '';
             if (! empty($v['pictures'])) {
                 foreach ($v['pictures'] as $idx => $vImg) {
-                    $url = $vImg['standardUrl'] ?? $vImg['largeThumbnailUrl'] ?? $vImg['thumbnailUrl'] ?? '';
-                    if (!$url) continue;
+                    $base = $vImg['highResUrl'] ?? '';
+                    if (!$base) continue;
+                    $thumb = str_replace('/highres/', '/thumbnail/', $base);
+                    $large = str_replace('/highres/', '/largethumbnail/', $base);
+                    $standard = str_replace('/highres/', '/standard/', $base);
                     $remoteImages[] = [
                         'id' => 'var_'.($colorCode ?: 'nc').'_'.$idx,
-                        'url' => $url,
-                        'medium' => $vImg['largeThumbnailUrl'] ?? $vImg['standardUrl'] ?? '',
-                        'thumb' => $vImg['thumbnailUrl'] ?? $vImg['largeThumbnailUrl'] ?? '',
+                        'url' => $standard ?? $base,
+                        'thumbnail' => $thumb,
+                        'medium' => $large,
+                        'large' => $base,
                         'color_ids' => [],
                     ];
                 }
@@ -291,6 +300,7 @@ GQL;
     public function syncProduct(Product $product): void
     {
         $data = $this->getFullProductData($product->sku);
+        $remoteImages = [];
 
         if (! $data) {
             return;
@@ -318,24 +328,11 @@ GQL;
 
             $existingMedia = $product->getMedia('images');
 
-            // Sync Main Pictures
-            if (! empty($data['pictures'])) {
-                foreach (array_slice($data['pictures'], 0, 5) as $img) {
-                    $url = $img['highResUrl'] ?? '';
-                    if (! $url) {
-                        continue;
-                    }
-                    $fileName = basename(parse_url((string) $url, PHP_URL_PATH));
-
-                    if (! $existingMedia->contains('file_name', $fileName)) {
-                        try {
-                            $product->addMediaFromUrl($url)
-                                ->withCustomProperties(['color_ids' => [], 'alt' => null, 'is_manual' => false])
-                                ->toMediaCollection('images');
-                        } catch (Exception $e) {
-                            Log::warning("Failed to download main image for SKU {$product->sku}: {$e->getMessage()}");
-                        }
-                    }
+            // Sync Main Pictures: prefer API-provided remote URLs and store them for display
+            if (! empty($data['pictures']) || ! empty($data['variations'])) {
+                $remoteImages = $this->mapFullProductPayloadToRemoteImages($data);
+                if (!empty($remoteImages)) {
+                    $product->update(['remote_images' => $remoteImages]);
                 }
             }
         }
@@ -391,6 +388,10 @@ GQL;
 
             // Sync Variation Images associated with this color
             if ($product->type === Product::TYPE_NEWWAVE && ! empty($variationData['pictures']) && $color) {
+                // If there are remote images derived from API payload, skip downloading variation images
+                if (!empty($remoteImages)) {
+                    continue;
+                }
                 foreach ($variationData['pictures'] as $img) {
                     $url = $img['highResUrl'] ?? '';
                     if (! $url) {

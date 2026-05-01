@@ -1,13 +1,23 @@
 @props(['product'])
 
 @php
-    $generalMedia = $product->getMedia('images')->first(fn($m) => empty($m->custom_properties['color_ids'] ?? []));
-    $firstMedia = $generalMedia ?? $product->getFirstMedia('images');
+$generalMedia = $product->getMedia('images')->first(fn($m) => empty($m->custom_properties['color_ids'] ?? []));
+$firstMedia = $generalMedia ?? $product->getFirstMedia('images');
+// Prefer API-provided remote images if available, otherwise fall back to local media
+$remoteImages = $product->remote_images ?? [];
+if (!empty($remoteImages)) {
+    $firstRemote = is_array($remoteImages) ? $remoteImages[0] ?? [] : [];
+    $imageUrl = $firstRemote['url'] ?? $firstRemote['thumb'] ?? ($firstRemote['large'] ?? '');
+    if (!$imageUrl) {
+        $imageUrl = $firstRemote['thumb'] ?? '';
+    }
+} else {
     $imageUrl = $firstMedia
-        ? ($firstMedia->hasGeneratedConversion('medium') ? $firstMedia->getUrl('medium') : $firstMedia->getUrl())
+        ? $product->mediaUrl($firstMedia, 'medium')
         : 'https://placehold.co/600x800?text=' . urlencode($product->name);
+}
 
-    // Extract available colors from variations
+// Extract available colors from variations
     $availableColors = $product->variations->pluck('color')->unique('id')->filter()->sortBy('sort_order');
 
     $colorCount = $availableColors->count();
@@ -33,9 +43,23 @@
 
 
         <div class=" aspect-4/5 overflow-hidden relative bg-white border border-gray-200 flex">
-            <img class="m-auto object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105  "
-                src="{{ $imageUrl }}" alt="{{ $product->name }}" />
+            <img class="m-auto object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105 lazyload"
+            data-src="{{ $imageUrl }}" alt="{{ $product->name }}" src=""/>
         </div>
+        <script>
+            (function(){
+                const imgs = document.querySelectorAll('img[data-src]');
+                const preload = (img) => { if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); } };
+                if ('IntersectionObserver' in window) {
+                    const io = new IntersectionObserver((entries, obs) => {
+                        entries.forEach(e => { if (e.isIntersecting) { preload(e.target); io.unobserve(e.target); } });
+                    });
+                    imgs.forEach(i => io.observe(i));
+                } else {
+                    imgs.forEach(i => preload(i));
+                }
+            })();
+        </script>
 
         <div class="p-6 flex flex-col flex-1">
             <div class="flex justify-between items-start mb-2">

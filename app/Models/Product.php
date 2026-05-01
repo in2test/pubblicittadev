@@ -32,7 +32,25 @@ class Product extends Model implements HasMedia
             'synced_at' => 'datetime',
             'is_active' => 'boolean',
             'remote_images' => 'array',
+            'external_image_urls' => 'array',
+            'image_conversion_mode' => 'string',
         ];
+    }
+
+    /**
+     * Return a media URL for a given media item, using the specified conversion if available.
+     * Falls back to the original URL if the conversion is not registered or not generated.
+     * @param \Spatie\MediaLibrary\MediaCollections\Models\Media|null $media
+     * @param string $conversion
+     * @return string
+     */
+    public function mediaUrl(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media, string $conversion = 'thumbnail'): string
+    {
+        if (!$media) return '';
+        if ($media->hasGeneratedConversion($conversion)) {
+            return $media->getUrl($conversion);
+        }
+        return $media->getUrl();
     }
 
     public const TYPE_STANDARD = 'standard';
@@ -130,6 +148,11 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Global toggle to enable/disable automatic media conversions
+        // Default to disabled to avoid auto-conversions unless explicitly enabled
+        if (!config('app.image_conversions_enabled', false)) {
+            return;
+        }
         // thumbnail for all images
         $this->addMediaConversion('thumbnail')
             ->width(150)
@@ -160,22 +183,27 @@ class Product extends Model implements HasMedia
     public function getAllImages(): \Illuminate\Support\Collection
     {
         $images = collect();
-        // Local media
-        foreach ($this->getMedia('images') as $media) {
-            $ri = $media->getCustomProperty('resourceFileId');
-            $images->push((object)[
-                'id' => (string) $media->id,
-                'resourceFileId' => $ri,
-                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
-                'large' => $media->getUrl(),
-                'alt' => $this->name,
-                'color_ids' => (array) ($media->getCustomProperty('color_ids') ?? []),
-                'is_remote' => false,
-            ]);
+
+        // If local media exist (converted images), prefer them
+        $local = $this->getMedia('images');
+        if ($local->isNotEmpty()) {
+            foreach ($local as $media) {
+                $ri = $media->getCustomProperty('resourceFileId');
+                $images->push((object)[
+                    'id' => (string) $media->id,
+                    'resourceFileId' => $ri,
+                    'thumb' => $this->mediaUrl($media, 'thumbnail'),
+                    'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                    'large' => $media->getUrl(),
+                    'alt' => $this->name,
+                    'color_ids' => (array) ($media->getCustomProperty('color_ids') ?? []),
+                    'is_remote' => false,
+                ]);
+            }
+            return $images;
         }
 
-        // Remote images
+        // If no local media, fall back to remote URLs if present
         foreach ($this->remote_images ?? [] as $ri) {
             $images->push((object)[
                 'id' => $ri['id'] ?? '',
@@ -187,6 +215,22 @@ class Product extends Model implements HasMedia
                 'color_ids' => $ri['color_ids'] ?? [],
                 'is_remote' => true,
             ]);
+        }
+
+        // If no local or remote images, but API provided external URLs, render them as remote images without downloading
+        if (empty($this->remote_images ?? []) && !empty($this->external_image_urls) && is_array($this->external_image_urls)) {
+            foreach ($this->external_image_urls as $url) {
+                $images->push((object)[
+                    'id' => '',
+                    'resourceFileId' => null,
+                    'thumb' => $url,
+                    'medium' => $url,
+                    'large' => $url,
+                    'alt' => $this->name,
+                    'color_ids' => [],
+                    'is_remote' => true,
+                ]);
+            }
         }
 
         return $images;
