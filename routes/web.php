@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteController;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
@@ -45,4 +46,12 @@ require __DIR__.'/settings.php';
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/catalogo/{category}', [CategoryController::class, 'show'])->name('category');
 Route::get('/catalogo/{category}/{slug}', [ProductController::class, 'show'])->name('product');
+Route::post('/catalogo/product/{product}/activate', function (Product $product) {
+    if (! auth()->check() || ! auth()->user()->isAdmin()) {
+        abort(403);
+    }
+    $product->update(['is_active' => true]);
+
+    return back()->with('success', 'Prodotto attivato con successo.');
+})->name('product.activate');
 Route::post('/quote', [QuoteController::class, 'store'])->name('quote.store');

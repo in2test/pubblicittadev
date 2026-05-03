@@ -16,13 +16,9 @@ class EditNewWaveProduct extends EditRecord
 {
     protected static string $resource = NewWaveProductResource::class;
 
-    #[Override]
-    public function mount(int|string $record): void
-    {
-        ini_set('memory_limit', '4G');
-        parent::mount($record);
-    }
-
+    /**
+     * Provide a simple header action to re-sync product data from the external NWG API.
+     */
     #[Override]
     protected function getHeaderActions(): array
     {
@@ -32,15 +28,23 @@ class EditNewWaveProduct extends EditRecord
                 ->icon('heroicon-o-cloud-arrow-down')
                 ->color('success')
                 ->action(function () {
-                    SyncNewWaveProductJob::dispatch($this->record->id);
-
-                    Notification::make()
-                        ->title('Sincronizzazione in coda')
-                        ->body('La sincronizzazione avverrà in background. Ricarica la pagina per vedere i risultati.')
-                        ->success()
-                        ->send();
+                    $this->dispatchSyncJob();
                 }),
             DeleteAction::make(),
         ];
+    }
+
+    /**
+     * Dispatch the background job and notify the user.
+     */
+    protected function dispatchSyncJob(): void
+    {
+        SyncNewWaveProductJob::dispatch($this->record->id);
+
+        Notification::make()
+            ->title('Sincronizzazione in coda')
+            ->body('La sincronizzazione avverrà in background. Ricarica la pagina per vedere i risultati.')
+            ->success()
+            ->send();
     }
 }

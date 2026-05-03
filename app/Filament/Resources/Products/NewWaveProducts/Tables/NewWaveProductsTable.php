@@ -6,8 +6,10 @@ namespace App\Filament\Resources\Products\NewWaveProducts\Tables;
 
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
+use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Product;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -17,6 +19,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\HtmlString;
 
 class NewWaveProductsTable
@@ -100,6 +103,21 @@ class NewWaveProductsTable
 
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('synchronize')
+                        ->label('Sincronizza')
+                        ->icon('heroicon-o-arrow-path')
+                        ->action(function (EloquentCollection $records): void {
+                            $records->each(function (Product $product): void {
+                                $product->update(['sync_status' => SyncStatus::Syncing, 'sync_progress' => 0]);
+                                SyncNewWaveProductJob::dispatch($product->id);
+                            });
+                        }),
+                    BulkAction::make('activate')
+                        ->label('Attiva')
+                        ->icon('heroicon-o-check-circle')
+                        ->action(function (EloquentCollection $records): void {
+                            Product::whereKey($records->pluck('id'))->update(['is_active' => true]);
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);

@@ -11,7 +11,9 @@ use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
+use Closure;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -28,7 +30,9 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class NewWaveProductForm
 {
@@ -49,6 +53,17 @@ class NewWaveProductForm
                                     ->required()
                                     ->unique()
                                     ->live(onBlur: true)
+                                    ->rules([
+                                        fn (ProductAvailabilityService $service) => function (string $attribute, $value, Closure $fail) use ($service) {
+                                            if (! $value) {
+                                                return;
+                                            }
+                                            $info = $service->fetchBasicInfo($value);
+                                            if (! $info || empty($info['name'])) {
+                                                $fail('Il codice NWG non è valido o non esiste nel sistema esterno.');
+                                            }
+                                        },
+                                    ])
                                     ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record, ProductAvailabilityService $service) {
                                         if (! $state) {
                                             return;
@@ -81,7 +96,7 @@ class NewWaveProductForm
                                         }
                                         if ($record->sync_status === SyncStatus::Syncing) {
                                             return new HtmlString(
-                                                "<div class='flex flex-col gap-2 min-w-[200px]' wire:poll.2s>
+                                                "<div class='flex flex-col gap-2 min-w-50' wire:poll.2s>
                                                     <span class='text-sm text-gray-700 dark:text-gray-300 font-medium'>In corso... {$record->sync_progress}%</span>
                                                     <div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
                                                         <div class='bg-primary-600 h-2.5 rounded-full transition-all duration-500' style='width: {$record->sync_progress}%'></div>
@@ -196,12 +211,15 @@ class NewWaveProductForm
                                     ->options(PrintPlacement::pluck('name', 'id'))
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function (Set $set, $state) {
-                                        if ($state) {
-                                            $placement = PrintPlacement::find($state);
-                                            if ($placement) {
-                                                $set('additional_price', $placement->default_price);
-                                            }
+                                    ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
+                                        if (! $state) {
+                                            return;
+                                        }
+
+                                        // Load the selected placement and prefill its default price.
+                                        $placement = PrintPlacement::find($state, ['*']);
+                                        if ($placement) {
+                                            $set('additional_price', $placement->default_price);
                                         }
                                     }),
                                 TextInput::make('additional_price')
@@ -217,11 +235,50 @@ class NewWaveProductForm
         $galleryTab = Tab::make('Galleria & Colori')
             ->icon('heroicon-o-photo')
             ->schema([
+                Section::make('Tutte le Immagini (Frontend)')
+                    ->description('Anteprima di tutte le immagini visibili sul sito (locali e remote).')
+                    ->visible(fn ($livewire): bool => ! ($livewire instanceof CreateRecord))
+                    ->schema([
+                        Placeholder::make('all_images_preview')
+                            ->label('')
+                            ->content(function (?Model $record): string|HtmlString {
+                                if (! $record instanceof Model) {
+                                    return '';
+                                }
+                                $images = $record->getAllImages();
+                                if ($images->isEmpty()) {
+                                    return 'Nessuna immagine.';
+                                }
+                                $colors = Color::pluck('color_name', 'id')->all();
+                                $html = '<div class="flex flex-wrap gap-4">';
+                                foreach ($images as $img) {
+                                    $html .= '<div class="relative group">';
+                                    $html .= '<img src="'.$img->medium.'" class="h-32 w-auto rounded border shadow-sm">';
+                                    if ($img->is_remote) {
+                                        $html .= '<span class="absolute top-1 right-1 bg-blue-500 text-white text-[10px] px-1 rounded shadow uppercase font-bold">API</span>';
+                                    }
+                                    if (! empty($img->color_ids)) {
+                                        $colorNames = array_map(fn ($id) => $colors[$id] ?? 'Sconosciuto', $img->color_ids);
+                                        $colorText = implode(', ', $colorNames);
+                                        $html .= '<span class="absolute bottom-1 left-1 right-1 bg-gray-900/80 text-white text-[10px] px-1 rounded shadow text-center truncate" title="'.$colorText.'">'.$colorText.'</span>';
+                                    } else {
+                                        $html .= '<span class="absolute bottom-1 left-1 right-1 bg-gray-500/80 text-white text-[10px] px-1 rounded shadow text-center">Generica</span>';
+                                    }
+                                    $html .= '</div>';
+                                }
+                                $html .= '</div>';
+
+                                return new HtmlString($html);
+                            }),
+                    ]),
+
                 Section::make('Caricamento / Cache Immagini')
+                    ->description('Carica nuove immagini o visualizza quelle generiche non associate a variazioni.')
                     ->schema([
                         SpatieMediaLibraryFileUpload::make('images')
                             ->label('')
                             ->collection('images')
+                            ->filterMediaUsing(fn (Collection $media) => $media->filter(fn (Media $item) => empty($item->custom_properties['color_ids'])))
                             ->multiple()
                             ->reorderable()
                             ->image()
@@ -232,19 +289,19 @@ class NewWaveProductForm
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Organizzazione per Colore')
-                    ->description('Associa ogni immagine ai rispettivi colori per permettere il cambio immagine dinamico sul sito.')
+                Section::make('Organizzazione per Colore (Solo Override Locali)')
+                    ->description('Usa questa sezione SOLO per immagini locali caricate manualmente. Le immagini dell\'API sono già associate automaticamente ai colori corretti.')
                     ->visible(fn ($livewire): bool => ! ($livewire instanceof CreateRecord))
                     ->schema([
                         Repeater::make('media')
                             ->label('')
-                            ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
+
                             ->schema([
                                 Grid::make(3)
                                     ->schema([
                                         Placeholder::make('preview')
                                             ->label('Anteprima')
-                                            ->content(function ($record) {
+                                            ->content(function ($record): string|HtmlString {
                                                 if (! $record) {
                                                     return 'N/A';
                                                 }
@@ -275,6 +332,45 @@ class NewWaveProductForm
                             ->grid(2)
                             ->addable(false)
                             ->deletable(false)
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Organizzazione Immagini Sincronizzate (API)')
+                    ->description('Ordina le immagini dell\'API, cambia i colori assegnati o rimuovi quelle che non vuoi visualizzare.')
+                    ->visible(fn ($livewire, ?Model $record): bool => ! ($livewire instanceof CreateRecord) && ! empty($record->remote_images))
+                    ->schema([
+                        Repeater::make('remote_images')
+                            ->label('')
+                            // It binds directly to the array attribute 'remote_images'
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        Placeholder::make('preview')
+                                            ->label('Anteprima')
+                                            ->content(function ($state, Get $get): HtmlString {
+                                                $url = $get('thumb') ?? $get('url') ?? '';
+
+                                                return new HtmlString("<img src='{$url}' class='h-32 w-auto rounded border shadow-sm mx-auto'>");
+                                            }),
+                                        Grid::make(1)
+                                            ->schema([
+                                                Select::make('color_ids')
+                                                    ->label('Associa a Colori')
+                                                    ->multiple()
+                                                    ->options($colorOptions)
+                                                    ->preload()
+                                                    ->searchable(),
+                                                Hidden::make('url'),
+                                                Hidden::make('thumb'),
+                                                Hidden::make('medium'),
+                                            ])
+                                            ->columnSpan(2),
+                                    ]),
+                            ])
+                            ->grid(2)
+                            ->addable(false)
+                            ->deletable(true)
+                            ->reorderable(true)
                             ->columnSpanFull(),
                     ]),
             ]);

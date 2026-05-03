@@ -11,7 +11,6 @@ use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Filament\Notifications\Notification;
 use Livewire\Component;
-use Override;
 use Throwable;
 
 class BatchImportNewWave extends Component
@@ -53,7 +52,7 @@ class BatchImportNewWave extends Component
                 'sku' => $sku,
                 'name' => $info['name'],
                 'price' => $info['price'],
-                'exists' => Product::where('sku', $sku)->exists(),
+                'exists' => Product::query()->where('sku', $sku)->exists(),
                 'selected' => true,
             ];
         }
@@ -124,8 +123,7 @@ class BatchImportNewWave extends Component
             ->send();
     }
 
-    #[Override]
-    public function reset(): void
+    public function resetForm(): void
     {
         $this->skus = '';
         $this->validatedProducts = [];

@@ -1,95 +1,47 @@
- - Yes: Prioritize high-signal sources from this repo: README*, root manifests (composer.json, package.json), workspace config, lockfiles, build/test/lint/configs, CI/pre-commit hooks, existing instruction files, and repo-local OpenCode settings (opencode.json).
-- Yes: Trust executable config/scripts over prose when they conflict; the source-of-truth is in code and config, not in prose docs.
-- Yes: Identify architecture by inspecting a small set of representative wiring files (service providers, bootstrapping, routing) before leaf components.
-- Yes: Extract exact developer commands and the required command order (eg, lint -> typecheck -> test) and keep them up to date in this file.
-- Yes: Note monorepo or multi-package boundaries and real entrypoints (where the app actually runs) to avoid scope misreads.
-- Yes: Rely on project conventions (Filament Livewire patterns, Pest tests, Laravel Scout notes) when guiding tasks; refer to dedicated docs only if ambiguous.
-- Yes: Exact developer commands to bake into sessions:
-- Yes: - vendor/bin/pint --dirty --format agent for formatting checks before commits.
-- Yes: - pint --parallel for general lint/style checks.
-- Yes: - php artisan test --compact for running tests; use --filter for focused tests.
-- Yes: Frontend/build steps:
-- Yes: - npm run build to regenerate Vite assets; npm run dev for local dev; composer run dev for combined tasks if frontend assets are out of date.
-- Yes: If a Vite manifest error occurs, follow the project rule to run the build, or suggest npm run build; if asked, run npm run dev or composer run dev.
-- Yes: Check and respect repo conventions from .github/workflows, pre-commit hooks, and the opencode.json guidance; do not bypass checks.
-- Yes: If architecture is unclear or a rule conflicts with current code, ask with the ? tool (one concise batch).
-- Yes: Improve AGENTS.md in place when needed; prune stale guidance and align with current codebase without rewriting from scratch.
-- Yes: Use the Boost tooling notes (database-query, database-schema, get-absolute-url, browser-logs) for repo-wide checks when applicable.
+# Abbigliamento Personalizzato Agent Guide
 
-## Project Overview
+This repository is a Laravel 13 application with Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11, and Laravel Scout 11. It is a quote-based custom apparel platform: customers browse products, request quotes, and admins process them manually.
 
-**Abbigliamento Personalizzato** - Custom Apparel E-commerce Platform
+Use `.github/copilot-instructions.md` for the canonical project-specific guidance. `AGENTS.md` is the repo-level summary and should stay concise.
 
-- **Purpose**: Quote-based custom apparel ordering system (no online payments)
-- **Target Users**: Customers browse catalog -> create quotes -> admin processes manually
-- **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11
+## Key areas
 
-## Investigation Workflow
+- `app/Filament/Resources`: Filament admin resources
+- `app/Http/Livewire`: Livewire pages and frontend state
+- `app/Services`: domain services such as product sync and availability
+- `app/Models`: Eloquent models and relationships
+- `routes/web.php`: core web routes
+- `database/factories`, `database/seeders`: test data and seeders
+- `tests/Feature`, `tests/Unit`: Pest test coverage
 
-1. Read README*, composer.json, package.json first
-2. Check build/test/lint configs (phpunit.xml, tailwind.config.js)
-3. Check CI workflows (.github/workflows/*.yml)
-4. Trust config files over prose documentation
+## Important commands
 
-## Commands
+- `composer run setup`
+- `composer run format`
+- `composer run lint`
+- `composer run test`
+- `composer run dev`
+- `npm run build`
+- `npm run dev`
 
-- **Format code**: vendor/bin/pint --dirty --format agent
-- **Run tests**: php artisan test --compact or php artisan test --compact --filter=testName
-- **Clear cache**: php artisan cache:clear vs php artisan config:clear
-- **List routes**: php artisan route:list --method=GET --path=api
+## Testing guidance
 
-## Framework Quirks
+- Use Pest with `php artisan test --compact`
+- Prefer model factories for data setup
+- Filament Livewire tests should `->actingAs(User::factory()->create())` and use `->call('save')` for edit forms
 
-- Filament: Use Get for conditional visibility, Set for reactive updates
-- Livewire: Use ->live(onBlur: true) on text inputs
-- Vite error: Run npm run build if "Unable to locate file in Vite manifest"
+## Project conventions
 
-## Testing
+- Keep existing Laravel and Filament patterns
+- Prefer `search-docs` before coding with package-specific questions
+- Do not add new top-level directories without approval
+- Only create documentation files when explicitly requested
 
-- Always ->actingAs(User::factory()->create()) before testing panel functionality
-- Edit pages: pass ['record' => $id], use ->call('save'), not ->assertRedirect()
+## Notes
 
-## Skills Activation
-
-- fortify-development - Authentication
-- laravel-best-practices - Backend PHP
-- fluxui-development - Flux UI in Livewire
-- livewire-development - Livewire components
-- pest-testing - Pest tests
-- tailwindcss-development - Tailwind CSS
-- medialibrary-development - Spatie media
-- debug-using-debugbar - Debugbar
-- scout-development - Search with Laravel Scout
-
-## MCP Tools
-
-- database-query - Read-only SQL
-- database-schema - Table structure
-- get-absolute-url - Resolve URLs
-- browser-logs - Frontend logs
-- search-docs - Laravel docs (ALWAYS use before coding)
-
-## Critical Patterns
-
-### Laravel Scout (v11)
-
-When using Scout's `query()` method for eager loading, the callback receives `Illuminate\Database\Eloquent\Builder`, NOT `Laravel\Scout\Builder`:
-
-```php
-// CORRECT - no type hint or use Eloquent Builder
-Product::search('query')
-    ->query(fn ($query) => $query->with(['category', 'media']))
-    ->get();
-
-// WRONG - causes TypeError at runtime
-Product::search('query')
-    ->query(fn (Builder $query) => $query->with(['category', 'media'])) // $query is Eloquent Builder, not Scout Builder
-    ->get();
-```
-
-Scout database driver uses LIKE/full-text queries on your actual database tables - no external indexing needed.
-
-Last Updated: April 2026
+- `composer run dev` starts Laravel + queue listener + Vite together
+- The repo uses `laravel-boost` MCP tools via `opencode.json`
+- If frontend changes do not appear, run `npm run build`, `npm run dev`, or `composer run dev`
 
 ===
 
@@ -104,7 +56,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4
+- php - 8.5
 - filament/filament (FILAMENT) - v5
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v13
@@ -185,7 +137,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
 - Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
 - To check environment variables, read the `.env` file directly.
-- Manual image conversion trigger: Use `php artisan products:convert-images {product_id}` to dispatch a background job that converts images for a product using external URLs if provided, or local images otherwise. This is the preferred way to trigger conversion outside of the UI.
 
 ## Tinker
 
@@ -209,13 +160,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
-
-=== herd rules ===
-
-# Laravel Herd
-
-- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
-- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
 
 === tests rules ===
 

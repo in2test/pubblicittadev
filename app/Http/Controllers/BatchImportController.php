@@ -18,7 +18,7 @@ use Throwable;
 
 class BatchImportController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
         if (! Auth::check()) {
             return redirect('/login');
@@ -35,7 +35,7 @@ class BatchImportController extends Controller
         ]);
     }
 
-    public function validate(Request $request): View
+    public function validate(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
             return redirect('/login');
@@ -57,7 +57,7 @@ class BatchImportController extends Controller
                     'sku' => $sku,
                     'name' => $info['name'],
                     'price' => $info['price'],
-                    'exists' => Product::where('sku', $sku)->exists(),
+                    'exists' => Product::query()->where('sku', $sku)->exists(),
                     'selected' => true,
                 ];
             }
@@ -75,7 +75,7 @@ class BatchImportController extends Controller
         ]);
     }
 
-    public function import(Request $request): View
+    public function import(Request $request): View|RedirectResponse
     {
         if (! Auth::check()) {
             return redirect('/login');
@@ -107,7 +107,7 @@ class BatchImportController extends Controller
             if (! $selected) {
                 continue;
             }
-            if (Product::where('sku', $sku)->exists()) {
+            if (Product::query()->where('sku', $sku)->exists()) {
                 continue;
             }
 

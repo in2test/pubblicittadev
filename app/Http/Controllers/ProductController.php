@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
 
@@ -14,7 +15,7 @@ class ProductController extends Controller
      */
     public function index(Product $product): void
     {
-        Product::where('slug', $product->slug)->first();
+        Product::query()->where('slug', $product->slug)->first();
     }
 
     /**
@@ -22,7 +23,7 @@ class ProductController extends Controller
      */
     public function show(string $category, string $slug)
     {
-        $product = Product::where('is_active', true)->where('slug', $slug)
+        $product = Product::query()->visibleToCurrentUser()->where('slug', $slug)
             ->with([
                 'category',
                 'category.parent',
@@ -34,9 +35,12 @@ class ProductController extends Controller
             ])
             ->firstOrFail();
 
-        // Syncing is now handled via background jobs from the admin panel.
+        // Refresh availability data in the background if the last sync is stale (>12 h).
+        if ($product->needsAvailabilityRefresh()) {
+            SyncNewWaveProductJob::dispatch($product->id);
+        }
 
-        $category = Category::where('slug', $category)->firstOrFail();
+        $category = Category::query()->where('slug', $category)->firstOrFail();
 
         return view('product', ['product' => $product, 'category' => $category]);
     }

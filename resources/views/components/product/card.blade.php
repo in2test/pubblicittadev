@@ -27,6 +27,15 @@ if (!empty($remoteImages)) {
 
 <article
     class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
+    
+    @if(auth()->check() && auth()->user()->isAdmin())
+        <div class="absolute top-4 right-4 z-40">
+            <a href="{{ $product->getFilamentEditUrl() }}" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded shadow transition-colors flex items-center justify-center" title="Modifica in Filament">
+                <span class="material-symbols-outlined text-sm">edit</span>
+            </a>
+        </div>
+    @endif
+
     <a href="{{ route('product', ['category' => optional($product->category)->slug ?: 'uncategorized', 'slug' => $product->slug]) }}"
         class="flex flex-col h-full">
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
@@ -41,6 +50,19 @@ if (!empty($remoteImages)) {
             </div>
         </div>
 
+        @if (!$product->is_active && auth()->check() && auth()->user()->isAdmin())
+            <div class="absolute inset-0 z-20 bg-black/40 flex flex-col justify-center items-center backdrop-blur-[2px]">
+                <div class="bg-red-600 text-white px-3 py-1 font-bold text-sm uppercase rounded shadow mb-2">
+                    Prodotto Non Attivo
+                </div>
+                <form action="{{ route('product.activate', $product->id) }}" method="POST" class="z-30">
+                    @csrf
+                    <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded shadow-lg transition-colors cursor-pointer text-sm">
+                        Attiva Ora
+                    </button>
+                </form>
+            </div>
+        @endif
 
         <div class=" aspect-4/5 overflow-hidden relative bg-white border border-gray-200 flex">
             <img class="m-auto object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105 lazyload"
@@ -97,7 +119,7 @@ if (!empty($remoteImages)) {
                     @foreach ($displayColors as $color)
                         @php $colorHex = $color->color_hex ?: '#ccc'; @endphp
                         <div class="w-3.5 h-3.5 rounded-full border border-outline-variant/30 shadow-sm"
-                            style="background-color: {{ $colorHex }}" title="{{ $color->color_name }}"></div>
+                            style="background-color: {{ $colorHex }};" title="{{ $color->color_name }}"></div>
                     @endforeach
 
                     @if ($remainingColors > 0)

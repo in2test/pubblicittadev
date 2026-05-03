@@ -9,6 +9,16 @@
 - **Current Status**: MVP in progress (Week 2 - Admin Panel & Polish)
 - **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11
 
+## Commands
+
+- **Setup:** `composer run setup`
+- **Format code:** `composer run format` or `vendor/bin/pint --dirty --format agent`
+- **Run tests:** `composer run test` or `php artisan test --compact --filter=testName`
+- **Lint:** `composer run lint` or `pint --parallel`
+- **Local development:** `composer run dev`
+- **Frontend build:** `npm run build`
+- **Frontend dev:** `npm run dev`
+
 ## 🗄️ Database Schema
 
 ### **Core Tables**
@@ -221,3 +231,6 @@ php artisan route:list,queue:failed,queue:flush
 - Write tests for every change
 - Run `pint` to format code
 - Use Boost tools over manual alternatives
+
+
+

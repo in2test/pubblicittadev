@@ -113,10 +113,13 @@ class ProductForm
                             ->schema([
                                 TextEntry::make('preview')
                                     ->label('Immagine')
-                                    ->state(function ($record) {
-                                        if (!$record) return 'Sconosciuta';
+                                    ->state(function ($record): string|HtmlString {
+                                        if (! $record) {
+                                            return 'Sconosciuta';
+                                        }
                                         $first = $record->getMedia('images')->first();
                                         $url = $first ? $record->mediaUrl($first, 'thumbnail') : '';
+
                                         return new HtmlString("<img src='{$url}' class='h-20 w-auto rounded border shadow-sm'>");
                                     }),
                                 Select::make('custom_properties.color_ids')
@@ -155,9 +158,9 @@ class ProductForm
                                     ->options(PrintPlacement::pluck('name', 'id'))
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function (\Filament\Forms\Set $set, $state) {
+                                    ->afterStateUpdated(function (Set $set, $state) {
                                         if ($state) {
-                                            $placement = PrintPlacement::find($state);
+                                            $placement = PrintPlacement::query()->find($state);
                                             if ($placement) {
                                                 $set('additional_price', $placement->default_price);
                                             }

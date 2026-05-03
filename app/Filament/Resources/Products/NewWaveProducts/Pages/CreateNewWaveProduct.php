@@ -15,6 +15,9 @@ class CreateNewWaveProduct extends CreateRecord
 {
     protected static string $resource = NewWaveProductResource::class;
 
+    /**
+     * Ensure the record is created as a NewWave product and is marked pending sync.
+     */
     #[Override]
     protected function mutateFormDataBeforeCreate(array $data): array
     {
@@ -24,6 +27,9 @@ class CreateNewWaveProduct extends CreateRecord
         return $data;
     }
 
+    /**
+     * After saving the product, dispatch background sync so the external API can fill details.
+     */
     protected function afterCreate(): void
     {
         SyncNewWaveProductJob::dispatch($this->record->id);

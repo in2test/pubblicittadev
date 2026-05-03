@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Console;
 
+use App\Console\Commands\ConvertProductImagesCommand;
+use App\Console\Commands\DiagnoseNwgSku;
+use App\Console\Commands\RefreshRemoteImagesCommand;
+use App\Console\Commands\SyncAllRemoteImagesCommand;
 use App\Console\Commands\SyncProductImagesCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -13,10 +17,10 @@ class Kernel extends ConsoleKernel
 {
     protected $commands = [
         SyncProductImagesCommand::class,
-        \App\Console\Commands\ConvertProductImagesCommand::class,
-        \App\Console\Commands\RefreshRemoteImagesCommand::class,
-        \App\Console\Commands\SyncAllRemoteImagesCommand::class,
-        \App\Console\Commands\DiagnoseNwgSku::class,
+        ConvertProductImagesCommand::class,
+        RefreshRemoteImagesCommand::class,
+        SyncAllRemoteImagesCommand::class,
+        DiagnoseNwgSku::class,
     ];
 
     #[Override]

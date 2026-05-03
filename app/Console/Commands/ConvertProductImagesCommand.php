@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\Product;
 use App\Jobs\ConvertProductImages;
+use App\Models\Product;
 use Illuminate\Console\Command;
 
 class ConvertProductImagesCommand extends Command
@@ -19,13 +19,15 @@ class ConvertProductImagesCommand extends Command
         $productId = (int) $this->argument('product_id');
         $product = Product::find($productId);
 
-        if (!$product) {
+        if (! $product) {
             $this->error("Product with ID {$productId} not found.");
+
             return 1;
         }
 
         ConvertProductImages::dispatch($product);
         $this->info("Dispatched image conversion for Product ID {$product->id}.");
+
         return 0;
     }
 }

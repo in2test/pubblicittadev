@@ -17,13 +17,13 @@ class CategoryController extends Controller
 
         if ($search) {
             $products = Product::search($search)
-                ->where('is_active', true)
+                ->visibleToCurrentUser()
                 ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
                 ->orderBy('name')
                 ->paginate(12)
                 ->appends($request->query());
         } else {
-            $products = Product::where('is_active', true)
+            $products = Product::visibleToCurrentUser()
                 ->with(['category', 'variations.color', 'media'])
                 ->orderBy('name')
                 ->paginate(12)
@@ -47,14 +47,14 @@ class CategoryController extends Controller
 
         if ($search) {
             $products = Product::search($search)
-                ->where('is_active', true)
+                ->visibleToCurrentUser()
                 ->whereIn('category_id', $categoryIds)
                 ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
                 ->orderBy('name')
                 ->paginate(12)
                 ->appends($request->query());
         } else {
-            $products = Product::where('is_active', true)
+            $products = Product::visibleToCurrentUser()
                 ->whereIn('category_id', $categoryIds)
                 ->with(['category', 'variations.color', 'media'])
                 ->orderBy('name')

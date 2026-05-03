@@ -143,7 +143,7 @@ class ProductSeeder extends Seeder
                 }
                 try {
                     // Skip seeding images when API URLs are provided for the product
-                    if (!empty($product->external_image_urls)) {
+                    if (! empty($product->external_image_urls)) {
                         continue;
                     }
                     $mediaAdder = $product->addMediaFromUrl($url);

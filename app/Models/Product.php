@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\SyncStatus;
+use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
+use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
 use App\Services\QuantityDiscountService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Scout\Searchable;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
@@ -16,7 +21,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Throwable;
 
-#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors', 'sync_status', 'synced_at', 'is_active', 'remote_images'])]
+#[Fillable(['name', 'slug', 'description', 'sku', 'price', 'offer_price', 'category_id', 'is_featured', 'type', 'override_price', 'override_description', 'disabled_colors', 'sync_status', 'sync_progress', 'synced_at', 'is_active', 'remote_images', 'external_image_urls'])]
 class Product extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Searchable;
@@ -40,24 +45,54 @@ class Product extends Model implements HasMedia
     /**
      * Return a media URL for a given media item, using the specified conversion if available.
      * Falls back to the original URL if the conversion is not registered or not generated.
-     * @param \Spatie\MediaLibrary\MediaCollections\Models\Media|null $media
-     * @param string $conversion
-     * @return string
      */
-    public function mediaUrl(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media, string $conversion = 'thumbnail'): string
+    public function mediaUrl(?Media $media, string $conversion = 'thumbnail'): string
     {
-        if (!$media) return '';
+        if (! $media instanceof Media) {
+            return '';
+        }
         if ($media->hasGeneratedConversion($conversion)) {
             return $media->getUrl($conversion);
         }
+
         return $media->getUrl();
     }
 
     public const TYPE_STANDARD = 'standard';
+
     public const TYPE_NEWWAVE = 'newwave';
 
     #[Override]
     protected static function booted(): void {}
+
+    public function scopeVisibleToCurrentUser(Builder $query)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user && $user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Returns true when the product's availability data is stale and should be re-fetched.
+     * Only NewWave products are synced via the API; standard products are always up to date.
+     */
+    public function needsAvailabilityRefresh(int $hours = 12): bool
+    {
+        if ($this->type !== self::TYPE_NEWWAVE) {
+            return false;
+        }
+
+        if ($this->synced_at === null) {
+            return true;
+        }
+
+        return $this->synced_at->lt(now()->subHours($hours));
+    }
 
     #[Override]
     public function getRouteKeyName(): string
@@ -112,6 +147,7 @@ class Product extends Model implements HasMedia
         try {
             $service = app(QuantityDiscountService::class);
             $discount = $service->getDiscountForCategoryTree($this->category_id, $quantity);
+
             return $service->computeDiscountedPrice($base, $discount);
         } catch (Throwable) {
             return $base;
@@ -126,7 +162,17 @@ class Product extends Model implements HasMedia
 
     public function getThumbnailUrl(): ?string
     {
-        return $this->getFirstMediaUrl('images', 'thumbnail');
+        $url = $this->getFirstMediaUrl('images', 'thumbnail');
+        if ($url !== '' && $url !== '0') {
+            return $url;
+        }
+
+        // Fall back to external image URLs if no local media
+        if (! empty($this->external_image_urls) && is_array($this->external_image_urls)) {
+            return $this->external_image_urls[0] ?? null;
+        }
+
+        return null;
     }
 
     public function getLargeImageUrl(): ?string
@@ -150,7 +196,7 @@ class Product extends Model implements HasMedia
     {
         // Global toggle to enable/disable automatic media conversions
         // Default to disabled to avoid auto-conversions unless explicitly enabled
-        if (!config('app.image_conversions_enabled', false)) {
+        if (! config('app.image_conversions_enabled', false)) {
             return;
         }
         // thumbnail for all images
@@ -180,59 +226,36 @@ class Product extends Model implements HasMedia
         'remote_images' => 'array',
     ];
 
-    public function getAllImages(): \Illuminate\Support\Collection
+    public function getAllImages(): Collection
     {
         $images = collect();
 
-        // If local media exist (converted images), prefer them
-        $local = $this->getMedia('images');
-        if ($local->isNotEmpty()) {
-            foreach ($local as $media) {
-                $ri = $media->getCustomProperty('resourceFileId');
-                $images->push((object)[
-                    'id' => (string) $media->id,
-                    'resourceFileId' => $ri,
-                    'thumb' => $this->mediaUrl($media, 'thumbnail'),
-                    'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
-                    'large' => $media->getUrl(),
-                    'alt' => $this->name,
-                    'color_ids' => (array) ($media->getCustomProperty('color_ids') ?? []),
-                    'is_remote' => false,
-                ]);
-            }
-            return $images;
-        }
-
-        // If no local media, fall back to remote URLs if present
-        foreach ($this->remote_images ?? [] as $ri) {
-            $images->push((object)[
-                'id' => $ri['id'] ?? '',
-                'resourceFileId' => $ri['resourceFileId'] ?? null,
-                'thumb' => $ri['thumb'] ?? ($ri['url'] ?? ''),
-                'medium' => $ri['medium'] ?? ($ri['url'] ?? ''),
-                'large' => $ri['url'] ?? '',
+        // Local media
+        foreach ($this->getMedia('images') as $media) {
+            $ri = $media->getCustomProperty('resourceFileId');
+            $images->push((object) [
+                'id' => (string) $media->id,
+                'resourceFileId' => $ri,
+                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large' => $media->getUrl(),
                 'alt' => $this->name,
-                'color_ids' => $ri['color_ids'] ?? [],
-                'is_remote' => true,
+                'color_ids' => (array) ($media->getCustomProperty('color_ids') ?? []),
+                'is_remote' => false,
             ]);
         }
-
-        // If no local or remote images, but API provided external URLs, render them as remote images without downloading
-        if (empty($this->remote_images ?? []) && !empty($this->external_image_urls) && is_array($this->external_image_urls)) {
-            foreach ($this->external_image_urls as $url) {
-                $images->push((object)[
-                    'id' => '',
-                    'resourceFileId' => null,
-                    'thumb' => $url,
-                    'medium' => $url,
-                    'large' => $url,
-                    'alt' => $this->name,
-                    'color_ids' => [],
-                    'is_remote' => true,
-                ]);
-            }
-        }
+        // Sort images by the order_by field from the Image model
+        $images = $images->sortBy('order_by');
 
         return $images;
+    }
+
+    public function getFilamentEditUrl(): string
+    {
+        if ($this->type === self::TYPE_NEWWAVE) {
+            return NewWaveProductResource::getUrl('edit', ['record' => $this]);
+        }
+
+        return StandardProductResource::getUrl('edit', ['record' => $this]);
     }
 }

@@ -2,6 +2,28 @@
 
     <x-product.breadcrumbs :$product :$category />
 
+    @if (auth()->check() && auth()->user()->isAdmin())
+        <div class="{{ !$product->is_active ? 'bg-red-600' : 'bg-gray-800' }} text-white px-8 py-3 flex flex-col md:flex-row justify-between items-center shadow-inner gap-4">
+            <div class="flex items-center gap-2 font-bold uppercase tracking-wide">
+                <span class="material-symbols-outlined">{{ !$product->is_active ? 'warning' : 'admin_panel_settings' }}</span>
+                <span>{{ !$product->is_active ? 'Attenzione: Questo prodotto non è attivo e non è visibile ai clienti.' : 'Modalità Amministratore (Prodotto Attivo)' }}</span>
+            </div>
+            <div class="flex gap-4 items-center">
+                @if (!$product->is_active)
+                <form action="{{ route('product.activate', $product->id) }}" method="POST" class="m-0">
+                    @csrf
+                    <button type="submit" class="bg-white text-red-700 hover:bg-gray-100 font-bold py-2 px-6 rounded shadow transition-colors cursor-pointer text-sm">
+                        Attiva Prodotto Ora
+                    </button>
+                </form>
+                @endif
+                <a href="{{ $product->getFilamentEditUrl() }}" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded shadow transition-colors cursor-pointer text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">edit</span> Modifica in Filament
+                </a>
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 py-12 3xl:px-32 bg-gray-200 text-gray-900"
         x-data="{
             productName: '{{ addslashes($product->name) }}',
@@ -14,27 +36,24 @@
             colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
             sizeNames: {{ json_encode($product->variations->pluck('size')->unique('id')->filter()->pluck('size', 'id')) }},
             @php
-$mediaList = $product->getMedia('images');
-            $firstMedia = $mediaList->first(fn($m) => empty($m->custom_properties['color_ids'])) ?? $mediaList->first();
-            $mainImageUrl = $firstMedia
-                ? ($firstMedia->hasGeneratedConversion('large') ? $firstMedia->getUrl('large') : $firstMedia->getUrl())
-                : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-            $mainImageMed = $firstMedia 
-                ? ($firstMedia->hasGeneratedConversion('medium') ? $firstMedia->getUrl('medium') : $firstMedia->getUrl()) 
-                : '';
-            $mainImageAlt = $firstMedia ? ($firstMedia->custom_properties['alt'] ?? $firstMedia->name) : $product->name; @endphp
+                $allImages = $product->getAllImages();
+                $firstImage = $allImages->first(fn($img) => empty($img->color_ids)) ?? $allImages->first();
+                $mainImageUrl = $firstImage?->large ?? 'https://placehold.co/600x800?text=' . urlencode($product->name);
+                $mainImageMed = $firstImage?->medium ?? $mainImageUrl;
+                $mainImageAlt = $firstImage?->alt ?? $product->name;
+            @endphp
             mainImage: '{{ $mainImageUrl }}',
             mainImageMed: '{{ $mainImageMed }}',
             mainAlt: '{{ $mainImageAlt }}',
             images: [
-                @foreach ($mediaList as $media)
+                @foreach ($allImages as $img)
                 {
-                    id: {{ $media->id }},
-                    thumb: '{{ $product->mediaUrl($media, 'thumbnail') }}',
-                    medium: '{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}',
-                    large: '{{ $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl() }}',
-                    alt: '{{ $media->custom_properties['alt'] ?? '' }}',
-                    color_ids: {{ json_encode(array_map('intval', (array) ($media->custom_properties['color_ids'] ?? []))) }}
+                    id: '{{ $img->id }}',
+                    thumb: '{{ $img->thumb }}',
+                    medium: '{{ $img->medium }}',
+                    large: '{{ $img->large }}',
+                    alt: '{{ $img->alt ?? '' }}',
+                    color_ids: {{ json_encode(array_map('intval', (array) ($img->color_ids ?? []))) }}
                 }, @endforeach
             ],
             getComputedAlt(image) {

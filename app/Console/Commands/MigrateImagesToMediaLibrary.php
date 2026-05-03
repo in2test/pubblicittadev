@@ -40,8 +40,9 @@ class MigrateImagesToMediaLibrary extends Command
                     ->toMediaCollection('images');
             } elseif ($image->image_url) {
                 // Do not download API-provided URLs automatically; skip if external API URLs exist
-                if (!empty($product->external_image_urls)) {
+                if (! empty($product->external_image_urls)) {
                     $this->line("Skipped downloading API-provided image {$image->id} for product {$image->product_id}");
+
                     continue;
                 }
                 $product->addMediaFromUrl($image->image_url)
