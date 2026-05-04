@@ -18,9 +18,8 @@
             "type": "local",
             "enabled": true,
             "command": [
-                "wsl.exe",
-                "/usr/bin/php8.4",
-                "/mnt/c/sites/pubblicittadev/artisan",
+                "php",
+                "artisan",
                 "boost:mcp"
             ]
         }

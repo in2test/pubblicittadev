@@ -23,7 +23,8 @@
                     @foreach ($product->printPlacements as $placement)
                         <label
                             class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container"
-                            :class="selectedPlacements.find(p => p.id == {{ $placement->id }}) ? 'border-primary bg-primary/5' : ''">
+                            :class="selectedPlacements.find(p => p.id == {{ $placement->id }}) ? 'border-primary bg-primary/5' :
+                                ''">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" name="print_placements[]" value="{{ $placement->id }}"
                                     class="h-4 w-4 text-primary"
@@ -89,11 +90,12 @@
                     ->orderBy('min_quantity')
                     ->get();
             @endphp
-            @if($discounts->count() > 0)
+            @if ($discounts->count() > 0)
                 <div class="p-3 bg-surface-container rounded text-xs">
                     <span class="font-bold">Sconti quantità:</span>
-                    @foreach($discounts as $d)
-                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi = -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
+                    @foreach ($discounts as $d)
+                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi =
+                            -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
                     @endforeach
                 </div>
             @endif
@@ -101,19 +103,18 @@
                 class="w-full bg-primary-container text-on-primary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
                 Richiedi Preventivo Personalizzato
             </button>
-            <button type="button" 
-                :disabled="totalQuantity < 1"
-                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''"
-                @click="addToCart()"
+            <button type="button" :disabled="totalQuantity < 1"
+                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''" @click="addToCart()"
                 class="w-full bg-secondary-container text-on-secondary py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98]">
-                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span x-text="totalPrice">0.00</span>)
+                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span
+                    x-text="totalPrice">0.00</span>)
             </button>
             <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20abbigliamento"
                 class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
                 Contattaci via email
             </a>
         </div>
-    </form>
+</form>
 </div>
 
 <!-- Cart Form (separate form outside the quote form) -->
@@ -122,7 +123,8 @@
     <input type="hidden" name="product_id" value="{{ $product->id }}">
     <input type="hidden" name="product_name" value="{{ $product->name }}">
     <input type="hidden" name="product_slug" value="{{ $product->slug }}">
-    <input type="hidden" name="image_url" value="{{ $product->getFirstMediaUrl('images', 'thumbnail') }}">
+    <input type="hidden" name="image_url"
+        value="{{ $product->getFirstImage()?->thumb ?: $product->getFirstImage()?->large ?: '' }}">
     <input type="hidden" name="color_id" :value="activeColorId">
     <input type="hidden" name="color_name" :value="activeColorId ? colorNames[activeColorId] : ''">
     <input type="hidden" name="print_placements" :value="JSON.stringify(selectedPlacements.map(p => p.id))">

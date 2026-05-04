@@ -14,27 +14,27 @@
             colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
             sizeNames: {{ json_encode($product->variations->pluck('size')->unique('id')->filter()->pluck('size', 'id')) }},
             @php
-$mediaList = $product->getMedia('images');
-            $firstMedia = $mediaList->first(fn($m) => empty($m->custom_properties['color_ids'])) ?? $mediaList->first();
-            $mainImageUrl = $firstMedia
-                ? ($firstMedia->hasGeneratedConversion('large') ? $firstMedia->getUrl('large') : $firstMedia->getUrl())
-                : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-            $mainImageMed = $firstMedia 
-                ? ($firstMedia->hasGeneratedConversion('medium') ? $firstMedia->getUrl('medium') : $firstMedia->getUrl()) 
-                : '';
-            $mainImageAlt = $firstMedia ? ($firstMedia->custom_properties['alt'] ?? $firstMedia->name) : $product->name; @endphp
+$allImages = $product->getAllImages();
+                $firstImage = $product->getFirstImage();
+                $mainImageUrl = $firstImage
+                    ? ($firstImage->large ?: $firstImage->medium ?: $firstImage->thumb)
+                    : 'https://placehold.co/600x800?text=' . urlencode($product->name);
+                $mainImageMed = $firstImage
+                    ? ($firstImage->medium ?: $firstImage->thumb ?: $firstImage->large)
+                    : '';
+                $mainImageAlt = $firstImage ? ($firstImage->alt ?? $product->name) : $product->name; @endphp
             mainImage: '{{ $mainImageUrl }}',
             mainImageMed: '{{ $mainImageMed }}',
             mainAlt: '{{ $mainImageAlt }}',
             images: [
-                @foreach ($mediaList as $media)
+                @foreach ($allImages as $image)
                 {
-                    id: {{ $media->id }},
-                    thumb: '{{ $media->getUrl('thumbnail') }}',
-                    medium: '{{ $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl() }}',
-                    large: '{{ $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl() }}',
-                    alt: '{{ $media->custom_properties['alt'] ?? '' }}',
-                    color_ids: {{ json_encode(array_map('intval', (array) ($media->custom_properties['color_ids'] ?? []))) }}
+                    id: '{{ $image->id }}',
+                    thumb: '{{ $image->thumb }}',
+                    medium: '{{ $image->medium }}',
+                    large: '{{ $image->large }}',
+                    alt: '{{ $image->alt }}',
+                    color_ids: {{ json_encode(array_map('intval', (array) ($image->color_ids ?? []))) }}
                 }, @endforeach
             ],
             getComputedAlt(image) {
@@ -86,7 +86,7 @@ $mediaList = $product->getMedia('images');
                     const formData = new FormData();
                     formData.append('product_id', this.productId);
                     formData.append('quantity', this.totalQuantity);
-                    const response = await fetch('{{ route("cart.price") }}', {
+                    const response = await fetch('{{ route('cart.price') }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -121,18 +121,18 @@ $mediaList = $product->getMedia('images');
                         fd.append('size_name', this.sizeNames[sizeId] || '');
                         fd.append('quantity', qty);
                         fd.append('print_placements', '[]');
-                        return fetch('{{ route("cart.add") }}', {
+                        return fetch('{{ route('cart.add') }}', {
                             method: 'POST',
-                            headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             body: fd
                         });
-                    })).then(() => window.location.href = '{{ route("cart") }}');
+                    })).then(() => window.location.href = '{{ route('cart') }}');
                 } else {
                     fetch(form.action, {
                         method: 'POST',
                         body: formData
                     }).then(res => {
-                        if (res.ok) window.location.href = '{{ route("cart") }}';
+                        if (res.ok) window.location.href = '{{ route('cart') }}';
                     });
                 }
             }
@@ -140,7 +140,8 @@ $mediaList = $product->getMedia('images');
             if (val >= 12 && typeof this.fetchDiscountedPrice === 'function') {
                 this.fetchDiscountedPrice();
             }
-        }); $watch('activeColorId', (val) => {
+        });
+        $watch('activeColorId', (val) => {
             if (!val) {
                 const firstGeneral = images.find(img => img.color_ids.length === 0);
                 if (firstGeneral) {

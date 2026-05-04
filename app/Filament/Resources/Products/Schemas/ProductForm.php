@@ -11,13 +11,13 @@ use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -104,6 +104,35 @@ class ProductForm
                     ])
                     ->columnSpanFull(),
 
+                Section::make('Immagini Remote (NewWave)')
+                    ->description('Gestisci l\'ordine delle immagini sincronizzate da NewWave.')
+                    ->collapsible()
+                    ->schema([
+                        Repeater::make('images')
+                            ->relationship('images')
+                            ->label('Immagini Remote')
+                            ->schema([
+                                Placeholder::make('preview')
+                                    ->label('Immagine')
+                                    ->content(fn ($record) => $record->image_url ? new HtmlString('<img src="'.($record->thumbnail_url ?: $record->image_url).'" class="h-20 w-auto rounded border shadow-sm">') : 'Nessuna immagine'),
+                                TextInput::make('image_description')
+                                    ->label('Descrizione')
+                                    ->disabled(),
+                                Select::make('color_id')
+                                    ->label('Colore Associato')
+                                    ->relationship('color', 'color_name')
+                                    ->preload()
+                                    ->searchable(),
+                            ])
+                            ->columns(2)
+                            ->reorderable()
+                            ->addable(false)
+                            ->deletable(false)
+                            ->visible(fn ($record) => $record && $record->type === Product::TYPE_NEWWAVE),
+                    ])
+                    ->columnSpanFull()
+                    ->visible(fn ($record) => $record && $record->type === Product::TYPE_NEWWAVE),
+
                 Section::make('Organizzazione Galleria per Colore')
                     ->description('Associa le immagini caricate sopra ai colori disponibili per questo prodotto.')
                     ->collapsible()
@@ -150,9 +179,9 @@ class ProductForm
                                     ->options(PrintPlacement::pluck('name', 'id'))
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function (\Filament\Forms\Set $set, $state) {
+                                    ->afterStateUpdated(function (Set $set, $state) {
                                         if ($state) {
-                                            $placement = PrintPlacement::find($state);
+                                            $placement = PrintPlacement::where('id', '=', $state, 'and')->first();
                                             if ($placement) {
                                                 $set('additional_price', $placement->default_price);
                                             }

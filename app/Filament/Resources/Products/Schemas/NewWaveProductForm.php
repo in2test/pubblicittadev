@@ -7,11 +7,13 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Enums\SyncStatus;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\Image;
 use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
-use Filament\Forms\Components\Checkbox;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -27,9 +29,9 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
-use Livewire\Attributes\Validate;
 
 class NewWaveProductForm
 {
@@ -82,7 +84,7 @@ class NewWaveProductForm
                                         }
                                         if ($record->sync_status === SyncStatus::Syncing) {
                                             return new HtmlString(
-                                                "<div class='flex flex-col gap-2 min-w-[200px]' wire:poll.2s>
+                                                "<div class='flex flex-col gap-2 min-w-50' wire:poll.2s>
                                                     <span class='text-sm text-gray-700 dark:text-gray-300 font-medium'>In corso... {$record->sync_progress}%</span>
                                                     <div class='w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700'>
                                                         <div class='bg-primary-600 h-2.5 rounded-full transition-all duration-500' style='width: {$record->sync_progress}%'></div>
@@ -199,7 +201,7 @@ class NewWaveProductForm
                                     ->live()
                                     ->afterStateUpdated(function (Set $set, $state) {
                                         if ($state) {
-                                            $placement = PrintPlacement::find($state);
+                                            $placement = PrintPlacement::find($state, ['default_price']);
                                             if ($placement) {
                                                 $set('additional_price', $placement->default_price);
                                             }
@@ -220,7 +222,7 @@ class NewWaveProductForm
             ->schema([
                 Section::make('Caricamento / Cache Immagini')
                     ->schema([
-                        SpatieMediaLibraryFileUpload::make('images')
+                        SpatieMediaLibraryFileUpload::make('media_images')
                             ->label('')
                             ->collection('images')
                             ->multiple()
@@ -233,42 +235,56 @@ class NewWaveProductForm
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Organizzazione per Colore')
-                    ->description('Associa ogni immagine ai rispettivi colori per permettere il cambio immagine dinamico sul sito.')
+                Section::make('Galleria Immagini')
+                    ->description('Visualizza e riordina sia le immagini sincronizzate da NewWave sia quelle caricate localmente.')
                     ->visible(fn ($livewire): bool => ! ($livewire instanceof CreateRecord))
                     ->schema([
-                        Repeater::make('media')
-                            ->label('')
-                            ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
+                        Repeater::make('remote_images')
+                            ->relationship('images')
+                            ->orderColumn('order_by')
+                            ->grid(5)
                             ->schema([
-                                Grid::make(3)
-                                    ->schema([
-                                        Placeholder::make('preview')
-                                            ->label('Anteprima')
-                                            ->content(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
-                                        Grid::make(1)
-                                            ->schema([
-                                                Select::make('custom_properties.color_ids')
-                                                    ->label('Associa a Colori')
-                                                    ->multiple()
-                                                    ->options($colorOptions)
-                                                    ->preload()
-                                                    ->searchable(),
-                                                TextInput::make('custom_properties.alt')
-                                                    ->label('Testo Alt')
-                                                    ->placeholder('es. Vista laterale'),
-                                                Checkbox::make('custom_properties.is_manual')
-                                                    ->label('Gestione Manuale (Blocca Sync API)')
-                                                    ->inline(false),
-                                            ])
-                                            ->columnSpan(2),
-                                    ]),
+                                Hidden::make('id'),
+                                Placeholder::make('preview')
+                                    ->label('Anteprima')
+                                    ->content(fn (?Image $record) => $record ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
+                                Select::make('color_id')
+                                    ->label('Colore associato')
+                                    ->options($colorOptions)
+                                    ->searchable()
+                                    ->nullable()
+                                    ->placeholder('Nessuna associazione')
+                                    ->columnSpanFull(),
+                                TextInput::make('image_url')
+                                    ->label('URL immagine')
+                                    ->url()
+                                    ->required()
+                                    ->columnSpanFull(),
+                                TextInput::make('image_description')
+                                    ->label('Descrizione immagine')
+                                    ->placeholder('es. Vista frontale')
+                                    ->columnSpanFull(),
                             ])
-                            ->grid(2)
-                            ->addable(false)
-                            ->deletable(false)
+                            ->extraItemActions([
+                                Action::make('downloadToLibrary')
+                                    ->label('Scarica in libreria')
+                                    ->icon(Heroicon::OutlinedArrowDownTray)
+                                    ->action(function (array $arguments, Repeater $component): void {
+                                        $item = $component->getItemState($arguments['item']);
+                                        $image = Image::query()->find($item['id'] ?? null);
+
+                                        if (! $image || ! $image->image_url || ! $image->product) {
+                                            return;
+                                        }
+
+                                        $image->downloadToMediaLibrary();
+                                    }),
+                            ])
+                            ->addActionLabel('Aggiungi URL immagine')
+                            ->columns(1)
                             ->columnSpanFull(),
                     ]),
+
             ]);
 
         return $schema

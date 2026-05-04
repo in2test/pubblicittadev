@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
+use App\Observers\MediaObserver;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Override;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Prevent lazy loading to catch potential N+1 query issues.
         Model::preventLazyLoading();
+
+        // Register observer for Spatie Media deletion to clean up orphaned Image records
+        Media::observe(MediaObserver::class);
 
         // Register Filament resources (global menu)
         if (class_exists(Filament::class)) {

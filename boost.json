@@ -5,10 +5,10 @@
         "gemini",
         "cursor"
     ],
-    "cloud": false,
+    "cloud": true,
     "guidelines": true,
     "mcp": true,
-    "nightwatch_mcp": false,
+    "nightwatch": false,
     "packages": [
         "filament/filament",
         "spatie/laravel-medialibrary",

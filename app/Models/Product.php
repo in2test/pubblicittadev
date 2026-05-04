@@ -9,6 +9,7 @@ use App\Services\QuantityDiscountService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
@@ -36,10 +37,44 @@ class Product extends Model implements HasMedia
     }
 
     public const TYPE_STANDARD = 'standard';
+
     public const TYPE_NEWWAVE = 'newwave';
 
     #[Override]
-    protected static function booted(): void {}
+    protected static function booted(): void
+    {
+        static::saved(function (Product $product): void {
+            $product->syncLocalMediaToImageRecords();
+        });
+    }
+
+    public function syncLocalMediaToImageRecords(): void
+    {
+        $mediaItems = $this->getMedia('images');
+        $orderCounter = 0;
+
+        foreach ($mediaItems as $media) {
+            $remoteUrl = data_get($media->getCustomProperty('remote_resource_url'), 'standard');
+
+            if (! $remoteUrl) {
+                continue;
+            }
+
+            $order = $media->order_column ?? $orderCounter++;
+
+            Image::updateOrCreate([
+                'product_id' => $this->id,
+                'image_url' => $remoteUrl,
+            ], [
+                'order_by' => $order,
+                'image_description' => $this->name,
+                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium_url' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large_url' => $media->getUrl(),
+                'color_id' => $media->getCustomProperty('color_ids')[0] ?? null,
+            ]);
+        }
+    }
 
     #[Override]
     public function getRouteKeyName(): string
@@ -85,6 +120,11 @@ class Product extends Model implements HasMedia
             ->withTimestamps();
     }
 
+    public function images()
+    {
+        return $this->hasMany(Image::class)->orderBy('order_by');
+    }
+
     public function getPriceForQuantity(int $quantity): float
     {
         $base = (float) $this->price;
@@ -94,6 +134,7 @@ class Product extends Model implements HasMedia
         try {
             $service = app(QuantityDiscountService::class);
             $discount = $service->getDiscountForCategoryTree($this->category_id, $quantity);
+
             return $service->computeDiscountedPrice($base, $discount);
         } catch (Throwable) {
             return $base;
@@ -137,47 +178,51 @@ class Product extends Model implements HasMedia
             ->sharpen(10)
             ->format('webp');
 
-        // medium and large conversions for all images
-        $this->addMediaConversion('medium')
-            ->width(600)
-            ->height(600)
-            ->sharpen(10)
-            ->format('webp')
-            ->queued();
-
-        $this->addMediaConversion('large')
-            ->width(1000)
-            ->height(1000)
-            ->sharpen(10)
-            ->format('webp')
-            ->queued();
     }
 
     protected $casts = [
         'remote_images' => 'array',
     ];
 
-    public function getAllImages(): \Illuminate\Support\Collection
+    public function getAllImages(): Collection
     {
         $images = collect();
-        // Local media
-        foreach ($this->getMedia('images') as $media) {
-            $ri = $media->getCustomProperty('resourceFileId');
-            $images->push((object)[
+
+        $imageRecords = $this->images()->orderBy('order_by')->get()->keyBy('image_url');
+
+        $localMedia = $this->getMedia('images');
+        $localRemoteUrls = $localMedia
+            ->map(fn ($media) => data_get($media->getCustomProperty('remote_resource_url'), 'standard'))
+            ->filter()
+            ->all();
+
+        $localOrderCounter = 0;
+        foreach ($localMedia->sortBy(fn ($media) => $media->order_column ?? PHP_INT_MAX) as $media) {
+            $order = $media->order_column ?? $localOrderCounter++;
+            $images->push((object) [
                 'id' => (string) $media->id,
-                'resourceFileId' => $ri,
+                'resourceFileId' => $media->getCustomProperty('resourceFileId'),
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
                 'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
                 'large' => $media->getUrl(),
                 'alt' => $this->name,
                 'color_ids' => (array) ($media->getCustomProperty('color_ids') ?? []),
                 'is_remote' => false,
+                'order' => $order,
             ]);
         }
 
-        // Remote images
-        foreach ($this->remote_images ?? [] as $ri) {
-            $images->push((object)[
+        $remoteOrderCounter = 0;
+        foreach (collect($this->remote_images ?? []) as $ri) {
+            $remoteUrl = $ri['url'] ?? $ri['large'] ?? null;
+
+            if (! $remoteUrl || in_array($remoteUrl, $localRemoteUrls, true)) {
+                continue;
+            }
+
+            $imageRecord = $imageRecords->get($remoteUrl);
+            $order = $imageRecord ? ($imageRecord->order_by ?? $remoteOrderCounter++) : $remoteOrderCounter++;
+            $images->push((object) [
                 'id' => $ri['id'] ?? '',
                 'resourceFileId' => $ri['resourceFileId'] ?? null,
                 'thumb' => $ri['thumb'] ?? ($ri['url'] ?? ''),
@@ -186,9 +231,21 @@ class Product extends Model implements HasMedia
                 'alt' => $this->name,
                 'color_ids' => $ri['color_ids'] ?? [],
                 'is_remote' => true,
+                'order' => $order,
             ]);
         }
 
-        return $images;
+        return $images->sortBy(fn ($image) => [$image->order, $image->is_remote ? 1 : 0])->values();
+    }
+
+    public function getFirstImage(): ?object
+    {
+        $images = $this->getAllImages();
+
+        if ($images->isEmpty()) {
+            return null;
+        }
+
+        return $images->first(fn ($image) => empty($image->color_ids)) ?? $images->first();
     }
 }

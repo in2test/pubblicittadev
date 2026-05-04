@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,8 +14,9 @@ use Intervention\Image\Encoders\FormatEncoder;
 use Intervention\Image\Format;
 use Intervention\Image\ImageManager;
 use Override;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-#[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'image_description', 'product_id', 'category_id', 'order_by'])]
+#[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
 class Image extends Model
 {
     use HasFactory;
@@ -59,19 +61,61 @@ class Image extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function color()
+    {
+        return $this->belongsTo(Color::class);
+    }
+
     public function getThumbnailUrlAttribute(): ?string
     {
-        return $this->thumbnail_path ? asset('storage/'.$this->thumbnail_path) : null;
+        if ($this->thumbnail_path) {
+            return asset('storage/'.$this->thumbnail_path);
+        }
+
+        return $this->attributes['thumbnail_url'] ?? $this->image_url;
     }
 
     public function getMediumUrlAttribute(): ?string
     {
-        return $this->medium_path ? asset('storage/'.$this->medium_path) : null;
+        if ($this->medium_path) {
+            return asset('storage/'.$this->medium_path);
+        }
+
+        return $this->attributes['medium_url'] ?? $this->image_url;
     }
 
     public function getLargeUrlAttribute(): ?string
     {
-        return $this->large_path ? asset('storage/'.$this->large_path) : null;
+        if ($this->large_path) {
+            return asset('storage/'.$this->large_path);
+        }
+
+        return $this->attributes['large_url'] ?? $this->image_url;
+    }
+
+    public function downloadToMediaLibrary(): ?Media
+    {
+        if (! $this->image_url || ! $this->product) {
+            return null;
+        }
+
+        try {
+            $media = $this->product
+                ->addMediaFromUrl($this->image_url)
+                ->usingName($this->image_description ?? 'Remote Image')
+                ->withCustomProperties([
+                    'remote_resource_url' => [
+                        'standard' => $this->image_url,
+                    ],
+                ])
+                ->toMediaCollection('images');
+
+            $this->product->syncLocalMediaToImageRecords();
+
+            return $media;
+        } catch (Exception) {
+            return null;
+        }
     }
 
     protected function deleteImageFiles(): void

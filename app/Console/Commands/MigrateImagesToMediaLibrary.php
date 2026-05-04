@@ -23,11 +23,12 @@ class MigrateImagesToMediaLibrary extends Command
         $this->info('Starting migration of images to media library...');
 
         // Migrate product images
-        $productImages = Image::whereNotNull('product_id')->get();
+        $productImages = Image::whereNotNull('product_id', 'and')->get();
         $this->info("Found {$productImages->count()} product images to migrate");
 
         foreach ($productImages as $image) {
-            $product = Product::find($image->product_id);
+            /** @var Product|null $product */
+            $product = Product::where('id', '=', $image->product_id, 'and')->first();
             if (! $product) {
                 $this->warn("Product {$image->product_id} not found, skipping image {$image->id}");
 
@@ -48,11 +49,12 @@ class MigrateImagesToMediaLibrary extends Command
         }
 
         // Migrate category images
-        $categoryImages = Image::whereNotNull('category_id')->get();
+        $categoryImages = Image::whereNotNull('category_id', 'and')->get();
         $this->info("Found {$categoryImages->count()} category images to migrate");
 
         foreach ($categoryImages as $image) {
-            $category = Category::find($image->category_id);
+            /** @var Category|null $category */
+            $category = Category::where('id', '=', $image->category_id, 'and')->first();
             if (! $category) {
                 $this->warn("Category {$image->category_id} not found, skipping image {$image->id}");
 

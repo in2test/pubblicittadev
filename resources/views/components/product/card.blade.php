@@ -1,10 +1,11 @@
 @props(['product'])
 
 @php
-    $generalMedia = $product->getMedia('images')->first(fn($m) => empty($m->custom_properties['color_ids'] ?? []));
-    $firstMedia = $generalMedia ?? $product->getFirstMedia('images');
-    $imageUrl = $firstMedia
-        ? ($firstMedia->hasGeneratedConversion('medium') ? $firstMedia->getUrl('medium') : $firstMedia->getUrl())
+    $firstImage = $product->getFirstImage();
+    $imageUrl = $firstImage
+        ? ($firstImage->medium ?:
+        $firstImage->thumb ?:
+        $firstImage->large)
         : 'https://placehold.co/600x800?text=' . urlencode($product->name);
 
     // Extract available colors from variations
