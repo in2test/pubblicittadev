@@ -6,12 +6,7 @@ namespace App\Services;
 
 class ProductValidator
 {
-    private NwgApiClient $apiClient;
-
-    public function __construct(NwgApiClient $apiClient)
-    {
-        $this->apiClient = $apiClient;
-    }
+    public function __construct(private readonly NwgApiClient $apiClient) {}
 
     /**
      * Validate multiple SKUs from the API.

@@ -215,8 +215,10 @@ class Product extends Model implements HasMedia
         $remoteOrderCounter = 0;
         foreach (collect($this->remote_images ?? []) as $ri) {
             $remoteUrl = $ri['url'] ?? $ri['large'] ?? null;
-
-            if (! $remoteUrl || in_array($remoteUrl, $localRemoteUrls, true)) {
+            if (! $remoteUrl) {
+                continue;
+            }
+            if (in_array($remoteUrl, $localRemoteUrls, true)) {
                 continue;
             }
 

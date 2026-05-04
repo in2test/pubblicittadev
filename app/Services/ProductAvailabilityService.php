@@ -8,13 +8,13 @@ use App\Models\Product;
 
 class ProductAvailabilityService
 {
-    private NwgApiClient $apiClient;
+    private readonly NwgApiClient $apiClient;
 
-    private ProductDataMapper $dataMapper;
+    private readonly ProductDataMapper $dataMapper;
 
-    private ProductValidator $validator;
+    private readonly ProductValidator $validator;
 
-    private ProductSynchronizer $synchronizer;
+    private readonly ProductSynchronizer $synchronizer;
 
     public function __construct()
     {

@@ -247,7 +247,7 @@ class NewWaveProductForm
                                 Hidden::make('id'),
                                 Placeholder::make('preview')
                                     ->label('Anteprima')
-                                    ->content(fn (?Image $record) => $record ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
+                                    ->content(fn (?Image $record) => $record instanceof Image ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
                                 Select::make('color_id')
                                     ->label('Colore associato')
                                     ->options($colorOptions)

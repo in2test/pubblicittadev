@@ -13,12 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProductSynchronizer
 {
-    private NwgApiClient $apiClient;
-
-    public function __construct(NwgApiClient $apiClient)
-    {
-        $this->apiClient = $apiClient;
-    }
+    public function __construct(private readonly NwgApiClient $apiClient) {}
 
     /**
      * Synchronize product variations in the database with the API data.
@@ -92,16 +87,16 @@ class ProductSynchronizer
             foreach ($remoteImagesArray as $img) {
                 Image::updateOrCreate([
                     'product_id' => $product->id,
-                    'image_url' => $img['url']??null,
+                    'image_url' => $img['url'] ?? null,
                     'thumbnail_url' => $img['thumbnailUrl'] ?? null,
                     'medium_url' => $img['largeThumbnailUrl'] ?? null,
-                    'large_url' => $img ['standardUrl'] ?? null,
-                    ], [
-                        'order_by' => $remoteImageOrder++,
-                        'image_description' => $product->name,
-                        ]);
-                        Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
-                        }
+                    'large_url' => $img['standardUrl'] ?? null,
+                ], [
+                    'order_by' => $remoteImageOrder++,
+                    'image_description' => $product->name,
+                ]);
+                Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
+            }
             if (! empty($data['variations'])) {
                 foreach ($data['variations'] as $v) {
                     $colorCode = (string) ($v['itemColorCode'] ?? '');
@@ -137,7 +132,7 @@ class ProductSynchronizer
                     }
                 }
             }
-            if (! empty($remoteImagesArray)) {
+            if ($remoteImagesArray !== []) {
                 $updateData['remote_images'] = $remoteImagesArray;
                 Log::info('Caching '.count($remoteImagesArray)." remote images for SKU {$product->sku}");
             }

@@ -40,6 +40,7 @@ class FakeNwgApiClient extends NwgApiClient
 {
     public function __construct() {}
 
+    #[Override]
     public function getFullProductData(string $productNumber): ?array
     {
         return [
