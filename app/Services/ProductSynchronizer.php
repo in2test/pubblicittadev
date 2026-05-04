@@ -65,7 +65,6 @@ class ProductSynchronizer
 
             // Cache remote_images for display and persist remote URLs to the image model.
             $remoteImagesArray = [];
-            $remoteImageOrder = 0;
 
             if (! empty($data['pictures'])) {
                 foreach ($data['pictures'] as $idx => $img) {
@@ -78,24 +77,12 @@ class ProductSynchronizer
                             'medium' => $img['largeThumbnailUrl'] ?? '',
                             'large' => $img['standardUrl'] ?? '',
                             'color_ids' => [],
+                            'color_id' => null,
                         ];
 
                         Log::info("Remote image for SKU {$product->sku}: {$url}");
                     }
                 }
-            }
-            foreach ($remoteImagesArray as $img) {
-                Image::updateOrCreate([
-                    'product_id' => $product->id,
-                    'image_url' => $img['url'] ?? null,
-                    'thumbnail_url' => $img['thumbnailUrl'] ?? null,
-                    'medium_url' => $img['largeThumbnailUrl'] ?? null,
-                    'large_url' => $img['standardUrl'] ?? null,
-                ], [
-                    'order_by' => $remoteImageOrder++,
-                    'image_description' => $product->name,
-                ]);
-                Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
             }
             if (! empty($data['variations'])) {
                 foreach ($data['variations'] as $v) {
@@ -114,24 +101,31 @@ class ProductSynchronizer
                                     'medium' => $vImg['largeThumbnailUrl'] ?? '',
                                     'large' => $vImg['standardUrl'] ?? '',
                                     'color_ids' => $colorIds,
-                                ];
-
-                                Image::updateOrCreate([
-                                    'product_id' => $product->id,
-                                    'image_url' => $url,
-                                ], [
-                                    'order_by' => $remoteImageOrder++,
-                                    'image_description' => $product->name,
                                     'color_id' => $color?->id,
-                                    'thumbnail_url' => $vImg['thumbnailUrl'] ?? null,
-                                    'medium_url' => $vImg['largeThumbnailUrl'] ?? null,
-                                    'large_url' => $vImg['standardUrl'] ?? null,
-                                ]);
+                                ];
                             }
                         }
                     }
                 }
             }
+
+            // Process all collected images in a single pass
+            $remoteImageOrder = 0;
+            foreach ($remoteImagesArray as $img) {
+                Image::updateOrCreate([
+                    'product_id' => $product->id,
+                    'image_url' => $img['url'],
+                ], [
+                    'order_by' => $remoteImageOrder++,
+                    'image_description' => $product->name,
+                    'color_id' => $img['color_id'] ?? null,
+                    'thumbnail_url' => $img['thumb'] ?? null,
+                    'medium_url' => $img['medium'] ?? null,
+                    'large_url' => $img['large'] ?? null,
+                ]);
+                Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
+            }
+
             if ($remoteImagesArray !== []) {
                 $updateData['remote_images'] = $remoteImagesArray;
                 Log::info('Caching '.count($remoteImagesArray)." remote images for SKU {$product->sku}");

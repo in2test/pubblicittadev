@@ -47,6 +47,7 @@ class ListNewWaveProducts extends ListRecords
                         ->label('Categoria')
                         ->options(Category::pluck('name', 'id'))
                         ->searchable()
+                        ->required()
                         ->createOptionForm([
                             TextInput::make('name')
                                 ->label('Nome')
@@ -55,7 +56,13 @@ class ListNewWaveProducts extends ListRecords
                                 ->label('Categoria padre')
                                 ->options(Category::pluck('name', 'id'))
                                 ->nullable(),
-                        ]),
+                        ])
+                        ->createOptionUsing(fn (array $data): int => Category::create([
+                            'name' => $data['name'],
+                            'slug' => SlugGenerator::unique(Category::class, $data['name']),
+                            'parent_id' => $data['parent_id'] ?? null,
+                            'is_active' => true,
+                        ])->id),
 
                     Select::make('print_placement_ids')
                         ->label('Posizioni di Stampa')

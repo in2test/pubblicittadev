@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Product;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -13,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\HtmlString;
 
 class ProductsTable
@@ -21,10 +24,10 @@ class ProductsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('sku')
                     ->searchable()
                     ->tooltip(function (Product $record): ?HtmlString {
-                        $url = $record->getThumbnailUrl();
+                        $url = $record->getFirstImage()?->thumbnail_url ?? $record->getThumbnailUrl();
                         if (! $url) {
                             return null;
                         }
@@ -33,6 +36,8 @@ class ProductsTable
                             "<img src='$url' style='width:150px;height:150px;object-fit:cover;border-radius:8px;' />"
                         );
                     }),
+                TextColumn::make('name')
+                    ->searchable(),
                 TextColumn::make('slug')
                     ->searchable(),
                 TextColumn::make('price')
@@ -72,6 +77,33 @@ class ProductsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('activate')
+                        ->label('Attiva')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => true])))
+                        ->requiresConfirmation()
+                        ->modalHeading('Attiva prodotti')
+                        ->modalDescription('Sei sicuro di voler attivare i prodotti selezionati?')
+                        ->modalButton('Attiva'),
+                    BulkAction::make('deactivate')
+                        ->label('Disattiva')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => false])))
+                        ->requiresConfirmation()
+                        ->modalHeading('Disattiva prodotti')
+                        ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
+                        ->modalButton('Disattiva'),
+                    BulkAction::make('synchronize')
+                        ->label('Sincronizza')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('info')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => SyncNewWaveProductJob::dispatch($record)))
+                        ->requiresConfirmation()
+                        ->modalHeading('Sincronizza prodotti')
+                        ->modalDescription('Sei sicuro di voler sincronizzare i prodotti selezionati?')
+                        ->modalButton('Sincronizza'),
                     DeleteBulkAction::make(),
                 ]),
             ])

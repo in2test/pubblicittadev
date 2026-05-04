@@ -27,12 +27,10 @@ class NewWaveProductsTable
             ->poll('2s')
             ->modifyQueryUsing(fn (Builder $query) => $query->with('category'))
             ->columns([
-                TextColumn::make('name')
-                    ->label('Nome')
+                TextColumn::make('sku')
                     ->searchable()
-                    ->sortable()
                     ->tooltip(function (Product $record): ?HtmlString {
-                        $url = $record->getThumbnailUrl();
+                        $url = $record->getFirstImage()?->thumb ?? $record->getThumbnailUrl();
                         if (! $url) {
                             return null;
                         }
@@ -41,6 +39,8 @@ class NewWaveProductsTable
                             "<img src='$url' style='width:150px;height:150px;object-fit:cover;border-radius:8px;' />"
                         );
                     }),
+                TextColumn::make('name')
+                    ->searchable(),
                 TextColumn::make('category.name')
                     ->label('Categoria')
                     ->sortable()
