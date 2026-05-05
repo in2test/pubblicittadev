@@ -1,126 +1,113 @@
 @props(['product'])
 
 @php
-    $firstImage = $product->getFirstImage();
-    $imageUrl = $firstImage
-        ? ($firstImage->medium ?:
-        $firstImage->thumb ?:
-        $firstImage->large)
-        : 'https://placehold.co/600x800?text=' . urlencode($product->name);
-
+    /** @var \App\Models\Product $product */
+    $imageUrl = $product->getFirstImageUrl('medium');
     $isAdmin = auth()->check() && auth()->user()->isAdmin();
     $adminEditUrl = $product->getAdminEditUrl();
-
-    // Extract available colors from variations
-    $availableColors = $product->variations->pluck('color')->unique('id')->filter()->sortBy('sort_order');
-
-    $colorCount = $availableColors->count();
-    $displayColors = $availableColors->take(8);
-    $remainingColors = $colorCount - 8;
+    
+    // Color Preview Data
+    $colorData = $product->getPreviewColors(8);
+    
+    // Pricing Data
+    $priceData = $product->getDisplayPriceData(1);
 @endphp
 
-<article
-    class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
-
-
-    <a href="{{ route('product', ['category' => optional($product->category)->slug ?: 'uncategorized', 'slug' => $product->slug]) }}"
+<article class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
+    <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'slug' => $product->slug]) }}"
         class="flex flex-col h-full">
+        
+        {{-- Badges --}}
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
             @if ($product->is_featured)
-                <div class=" bg-vividauburn-800 text-white text-[10px] font-bold px-2 py-1 uppercase ">
-                    Prodotto in Evidenza
+                <div class="bg-primary text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                    Evidenza
                 </div>
             @endif
 
-            <div class="text-white text-[10px] font-bold px-2 py-1 uppercase  bg-gray-800">
-                {{ optional($product->category)->slug ?: 'senza categoria' }}
+            <div class="text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest bg-gray-900">
+                {{ $product->category->name ?? 'Senza Categoria' }}
             </div>
         </div>
 
-
-        <div class=" aspect-4/5 overflow-hidden relative bg-white border border-gray-200 flex">
-            <img class="m-auto object-cover grayscale-0 group-hover:grayscale transition-all duration-500 group-hover:scale-105  "
-                src="{{ $imageUrl }}" alt="{{ $product->name }}" />
+        {{-- Product Image --}}
+        <div class="aspect-4/5 overflow-hidden relative bg-white border border-gray-100 flex">
+            <img class="m-auto object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy" />
         </div>
 
+        {{-- Product Info --}}
         <div class="p-6 flex flex-col flex-1">
-            <div class="flex justify-between items-start mb-2">
-                <h3 class="text-lg font-bold leading-tight uppercase tracking-tight text-on-surface line-clamp-2">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-black leading-tight uppercase tracking-tight text-on-surface line-clamp-2">
                     {{ $product->name }}
                 </h3>
+                
+                {{-- Pricing --}}
                 <div class="flex flex-col items-end">
-                    @php
-                        $discountedPrice = $product->getPriceForQuantity(1);
-                        $basePrice = (float) $product->price;
-                    @endphp
-                    @if ($discountedPrice > 0 && $discountedPrice < $basePrice)
-                        <span
-                            class="font-mono text-sm font-bold text-primary">€{{ number_format((float) $discountedPrice, 2) }}</span>
-                        <span
-                            class="text-xs line-through text-gray-500 ml-2">€{{ number_format((float) $basePrice, 2) }}</span>
-                    @elseif ($basePrice > 0)
-                        <span
-                            class="font-mono text-sm font-bold text-primary">€{{ number_format((float) $basePrice, 2) }}</span>
+                    @if ($priceData['on_request'])
+                        <span class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
+                            Su Richiesta
+                        </span>
+                    @elseif ($priceData['is_discounted'])
+                        <span class="font-mono text-sm font-bold text-primary">
+                            €{{ number_format($priceData['price'], 2) }}
+                        </span>
+                        <span class="text-[10px] line-through text-gray-400 font-mono">
+                            €{{ number_format($priceData['base_price'], 2) }}
+                        </span>
                     @else
-                        <span
-                            class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">Su
-                            Richiesta</span>
+                        <span class="font-mono text-sm font-bold text-primary">
+                            €{{ number_format($priceData['price'], 2) }}
+                        </span>
                     @endif
                 </div>
             </div>
 
-            <code class="text-[10px] font-mono text-secondary mb-4">{{ $product->sku }}</code>
+            <code class="text-[10px] font-mono text-secondary mb-4 opacity-50">{{ $product->sku }}</code>
 
-            <p class="text-sm text-on-surface line-clamp-2 mb-6 opacity-70">{{ $product->description }}</p>
+            <p class="text-xs text-on-surface line-clamp-2 mb-6 opacity-60 leading-relaxed">
+                {{ $product->description }}
+            </p>
 
-            <!-- Color Preview Section -->
-            @if ($colorCount > 0)
-                <div class="mb-6 flex flex-wrap gap-1.5 items-center">
-                    @foreach ($displayColors as $color)
-                        @php $colorHex = $color->color_hex ?: '#ccc'; @endphp
-                        <div class="w-3.5 h-3.5 rounded-full border border-outline-variant/30 shadow-sm"
-                            style="background-color: {{ $colorHex }}" title="{{ $color->color_name }}"></div>
+            {{-- Color Preview --}}
+            @if ($colorData['total'] > 0)
+                <div class="mb-6 flex flex-wrap gap-1 items-center">
+                    @foreach ($colorData['display'] as $color)
+                        <div class="w-3 h-3 border border-gray-200"
+                            @style(['background-color: ' . ($color->color_hex ?: '#ccc')]) 
+                            title="{{ $color->color_name }}"></div>
                     @endforeach
 
-                    @if ($remainingColors > 0)
-                        <span class="text-[10px] font-mono font-bold text-secondary ml-1">
-                            +{{ $remainingColors }}
+                    @if ($colorData['remaining'] > 0)
+                        <span class="text-[10px] font-mono font-bold text-secondary ml-1 opacity-50">
+                            +{{ $colorData['remaining'] }}
                         </span>
                     @endif
                 </div>
             @endif
 
-            <div class="mt-auto flex justify-between items-center pt-4 border-t border-outline-variant/10">
-                <span
-                    class="text-[10px] bg-secondary-container px-2 py-1 font-bold text-on-secondary-fixed-variant uppercase">
-                    Premium Quality
+            {{-- Footer / Admin Actions --}}
+            <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
+                <span class="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest">
+                    {{ $product->category->name ?? 'Prodotti' }}
                 </span>
-                <div class="flex items-center gap-2">
-
-                    <a href="{{ $adminEditUrl }}" class="text-primary hover:scale-110 transition-transform"
-                        target="_blank">
-                        <span class="material-symbols-outlined text-primary hover:scale-110 transition-transform">
-                            edit
-                        </span>
-                    </a>
-                    @if ($isAdmin)
+                
+                @if ($isAdmin)
+                    <div class="flex items-center gap-2" onclick="event.preventDefault()">
+                        <a href="{{ $adminEditUrl }}" class="p-2 border border-gray-100 hover:bg-gray-100 transition-colors"
+                            target="_blank">
+                            <span class="material-symbols-outlined text-sm text-gray-400">edit</span>
+                        </a>
                         <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}">
                             @csrf
                             <button type="submit"
-                                class="w-full rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white {{ $product->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} transition-colors">
-                                {{ $product->is_active ? 'Disattiva' : 'Attiva' }}
-                        </form>
-
-
-                        <form method="POST" action="{{ route('admin.products.sync', $product) }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full rounded-md bg-sky-600 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-sky-700 transition-colors">
-                                Sincronizza
+                                class="border border-gray-100 px-3 py-2 text-[10px] font-bold uppercase tracking-widest {{ $product->is_active ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50' }} transition-colors">
+                                {{ $product->is_active ? 'Off' : 'On' }}
                             </button>
                         </form>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </div>
         </div>
     </a>

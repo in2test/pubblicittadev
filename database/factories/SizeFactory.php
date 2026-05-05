@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
-use App\Models\Category;
+use App\Models\Size;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Category>
+ * @extends Factory<Size>
  */
-class CategoryFactory extends Factory
+class SizeFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -17,10 +19,12 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
+        $size = $this->faker->randomElement(['S', 'M', 'L', 'XL', 'XXL']);
+
         return [
-            'name' => fake()->words(2, true),
-            'slug' => fake()->slug(),
-            'description' => fake()->sentence(),
+            'size' => $size,
+            'size_name' => $size,
+            'size_code' => $size,
         ];
     }
 }

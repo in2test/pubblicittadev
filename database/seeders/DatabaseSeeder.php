@@ -39,13 +39,12 @@ class DatabaseSeeder extends Seeder
 
         // Categories
         Category::updateOrCreate(['slug' => 'abbigliamento-da-lavoro'], ['name' => 'Abbigliamento da lavoro', 'parent_id' => null]);
-        Category::updateOrCreate(['slug' => 't-shirt'], ['name' => 'T-Shirt', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'polo'], ['name' => 'Polo', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'felpe'], ['name' => 'Felpe', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'pantaloni'], ['name' => 'Pantaloni', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'giacche'], ['name' => 'Giacche', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'gilet'], ['name' => 'Gilet', 'parent_id' => 1]);
-        Category::updateOrCreate(['slug' => 'calzature'], ['name' => 'Calzature', 'parent_id' => 1]);
+        Category::updateOrCreate(['slug' => 'piccolo_formato'], ['name' => 'Stampa piccolo Formato', 'parent_id' => null]);
+        Category::updateOrCreate(['slug' => 'grande_formato'], ['name' => 'Stampa grande Formato', 'parent_id' => null]);
+        Category::updateOrCreate(['slug' => 'gadget_promozionale'], ['name' => 'Gadget e materiale promozionale', 'parent_id' => null]);
+        Category::updateOrCreate(['slug' => 'espositori'], ['name' => 'Espositori', 'parent_id' => null]);
+        Category::updateOrCreate(['slug' => 'packaging_borse'], ['name' => 'Packaging e borse', 'parent_id' => null]);
+
 
         // Seed Sizes
         Size::updateOrCreate(['size' => 'XXS', 'size_code' => '2'], ['size_name' => 'XXS', 'sort_order' => 1]);

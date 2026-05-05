@@ -19,13 +19,13 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->words(3, true),
-            'slug' => $this->faker->unique()->slug(),
-            'description' => $this->faker->paragraph(),
-            'sku' => $this->faker->unique()->bothify('PRD-######'),
-            'price' => $this->faker->randomFloat(2, 10, 1000),
+            'name' => fake()->words(3, true),
+            'slug' => fake()->unique()->slug(),
+            'description' => fake()->paragraph(),
+            'sku' => fake()->unique()->bothify('PRD-######'),
+            'price' => fake()->randomFloat(2, 10, 1000),
             'category_id' => Category::factory(),
-            'is_featured' => $this->faker->boolean(),
+            'is_featured' => fake()->boolean(),
         ];
     }
 }

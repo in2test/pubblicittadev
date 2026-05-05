@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('description')->nullable();
+            $table->decimal('default_price', 10, 2)->default(0);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
@@ -12,14 +13,14 @@ class DebugController extends Controller
 {
     public function remoteImages(string $sku, Request $request)
     {
-        $product = Product::where('sku', $sku)->first();
+        $product = Product::where('sku', '=', $sku, 'and')->first();
         if (! $product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
 
         return response()->json([
             'sku' => $sku,
-            'remote_images' => $product->remote_images,
+            'images_table' => $product->images,
             'all_images' => $product->getAllImages(),
         ]);
     }
@@ -35,7 +36,7 @@ class DebugController extends Controller
         }
         $remote = method_exists($service, 'mapFullProductPayloadToRemoteImages') ? $service->mapFullProductPayloadToRemoteImages($payload) : [];
 
-        return response()->json(['sku' => $sku, 'remote_images' => $remote]);
+        return response()->json(['sku' => $sku, 'mapped_remote_images' => $remote]);
     }
 
     public function mapPayloadToRemoteImages(string $sku, Request $request)
@@ -48,13 +49,26 @@ class DebugController extends Controller
             return response()->json(['error' => 'Full payload not available'], 404);
         }
         $remote = method_exists($service, 'mapFullProductPayloadToRemoteImages') ? $service->mapFullProductPayloadToRemoteImages($payload) : [];
-        $product = Product::where('sku', $sku)->first();
+        $product = Product::where('sku', '=', $sku, 'and')->first();
         if (! $product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
-        $product->update(['remote_images' => $remote]);
 
-        return response()->json(['sku' => $sku, 'remote_images_count' => count($remote), 'remote_images' => $remote]);
+        // Persist to images table instead of JSON column
+        foreach ($remote as $img) {
+            Image::updateOrCreate([
+                'product_id' => $product->id,
+                'image_url' => $img['url'],
+            ], [
+                'image_description' => $product->name,
+                'color_id' => $img['color_id'] ?? null,
+                'thumbnail_url' => $img['thumb'] ?? null,
+                'medium_url' => $img['medium'] ?? null,
+                'large_url' => $img['large'] ?? null,
+            ]);
+        }
+
+        return response()->json(['sku' => $sku, 'images_added_to_table' => count($remote)]);
     }
 
     public function forceMapAll(string $sku, Request $request)
@@ -62,18 +76,30 @@ class DebugController extends Controller
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
         $service = app(ProductAvailabilityService::class);
-        $payload = $service->fetchFullGraphQLProductData($sku, $language) ?? $service->fetchRawProductDataFull($sku, $language);
+        $payload = $service->fetchFullGraphQLProductData($sku, $language);
         if (! $payload) {
             return response()->json(['error' => 'Full payload not available'], 404);
         }
         $remote = $service->mapFullProductPayloadToRemoteImages($payload);
-        $product = Product::where('sku', $sku)->first();
+        $product = Product::where('sku', '=', $sku, 'and')->first();
         if (! $product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
-        $product->update(['remote_images' => $remote]);
 
-        return response()->json(['sku' => $sku, 'remote_images_count' => count($remote), 'remote_images' => $remote]);
+        foreach ($remote as $img) {
+            Image::updateOrCreate([
+                'product_id' => $product->id,
+                'image_url' => $img['url'],
+            ], [
+                'image_description' => $product->name,
+                'color_id' => $img['color_id'] ?? null,
+                'thumbnail_url' => $img['thumb'] ?? null,
+                'medium_url' => $img['medium'] ?? null,
+                'large_url' => $img['large'] ?? null,
+            ]);
+        }
+
+        return response()->json(['sku' => $sku, 'images_added_to_table' => count($remote)]);
     }
 
     public function apiData(string $sku, Request $request)
@@ -81,13 +107,7 @@ class DebugController extends Controller
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
         $service = app(ProductAvailabilityService::class);
-        $data = method_exists($service, 'fetchRawProductData') ? $service->fetchRawProductData($sku, $language) : null;
-        if (! $data && method_exists($service, 'fetchRawProductDataFull')) {
-            $data = $service->fetchRawProductDataFull($sku, $language);
-        }
-        if (! $data && method_exists($service, 'fetchFullGraphQLProductData')) {
-            $data = $service->fetchFullGraphQLProductData($sku, $language);
-        }
+        $data = $service->getFullProductData($sku);
         if (! $data) {
             return response()->json(['error' => 'Data not found or API error'], 404);
         }
@@ -100,10 +120,7 @@ class DebugController extends Controller
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
         $service = app(ProductAvailabilityService::class);
-        $data = method_exists($service, 'fetchFullGraphQLProductData') ? $service->fetchFullGraphQLProductData($sku, $language) : null;
-        if (! $data) {
-            $data = $service->fetchRawProductDataFull($sku, $language);
-        }
+        $data = $service->getFullProductData($sku);
         if (! $data) {
             return response()->json(['error' => 'Data not found or API error'], 404);
         }

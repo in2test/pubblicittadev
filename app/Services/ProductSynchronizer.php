@@ -127,8 +127,7 @@ class ProductSynchronizer
             }
 
             if ($remoteImagesArray !== []) {
-                $updateData['remote_images'] = $remoteImagesArray;
-                Log::info('Caching '.count($remoteImagesArray)." remote images for SKU {$product->sku}");
+                Log::info('Cached '.count($remoteImagesArray)." remote images to 'images' table for SKU {$product->sku}");
             }
 
             $product->update($updateData);
@@ -156,8 +155,6 @@ class ProductSynchronizer
                 $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
                 $product->update(['sync_progress' => $progress]);
             }
-
-            // Rest of the code...
 
             // Find or create Color for this variation
             $colorCode = (string) ($variationData['itemColorCode'] ?? '');

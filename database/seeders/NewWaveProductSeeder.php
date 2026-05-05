@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
@@ -21,7 +22,7 @@ class NewWaveProductSeeder extends Seeder
         // Example input format:
         // Category Name
         // SKU1 SKU2 SKU3
-        $input = <<<EOD
+        $input = <<<'EOD'
 T-Shirts & Tops
 029030 029031 029029 029035 029368 029033 029034 029364 029365 029320 029360 029361 029348 029349 029358 029359 029340 029341 029356 029342 029343 029344 029352 029353 029390 029391 029006 029317 029319 029318 029305 029005 029307 029367 029351 029411 029460 029038 029039 029040 029041 029338 029339 029345 029346 029334 029335 029376 029377 029326 029314 021174 
 
@@ -56,7 +57,7 @@ Guanti e accessori
 024205 024201 024200 
 EOD;
 
-        $parentCategory = Category::where('slug', 'abbigliamento-da-lavoro')->first();
+        $parentCategory = Category::query()->where('slug', '=', 'abbigliamento-da-lavoro')->first();
 
         if (! $parentCategory) {
             $this->command->error('Parent category "Abbigliamento da lavoro" not found!');
@@ -92,14 +93,15 @@ EOD;
                     continue;
                 }
 
-                $product = Product::where('sku', $sku)->first();
+                /** @var Product|null $product */
+                $product = Product::query()->where('sku', '=', $sku)->first();
 
                 if (! $product) {
                     $this->command->info("Product $sku not found locally, fetching from API...");
                     $info = $service->fetchBasicInfo($sku);
 
                     if ($info) {
-                        $product = Product::create([
+                        $product = Product::query()->create([
                             'name' => $info['name'],
                             'sku' => $sku,
                             'slug' => SlugGenerator::unique(Product::class, $info['name']),
@@ -112,6 +114,7 @@ EOD;
                         $this->command->info("Created product $sku: {$product->name}");
                     } else {
                         $this->command->warn("Could not fetch info for SKU $sku from API.");
+
                         continue;
                     }
                 } else {
@@ -123,7 +126,7 @@ EOD;
                 }
 
                 // Dispatch full sync job
-                \App\Jobs\SyncNewWaveProductJob::dispatch($product->id);
+                SyncNewWaveProductJob::dispatch($product->id);
             }
         }
     }

@@ -5,74 +5,23 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search', '');
-        $categories = Category::all();
-        $showInactive = $this->shouldShowInactiveProducts();
-
-        if ($search) {
-            $products = Product::search($search)
-                ->when(! $showInactive, fn ($query) => $query->where('is_active', true))
-                ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
-                ->orderBy('name')
-                ->paginate(12)
-                ->appends($request->query());
-        } else {
-            $products = Product::when(! $showInactive, fn ($query) => $query->where('is_active', true))
-                ->with(['category', 'variations.color', 'media'])
-                ->orderBy('name')
-                ->paginate(12)
-                ->appends($request->query());
-        }
-
         return view('categories', [
-            'category' => $categories,
-            'products' => $products,
-            'search' => $search,
+            'category' => null,
         ]);
     }
 
     public function show(Request $request, string $slug)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
-        $search = $request->input('search', '');
-        $showInactive = $this->shouldShowInactiveProducts();
-
-        $categoryIds = $category->children->pluck('id')->toArray();
-        $categoryIds[] = $category->id;
-
-        if ($search) {
-            $products = Product::search($search)
-                ->when(! $showInactive, fn ($query) => $query->where('is_active', true))
-                ->whereIn('category_id', $categoryIds)
-                ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
-                ->orderBy('name')
-                ->paginate(12)
-                ->appends($request->query());
-        } else {
-            $products = Product::when(! $showInactive, fn ($query) => $query->where('is_active', true))
-                ->whereIn('category_id', $categoryIds)
-                ->with(['category', 'variations.color', 'media'])
-                ->orderBy('name')
-                ->paginate(12)
-                ->appends($request->query());
-        }
+        $category = Category::query()->where('slug', '=', $slug)->with('parent')->firstOrFail();
 
         return view('categories', [
             'category' => $category,
-            'products' => $products,
-            'search' => $search,
         ]);
-    }
-
-    private function shouldShowInactiveProducts(): bool
-    {
-        return auth()->check() && auth()->user()?->isAdmin() === true;
     }
 }

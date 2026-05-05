@@ -6,23 +6,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
+/**
+ * Product Controller
+ *
+ * Handles the public-facing product detail page.
+ */
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the specified product detail page.
+     *
+     * @param  string  $category  The category slug from the URL
+     * @param  string  $slug  The product slug from the URL
      */
-    public function index(Product $product): void
+    public function show(string $category, string $slug): View
     {
-        Product::where('slug', $product->slug)->first();
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $category, string $slug)
-    {
-        $productQuery = Product::where('slug', $slug)
+        // Fetch the product with all necessary relationships for the detail page
+        $productQuery = Product::where('slug', '=', $slug, 'and')
             ->with([
                 'category',
                 'category.parent',
@@ -31,23 +34,28 @@ class ProductController extends Controller
                 'variations.size',
                 'variations.printPlacement',
                 'variations.printSide',
+                'media',
             ]);
 
+        // Authorization: Only admins can view inactive products
         if (! $this->shouldShowInactiveProducts()) {
-            $productQuery->where('is_active', true);
+            $productQuery->where('is_active', '=', true, 'and');
         }
 
         $product = $productQuery->firstOrFail();
+        $category = Category::where('slug', '=', $category, 'and')->firstOrFail();
 
-        // Syncing is now handled via background jobs from the admin panel.
-
-        $category = Category::where('slug', $category)->firstOrFail();
-
-        return view('product', ['product' => $product, 'category' => $category]);
+        return view('product', [
+            'product' => $product,
+            'category' => $category,
+        ]);
     }
 
+    /**
+     * Helper to determine if inactive products should be visible to the current user
+     */
     private function shouldShowInactiveProducts(): bool
     {
-        return auth()->check() && auth()->user()?->isAdmin() === true;
+        return Auth::check() && Auth::user()?->isAdmin() === true;
     }
 }
