@@ -24,6 +24,7 @@
         "pest-testing",
         "tailwindcss-development",
         "medialibrary-development",
-        "debug-using-debugbar"
+        "debug-using-debugbar",
+        "deploying-laravel-cloud"
     ]
 }
