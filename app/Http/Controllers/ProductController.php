@@ -22,7 +22,7 @@ class ProductController extends Controller
      */
     public function show(string $category, string $slug)
     {
-        $product = Product::where('is_active', true)->where('slug', $slug)
+        $productQuery = Product::where('slug', $slug)
             ->with([
                 'category',
                 'category.parent',
@@ -31,13 +31,23 @@ class ProductController extends Controller
                 'variations.size',
                 'variations.printPlacement',
                 'variations.printSide',
-            ])
-            ->firstOrFail();
+            ]);
+
+        if (! $this->shouldShowInactiveProducts()) {
+            $productQuery->where('is_active', true);
+        }
+
+        $product = $productQuery->firstOrFail();
 
         // Syncing is now handled via background jobs from the admin panel.
 
         $category = Category::where('slug', $category)->firstOrFail();
 
         return view('product', ['product' => $product, 'category' => $category]);
+    }
+
+    private function shouldShowInactiveProducts(): bool
+    {
+        return auth()->check() && auth()->user()?->isAdmin() === true;
     }
 }

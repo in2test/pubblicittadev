@@ -250,4 +250,13 @@ class Product extends Model implements HasMedia
 
         return $images->first(fn ($image) => empty($image->color_ids)) ?? $images->first();
     }
+
+    public function getAdminEditUrl(): string
+    {
+        $routeName = $this->type === self::TYPE_NEWWAVE
+            ? 'filament.admin.resources.products.new-wave-products.edit'
+            : 'filament.admin.resources.products.standard-products.edit';
+
+        return route($routeName, ['record' => $this]);
+    }
 }

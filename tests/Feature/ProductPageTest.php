@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -91,5 +92,22 @@ class ProductPageTest extends TestCase
         $response = $this->get(route('product', ['category' => 'unknown', 'slug' => $product->slug]));
 
         $response->assertNotFound();
+    }
+
+    public function test_admin_can_view_inactive_product_page(): void
+    {
+        $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => false,
+            'slug' => 'inactive-product',
+            'category_id' => $category->id,
+        ]);
+
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'is_active' => true]);
+
+        $response = $this->actingAs($admin)->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+
+        $response->assertOk();
+        $response->assertViewHas('product');
     }
 }

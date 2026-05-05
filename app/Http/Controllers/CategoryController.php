@@ -14,16 +14,17 @@ class CategoryController extends Controller
     {
         $search = $request->input('search', '');
         $categories = Category::all();
+        $showInactive = $this->shouldShowInactiveProducts();
 
         if ($search) {
             $products = Product::search($search)
-                ->where('is_active', true)
+                ->when(! $showInactive, fn ($query) => $query->where('is_active', true))
                 ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
                 ->orderBy('name')
                 ->paginate(12)
                 ->appends($request->query());
         } else {
-            $products = Product::where('is_active', true)
+            $products = Product::when(! $showInactive, fn ($query) => $query->where('is_active', true))
                 ->with(['category', 'variations.color', 'media'])
                 ->orderBy('name')
                 ->paginate(12)
@@ -41,20 +42,21 @@ class CategoryController extends Controller
     {
         $category = Category::where('slug', $slug)->firstOrFail();
         $search = $request->input('search', '');
+        $showInactive = $this->shouldShowInactiveProducts();
 
         $categoryIds = $category->children->pluck('id')->toArray();
         $categoryIds[] = $category->id;
 
         if ($search) {
             $products = Product::search($search)
-                ->where('is_active', true)
+                ->when(! $showInactive, fn ($query) => $query->where('is_active', true))
                 ->whereIn('category_id', $categoryIds)
                 ->query(fn ($query) => $query->with(['category', 'variations.color', 'media']))
                 ->orderBy('name')
                 ->paginate(12)
                 ->appends($request->query());
         } else {
-            $products = Product::where('is_active', true)
+            $products = Product::when(! $showInactive, fn ($query) => $query->where('is_active', true))
                 ->whereIn('category_id', $categoryIds)
                 ->with(['category', 'variations.color', 'media'])
                 ->orderBy('name')
@@ -67,5 +69,10 @@ class CategoryController extends Controller
             'products' => $products,
             'search' => $search,
         ]);
+    }
+
+    private function shouldShowInactiveProducts(): bool
+    {
+        return auth()->check() && auth()->user()?->isAdmin() === true;
     }
 }

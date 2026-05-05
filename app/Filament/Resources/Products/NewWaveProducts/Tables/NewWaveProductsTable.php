@@ -6,8 +6,10 @@ namespace App\Filament\Resources\Products\NewWaveProducts\Tables;
 
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
+use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Product;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -17,6 +19,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\HtmlString;
 
 class NewWaveProductsTable
@@ -100,6 +103,33 @@ class NewWaveProductsTable
 
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('activate')
+                        ->label('Attiva')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => true])))
+                        ->requiresConfirmation()
+                        ->modalHeading('Attiva prodotti')
+                        ->modalDescription('Sei sicuro di voler attivare i prodotti selezionati?')
+                        ->modalButton('Attiva'),
+                    BulkAction::make('deactivate')
+                        ->label('Disattiva')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => false])))
+                        ->requiresConfirmation()
+                        ->modalHeading('Disattiva prodotti')
+                        ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
+                        ->modalButton('Disattiva'),
+                    BulkAction::make('synchronize')
+                        ->label('Sincronizza')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('info')
+                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => SyncNewWaveProductJob::dispatch($record)))
+                        ->requiresConfirmation()
+                        ->modalHeading('Sincronizza prodotti')
+                        ->modalDescription('Sei sicuro di voler sincronizzare i prodotti selezionati?')
+                        ->modalButton('Sincronizza'),
                     DeleteBulkAction::make(),
                 ]),
             ]);

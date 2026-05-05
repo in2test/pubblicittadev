@@ -8,6 +8,9 @@
         $firstImage->large)
         : 'https://placehold.co/600x800?text=' . urlencode($product->name);
 
+    $isAdmin = auth()->check() && auth()->user()->isAdmin();
+    $adminEditUrl = $product->getAdminEditUrl();
+
     // Extract available colors from variations
     $availableColors = $product->variations->pluck('color')->unique('id')->filter()->sortBy('sort_order');
 
@@ -18,6 +21,8 @@
 
 <article
     class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-primary transition-all duration-300">
+
+
     <a href="{{ route('product', ['category' => optional($product->category)->slug ?: 'uncategorized', 'slug' => $product->slug]) }}"
         class="flex flex-col h-full">
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
@@ -90,8 +95,32 @@
                     class="text-[10px] bg-secondary-container px-2 py-1 font-bold text-on-secondary-fixed-variant uppercase">
                     Premium Quality
                 </span>
-                <span
-                    class="material-symbols-outlined text-primary hover:scale-110 transition-transform">add_circle</span>
+                <div class="flex items-center gap-2">
+
+                    <a href="{{ $adminEditUrl }}" class="text-primary hover:scale-110 transition-transform"
+                        target="_blank">
+                        <span class="material-symbols-outlined text-primary hover:scale-110 transition-transform">
+                            edit
+                        </span>
+                    </a>
+                    @if ($isAdmin)
+                        <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white {{ $product->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} transition-colors">
+                                {{ $product->is_active ? 'Disattiva' : 'Attiva' }}
+                        </form>
+
+
+                        <form method="POST" action="{{ route('admin.products.sync', $product) }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full rounded-md bg-sky-600 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-sky-700 transition-colors">
+                                Sincronizza
+                            </button>
+                        </form>
+                    @endif
+                </div>
             </div>
         </div>
     </a>

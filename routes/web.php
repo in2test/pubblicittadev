@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomePageController;
@@ -37,6 +38,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return redirect('/');
     })->name('logout');
+
+    Route::post('/admin/products/{product}/toggle-active', [AdminProductController::class, 'toggleActive'])
+        ->name('admin.products.toggle-active');
+
+    Route::post('/admin/products/{product}/sync', [AdminProductController::class, 'sync'])
+        ->name('admin.products.sync');
 });
 
 require __DIR__.'/settings.php';
