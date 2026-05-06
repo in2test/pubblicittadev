@@ -1,9 +1,6 @@
 {
     "agents": [
-        "opencode",
-        "copilot",
-        "gemini",
-        "cursor"
+        "claude_code"
     ],
     "cloud": true,
     "guidelines": true,

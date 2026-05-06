@@ -1,9 +1,9 @@
 <x-layout>
 
     @php
-    $isAdmin = auth()->check() && auth()->user()->isAdmin();
-    $adminEditUrl = $product->getAdminEditUrl();
-@endphp
+        $isAdmin = auth()->check() && auth()->user()->isAdmin();
+        $adminEditUrl = $product->getAdminEditUrl();
+    @endphp
 
     <x-product.breadcrumbs :$product :$category />
 
@@ -18,16 +18,14 @@
                     class="inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-primary-700 transition-colors">
                     Modifica prodotto
                 </a>
-                <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}"
-                    class="inline">
+                <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}" class="inline">
                     @csrf
                     <button type="submit"
                         class="inline-flex items-center rounded-full {{ $product->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors">
                         {{ $product->is_active ? 'Disattiva prodotto' : 'Attiva prodotto' }}
                     </button>
                 </form>
-                <form method="POST" action="{{ route('admin.products.sync', $product) }}"
-                    class="inline">
+                <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline">
                     @csrf
                     <button type="submit"
                         class="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-sky-700 transition-colors">
@@ -69,7 +67,7 @@ $allImages = $product->getAllImages();
                     thumb: '{{ $image->thumb }}',
                     medium: '{{ $image->medium }}',
                     large: '{{ $image->large }}',
-                    alt: '{{ $image->alt }}',
+                    alt: '{{ $image->alt ?? '' }}',
                     color_ids: {{ json_encode(array_map('intval', (array) ($image->color_ids ?? []))) }}
                 }, @endforeach
             ],
