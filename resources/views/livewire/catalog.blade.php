@@ -124,13 +124,18 @@
         <div class="flex flex-col md:flex-row justify-between items-stretch gap-0 mb-16 border border-gray-200">
             {{-- Search Input --}}
             <div class="flex items-center gap-0 w-full md:w-auto flex-1 border-r border-gray-200">
-                <span class="px-6 material-symbols-outlined text-gray-400">search</span>
-                <input 
-                    wire:model.live.debounce.300ms="search"
-                    type="text" 
-                    placeholder="Cerca prodotti, SKU..." 
-                    class="w-full py-5 text-sm bg-transparent border-none focus:ring-0 font-mono tracking-tight"
-                />
+                <form action="{{ route('search') }}" method="GET" class="flex w-full items-center">
+                    <span class="px-6 material-symbols-outlined text-gray-400">search</span>
+                    <input
+                        name="q"
+                        type="text"
+                        placeholder="Cerca prodotti, SKU..."
+                        class="w-full py-5 text-sm bg-transparent border-none focus:ring-0 font-mono tracking-tight"
+                    />
+                    @if($categorySlug)
+                        <input type="hidden" name="category" value="{{ $categorySlug }}">
+                    @endif
+                </form>
             </div>
 
             {{-- Sorting --}}

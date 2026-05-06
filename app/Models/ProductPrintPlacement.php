@@ -9,15 +9,32 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * ProductPrintPlacement Model
+ *
+ * This model represents the pivot relationship between a Product and its
+ * available PrintPlacements. It specifically stores the additional price
+ * associated with a specific placement for a specific product.
+ */
 #[Fillable(['product_id', 'print_placement_id', 'additional_price'])]
 #[Table(name: 'product_print_placement')]
 class ProductPrintPlacement extends Model
 {
+    /**
+     * Get the product associated with this placement.
+     *
+     * @return BelongsTo The relationship with the product.
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * Get the specific print placement associated with this record.
+     *
+     * @return BelongsTo The relationship with the print placement.
+     */
     public function printPlacement(): BelongsTo
     {
         return $this->belongsTo(PrintPlacement::class);

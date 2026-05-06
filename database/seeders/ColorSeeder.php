@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Color;
-
 use Illuminate\Database\Seeder;
 
 class ColorSeeder extends Seeder

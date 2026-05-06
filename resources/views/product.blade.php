@@ -68,7 +68,7 @@ $allImages = $product->getAllImages();
                     medium: '{{ $image->medium }}',
                     large: '{{ $image->large }}',
                     alt: '{{ $image->alt ?? '' }}',
-                    color_ids: {{ json_encode(array_map('intval', (array) ($image->color_ids ?? []))) }}
+                    color_ids: {{ json_encode($image->color_id ? [ (int) $image->color_id ] : []) }}
                 }, @endforeach
             ],
             getComputedAlt(image) {
@@ -177,21 +177,23 @@ $allImages = $product->getAllImages();
         });
         $watch('activeColorId', (val) => {
             if (!val) {
-                const firstGeneral = images.find(img => img.color_ids.length === 0);
-                if (firstGeneral) {
-                    updateMain(firstGeneral);
+                // No color selected - use general images first, then first image
+                const generalImages = this.images.filter(img => img.color_ids.length === 0);
+                if (generalImages.length > 0) {
+                    this.updateMain(generalImages[0]);
                 }
-        
+
                 return;
             }
-            const match = images.find(img => img.color_ids.some(cid => cid == val));
-            if (match) {
-                updateMain(match);
+            // Find the FIRST image for this color (prefer general if available, otherwise first color-specific)
+            const colorImages = this.images.filter(img => img.color_ids.some(cid => cid == val));
+            if (colorImages.length > 0) {
+                this.updateMain(colorImages[0]);
             }
-        
+
             // Reset size if not compatible with new color
-            if (activeSizeId && !colorToSizes[val].includes(parseInt(activeSizeId))) {
-                activeSizeId = '';
+            if (this.activeSizeId && !this.colorToSizes[val].includes(parseInt(this.activeSizeId))) {
+                this.activeSizeId = '';
             }
         })">
         <x-product.gallery />

@@ -28,7 +28,7 @@
                     :class="mainImage === image.large ? 'border-primary ring-1 ring-primary/20' :
                         'border-outline-variant/10 hover:border-outline-variant'"
                     x-show="(!activeColorId && image.color_ids.length === 0) || (activeColorId && image.color_ids.some(cid => cid == activeColorId))"
-                    @click="updateMain(image)">
+                    @click="this.updateMain(image)">
                     <img :alt="getComputedAlt(image)"
                         class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity"
                         :src="image.thumb" />

@@ -3,14 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\Size;
-
 use Illuminate\Database\Seeder;
 
 class SizeSeeder extends Seeder
 {
     public function run(): void
     {
-                // Seed Sizes
+        // Seed Sizes
         Size::updateOrCreate(['size' => 'XXS', 'size_code' => '2'], ['size_name' => 'XXS', 'sort_order' => 1]);
         Size::updateOrCreate(['size' => 'XS', 'size_code' => '3'], ['size_name' => 'XS', 'sort_order' => 2]);
         Size::updateOrCreate(['size' => 'UK 03', 'size_code' => '03'], ['size_name' => 'UK 03', 'sort_order' => 3]);
@@ -156,5 +155,5 @@ class SizeSeeder extends Seeder
         Size::updateOrCreate(['size' => 'S/M', 'size_code' => 'S/M'], ['size_name' => 'S/M', 'sort_order' => 143]);
         Size::updateOrCreate(['size' => 'S_SWEA', 'size_code' => 'S_SWEA'], ['size_name' => 'S_SWEA', 'sort_order' => 144]);
 
- }
+    }
 }

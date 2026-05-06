@@ -8,7 +8,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        
+
         $this->call([
             UserSeeder::class,
             PrintPlacementSeeder::class,
@@ -19,12 +19,5 @@ class DatabaseSeeder extends Seeder
             NewWaveProductSeeder::class,
         ]);
 
-
-
-
-
-
-
-
-            }
+    }
 }

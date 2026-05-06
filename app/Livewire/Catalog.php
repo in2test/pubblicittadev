@@ -63,17 +63,49 @@ class Catalog extends Component
     /**
      * Category selection logic
      */
-    public function selectCategory(string $slug): void
+    /**
+     * Handles the selection of a category from the sidebar.
+     *
+     * This method updates the active category filter and redirects the user
+     * to the corresponding category route to maintain SEO-friendly URLs.
+     *
+     * @param  string  $slug  The slug of the category to select.
+     * @return mixed Returns a redirect response or void.
+     */
+    public function selectCategory(string $slug): mixed
     {
         if ($this->categorySlug === $slug) {
-            // Deselect: go to parent category if available
+            // If the category is already selected, attempt to "deselect" it
+            // by moving up to the parent category, or clear the filter.
             $category = Category::where('slug', '=', $slug, 'and')->first();
             $this->categorySlug = $category?->parent?->slug ?? null;
         } else {
+            // Otherwise, set the selected category
             $this->categorySlug = $slug;
         }
+
+        /**
+         * Navigation logic:
+         * Redirect to the specific category route if a slug is active,
+         * otherwise return to the base catalog route.
+         *
+         * We use 'mixed' return type because Livewire's redirect helper
+         * returns a Livewire-specific Redirector object rather than
+         * a standard Symfony RedirectResponse.
+         */
+        return $this->categorySlug
+            ? redirect()->route('category', ['category' => $this->categorySlug])
+            : redirect()->route('catalog');
     }
 
+    /**
+     * Toggles the selection of a color filter.
+     *
+     * If the color is already selected, it is removed from the active filters.
+     * Otherwise, it is added to the selection.
+     *
+     * @param  int  $id  The ID of the color to toggle.
+     */
     public function toggleColor(int $id): void
     {
         if (in_array($id, $this->selectedColors)) {
@@ -83,6 +115,14 @@ class Catalog extends Component
         }
     }
 
+    /**
+     * Toggles the selection of a size filter.
+     *
+     * If the size is already selected, it is removed from the active filters.
+     * Otherwise, it is added to the selection.
+     *
+     * @param  int  $id  The ID of the size to toggle.
+     */
     public function toggleSize(int $id): void
     {
         if (in_array($id, $this->selectedSizes)) {
@@ -92,13 +132,24 @@ class Catalog extends Component
         }
     }
 
+    /**
+     * Resets all active product filters (search, colors, and sizes).
+     *
+     * This clears the current filtering state, returning the catalog to its
+     * default view.
+     */
     public function resetFilters(): void
     {
         $this->reset(['search', 'selectedColors', 'selectedSizes']);
     }
 
     /**
-     * Computed Properties
+     * Resolves the current category object based on the active slug.
+     *
+     * This is a computed property used to determine the current category
+     * context for filtering and display purposes.
+     *
+     * @return Category|null The current category or null if no category is selected.
      */
     public function getCategoryProperty(): ?Category
     {
@@ -109,6 +160,11 @@ class Catalog extends Component
         return Category::where('slug', '=', $this->categorySlug, 'and')->with('children')->first();
     }
 
+    /**
+     * Determines if any active filters (search, colors, or sizes) are currently applied.
+     *
+     * @return bool True if the catalog is currently filtered.
+     */
     public function getIsFilteringProperty(): bool
     {
         return $this->search !== '' && $this->search !== '0' || $this->selectedColors !== [] || $this->selectedSizes !== [];
@@ -139,7 +195,15 @@ class Catalog extends Component
     }
 
     /**
-     * Core query builder for products with basic filters applied
+     * Builds the core Eloquent query for products with active filters applied.
+     *
+     * This method handles:
+     * 1. Visibility filtering (active products for guests, all for admins).
+     * 2. Category filtering (including children of the selected category).
+     * 3. Keyword search (split into words for inclusive matching across product and category).
+     * 4. Variation filtering (color and size matching).
+     *
+     * @return Builder The configured product query builder.
      */
     protected function getBaseFilteredQuery(): Builder
     {
@@ -154,10 +218,17 @@ class Catalog extends Component
                 $q->whereIn('category_id', $ids);
             })
             ->when($this->search !== '' && $this->search !== '0', function ($q) {
-                // Use Scout for full-text search if applicable, or fallback to simple LIKE
-                // Here we use Scout's database search or keys() depending on config
-                $keys = Product::search($this->search)->keys();
-                $q->whereIn('id', $keys);
+                $searchTerm = $this->search;
+                $words = preg_split('/\s+/', trim($searchTerm), -1, PREG_SPLIT_NO_EMPTY);
+
+                foreach ($words as $word) {
+                    $q->where(function ($sq) use ($word) {
+                        $sq->where('name', 'like', "%{$word}%")
+                            ->orWhere('sku', 'like', "%{$word}%")
+                            ->orWhere('description', 'like', "%{$word}%")
+                            ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$word}%"));
+                    });
+                }
             })
             ->when($this->selectedColors !== [], function ($q) {
                 $q->whereHas('variations', fn ($sq) => $sq->whereIn('color_id', $this->selectedColors));
@@ -168,7 +239,18 @@ class Catalog extends Component
     }
 
     /**
-     * Final data fetching for the view
+     * Prepares and fetches data for the catalog view.
+     *
+     * This method decides whether to return a "Grouped" view (showing children categories
+     * when no filters are active) or a "Grid" view (a flat list of products when searching
+     * or filtering).
+     *
+     * @return array {
+     *               'type': 'grouped'|'grid',
+     *               'groups': array|null,
+     *               'standalone': Collection|null,
+     *               'products': Paginator|null
+     *               }
      */
     public function getCatalogData(): array
     {

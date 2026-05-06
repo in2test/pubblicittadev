@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
@@ -18,5 +17,5 @@ class CategorySeeder extends Seeder
         Category::updateOrCreate(['slug' => 'espositori'], ['name' => 'Espositori', 'parent_id' => null]);
         Category::updateOrCreate(['slug' => 'packaging_borse'], ['name' => 'Packaging e borse', 'parent_id' => null]);
 
- }
+    }
 }

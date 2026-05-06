@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\PrintPlacement;
-
 use Illuminate\Database\Seeder;
 
 class PrintPlacementSeeder extends Seeder
@@ -20,5 +19,5 @@ class PrintPlacementSeeder extends Seeder
         PrintPlacement::updateOrCreate(['name' => 'Gamba sinistra'], ['description' => 'Stampa sulla gamba sinistra 9x9 cm', 'sort_order' => 7, 'default_price' => 2]);
         PrintPlacement::updateOrCreate(['name' => 'Gamba destra'], ['description' => 'Stampa sulla gamba destra 9x9 cm', 'sort_order' => 8, 'default_price' => 2]);
 
- }
+    }
 }

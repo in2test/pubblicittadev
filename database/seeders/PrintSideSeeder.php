@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\PrintSide;
-
 use Illuminate\Database\Seeder;
 
 class PrintSideSeeder extends Seeder
@@ -15,5 +14,5 @@ class PrintSideSeeder extends Seeder
         PrintSide::updateOrCreate(['name' => 'Fronte e retro uguali'], ['description' => 'Stampa fronte e retro uguali', 'sort_order' => 2]);
         PrintSide::updateOrCreate(['name' => 'Fronte e retro differenti'], ['description' => 'Stampa fronte e retro differenti', 'sort_order' => 3]);
 
- }
+    }
 }

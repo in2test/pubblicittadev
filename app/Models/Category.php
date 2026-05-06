@@ -7,11 +7,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+/**
+ * Category Model
+ *
+ * Represents a product category in the e-commerce system.
+ * Categories are hierarchical (parent-child relationship) and can
+ * have associated media for visual representation.
+ */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model implements HasMedia
 {
@@ -23,26 +32,45 @@ class Category extends Model implements HasMedia
         // Media library handles cleanup automatically
     }
 
-    // Use slug as key
+    /**
+     * Get the route key name used by the application to resolve the model.
+     *
+     * @return string The attribute used for routing (slug).
+     */
     #[Override]
     public function getRouteKeyName(): string
     {
         return 'slug';
     }
 
-    // Returns Parent Category
-    public function parent()
+    /**
+     * Get the parent category of the current category.
+     *
+     * @return BelongsTo The relationship with the parent category.
+     */
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Returns Children Categories
-    public function children()
+    /**
+     * Get all sub-categories of the current category.
+     *
+     * @return HasMany The relationship with children categories.
+     */
+    public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    // Return all ancestor category IDs (closest first)
+    /**
+     * Retrieve a list of all ancestor category IDs.
+     *
+     * Traverses up the category tree from the current category to the root,
+     * collecting the IDs of all parent categories.
+     *
+     * @return array<int> An array of ancestor category IDs, ordered closest to farthest.
+     */
     public function ancestors(): array
     {
         $ids = [];
@@ -55,13 +83,24 @@ class Category extends Model implements HasMedia
         return $ids;
     }
 
-    // Returns Cateogrie's Products
-    public function products()
+    /**
+     * Get all products associated with this category.
+     *
+     * @return HasMany The relationship with products.
+     */
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'category_id');
     }
 
-    // Register media conversions for image variants
+    /**
+     * Register media conversions for category image variants.
+     *
+     * Configures thumbnail and medium size conversions to optimize
+     * category image loading across different device screen sizes.
+     *
+     * @param  Media|null  $media  The media object being converted.
+     */
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumbnail')

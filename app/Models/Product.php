@@ -135,7 +135,7 @@ class Product extends Model implements HasMedia
     {
         $image = $this->getFirstImage();
         if (! $image) {
-            return 'https://placehold.co/600x800?text=' . urlencode($this->name);
+            return 'https://placehold.co/600x800?text='.urlencode($this->name);
         }
 
         return $image->{$conversion} ?? $image->url;
@@ -240,7 +240,7 @@ class Product extends Model implements HasMedia
         }
 
         // Sort by order
-        usort($images, fn($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
+        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
 
         return collect($images);
     }
@@ -320,6 +320,7 @@ class Product extends Model implements HasMedia
             'name' => $this->name,
             'sku' => $this->sku,
             'description' => $this->description,
+            'category_name' => $this->category?->name,
         ];
     }
 

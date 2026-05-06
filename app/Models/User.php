@@ -14,6 +14,12 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Override;
 
+/**
+ * User Model
+ *
+ * Represents a user of the platform. Users can be either 'admins' (who manage
+ * the catalog and quotes) or 'clients' (who browse products and request quotes).
+ */
 #[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
@@ -35,23 +41,42 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Check if the user has administrative privileges.
+     *
+     * @return bool True if the user is an admin.
+     */
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
     }
 
+    /**
+     * Check if the user account is currently active.
+     *
+     * @return bool True if the account is active.
+     */
     public function isActive(): bool
     {
         return $this->is_active === true;
     }
 
+    /**
+     * Determine if the user can access the Filament admin panel.
+     *
+     * Access is granted only if the user is both an administrator and active.
+     *
+     * @return bool True if access is granted.
+     */
     public function canAccessFilament(): bool
     {
         return $this->isAdmin() && $this->isActive();
     }
 
     /**
-     * Get the user's initials
+     * Generate the user's initials for UI display (e.g., in avatars).
+     *
+     * @return string The first letter of the first two words of the name.
      */
     public function initials(): string
     {

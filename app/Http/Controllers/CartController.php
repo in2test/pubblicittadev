@@ -6,15 +6,32 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Services\CartManager;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * CartController manages the shopping cart lifecycle, including adding,
+ * updating, removing, and clearing items.
+ *
+ * It leverages the CartManager service to handle session-based storage
+ * and pricing logic.
+ */
 class CartController extends Controller
 {
+    /**
+     * @param  CartManager  $cart  The service responsible for cart operations.
+     */
     public function __construct(
         private readonly CartManager $cart
     ) {}
 
+    /**
+     * Display the cart page with all current items.
+     *
+     * @return View The rendered cart view.
+     */
     public function index(): View
     {
         return view('cart', [
@@ -24,7 +41,16 @@ class CartController extends Controller
         ]);
     }
 
-    public function add(Request $request)
+    /**
+     * Add a product to the cart.
+     *
+     * This method validates the input, calculates the total price including
+     * quantity-based discounts and additional costs for print placements.
+     *
+     * @param  Request  $request  The incoming request with product details.
+     * @return RedirectResponse Redirects back to the cart page with a success message.
+     */
+    public function add(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
@@ -33,23 +59,24 @@ class CartController extends Controller
             'color_name' => 'nullable|string',
             'size_id' => 'nullable|integer',
             'size_name' => 'nullable|string',
-            'print_placements' => 'nullable|string',  // Changed from array to string (JSON)
+            'print_placements' => 'nullable|string', // JSON encoded list of placement IDs
             'product_name' => 'required|string',
             'product_slug' => 'required|string',
             'image_url' => 'nullable|string',
         ]);
 
-        // Decode print_placements JSON if it's a string
+        // Decode print_placements JSON if provided
         $printPlacements = [];
         if (! empty($validated['print_placements'])) {
             $printPlacements = json_decode((string) $validated['print_placements'], true) ?? [];
         }
 
-        // Compute price server-side to apply quantity discounts
+        // 1. Compute base unit price with quantity discounts
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];
         $unitPrice = $product->getPriceForQuantity($quantity);
 
+        // 2. Calculate additional cost for selected print placements
         $additionalPrice = 0;
         if (! empty($printPlacements)) {
             $additionalPrice = $product->printPlacements()
@@ -76,7 +103,13 @@ class CartController extends Controller
         return redirect()->route('cart')->with('success', 'Prodotto aggiunto al carrello!');
     }
 
-    public function update(Request $request)
+    /**
+     * Update the quantity of a specific item in the cart.
+     *
+     * @param  Request  $request  The request containing the item key and new quantity.
+     * @return RedirectResponse Redirects back to the current page.
+     */
+    public function update(Request $request): RedirectResponse
     {
         $request->validate([
             'key' => 'required|string',
@@ -88,7 +121,13 @@ class CartController extends Controller
         return back()->with('success', 'Carrello aggiornato!');
     }
 
-    public function remove(Request $request)
+    /**
+     * Remove a single item from the cart.
+     *
+     * @param  Request  $request  The request containing the item key.
+     * @return RedirectResponse Redirects back to the current page.
+     */
+    public function remove(Request $request): RedirectResponse
     {
         $request->validate([
             'key' => 'required|string',
@@ -99,7 +138,13 @@ class CartController extends Controller
         return back()->with('success', 'Prodotto rimosso dal carrello!');
     }
 
-    public function removeMultiple(Request $request)
+    /**
+     * Remove multiple items from the cart.
+     *
+     * @param  Request  $request  The request containing an array of item keys.
+     * @return RedirectResponse Redirects back to the current page.
+     */
+    public function removeMultiple(Request $request): RedirectResponse
     {
         $keys = $request->input('keys', []);
 
@@ -110,14 +155,28 @@ class CartController extends Controller
         return back()->with('success', 'Prodotto rimosso dal carrello!');
     }
 
-    public function clear()
+    /**
+     * Completely empty the shopping cart.
+     *
+     * @return RedirectResponse Redirects back to the current page.
+     */
+    public function clear(): RedirectResponse
     {
         $this->cart->clear();
 
         return back()->with('success', 'Carrello svuotato!');
     }
 
-    public function price(Request $request)
+    /**
+     * Return a real-time price calculation for a product configuration.
+     *
+     * This is used by AJAX requests on the product page to show the total
+     * price based on quantity and selected print placements.
+     *
+     * @param  Request  $request  The request containing configuration details.
+     * @return JsonResponse A JSON response with unit price, total price, and discount status.
+     */
+    public function price(Request $request): JsonResponse
     {
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',

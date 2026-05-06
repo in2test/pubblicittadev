@@ -9,6 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * QuoteItem Model
+ *
+ * Represents a specific product requested within a quote.
+ * It captures the snapshot of the product configuration (color, quantity, price)
+ * at the time the quote was requested, ensuring the price remains valid
+ * regardless of future product changes.
+ */
 #[Fillable([
     'quote_id',
     'product_id',
@@ -27,16 +35,31 @@ class QuoteItem extends Model
         'customization_json' => 'array',
     ];
 
+    /**
+     * Get the quote this item belongs to.
+     *
+     * @return BelongsTo The relationship with the parent quote.
+     */
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class);
     }
 
+    /**
+     * Get the product associated with this quote item.
+     *
+     * @return BelongsTo The relationship with the product.
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * Get the color associated with this quote item.
+     *
+     * @return BelongsTo The relationship with the color.
+     */
     public function color(): BelongsTo
     {
         return $this->belongsTo(Color::class);
