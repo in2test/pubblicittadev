@@ -1,40 +1,10 @@
 <x-layout>
 
-    @php
-        $isAdmin = auth()->check() && auth()->user()->isAdmin();
-        $adminEditUrl = $product->getAdminEditUrl();
-    @endphp
+
 
     <x-product.breadcrumbs :$product :$category />
 
-    @if ($isAdmin)
-        <div class="px-8 3xl:px-32 mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex flex-wrap gap-2">
-                <span
-                    class="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-700 shadow-sm border border-slate-200">
-                    {{ $product->is_active ? 'Prodotto attivo' : 'Prodotto non attivo' }}
-                </span>
-                <a href="{{ $adminEditUrl }}"
-                    class="inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-primary-700 transition-colors">
-                    Modifica prodotto
-                </a>
-                <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}" class="inline">
-                    @csrf
-                    <button type="submit"
-                        class="inline-flex items-center rounded-full {{ $product->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors">
-                        {{ $product->is_active ? 'Disattiva prodotto' : 'Attiva prodotto' }}
-                    </button>
-                </form>
-                <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline">
-                    @csrf
-                    <button type="submit"
-                        class="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-sky-700 transition-colors">
-                        Sincronizza prodotto
-                    </button>
-                </form>
-            </div>
-        </div>
-    @endif
+
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 py-12 3xl:px-32 bg-gray-200 text-gray-900"
         x-data="{
@@ -68,7 +38,7 @@ $allImages = $product->getAllImages();
                     medium: '{{ $image->medium }}',
                     large: '{{ $image->large }}',
                     alt: '{{ $image->alt ?? '' }}',
-                    color_ids: {{ json_encode($image->color_id ? [ (int) $image->color_id ] : []) }}
+                    color_ids: {{ json_encode($image->color_id ? [(int) $image->color_id] : []) }}
                 }, @endforeach
             ],
             getComputedAlt(image) {
@@ -182,7 +152,7 @@ $allImages = $product->getAllImages();
                 if (generalImages.length > 0) {
                     this.updateMain(generalImages[0]);
                 }
-
+        
                 return;
             }
             // Find the FIRST image for this color (prefer general if available, otherwise first color-specific)
@@ -190,7 +160,7 @@ $allImages = $product->getAllImages();
             if (colorImages.length > 0) {
                 this.updateMain(colorImages[0]);
             }
-
+        
             // Reset size if not compatible with new color
             if (this.activeSizeId && !this.colorToSizes[val].includes(parseInt(this.activeSizeId))) {
                 this.activeSizeId = '';
