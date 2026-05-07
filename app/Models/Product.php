@@ -300,12 +300,21 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get applicable quantity discounts for this product's category.
+     * Get applicable quantity discounts for this product, including those
+     * from its category and all parent categories.
      */
     public function getQuantityDiscounts(): Collection
     {
-        return CategoryQuantityDiscount::where('category_id', '=', $this->category_id, 'and')
-            ->where('min_quantity', '>', 1, 'and')
+        $categoryIds = collect([$this->category_id]);
+
+        $category = $this->category;
+        while ($category && $category->parent_id) {
+            $categoryIds->push($category->parent_id);
+            $category = $category->parent;
+        }
+
+        return CategoryQuantityDiscount::whereIn('category_id', $categoryIds)
+            ->where('min_quantity', '>', 1)
             ->orderBy('min_quantity', 'asc')
             ->get();
     }

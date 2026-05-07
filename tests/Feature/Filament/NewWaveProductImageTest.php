@@ -5,12 +5,12 @@ use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
 use App\Models\Image;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\NwgApiClient;
 use App\Services\ProductSynchronizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
-use Spatie\MediaLibrary\Downloaders\Downloader;
+use Tests\Support\FakeNwgApiClient;
+use Tests\Support\TestDownloader;
 
 uses(RefreshDatabase::class);
 
@@ -18,63 +18,6 @@ beforeEach(function () {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
-
-class TestDownloader implements Downloader
-{
-    public function getTempFile(string $url): string
-    {
-        $temporaryFile = tempnam(sys_get_temp_dir(), 'media-library');
-
-        $image = imagecreatetruecolor(1, 1);
-        imagesavealpha($image, true);
-        $transparent = imagecolorallocatealpha($image, 0, 0, 0, 127);
-        imagefill($image, 0, 0, $transparent);
-        imagepng($image, $temporaryFile);
-        imagedestroy($image);
-
-        return $temporaryFile;
-    }
-}
-
-class FakeNwgApiClient extends NwgApiClient
-{
-    public function __construct() {}
-
-    #[Override]
-    public function getFullProductData(string $productNumber): ?array
-    {
-        return [
-            'productName' => 'Test Product',
-            'productCatalogText' => 'Test description',
-            'retailPrice' => ['price' => 100],
-            'pictures' => [],
-            'variations' => [
-                [
-                    'itemColorCode' => '99',
-                    'itemWebColor' => 'Blue',
-                    'pictures' => [
-                        [
-                            'standardUrl' => 'https://example.com/variation-99.jpg',
-                            'thumbnailUrl' => 'https://example.com/variation-99-thumb.jpg',
-                            'largeThumbnailUrl' => 'https://example.com/variation-99-large.jpg',
-                        ],
-                    ],
-                    'skus' => [
-                        [
-                            'availability' => 10,
-                            'sku' => 'TEST-99-M',
-                            'skuSize' => [
-                                'webtext' => 'M',
-                                'size' => 'M',
-                            ],
-                            'active' => true,
-                        ],
-                    ],
-                ],
-            ],
-        ];
-    }
-}
 
 it('persists remote image urls in the image model from the NewWave product form', function () {
     $product = Product::factory()->create([

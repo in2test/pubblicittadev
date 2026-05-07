@@ -2,10 +2,6 @@
 
 @php
     /** @var \App\Models\Product $product */
-    $priceData = $product->getDisplayPriceData(1);
-@endphp
-
-@php
     $isAdmin = auth()->check() && auth()->user()->isAdmin();
     $adminEditUrl = $product->getAdminEditUrl();
 @endphp
@@ -19,6 +15,7 @@
 <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950 mb-4 leading-none uppercase">
     {{ $product->name }}
 </h1>
+
 @if ($isAdmin)
     <div class=" mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-wrap gap-2">
@@ -47,19 +44,22 @@
         </div>
     </div>
 @endif
-<div class="flex items-baseline gap-4 mb-8">
-    @if ($priceData['on_request'])
-        <span class="text-3xl font-black text-primary uppercase">Su Richiesta</span>
-    @elseif ($priceData['is_discounted'])
-        <span class="text-3xl font-black text-primary">€{{ number_format($priceData['price'], 2) }}</span>
-        <span
-            class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format($priceData['base_price'], 2) }}</span>
-    @else
-        <span
-            class="text-3xl font-light text-gray-900 tracking-tight">€{{ number_format($priceData['base_price'], 2) }}</span>
-    @endif
 
-    <span class="text-xs font-mono text-gray-800">IVA INCLUSA</span>
+<div class="flex items-baseline gap-4 mb-8">
+    <template x-if="!onRequest">
+        <div class="flex items-baseline gap-4">
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-black text-primary" x-text="'€' + unitPrice.toFixed(2)"></span>
+                <template x-if="unitPrice < basePrice">
+                    <span class="text-lg font-light text-gray-500 line-through tracking-tight" x-text="'€' + basePrice.toFixed(2)"></span>
+                </template>
+            </div>
+            <span class="text-xs font-mono text-gray-800">IVA INCLUSA</span>
+        </div>
+    </template>
+    <template x-if="onRequest">
+        <span class="text-3xl font-black text-primary uppercase">Su Richiesta</span>
+    </template>
 </div>
 
 <div class="mb-8 p-6 bg-surface-container-low border-l-4 border-primary">

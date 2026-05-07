@@ -17,6 +17,13 @@
             colorSizeIsAvailable: {{ json_encode($product->variations->groupBy('color_id')->map(fn($v) => $v->keyBy('size_id')->map->is_available)) }},
             colorNames: {{ json_encode($product->variations->pluck('color')->unique('id')->filter()->pluck('color_name', 'id')) }},
             sizeNames: {{ json_encode($product->variations->pluck('size')->unique('id')->filter()->pluck('size', 'id')) }},
+            availableDiscounts: {{ json_encode($product->getQuantityDiscounts()->map(fn($d) => [
+                'min' => $d->min_quantity,
+                'max' => $d->max_quantity,
+                'value' => $d->discount_value,
+                'type' => $d->discount_type,
+                'description' => $d->description
+            ])) }},
             @php
 $allImages = $product->getAllImages();
                 $firstImage = $product->getFirstImage();
@@ -58,10 +65,14 @@ $allImages = $product->getAllImages();
                 this.mainImage = img.large;
                 this.mainImageMed = img.medium;
                 this.mainAlt = img.alt;
+
+                // Force a refresh for any dependent components
+                window.dispatchEvent(new CustomEvent('main-image-updated', { detail: img }));
             },
             basePrice: {{ (float) ($product->price ?? 0) }},
             offerPrice: {{ (float) ($product->offer_price ?? 0) }},
             currentUnitPrice: {{ (float) $product->getPriceForQuantity(1) }},
+            onRequest: {{ $product->price <= 0 && $product->offer_price <= 0 ? 'true' : 'false' }},
             selectedPlacements: [],
             get selectedPlacementPrice() {
                 return this.selectedPlacements.reduce((sum, p) => sum + parseFloat(p.price), 0);
@@ -75,7 +86,16 @@ $allImages = $product->getAllImages();
                 if (this.offerPrice > 0) {
                     unit = this.offerPrice;
                 }
-                if (this.totalQuantity >= 12 && this.currentUnitPrice < unit) {
+
+                // Find applicable discount based on total quantity
+                const applicableDiscount = this.availableDiscounts
+                    .filter(d => this.totalQuantity >= d.min && (d.max === null || this.totalQuantity <= d.max))
+                    .reduce((best, current) => {
+                        // Assuming we want the best discount if multiple apply
+                        return (current.value > (best?.value || 0)) ? current : best;
+                    }, null);
+
+                if (applicableDiscount && this.currentUnitPrice < unit) {
                     unit = this.currentUnitPrice;
                 }
                 return unit;
@@ -147,22 +167,18 @@ $allImages = $product->getAllImages();
         });
         $watch('activeColorId', (val) => {
             if (!val) {
-                // No color selected - use general images first, then first image
                 const generalImages = this.images.filter(img => img.color_ids.length === 0);
                 if (generalImages.length > 0) {
                     this.updateMain(generalImages[0]);
                 }
-        
                 return;
             }
-            // Find the FIRST image for this color (prefer general if available, otherwise first color-specific)
             const colorImages = this.images.filter(img => img.color_ids.some(cid => cid == val));
             if (colorImages.length > 0) {
                 this.updateMain(colorImages[0]);
             }
-        
-            // Reset size if not compatible with new color
-            if (this.activeSizeId && !this.colorToSizes[val].includes(parseInt(this.activeSizeId))) {
+
+            if (this.activeSizeId && this.colorToSizes[val] && !this.colorToSizes[val].includes(parseInt(this.activeSizeId))) {
                 this.activeSizeId = '';
             }
         })">
@@ -171,6 +187,24 @@ $allImages = $product->getAllImages();
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
             <x-product.info :$product />
+
+            <!-- Quantity Discounts List -->
+            @if($product->getQuantityDiscounts()->isNotEmpty())
+                <div class="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                    <div class="flex items-center gap-2 text-primary font-semibold mb-3">
+                        <span class="material-symbols-outlined text-lg">local_offer</span>
+                        <h3 class="text-sm uppercase tracking-wider">Sconti per quantità</h3>
+                    </div>
+                    <ul class="space-y-2">
+                        @foreach($product->getQuantityDiscounts() as $discount)
+                            <li class="flex justify-between text-sm text-gray-600 border-b border-primary/10 pb-2 last:border-0 last:pb-0">
+                                <span>{{ $discount->description ?: "Da {$discount->min_quantity} pezzi" }}</span>
+                                <span class="font-medium text-primary">-{{ number_format($discount->discount_value * 100, 0) }}%</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <x-product.quote-form :$product />
 

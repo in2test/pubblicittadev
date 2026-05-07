@@ -34,6 +34,10 @@ class Catalog extends Component
 
     public string $sort = 'name';
 
+    public ?Category $category = null;
+
+    public bool $isFiltering = false;
+
     // Query string synchronization
     protected $queryString = [
         'search' => ['except' => ''],
@@ -146,12 +150,9 @@ class Catalog extends Component
     /**
      * Resolves the current category object based on the active slug.
      *
-     * This is a computed property used to determine the current category
-     * context for filtering and display purposes.
-     *
      * @return Category|null The current category or null if no category is selected.
      */
-    public function getCategoryProperty(): ?Category
+    public function getCategory(): ?Category
     {
         if (! $this->categorySlug) {
             return null;
@@ -165,7 +166,7 @@ class Catalog extends Component
      *
      * @return bool True if the catalog is currently filtered.
      */
-    public function getIsFilteringProperty(): bool
+    public function getIsFiltering(): bool
     {
         return $this->search !== '' && $this->search !== '0' || $this->selectedColors !== [] || $this->selectedSizes !== [];
     }
@@ -207,7 +208,7 @@ class Catalog extends Component
      */
     protected function getBaseFilteredQuery(): Builder
     {
-        $category = $this->category;
+        $category = $this->getCategory();
         $showInactive = Auth::check() && Auth::user()?->isAdmin() === true;
 
         return Product::query()
@@ -254,12 +255,12 @@ class Catalog extends Component
      */
     public function getCatalogData(): array
     {
-        $category = $this->category;
+        $category = $this->getCategory();
 
         $showInactive = Auth::check() && Auth::user()?->isAdmin() === true;
 
         // Grouped view: only when viewing a category with children and NO filters are active
-        if (! $this->isFiltering && $category && $category->children->isNotEmpty()) {
+        if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
             $childrenData = $category->children->map(fn ($child) => [
                 'category' => $child,
                 'products' => $child->products()

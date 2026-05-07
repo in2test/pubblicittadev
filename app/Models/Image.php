@@ -16,6 +16,11 @@ use Intervention\Image\ImageManager;
 use Override;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+/**
+ * @property-read Product $product
+ * @property-read Category $category
+ * @property-read Color $color
+ */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
 class Image extends Model
 {
