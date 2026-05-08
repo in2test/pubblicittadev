@@ -10,8 +10,12 @@
       "Bash(herd php *)",
       "Bash(git add *)",
       "Bash(git commit *)",
+<<<<<<< HEAD
       "Bash(git push *)",
       "Bash(vendor/bin/phpstan analyse:*)"
+=======
+      "Bash(git push *)"
+>>>>>>> ef09dd49d920c55fec4484604f0dc0b6c7d4148b
     ]
   },
   "enableAllProjectMcpServers": true,
