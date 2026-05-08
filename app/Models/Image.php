@@ -17,12 +17,29 @@ use Override;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
+ * @property int $id
+ * @property string|null $image_path
+ * @property string|null $thumbnail_path
+ * @property string|null $medium_path
+ * @property string|null $large_path
+ * @property string|null $image_url
+ * @property string|null $thumbnail_url
+ * @property string|null $medium_url
+ * @property string|null $large_url
+ * @property string|null $image_description
+ * @property string|null $alt
+ * @property int $product_id
+ * @property int|null $category_id
+ * @property int|null $color_id
+ * @property int $order_by
  * @property-read Product $product
  * @property-read Category $category
  * @property-read Color $color
  */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
 class Image extends Model
+
+
 {
     use HasFactory;
 
@@ -162,10 +179,7 @@ class Image extends Model
         foreach ($variants as $variant => [$width, $height]) {
             $variantPath = $this->variantPath($variant);
             $resizedImage = clone $originalImage;
-            $resizedImage->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            $resizedImage->resize($width, $height);
 
             $webpData = (string) $resizedImage->encode(
                 new FormatEncoder(Format::create('webp'), 80)

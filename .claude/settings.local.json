@@ -5,7 +5,13 @@
       "mcp__laravel-boost__browser-logs",
       "Bash(vendor/bin/pint --format agent)",
       "mcp__laravel-boost__database-schema",
-      "Bash(composer run:*)"
+      "Bash(composer run:*)",
+      "Bash(php -v)",
+      "Bash(herd php *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(vendor/bin/phpstan analyse:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

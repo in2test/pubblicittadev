@@ -35,7 +35,7 @@ class CategoryForm
                     ->relationship(
                         name: 'parent',
                         titleAttribute: 'name',
-                        modifyQueryUsing: fn ($query, ?Model $record) => $query
+                        modifyQueryUsing: fn ($query, ?Category $record) => $query
                             ->whereNull('parent_id')
                             ->when($record, fn ($query) => $query->where('id', '!=', $record->id)),
                     )

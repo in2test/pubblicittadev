@@ -52,7 +52,7 @@ class NewWaveProductForm
                                     ->required()
                                     ->unique()
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record, ProductAvailabilityService $service) {
+                                    ->afterStateUpdated(function (Set $set, ?string $state, ?Product $record, ProductAvailabilityService $service) {
                                         if (! $state) {
                                             return;
                                         }
@@ -73,13 +73,13 @@ class NewWaveProductForm
                                     ->required(),
                                 Toggle::make('is_active')
                                     ->label('Disponibile (Attivo)')
-                                    ->disabled(fn (?Model $record) => $record?->sync_status !== SyncStatus::Synced)
-                                    ->helperText(fn (?Model $record) => $record?->sync_status !== SyncStatus::Synced ? 'Attivabile solo dopo una sincronizzazione completa con successo.' : 'Attiva per rendere visibile il prodotto.')
+                                    ->disabled(fn (?Product $record) => $record?->sync_status !== SyncStatus::Synced)
+                                    ->helperText(fn (?Product $record) => $record?->sync_status !== SyncStatus::Synced ? 'Attivabile solo dopo una sincronizzazione completa con successo.' : 'Attiva per rendere visibile il prodotto.')
                                     ->default(false),
                                 Placeholder::make('sync_progress_display')
                                     ->label('Stato Sincronizzazione')
-                                    ->content(function (?Model $record) {
-                                        if (! $record instanceof Model) {
+                                    ->content(function (?Product $record) {
+                                        if (! $record instanceof Product) {
                                             return 'Non sincronizzato';
                                         }
                                         if ($record->sync_status === SyncStatus::Syncing) {
@@ -106,7 +106,7 @@ class NewWaveProductForm
                                             ->label('Nome Categoria')
                                             ->required()
                                             ->live(onBlur: true)
-                                            ->afterStateUpdated(fn (Set $set, ?string $state, ?Model $record) => $set('slug', SlugGenerator::unique(Category::class, $state ?? '', $record))),
+                                            ->afterStateUpdated(fn (Set $set, ?string $state, ?Category $record) => $set('slug', SlugGenerator::unique(Category::class, $state ?? '', $record))),
                                         TextInput::make('slug')
                                             ->required()
                                             ->unique(Category::class, 'slug'),
@@ -115,7 +115,7 @@ class NewWaveProductForm
                                             ->relationship(
                                                 name: 'parent',
                                                 titleAttribute: 'name',
-                                                modifyQueryUsing: fn ($query, ?Model $record) => $query
+                                                modifyQueryUsing: fn ($query, ?Category $record) => $query
                                                     ->whereNull('parent_id')
                                                     ->when($record, fn ($query) => $query->where('id', '!=', $record->id)),
                                             )
@@ -175,7 +175,7 @@ class NewWaveProductForm
                                 Select::make('disabled_colors')
                                     ->label('Nascondi Colori')
                                     ->multiple()
-                                    ->options(fn (?Model $record) => $record instanceof Model
+                                    ->options(fn (?Product $record) => $record instanceof Model
                                         ? Color::whereHas('variations', fn ($q) => $q->where('product_id', $record->id))
                                             ->pluck('color_name', 'id')
                                             ->all()

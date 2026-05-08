@@ -46,6 +46,7 @@ class QuoteController extends Controller
             ->orderByDesc('min_quantity')
             ->first();
 
+        /** @var \App\Models\PricingTier|null $pricingTier */
         $unitPrice = $pricingTier?->price_per_unit ?? $product->price;
         $subtotal = $unitPrice * $quantity;
 

@@ -32,7 +32,9 @@ class EditNewWaveProduct extends EditRecord
                 ->icon('heroicon-o-cloud-arrow-down')
                 ->color('success')
                 ->action(function () {
-                    SyncNewWaveProductJob::dispatch($this->record->id);
+                    /** @var \App\Models\Product $record */
+                    $record = $this->record;
+                    SyncNewWaveProductJob::dispatch($record->id);
 
                     Notification::make()
                         ->title('Sincronizzazione in coda')

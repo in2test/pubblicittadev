@@ -49,6 +49,27 @@ use Throwable;
 ])]
 class Product extends Model implements HasMedia
 {
+    /**
+     * @property int $id
+     * @property string $name
+     * @property string $sku
+     * @property string $slug
+     * @property string $description
+     * @property string $price
+     * @property string $offer_price
+     * @property bool $is_featured
+     * @property int $category_id
+     * @property string $type
+     * @property string $sync_status
+     * @property \Illuminate\Support\Carbon $synced_at
+     * @property bool $is_active
+     * @property int $sync_progress
+     * @property bool $override_price
+     * @property bool $override_description
+     * @property array $disabled_colors
+     * @property array $remote_images
+     
+     */
     use HasFactory;
     use InteractsWithMedia;
     use Searchable;
@@ -220,6 +241,7 @@ class Product extends Model implements HasMedia
         // 2. Add remote images from the dedicated 'images' table
         $remoteImages = $this->images()->orderBy('order_by', 'asc')->get();
         foreach ($remoteImages as $remote) {
+            /** @var Image $remote */
             // Skip remote images that have already been downloaded locally
             if (in_array($remote->image_url, $localRemoteUrls)) {
                 continue;
@@ -323,12 +345,17 @@ class Product extends Model implements HasMedia
      * Scout Search Configuration
      */
     public function toSearchableArray(): array
-    {
+    {   
+        /**
+         * Only index products that are active and synced (for NewWave products)
+         * This ensures that only ready-to-sell products appear in search results.
+         */
+        
         return [
-            'id' => $this->id,
+            'id' => (int) $this->id,
             'name' => $this->name,
-            'sku' => $this->sku,
-            'description' => $this->description,
+            'sku' => (string) $this->sku,
+            'description' => (string) $this->description,
             'category_name' => $this->category?->name,
         ];
     }

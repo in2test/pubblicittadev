@@ -21,8 +21,16 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * Categories are hierarchical (parent-child relationship) and can
  * have associated media for visual representation.
  */
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int|null $parent_id
+ */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model implements HasMedia
+
 {
     use HasFactory, InteractsWithMedia;
 
@@ -107,14 +115,12 @@ class Category extends Model implements HasMedia
             ->width(150)
             ->height(150)
             ->sharpen(10)
-            ->format('webp')
-            ->nonQueued();
+            ->format('webp');
 
         $this->addMediaConversion('medium')
             ->width(600)
             ->height(600)
             ->sharpen(10)
-            ->format('webp')
-            ->nonQueued();
+            ->format('webp');
     }
 }

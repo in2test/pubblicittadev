@@ -81,12 +81,16 @@ class Catalog extends Component
         if ($this->categorySlug === $slug) {
             // If the category is already selected, attempt to "deselect" it
             // by moving up to the parent category, or clear the filter.
+            /** @var Category|null $category */
             $category = Category::where('slug', '=', $slug, 'and')->first();
             $this->categorySlug = $category?->parent?->slug ?? null;
         } else {
             // Otherwise, set the selected category
             $this->categorySlug = $slug;
         }
+
+
+
 
         /**
          * Navigation logic:
@@ -262,6 +266,7 @@ class Catalog extends Component
         // Grouped view: only when viewing a category with children and NO filters are active
         if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
             $childrenData = $category->children->map(fn ($child) => [
+                /** @var Category $child */
                 'category' => $child,
                 'products' => $child->products()
                     ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
@@ -270,6 +275,7 @@ class Catalog extends Component
                     ->get(),
             ]);
 
+            /** @var Category $category */
             $ownProducts = $category->products()
                 ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                 ->with(['media', 'category', 'variations.color'])

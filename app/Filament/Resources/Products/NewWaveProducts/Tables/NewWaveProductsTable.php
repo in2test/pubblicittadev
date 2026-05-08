@@ -64,7 +64,7 @@ class NewWaveProductsTable
                         }
 
                         return new HtmlString(
-                            "<div class='flex flex-col gap-1 min-w-[120px]'>
+                            "<div class='flex flex-col gap-1 min-w-30'>
                                 <span class='text-xs text-gray-500 font-medium'>{$state}%</span>
                                 <div class='w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700'>
                                     <div class='bg-primary-600 h-2 rounded-full transition-all duration-500' style='width: {$state}%'></div>

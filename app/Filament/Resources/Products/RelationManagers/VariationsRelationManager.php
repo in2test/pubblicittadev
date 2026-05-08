@@ -140,6 +140,7 @@ class VariationsRelationManager extends RelationManager
                             ]),
                     ])
                     ->action(function (array $data, RelationManager $livewire): void {
+                        /** @var \App\Models\Product $product */
                         $product = $livewire->getOwnerRecord();
 
                         $colors = (! empty($data['use_color']) && ! empty($data['colors'])) ? $data['colors'] : [null];
