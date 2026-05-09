@@ -94,7 +94,6 @@
     --color-gray-900: #1c171a;
     --color-gray-950: #0e0b0d;
 
-
     --breakpoint-3xl: 128rem;
 }
 
@@ -177,7 +176,11 @@
 }
 
 .bg-grid-subtle {
-    background-image: radial-gradient(circle, var(--color-gray-100) 1px, transparent 1px);
+    background-image: radial-gradient(
+        circle,
+        var(--color-gray-100) 1px,
+        transparent 1px
+    );
     background-size: 32px 32px;
 }
 
@@ -192,4 +195,15 @@
 
 .text-vertical {
     writing-mode: vertical-rl;
+}
+
+@keyframes menu_slide {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }

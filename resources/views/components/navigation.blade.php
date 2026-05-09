@@ -1,22 +1,107 @@
 <header
-    class="flex justify-between bg-highstyle-50 text-gray-900 font-body items-center px-4 md:px-10 xl:px-16 3xl:px-32 py-3 top-0  left-0 right-0 z-50 shadow-sm fixed">
-    <nav id="mobile-menu-panel" class="
-    lg:block lg:relative 
-    absolute top-0 left-0 w-[calc(100%-3.5rem)] md:w-[calc(100%-5rem)] h-screen
-      bg-highstyle-50 shadow-lg lg:shadow-none  z-50 lg:z-0 lg:h-auto lg:w-auto hidden">
-        <ul class="flex gap-6 lg:gap-6 lg:flex-row lg:px-0 lg:py-0 lg:text-base flex-col px-20 py-20 text-xl">
+    class="flex justify-between bg-highstyle-50 text-gray-900 font-body items-center px-4 md:px-10 xl:px-16 3xl:px-32 py-7 top-0 left-0 right-0 z-20 shadow-lg fixed">
+    <nav id="mobile-menu-panel"
+        class="
+        bg-highstyle-50 shadow-lg lg:shadow-none
+        
+        hidden absolute z-50
+        top-0 left-0 w-[calc(100%-3.5rem)] md:w-[calc(100%-5rem)] h-screen
+        lg:block lg:static lg:z-0 
+        lg:h-fit lg:w-fit
+        
+        ">
+        <ul class="flex gap-6 lg:gap-6 lg:flex-row lg:px-0 lg:my-0 lg:text-base flex-col pl-10 my-8 text-xl">
             <li><a href="{{ route('catalog') }}"
-                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50">Categorie</a>
+                    class="transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50 py-2 w-100% block">Categorie</a>
+
             </li>
-            <li><a href="{{ route('services') }}"
-                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50">Servizi</a>
+            <li class="group ">
+                <a href="{{ route('services') }}"
+                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50 py-2 w-100% block">
+                    <span
+                        class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">chevron_right</span>
+                    Servizi</a>
+                <div
+                    class="
+                            lg:absolute lg:w-screen lg:left-0 lg:top-18 lg:bg-gray-50
+                            lg:px-10 xl:px-16 3xl:px-32 lg:ml-0 lg:flex-row
+                            ml-8 pt-4 flex-col gap-4
+                            lg:shadow-lg lg:gap-32
+                            hidden
+                            group-hover:flex
+                             font-bold">
+                    <div class="group/submenu">
+                        <p>Abbigliamento da lavoro</p>
+                        <ul class="font-mono font-normal py-4  flex-col gap-4 hidden group-hover/submenu:flex lg:flex">
+                            <li>menu1</li>
+                            <li>menu2</li>
+                            <li>menu3</li>
+                            <li>menu4</li>
+                            <li>menu5</li>
+                            <li>menu6</li>
+                            <li>menu7</li>
+                            <li>menu8</li>
+                            <li>menu9</li>
+                            <li>menu10</li>
+                        </ul>
+                    </div>
+                    <div class="group/submenu">
+                        <p>Abbigliamento da lavoro</p>
+                        <ul class="font-mono font-normal py-4  flex-col gap-4 hidden group-hover/submenu:flex lg:flex">
+                            <li>menu1</li>
+                            <li>menu2</li>
+                            <li>menu3</li>
+                            <li>menu4</li>
+                            <li>menu5</li>
+                            <li>menu6</li>
+                            <li>menu7</li>
+                            <li>menu8</li>
+                            <li>menu9</li>
+                            <li>menu10</li>
+                        </ul>
+                    </div>
+
+                </div>
+
             </li>
-            <li><a href="{{ route('services') }}"
-                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50">Chi
+            <li class="group"><a href="{{ route('services') }}"
+                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50 py-2 w-100% block">
+                    <span
+                        class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">chevron_right</span>
+                    Chi
                     siamo</a>
+                <ul
+                    class="lg:absolute lg:w-screen lg:left-0 lg:top-18 lg:bg-gray-50 lg:px-4 xl:px-16 3xl:px-32 pt-4 lg:shadow-lg hidden group-hover:flex ml-8 lg:ml-0 flex-col gap-4">
+                    <li>menu1</li>
+                    <li>menu2</li>
+                    <li>menu3</li>
+                    <li>menu4</li>
+                    <li>menu5</li>
+                    <li>menu6</li>
+                    <li>menu7</li>
+                    <li>menu8</li>
+                    <li>menu9</li>
+                    <li>menu10</li>
+                </ul>
             </li>
-            <li><a href="{{ route('contact') }}"
-                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50">Contatti</a>
+            <li class="group"><a href="{{ route('contact') }}"
+                    class=" transition-color duration-300 font-bold hover:border-b-vividauburn-800 border-b-2 border-b-gray-50 py-2 w-100% block">
+                    <span
+                        class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">chevron_right</span>
+                    Contatti</a>
+                <ul
+                    class="lg:absolute lg:w-screen lg:left-0 lg:top-18 lg:bg-gray-50 lg:px-4 xl:px-16 3xl:px-32 pt-4 lg:shadow-lg hidden group-hover:flex ml-8 lg:ml-0 flex-col gap-4">
+                    <li>menu1</li>
+                    <li>menu2</li>
+                    <li>menu3</li>
+                    <li>menu4</li>
+                    <li>menu5</li>
+                    <li>menu6</li>
+                    <li>menu7</li>
+                    <li>menu8</li>
+                    <li>menu9</li>
+                    <li>menu10</li>
+                </ul>
             </li>
         </ul>
     </nav>
