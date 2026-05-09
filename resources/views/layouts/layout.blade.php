@@ -47,7 +47,7 @@
 
 
 
-<body class="bg-gray-50 text-gray-900 font-body antialiased relative">
+<body class="bg-gray-50 text-gray-900 font-body antialiased relative text-base">
     <!-- Navigation -->
     <x-navigation />
     @if (request()->is('categories'))
