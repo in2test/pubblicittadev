@@ -27,10 +27,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $slug
  * @property string|null $description
  * @property int|null $parent_id
+ * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
+ * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $children
+ * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
  */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model implements HasMedia
-
 {
     use HasFactory, InteractsWithMedia;
 
@@ -45,7 +47,7 @@ class Category extends Model implements HasMedia
      *
      * @return string The attribute used for routing (slug).
      */
-    #[Override]
+    
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -96,6 +98,7 @@ class Category extends Model implements HasMedia
      *
      * @return HasMany The relationship with products.
      */
+    
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'category_id');

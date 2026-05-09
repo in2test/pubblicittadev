@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Products\NewWaveProducts\Pages;
 
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
+use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -32,7 +33,7 @@ class EditNewWaveProduct extends EditRecord
                 ->icon('heroicon-o-cloud-arrow-down')
                 ->color('success')
                 ->action(function () {
-                    /** @var \App\Models\Product $record */
+                    /** @var Product $record */
                     $record = $this->record;
                     SyncNewWaveProductJob::dispatch($record->id);
 

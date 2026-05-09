@@ -38,8 +38,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
 class Image extends Model
-
-
 {
     use HasFactory;
 
@@ -193,8 +191,8 @@ class Image extends Model
 
     protected function variantPath(string $variant): string
     {
-        $directory = pathinfo($this->image_path, PATHINFO_DIRNAME);
-        $filename = pathinfo($this->image_path, PATHINFO_FILENAME);
+        $directory = pathinfo((string) $this->image_path, PATHINFO_DIRNAME);
+        $filename = pathinfo((string) $this->image_path, PATHINFO_FILENAME);
 
         return "{$directory}/{$filename}_{$variant}.webp";
     }

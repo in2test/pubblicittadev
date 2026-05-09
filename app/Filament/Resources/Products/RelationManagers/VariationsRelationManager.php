@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Products\RelationManagers;
 
 use App\Filament\Resources\ProductVariations\ProductVariationResource;
 use App\Models\Color;
+use App\Models\Product;
 use App\Models\Size;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -140,7 +141,7 @@ class VariationsRelationManager extends RelationManager
                             ]),
                     ])
                     ->action(function (array $data, RelationManager $livewire): void {
-                        /** @var \App\Models\Product $product */
+                        /** @var Product $product */
                         $product = $livewire->getOwnerRecord();
 
                         $colors = (! empty($data['use_color']) && ! empty($data['colors'])) ? $data['colors'] : [null];

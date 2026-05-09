@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Laravel\Scout\Searchable;
 use Override;
@@ -52,8 +53,8 @@ class Product extends Model implements HasMedia
     /**
      * @property int $id
      * @property string $name
-     * @property string $sku
      * @property string $slug
+     * @property string $sku
      * @property string $description
      * @property string $price
      * @property string $offer_price
@@ -68,9 +69,13 @@ class Product extends Model implements HasMedia
      * @property bool $override_description
      * @property array $disabled_colors
      * @property array $remote_images
-     
+     *
+     * @property \App\Models\Category $category
+     * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariation> $variations
+     * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Image> $media
      */
     use HasFactory;
+
     use InteractsWithMedia;
     use Searchable;
 
@@ -129,7 +134,7 @@ class Product extends Model implements HasMedia
         return $this->hasMany(PricingTier::class);
     }
 
-    #[Override]
+    
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -345,12 +350,12 @@ class Product extends Model implements HasMedia
      * Scout Search Configuration
      */
     public function toSearchableArray(): array
-    {   
+    {
         /**
          * Only index products that are active and synced (for NewWave products)
          * This ensures that only ready-to-sell products appear in search results.
          */
-        
+
         return [
             'id' => (int) $this->id,
             'name' => $this->name,

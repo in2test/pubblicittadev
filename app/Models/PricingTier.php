@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'price_per_unit',
 ])]
 class PricingTier extends Model
-
 {
     use HasFactory;
 

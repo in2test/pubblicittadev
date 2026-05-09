@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreQuoteRequest;
+use App\Models\PricingTier;
 use App\Models\Product;
 use App\Models\Quote;
 use App\Models\QuoteItem;
@@ -46,7 +47,7 @@ class QuoteController extends Controller
             ->orderByDesc('min_quantity')
             ->first();
 
-        /** @var \App\Models\PricingTier|null $pricingTier */
+        /** @var PricingTier|null $pricingTier */
         $unitPrice = $pricingTier?->price_per_unit ?? $product->price;
         $subtotal = $unitPrice * $quantity;
 

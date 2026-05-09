@@ -89,9 +89,6 @@ class Catalog extends Component
             $this->categorySlug = $slug;
         }
 
-
-
-
         /**
          * Navigation logic:
          * Redirect to the specific category route if a slug is active,
