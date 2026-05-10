@@ -197,13 +197,148 @@
     writing-mode: vertical-rl;
 }
 
-@keyframes menu_slide {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
+@layer components {
+    .mega-nav {
+        @apply border-b border-gray-200 bg-gray-50  fixed z-55 top-0 left-0 w-full shadow-lg font-body;
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
+
+    .mega-nav-shell {
+        @apply mx-auto px-8 3xl:px-32;
+    }
+
+    .mega-nav-row {
+        @apply flex items-center justify-between gap-4 py-4;
+    }
+
+    .mega-logo {
+        @apply text-2xl font-bold text-vividauburn-500  border-gray-50 hover:text-vividauburn-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
+    }
+
+    .mega-mobile-toggle {
+        @apply p-2 hover:bg-gray-100  transition-all active:scale-95 duration-150 lg:hidden;
+    }
+
+    .mega-menu-root {
+        @apply hidden items-center gap-6 lg:flex;
+    }
+
+    .mega-trigger {
+        @apply inline-flex items-center gap-2 py-3 text-base font-medium text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
+    }
+
+    .mega-trigger-icon {
+        @apply h-4 w-4 text-slate-400 transition-transform duration-200;
+    }
+
+    .mega-item {
+        @apply relative;
+    }
+
+    .mega-panel {
+        @apply invisible absolute left-0 top-full -ml-6 z-50 w-screen max-w-4xl border-2 border-gray-400 bg-gray-50 p-6 opacity-0 shadow-xl transition duration-200;
+    }
+
+    .mega-item[data-open="true"] > .mega-panel {
+        @apply visible opacity-100;
+    }
+
+    .mega-item[data-open="true"] > .mega-trigger {
+        @apply text-gray-950 border-gray-400;
+    }
+
+    .mega-item[data-open="true"] .mega-trigger-icon {
+        @apply rotate-180;
+    }
+
+    .mega-panel-grid {
+        @apply grid gap-8 lg:grid-cols-4;
+    }
+
+    .mega-col-title {
+        @apply mb-3 text-base font-semibold uppercase tracking-[0.08em] text-gray-900;
+    }
+
+    .mega-link-list {
+        @apply space-y-1;
+    }
+
+    .mega-link {
+        @apply block px-3 py-3 transition hover:bg-gray-100;
+    }
+
+    .mega-link-title {
+        @apply text-base font-medium text-gray-900;
+    }
+
+    .mega-link-copy {
+        @apply mt-1 text-base leading-6 text-gray-500;
+    }
+
+    .mega-feature {
+        @apply bg-vividauburn-200 p-5;
+    }
+
+    .mega-feature-kicker {
+        @apply mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-vividauburn-500;
+    }
+
+    .mega-feature-title {
+        @apply text-base font-semibold text-gray-900;
+    }
+
+    .mega-feature-copy {
+        @apply mt-2 text-base leading-6 text-gray-600;
+    }
+
+    .mega-feature-cta {
+        @apply mt-4 inline-flex items-center  bg-vividauburn-500 px-4 py-2 text-base font-medium text-gray-50 transition hover:bg-vividauburn-600;
+    }
+
+    .mega-simple-link {
+        @apply inline-flex items-center  px-4 py-3 text-base font-medium  text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
+    }
+
+    .mega-mobile-panel {
+        @apply fixed inset-y-0 left-0 z-50 w-[92%] max-w-sm -translate-x-full overflow-y-auto border-r border-gray-200 bg-gray-50 p-4 shadow-xl transition duration-300 lg:hidden;
+    }
+
+    .mega-nav[data-mobile-open="true"] .mega-mobile-panel {
+        @apply translate-x-0;
+    }
+
+    .mega-mobile-backdrop {
+        @apply pointer-events-none fixed inset-0 z-40 bg-gray-900/30 opacity-0 transition lg:hidden;
+    }
+
+    .mega-nav[data-mobile-open="true"] .mega-mobile-backdrop {
+        @apply pointer-events-auto opacity-100;
+    }
+
+    .mega-mobile-header {
+        @apply mb-4 flex items-center justify-between;
+    }
+
+    .mega-mobile-close {
+        @apply inline-flex items-center justify-center  border border-gray-300 bg-gray-50 p-2 text-gray-700;
+    }
+
+    .mega-mobile-group {
+        @apply border-t border-gray-200 py-2;
+    }
+
+    .mega-mobile-trigger {
+        @apply flex w-full items-center justify-between  px-3 py-3 text-left text-base font-medium text-gray-800 transition hover:bg-gray-100;
+    }
+
+    .mega-mobile-submenu {
+        @apply hidden space-y-1 px-2 pb-2 pt-1;
+    }
+
+    .mega-mobile-group[data-open="true"] > .mega-mobile-submenu {
+        @apply block;
+    }
+
+    .mega-mobile-sublink {
+        @apply block  px-3 py-2 text-base text-gray-600 transition hover:bg-gray-100 hover:text-gray-900;
     }
 }

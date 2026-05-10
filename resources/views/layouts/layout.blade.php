@@ -49,7 +49,7 @@
 
 <body class="bg-gray-50 text-gray-900 font-body antialiased relative text-base">
     <!-- Navigation -->
-    <x-navigation />
+    <livewire:navigation />
     @if (request()->is('categories'))
         <x-sidebar />
         <!-- Sidebar -->

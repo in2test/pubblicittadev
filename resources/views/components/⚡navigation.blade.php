@@ -1,10 +1,23 @@
+<?php
+
+use Livewire\Component;
+use App\Models\Category;
+
+new class extends Component {
+    public function mount()
+    {
+        $this->categories = Category::with('children')->get();
+    }
+};
+?>
+
 <nav class="mega-nav" data-mobile-open="false">
     <div class="mega-nav-shell">
         <div class="mega-nav-row">
             <ul class="mega-menu-root">
                 <li class="mega-item" data-open="false">
                     <button class="mega-trigger" type="button" data-mega-trigger aria-expanded="false">
-                        Products
+                        Catalogo per categoria
                         <svg class="mega-trigger-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd"
                                 d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -14,80 +27,28 @@
 
                     <div class="mega-panel">
                         <div class="mega-panel-grid">
-                            <div>
-                                <h3 class="mega-col-title">Commerce</h3>
-                                <ul class="mega-link-list">
-                                    <li>
-                                        <a href="#" class="mega-link">
-                                            <span class="mega-link-title">Catalog Manager</span>
-                                            <span class="mega-link-copy">Organize products, variants, and pricing in one
-                                                place.</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" class="mega-link">
-                                            <span class="mega-link-title">Orders</span>
-                                            <span class="mega-link-copy">Track fulfillment, returns, and customer
-                                                history.</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" class="mega-link">
-                                            <span class="mega-link-title">Promotions</span>
-                                            <span class="mega-link-copy">Launch bundles, discounts, and seasonal
-                                                campaigns.</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h3 class="mega-col-title">Operations</h3>
-                                <ul class="mega-link-list">
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Inventory</span><span
-                                                class="mega-link-copy">Monitor stock across warehouses and
-                                                channels.</span></a></li>
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Suppliers</span><span
-                                                class="mega-link-copy">Manage purchasing workflows and vendor
-                                                records.</span></a></li>
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Shipping</span><span
-                                                class="mega-link-copy">Connect carriers and automate shipping
-                                                rules.</span></a></li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h3 class="mega-col-title">Insights</h3>
-                                <ul class="mega-link-list">
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Dashboard</span><span class="mega-link-copy">See
-                                                sales, margins, and conversion trends.</span></a></li>
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Reports</span><span
-                                                class="mega-link-copy">Export financial and operational summaries
-                                                fast.</span></a></li>
-                                    <li><a href="#" class="mega-link"><span
-                                                class="mega-link-title">Forecasting</span><span
-                                                class="mega-link-copy">Project demand and plan replenishment.</span></a>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div class="mega-feature">
-                                <p class="mega-feature-kicker">Featured</p>
-                                <h3 class="mega-feature-title">Built for modern storefront teams</h3>
-                                <p class="mega-feature-copy">A structured mega menu helps users scan many destinations
-                                    quickly without forcing them through deep navigation layers.</p>
-                                <a href="#" class="mega-feature-cta">View platform</a>
-                            </div>
+                            @foreach ($this->categories->where('parent_id', null) as $category)
+                                <div>
+                                    <h3 class="mega-col-title">{{ $category->name }}</h3>
+                                    <ul class="mega-link-list">
+                                        @foreach ($category->children as $categoryChild)
+                                            <li>
+                                                <a href="{{ route('category', $categoryChild->slug) }}"
+                                                    class="mega-link">
+                                                    <span class="mega-link-title">{{ $categoryChild->name }}</span>
+                                                    <span
+                                                        class="mega-link-copy">{{ Str::limit($categoryChild->description, 60) }}</span>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </li>
 
-                <li class="mega-item" data-open="false">
+                <!--li class="mega-item" data-open="false">
                     <button class="mega-trigger" type="button" data-mega-trigger aria-expanded="false">
                         Services
                         <svg class="mega-trigger-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -144,10 +105,10 @@
                             </div>
                         </div>
                     </div>
-                </li>
+                </li-->
 
-                <li><a href="#" class="mega-simple-link">Pricing</a></li>
-                <li><a href="#" class="mega-simple-link">About</a></li>
+                <li><a href="{{ route('services') }}" class="mega-simple-link">Servizi</a></li>
+                <li><a href="{{ route('contact') }}" class="mega-simple-link">Contatti</a></li>
                 <li class="mega-item" data-open="false">
                     <button class="mega-trigger" type="button" data-mega-trigger aria-expanded="false">
 
@@ -260,35 +221,30 @@
                 ✕
             </button>
         </div>
-
-        <div class="mega-mobile-group" data-open="false">
-            <button class="mega-mobile-trigger" type="button" data-mobile-group-trigger>
-                Products
-                <span>+</span>
-            </button>
-            <div class="mega-mobile-submenu">
-                <a href="#" class="mega-mobile-sublink">Catalog Manager</a>
-                <a href="#" class="mega-mobile-sublink">Orders</a>
-                <a href="#" class="mega-mobile-sublink">Promotions</a>
-                <a href="#" class="mega-mobile-sublink">Inventory</a>
+        @foreach ($this->categories->where('parent_id', null) as $category)
+            <div class="mega-mobile-group" data-open="false">
+                @if ($category->children->isEmpty())
+                    <a href="{{ route('category', $category->slug) }}" class="mega-mobile-sublink">
+                        {{ $category->name }}
+                    </a>
+                @else
+                    <button class="mega-mobile-trigger" type="button" data-mobile-group-trigger>
+                        {{ $category->name }}
+                        <span>+</span>
+                    </button>
+                    <div class="mega-mobile-submenu">
+                        @foreach ($category->children as $categoryChild)
+                            <a href="{{ route('category', $categoryChild->slug) }}" class="mega-mobile-sublink">
+                                {{ $categoryChild->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
-        </div>
-
-        <div class="mega-mobile-group" data-open="false">
-            <button class="mega-mobile-trigger" type="button" data-mobile-group-trigger>
-                Services
-                <span>+</span>
-            </button>
-            <div class="mega-mobile-submenu">
-                <a href="#" class="mega-mobile-sublink">Brand Systems</a>
-                <a href="#" class="mega-mobile-sublink">Laravel Builds</a>
-                <a href="#" class="mega-mobile-sublink">Maintenance</a>
-            </div>
-        </div>
-
+        @endforeach
         <div class="mega-mobile-group">
-            <a href="#" class="mega-mobile-sublink">Pricing</a>
-            <a href="#" class="mega-mobile-sublink">About</a>
+            <a href="{{ route('services') }}" class="mega-mobile-sublink">Servizi</a>
+            <a href="{{ route('contact') }}" class="mega-mobile-sublink">Contatti</a>
         </div>
     </div>
 </nav>
