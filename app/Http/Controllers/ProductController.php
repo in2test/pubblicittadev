@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -21,8 +22,9 @@ class ProductController extends Controller
      *
      * @param  string  $category  The category slug from the URL
      * @param  string  $slug  The product slug from the URL
+     * @param  Request  $request  The incoming HTTP request
      */
-    public function show(string $category, string $slug): View
+    public function show(string $category, string $slug, Request $request): View
     {
         // Fetch the product with all necessary relationships for the detail page
         $productQuery = Product::where('slug', '=', $slug, 'and')
@@ -44,10 +46,14 @@ class ProductController extends Controller
 
         $product = $productQuery->firstOrFail();
         $category = Category::where('slug', '=', $category, 'and')->firstOrFail();
+        $colorId = $request->query('color_id') ?? null;
+        $jobId = $request->query('job_id') ?? null;
 
         return view('product', [
             'product' => $product,
             'category' => $category,
+            'colorId' => $colorId,
+            'jobId' => $jobId,
         ]);
     }
 

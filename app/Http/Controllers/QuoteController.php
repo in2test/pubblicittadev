@@ -48,7 +48,7 @@ class QuoteController extends Controller
             ->first();
 
         /** @var PricingTier|null $pricingTier */
-        $unitPrice = $pricingTier?->price_per_unit ?? $product->price;
+        $unitPrice = $pricingTier->price_per_unit ?? $product->price;
         $subtotal = $unitPrice * $quantity;
 
         // 2. Generate a unique quote number (e.g., QT-20260506-001)

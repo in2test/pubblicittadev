@@ -7,11 +7,12 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DebugController extends Controller
 {
-    public function remoteImages(string $sku, Request $request)
+    public function remoteImages(string $sku, Request $request): JsonResponse
     {
         $product = Product::where('sku', '=', $sku, 'and')->first();
         if (! $product) {
@@ -25,7 +26,7 @@ class DebugController extends Controller
         ]);
     }
 
-    public function remoteImagesFromPayload(string $sku, Request $request)
+    public function remoteImagesFromPayload(string $sku, Request $request): JsonResponse
     {
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
@@ -39,7 +40,7 @@ class DebugController extends Controller
         return response()->json(['sku' => $sku, 'mapped_remote_images' => $remote]);
     }
 
-    public function mapPayloadToRemoteImages(string $sku, Request $request)
+    public function mapPayloadToRemoteImages(string $sku, Request $request): JsonResponse
     {
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
@@ -71,7 +72,7 @@ class DebugController extends Controller
         return response()->json(['sku' => $sku, 'images_added_to_table' => count($remote)]);
     }
 
-    public function forceMapAll(string $sku, Request $request)
+    public function forceMapAll(string $sku, Request $request): JsonResponse
     {
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
@@ -102,7 +103,7 @@ class DebugController extends Controller
         return response()->json(['sku' => $sku, 'images_added_to_table' => count($remote)]);
     }
 
-    public function apiData(string $sku, Request $request)
+    public function apiData(string $sku, Request $request): JsonResponse
     {
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
@@ -115,7 +116,7 @@ class DebugController extends Controller
         return response()->json(['sku' => $sku, 'language' => $language, 'data' => $data]);
     }
 
-    public function apiDataFull(string $sku, Request $request)
+    public function apiDataFull(string $sku, Request $request): JsonResponse
     {
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */

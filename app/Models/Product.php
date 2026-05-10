@@ -173,7 +173,7 @@ class Product extends Model implements HasMedia
     {
         $image = $this->getFirstImage();
 
-        return $image?->thumb ?? $image?->url ?? null;
+        return $image->thumb ?? $image->url ?? null;
     }
 
     /**

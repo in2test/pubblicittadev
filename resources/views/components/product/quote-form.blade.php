@@ -1,4 +1,4 @@
-@props(['product'])
+@props(['product', 'colorId'])
 
 @php
     /** @var \App\Models\Product $product */
@@ -19,12 +19,12 @@
     <input type="hidden" name="quantity" :value="totalQuantity">
 
     {{-- Variation Selectors --}}
-    <x-product.color-selector :$product />
+    <x-product.color-selector :$product :$colorId />
     <x-product.size-selector :$product />
 
     {{-- Printing Options --}}
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">
-        
+
         {{-- Print Placements --}}
         @if ($hasPlacements)
             <div>
@@ -35,7 +35,8 @@
                     @foreach ($product->printPlacements as $placement)
                         <label
                             class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container"
-                            :class="selectedPlacements.find(p => p.id == {{ $placement->id }}) ? 'border-primary bg-primary/5' : ''">
+                            :class="selectedPlacements.find(p => p.id == {{ $placement->id }}) ? 'border-primary bg-primary/5' :
+                                ''">
                             <div class="flex items-center gap-3">
                                 <input type="checkbox" name="print_placements[]" value="{{ $placement->id }}"
                                     class="h-4 w-4 text-primary"
@@ -65,8 +66,10 @@
                 </label>
                 <div class="grid grid-cols-2 gap-3">
                     @foreach ($product->printSides as $side)
-                        <label class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container">
-                            <input type="checkbox" name="print_sides[]" value="{{ $side->id }}" class="h-4 w-4 text-primary">
+                        <label
+                            class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container">
+                            <input type="checkbox" name="print_sides[]" value="{{ $side->id }}"
+                                class="h-4 w-4 text-primary">
                             <span class="text-sm">{{ $side->name }}</span>
                         </label>
                     @endforeach
@@ -104,22 +107,24 @@
                 <div class="p-3 bg-surface-container rounded text-xs">
                     <span class="font-bold">Sconti quantità:</span>
                     @foreach ($discounts as $d)
-                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi = -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
+                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi =
+                            -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
                     @endforeach
                 </div>
             @endif
-            
+
             <button type="submit"
                 class="w-full bg-primary text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-primary-700">
                 Richiedi Preventivo Personalizzato
             </button>
-            
+
             <button type="button" :disabled="totalQuantity < 1"
                 :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''" @click="addToCart()"
                 class="w-full bg-gray-950 text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-black">
-                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span x-text="totalPrice">0.00</span>)
+                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span
+                    x-text="totalPrice">0.00</span>)
             </button>
-            
+
             <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}"
                 class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
                 Contattaci via email

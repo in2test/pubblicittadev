@@ -63,7 +63,7 @@ class NewWaveProductForm
                                             $set('description', $info['description'] ?? null);
 
                                             // Ensure slug is generated
-                                            if (empty($record?->slug)) {
+                                            if (empty($record->slug)) {
                                                 $set('slug', SlugGenerator::unique(Product::class, $info['name'], $record));
                                             }
 
@@ -93,7 +93,7 @@ class NewWaveProductForm
                                             );
                                         }
 
-                                        return $record->sync_status?->getLabel() ?? 'Sconosciuto';
+                                        return $record->sync_status->getLabel() ?? 'Sconosciuto';
                                     }),
                                 Select::make('category_id')
                                     ->label('Categoria')
@@ -273,7 +273,7 @@ class NewWaveProductForm
                                         $item = $component->getItemState($arguments['item']);
                                         $image = Image::query()->find($item['id'] ?? null);
 
-                                        if (! $image || ! $image->image_url || ! $image->product) {
+                                        if (! $image) {
                                             return;
                                         }
 

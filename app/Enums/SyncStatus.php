@@ -15,7 +15,7 @@ enum SyncStatus: string implements HasColor, HasIcon, HasLabel
     case Synced = 'synced';
     case Failed = 'failed';
 
-    public function getLabel(): ?string
+    public function getLabel(): string
     {
         return match ($this) {
             self::Pending => 'In Attesa',
@@ -25,7 +25,7 @@ enum SyncStatus: string implements HasColor, HasIcon, HasLabel
         };
     }
 
-    public function getColor(): string|array|null
+    public function getColor(): string
     {
         return match ($this) {
             self::Pending => 'gray',
@@ -35,7 +35,7 @@ enum SyncStatus: string implements HasColor, HasIcon, HasLabel
         };
     }
 
-    public function getIcon(): ?string
+    public function getIcon(): string
     {
         return match ($this) {
             self::Pending => 'heroicon-m-clock',

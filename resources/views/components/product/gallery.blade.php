@@ -20,20 +20,17 @@
         </button>
 
         <!-- Thumbnail Container -->
-        <div x-ref="thumbContainer"
-            class="flex-1 flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto scrollbar-hide no-scrollbar snap-x lg:snap-y select-none max-h-[100px] lg:max-h-[600px] w-full"
+        <div class="flex-1 flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto scrollbar-hide no-scrollbar snap-x lg:snap-y select-none max-h-25 lg:max-h-150 w-full"
             style="scrollbar-width: none; -ms-overflow-style: none;">
-            <template x-for="image in images" :key="image.id">
+            @foreach ($images as $image)
                 <div class="shrink-0 w-20 h-20 lg:w-20 lg:h-auto bg-surface-container border-2 overflow-hidden cursor-pointer transition-all snap-center"
-                    :class="mainImage === image.large ? 'border-primary ring-1 ring-primary/20' :
-                        'border-outline-variant/10 hover:border-outline-variant'"
-                    x-show="(!activeColorId && image.color_ids.length === 0) || (activeColorId && image.color_ids.some(cid => cid == activeColorId))"
                     @click="updateMain(image)">
-                    <img :alt="getComputedAlt(image)"
+                    <img alt=""
                         class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity"
-                        :src="image.thumb" />
+                        src="{{ $image->getThumbnailUrlAttribute() }}" />
                 </div>
-            </template>
+            @endforeach
+            
         </div>
 
         <!-- Down Scroll Button (Desktop) -->
@@ -54,7 +51,8 @@
     </div>
 
     <!-- Main Display Section -->
-    <div class="flex-1 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white min-h-[200px]">
+    <div
+        class="flex-1 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white min-h-50">
         <picture class="">
             <source media="(max-width: 768px)" :srcset="mainImageMed">
             <img :alt="getComputedAlt(images.find(i => i.large === mainImage) || { alt: '', color_ids: [] })"

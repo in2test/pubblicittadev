@@ -85,7 +85,7 @@ class Catalog extends Component
             $category = Category::where('slug', '=', $slug, 'and')->first();
             /** @var Category|null $parent */
             $parent = $category?->parent;
-            $this->categorySlug = $parent?->slug ?? null;
+            $this->categorySlug = $parent->slug ?? null;
         } else {
             // Otherwise, set the selected category
             $this->categorySlug = $slug;

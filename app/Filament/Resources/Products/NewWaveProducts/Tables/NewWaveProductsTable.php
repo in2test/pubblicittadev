@@ -33,7 +33,7 @@ class NewWaveProductsTable
                 TextColumn::make('sku')
                     ->searchable()
                     ->tooltip(function (Product $record): ?HtmlString {
-                        $url = $record->getFirstImage()?->thumb ?? $record->getThumbnailUrl();
+                        $url = $record->getFirstImage()->thumb ?? $record->getThumbnailUrl();
                         if (! $url) {
                             return null;
                         }
