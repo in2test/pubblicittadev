@@ -62,17 +62,16 @@ class Product extends Model implements HasMedia
      * @property int $category_id
      * @property string $type
      * @property string $sync_status
-     * @property \Illuminate\Support\Carbon $synced_at
+     * @property Carbon $synced_at
      * @property bool $is_active
      * @property int $sync_progress
      * @property bool $override_price
      * @property bool $override_description
      * @property array $disabled_colors
      * @property array $remote_images
-     *
-     * @property \App\Models\Category $category
-     * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariation> $variations
-     * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Image> $media
+     * @property Category $category
+     * @property \Illuminate\Database\Eloquent\Collection<int, ProductVariation> $variations
+     * @property \Illuminate\Database\Eloquent\Collection<int, Image> $media
      */
     use HasFactory;
 
@@ -134,7 +133,7 @@ class Product extends Model implements HasMedia
         return $this->hasMany(PricingTier::class);
     }
 
-    
+    #[Override]
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -355,13 +354,15 @@ class Product extends Model implements HasMedia
          * Only index products that are active and synced (for NewWave products)
          * This ensures that only ready-to-sell products appear in search results.
          */
+        /** @var Category|null $category */
+        $category = $this->category;
 
         return [
             'id' => (int) $this->id,
             'name' => $this->name,
             'sku' => (string) $this->sku,
             'description' => (string) $this->description,
-            'category_name' => $this->category?->name,
+            'category_name' => $category?->name,
         ];
     }
 

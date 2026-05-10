@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,9 +28,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $slug
  * @property string|null $description
  * @property int|null $parent_id
- * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Product> $products
- * @property \Illuminate\Database\Eloquent\Collection<int, \App\Models\Category> $children
- * @property \Illuminate\Database\Eloquent\Collection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property Collection<int, Product> $products
+ * @property Collection<int, Category> $children
+ * @property Collection<int, Media> $media
  */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model implements HasMedia
@@ -47,7 +48,7 @@ class Category extends Model implements HasMedia
      *
      * @return string The attribute used for routing (slug).
      */
-    
+    #[Override]
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -98,7 +99,6 @@ class Category extends Model implements HasMedia
      *
      * @return HasMany The relationship with products.
      */
-    
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'category_id');

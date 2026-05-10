@@ -4,7 +4,7 @@ use Livewire\Component;
 use App\Models\Category;
 
 new class extends Component {
-    public function mount()
+    public function mount(): void
     {
         $this->categories = Category::with('children')->get();
     }
