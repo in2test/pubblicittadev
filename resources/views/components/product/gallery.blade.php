@@ -1,66 +1,43 @@
 <!-- Gallery Component -->
-<div class="lg:col-span-7 2xl:col-span-5 flex flex-col-reverse lg:flex-row gap-6 h-fit" x-data="{
-    scrollThumbnails(dir) {
-        const container = $refs.thumbContainer;
-        const scrollAmount = 150;
-        if (window.innerWidth >= 1024) {
-            container.scrollBy({ top: dir === 'up' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-        } else {
-            container.scrollBy({ left: dir === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-        }
-    }
-}">
+<div class="flex flex-col-reverse lg:flex-row gap-4 w-full max-w-7xl mx-auto h-fit items-start p-4 bg-gray-50 border-2 border-dashed border-gray-300">
     <!-- Thumbnail Sidebar -->
-    <div class="w-full lg:w-24 flex flex-row lg:flex-col relative items-center">
-        <!-- Up Scroll Button (Desktop) -->
-        <button type="button" @click="scrollThumbnails('up')"
-            class="hidden lg:flex w-full justify-center py-1 hover:bg-surface-container transition-colors disabled:opacity-30"
-            aria-label="Scroll up">
-            <span class="material-symbols-outlined text-lg">expand_less</span>
-        </button>
-
-        <!-- Thumbnail Container -->
-        <div class="flex-1 flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto scrollbar-hide no-scrollbar snap-x lg:snap-y select-none max-h-25 lg:max-h-150 w-full"
-            style="scrollbar-width: none; -ms-overflow-style: none;">
-            @foreach ($images as $image)
-                <div class="shrink-0 w-20 h-20 lg:w-20 lg:h-auto bg-surface-container border-2 overflow-hidden cursor-pointer transition-all snap-center"
-                    @click="updateMain(image)">
-                    <img alt=""
-                        class="w-full h-full object-contain opacity-90 hover:opacity-100 transition-opacity"
-                        src="{{ $image->getThumbnailUrlAttribute() }}" />
-                </div>
-            @endforeach
-            
-        </div>
-
-        <!-- Down Scroll Button (Desktop) -->
-        <button type="button" @click="scrollThumbnails('down')"
-            class="hidden lg:flex w-full justify-center py-1 hover:bg-surface-container transition-colors mt-auto"
-            aria-label="Scroll down">
-            <span class="material-symbols-outlined text-lg">expand_more</span>
-        </button>
-
-        <!-- Indicators (Mobile only) -->
-        <div class="lg:hidden absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-1">
-            <template
-                x-for="(image, index) in images.filter(i => (!activeColorId && i.color_ids.length === 0) || (activeColorId && i.color_ids.some(cid => cid == activeColorId)))">
-                <div class="w-1.5 h-1.5 rounded-full transition-all"
-                    :class="mainImage === image.large ? 'bg-primary w-4' : 'bg-outline-variant/30'"></div>
-            </template>
-        </div>
+    <div class="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto shrink-0 no-scrollbar">
+        @foreach ($images as $index => $image)
+            <a href="#slide{{ $index }}"
+               class="shrink-0 w-20 h-20 lg:w-24 lg:h-32 border-2 border-transparent hover:border-primary transition-all rounded-sm overflow-hidden bg-gray-200">
+                <img src="{{ $image->getThumbnailUrlAttribute() }}"
+                     class="w-full h-full object-cover object-top"
+                     alt="Thumbnail {{ $index + 1 }}" />
+            </a>
+        @endforeach
     </div>
 
     <!-- Main Display Section -->
-    <div
-        class="flex-1 bg-surface-container-lowest border border-outline-variant/10 overflow-hidden relative group bg-white min-h-50">
-        <picture class="">
-            <source media="(max-width: 768px)" :srcset="mainImageMed">
-            <img :alt="getComputedAlt(images.find(i => i.large === mainImage) || { alt: '', color_ids: [] })"
-                class="h-auto max-w-full product-main-image transition-opacity duration-300 mx-auto object-contain"
-                :src="mainImageMed" />
-        </picture>
+    <!-- Changed from flex-1 to min-w-[400px] to prevent collapsing in flex parents -->
+    <div class="relative overflow-hidden w-full lg:min-w-[400px] lg:max-w-[400px] h-[400px] bg-blue-100 border-4 border-blue-500 rounded-sm shadow-xl flex items-center justify-center">
 
-        <!-- Navigation hint -->
-        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none"></div>
+        <!-- VISUAL DEBUG LABEL -->
+        <div class="absolute z-50 pointer-events-none text-blue-600 font-bold text-xl uppercase tracking-widest text-center px-4">
+            Debug Mode: 400px<br>
+            <span class="text-sm font-normal">(Forcing Width)</span>
+        </div>
+
+        @foreach ($images as $index => $image)
+            <div id="slide{{ $index }}"
+                class="absolute inset-0 w-full h-full z-1 transition-all duration-700 ease-in-out target:z-10 target:translate-y-0 -translate-y-full">
+                <!-- Placeholder Image for debugging -->
+                <img src="https://placehold.co/400x400/blue/white?text=Image+{{ $index + 1 }}"
+                     class="h-full w-full object-cover object-top"
+                     alt="Product image {{ $index + 1 }}" />
+            </div>
+        @endforeach
+
+        <!-- Default State image -->
+        <div class="absolute inset-0 z-0 bg-blue-50 flex items-center justify-center">
+             <!-- Placeholder Image for debugging -->
+             <img src="https://placehold.co/400x400/gray/white?text=Default+Image"
+                  class="h-full w-full object-cover object-top opacity-50"
+                  alt="Default image" />
+        </div>
     </div>
 </div>

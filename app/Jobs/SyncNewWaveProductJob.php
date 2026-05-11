@@ -24,7 +24,7 @@ class SyncNewWaveProductJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(public int $productId) {}
+    public function __construct(public Product|int $productId) {}
 
     /**
      * Execute the job.

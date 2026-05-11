@@ -13,7 +13,9 @@
       "Bash(git push *)",
       "Bash(vendor/bin/phpstan analyse:*)",
       "Bash(git push *)",
-      "Bash(vendor/bin/phpstan --memory-limit=-1)"
+      "Bash(vendor/bin/phpstan --memory-limit=-1)",
+      "Bash(vendor/bin/larastan analyze:*)",
+      "Bash(vendor/bin/phpstan analyze:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

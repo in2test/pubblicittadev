@@ -20,7 +20,7 @@
 
     {{-- Variation Selectors --}}
     <x-product.color-selector :$product :$colorId />
-    <x-product.size-selector :$product />
+    <x-product.size-selector :$product :$colorId />
 
     {{-- Printing Options --}}
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">

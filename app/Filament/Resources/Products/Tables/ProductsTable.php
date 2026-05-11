@@ -68,8 +68,8 @@ class ProductsTable
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
                     ->url(fn (Product $record): ?string => $record->category?->slug ? route('product', [
-                        'category' => $record->category->slug,
-                        'slug' => $record->slug,
+                        'category' => (string) $record->category->slug,
+                        'slug' => (string) $record->slug,
                     ]) : null)
                     ->visible(fn (Product $record): bool => (bool) $record->category_id)
                     ->openUrlInNewTab(),
