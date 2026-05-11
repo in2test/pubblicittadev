@@ -24,8 +24,9 @@ new class extends Component {
 <div>
     <x-product.breadcrumbs :$product :$category />
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 py-12 3xl:px-32 bg-gray-200 text-gray-900">
-
-        <x-product.gallery :images="$images" />
+        <div class="lg:col-span-7 2xl:col-span-5 ">
+            <x-product.gallery :images="$images" />
+        </div>
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
             <x-product.info :$product />

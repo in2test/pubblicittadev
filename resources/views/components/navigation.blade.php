@@ -171,7 +171,7 @@
                 </li>
             </ul>
             <a href="/" class="mega-logo">PubbliCitta24</a>
-            <div class="flex items-center gap-2 lg:gap-6">
+            <div class="flex items-center  lg:gap-4">
 
                 @php
                     $cartCount = \Illuminate\Support\Facades\Session::get('cart_items', []);

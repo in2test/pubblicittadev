@@ -95,45 +95,17 @@ class ProductForm
                     ->collection('images')
                     ->multiple()
                     ->reorderable()
-                    ->image()
+                    
                     ->imagePreviewHeight('150')
                     ->panelLayout('grid')
                     ->disk('public')
                     ->conversionsDisk('public')
-                    ->customProperties(fn (): array => [
+                    ->customProperties(fn ($record, $file): array => [
                         'alt' => 'descrizione',
                     ])
                     ->columnSpanFull(),
 
-                Section::make('Immagini Remote (NewWave)')
-                    ->description('Gestisci l\'ordine delle immagini sincronizzate da NewWave.')
-                    ->collapsible()
-                    ->schema([
-                        Repeater::make('images')
-                            ->relationship('images')
-                            ->label('Immagini Remote')
-                            ->schema([
-                                Placeholder::make('preview')
-                                    ->label('Immagine')
-                                    ->content(fn ($record) => $record->image_url ? new HtmlString('<img src="'.($record->thumbnail_url ?: $record->image_url).'" class="h-20 w-auto rounded border shadow-sm">') : 'Nessuna immagine'),
-                                TextInput::make('image_description')
-                                    ->label('Descrizione')
-                                    ->disabled(),
-                                Select::make('color_id')
-                                    ->label('Colore Associato')
-                                    ->relationship('color', 'color_name')
-                                    ->preload()
-                                    ->searchable(),
-                            ])
-                            ->columns(2)
-                            ->reorderable()
-                            ->addable(false)
-                            ->deletable(false)
-                            ->visible(fn ($record) => $record && $record->type === Product::TYPE_NEWWAVE),
-                    ])
-                    ->columnSpanFull()
-                    ->visible(fn ($record) => $record && $record->type === Product::TYPE_NEWWAVE),
-
+                
                 Section::make('Organizzazione Galleria per Colore')
                     ->description('Associa le immagini caricate sopra ai colori disponibili per questo prodotto.')
                     ->collapsible()
@@ -141,6 +113,18 @@ class ProductForm
                         Repeater::make('media')
                             ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
                             ->schema([
+                                \Filament\Forms\Components\Hidden::make('collection_name')
+                                    ->default('images'),
+                                \Filament\Forms\Components\Hidden::make('name')
+                                    ->default('product-image'),
+                                \Filament\Forms\Components\Hidden::make('file_name')
+                                    ->default('product-image.jpg'),
+                                \Filament\Forms\Components\Hidden::make('disk')
+                                    ->default('public'),
+                                \Filament\Forms\Components\Hidden::make('size')
+                                    ->default(0),
+                                \Filament\Forms\Components\Hidden::make('manipulations')
+                                    ->default('[]'),
                                 TextEntry::make('preview')
                                     ->label('Immagine')
                                     ->state(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),

@@ -7,7 +7,6 @@
       "mcp__laravel-boost__database-schema",
       "Bash(composer run:*)",
       "Bash(php -v)",
-      "Bash(herd php *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
@@ -15,7 +14,9 @@
       "Bash(git push *)",
       "Bash(vendor/bin/phpstan --memory-limit=-1)",
       "Bash(vendor/bin/larastan analyze:*)",
-      "Bash(vendor/bin/phpstan analyze:*)"
+      "Bash(vendor/bin/phpstan analyze:*)",
+      "Bash(./vendor/bin/phpstan analyze *)",
+      "Bash(php -m)"
     ]
   },
   "enableAllProjectMcpServers": true,

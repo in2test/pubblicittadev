@@ -91,10 +91,18 @@ class NewWaveProductsTable
                 Action::make('view')
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (Product $record): ?string => $record->category?->slug ? route('product', [
-                        'category' => (string) $record->category->slug,
-                        'slug' => (string) $record->slug,
-                    ]) : null)
+                    ->url(function (Product $record): ?string {
+                    /** @var \App\Models\Category|null $category */
+                        $category = $record->category;
+                        if (! $category?->slug) {
+                            return null;
+                        }
+
+                        return route('product', [
+                            'category' => (string) $category->slug,
+                            'slug' => (string) $record->getAttribute('slug'),
+                        ]);
+                    })
                     ->visible(fn (Product $record): bool => (bool) $record->category_id)
                     ->openUrlInNewTab(),
                 EditAction::make(),
