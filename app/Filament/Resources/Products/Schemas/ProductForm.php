@@ -11,7 +11,7 @@ use App\Models\Product;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -95,7 +95,7 @@ class ProductForm
                     ->collection('images')
                     ->multiple()
                     ->reorderable()
-                    
+
                     ->imagePreviewHeight('150')
                     ->panelLayout('grid')
                     ->disk('public')
@@ -105,7 +105,6 @@ class ProductForm
                     ])
                     ->columnSpanFull(),
 
-                
                 Section::make('Organizzazione Galleria per Colore')
                     ->description('Associa le immagini caricate sopra ai colori disponibili per questo prodotto.')
                     ->collapsible()
@@ -113,17 +112,17 @@ class ProductForm
                         Repeater::make('media')
                             ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
                             ->schema([
-                                \Filament\Forms\Components\Hidden::make('collection_name')
+                                Hidden::make('collection_name')
                                     ->default('images'),
-                                \Filament\Forms\Components\Hidden::make('name')
+                                Hidden::make('name')
                                     ->default('product-image'),
-                                \Filament\Forms\Components\Hidden::make('file_name')
+                                Hidden::make('file_name')
                                     ->default('product-image.jpg'),
-                                \Filament\Forms\Components\Hidden::make('disk')
+                                Hidden::make('disk')
                                     ->default('public'),
-                                \Filament\Forms\Components\Hidden::make('size')
+                                Hidden::make('size')
                                     ->default(0),
-                                \Filament\Forms\Components\Hidden::make('manipulations')
+                                Hidden::make('manipulations')
                                     ->default('[]'),
                                 TextEntry::make('preview')
                                     ->label('Immagine')

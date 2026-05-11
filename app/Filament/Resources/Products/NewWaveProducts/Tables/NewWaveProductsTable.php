@@ -7,6 +7,7 @@ namespace App\Filament\Resources\Products\NewWaveProducts\Tables;
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
 use App\Jobs\SyncNewWaveProductJob;
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -92,7 +93,7 @@ class NewWaveProductsTable
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
                     ->url(function (Product $record): ?string {
-                    /** @var \App\Models\Category|null $category */
+                        /** @var Category|null $category */
                         $category = $record->category;
                         if (! $category?->slug) {
                             return null;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Jobs\SyncNewWaveProductJob;
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -68,7 +69,7 @@ class ProductsTable
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
                     ->url(function (Product $record): ?string {
-                    /** @var \App\Models\Category|null $category */
+                        /** @var Category|null $category */
                         $category = $record->category;
                         if (! $category?->slug) {
                             return null;
