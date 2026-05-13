@@ -246,7 +246,7 @@ class CartTest extends TestCase
         $response->assertViewIs('cart');
     }
 
-    public function test_adding_same_product_merges_quantity(): void
+    public function test_adding_same_product_creates_separate_jobs(): void
     {
         $product = Product::factory()->create(['price' => 50]);
 
@@ -266,8 +266,10 @@ class CartTest extends TestCase
 
         $cart = new CartManager;
         $items = $cart->getItems();
-        $this->assertCount(1, $items);
-        $item = reset($items);
-        $this->assertEquals(5, $item['quantity']);
+        $this->assertCount(2, $items);
+
+        $itemValues = array_values($items);
+        $this->assertEquals(3, $itemValues[0]['quantity']);
+        $this->assertEquals(2, $itemValues[1]['quantity']);
     }
 }

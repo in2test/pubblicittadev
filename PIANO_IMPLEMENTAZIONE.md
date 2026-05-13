@@ -75,8 +75,8 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 
 #### Giorni 1-2: Setup Database & Models
 
-- [x] Creare migrazioni (products, categories, colors, sizes, variations, pricing_tiers, quotes)
-- [x] Generare Models: `Product`, `Category`, `Color`, `Size`, `ProductVariation`, `PricingTier`, `Quote`, `QuoteItem`
+- [x] Creare migrazioni (products, categories, colors, sizes, variations, pricing_tiers, quotes, category_quantity_discounts)
+- [x] Generare Models: `Product`, `Category`, `Color`, `Size`, `ProductVariation`, `PricingTier`, `Quote`, `QuoteItem`, `CategoryQuantityDiscount`
 - [x] Setup relazioni Eloquent (Focus su `ProductVariation` come pivot)
 - [x] Seed database con prodotti workwear e varianti
 
@@ -86,6 +86,8 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 
 - [x] Creare vista catalogo e dettaglio prodotto (`ProductController`)
 - [x] Rotte dinamiche per categorie e prodotti
+- [x] Implementazione di Galleria Prodotto interattiva con thumbnail e navigazione
+- [x] Logica di switch colori in tempo reale via query parameters
 - [x] Logica di calcolo prezzo basata sui `pricing_tiers` nel `QuoteController`
 - [x] Gestione upload file design nel form preventivo
 - [x] Memorizzazione preventivo e relativi articoli nel DB
@@ -102,12 +104,21 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 - [x] Creare Filament Resource: `CategoryResource`
 - [x] Creare Filament Resource: `ColorResource`
 - [x] Creare Filament Resource: `ProductVariationResource`
+- [x] Creare Filament Resource: `CategoryQuantityDiscountResource` per gestione sconti quantità
+- [x] Creare Filament Resource: `PrintPlacementResource` e `PrintSideResource`
+- [x] Implementazione `NewWaveProductResource` e `StandardProductResource` per gestione differenziata prodotti
 - [x] Batch Import via Filament modal for NewWave products (Import da SKU) with category selection and print placements
 - [x] Print placements in batch import (multi-select) attached to all imported products
 - [x] Gestione stati: pending, syncing, synced, failed
 - [x] **Thumbnail on hover** per product name in Filament tables
 
 **✅ MILESTONE 3**: Gestione catalogo completa da pannello admin (incluso Batch Import)
+
+#### 🌐 Integrazione API & Dati Esterni (NUOVO)
+
+- [x] Sistema di mapping per `remote_images` da API esterne a media locali
+- [x] Integrazione GraphQL per l'importazione automatizzata prodotti NewWave
+- [x] `DebugController` per testing payload API e validazione dati
 
 #### 🔍 Ricerca (Laravel Scout) - NUOVO
 
@@ -191,16 +202,51 @@ Testing: Pest 4
 
 ---
 
-## ⏭️ Prossimi Passi (Future)
+## ⏭️ PHASE 2: Full E-commerce Transition
 
-1. Implementare **Filament QuoteResource** per visualizzare i preventivi ricevuti
-2. Configurare **Mailables** per le notifiche automatiche
-3. Aggiungere logica per la generazione di **PDF** dai dettagli del preventivo
-4. Dashboard con statistiche preventivi
+L'obiettivo di questa fase è trasformare il sistema da un generatore di preventivi a una piattaforma e-commerce completa con gestione di "Lavorazioni" indipendenti e pagamenti integrati.
+
+### 📦 Modulo 1: L'Engine delle "Lavorazioni" (Job-Based Cart)
+Il sistema non raggrupperà più i prodotti genericamente, ma tratterà ogni aggiunta al carrello come una "Lavorazione" unica.
+- [ ] Refactoring del `CartManager`: ogni item nel carrello è un'entità unica con proprio `customization_json` e `design_file_path`.
+- [ ] Logica Sconti per Lavorazione: il `QuantityDiscountService` applica lo sconto basandosi sulla quantità del singolo Job, non sul totale dell'ordine.
+- [ ] Gestione Job nel Carrello: implementazione della funzione "Modifica Lavorazione" per permettere al cliente di cambiare colori, quantità o design per ogni singolo job.
+- [ ] **Sistema di Visualizzazione Dinamica (Attribute-Based Gallery)**:
+    - [ ] Implementazione di una gerarchia di fallback per le immagini: *Combinazione Specifica $\rightarrow$ Attributo Singolo $\rightarrow$ Prodotto Default*.
+    - [ ] Gestione di attributi multipli (Materiale, Spessore, Posizionamento) per il trigger delle immagini in gallery.
+    - [ la l'indirizzo di fatturazione e spedizione.
+    - [ ] Logica di pricing fallback: *Prezzo Variante $\rightarrow$ Prezzo Base Prodotto*.
+    - [ ] Integrazione nel pannello Admin (Filament) per mappare immagini a attributi specifici.
+
+### 👤 Modulo 2: User Lifecycle & Sicurezza
+Implementazione del sistema utenti per gestire l'area clienti e la conformità legale.
+- [ ] Configurazione Laravel Fortify: Registrazione, Login, Recupero Password e **Verifica Email**.
+- [ ] User Profile CRUD: gestione indirizzi di fatturazione e spedizione.
+- [ ] Sezione GDPR: implementazione checkbox di consenso privacy e gestione dei dati personali.
+- [ ] Area "I miei Ordini": storico ordini con stato e accesso ai documenti.
+
+### 💳 Modulo 3: Pagamenti & Checkout (Stripe)
+Transizione dal preventivo all'acquisto reale.
+- [ ] Integrazione Stripe Checkout: reindirizzamento sicuro per il pagamento.
+- [ ] Webhook di Stripe: gestione automatica della creazione dell'ordine dopo il pagamento (`checkout.session.completed`).
+- [ ] Gestione Inventario: decremento automatico delle quantità disponibili in `product_variations` al momento del pagamento.
+
+### 🛠️ Modulo 4: Admin Order Management & Logistica
+Nuovi strumenti per l'amministratore per gestire il ciclo di vita dell'ordine.
+- [ ] Filament `OrderResource`: gestione completa degli ordini e delle relative lavorazioni.
+- [ ] Gestione Fatture: campo di upload per il PDF della fattura elettronica (generata esternamente).
+- [ ] Logistica "Lean": campi per inserimento Codice di Tracking e URL del corriere.
+- [ ] Sistema Notifiche: email automatiche per "Ordine Ricevuto", "Fattura Disponibile" e "Ordine Spedito".
+
+### 🌐 Modulo 5: CMS & SEO
+Creazione delle pagine informative e ottimizzazione per i motori di ricerca.
+- [ ] Sistema Pagine Statiche: modello `Page` e Filament Resource per editare About, Services, Sustainability, FAQ, Contacts.
+- [ ] SEO Tools: implementazione di `sitemap.xml` dinamico e gestione admin per il file `robots.txt`.
+- [ ] Pagine Legali: Terms & Conditions e Privacy Policy.
 
 ---
 
-## 📝 Checklist Stato Attuale
+## 📝 Checklist Stato Attuale (Aggiornata)
 
 - [x] Database migrations create
 - [x] Logica Varianti Prodotto (Pivot table)
@@ -210,18 +256,18 @@ Testing: Pest 4
 - [x] Upload design file
 - [x] Admin Prodotti/Categorie/Colori
 - [x] Ricerca Laravel Scout (database driver)
-- [x] Carrello con sconti quantità
+- [x] Carrello con sconti quantità (da refactorizzare in Job-based)
 - [x] Test suite completa
 - [x] User Management con ruoli (admin/client) e is_active
 - [x] Filament UserResource per gestione utenti
 - [x] AuthenticateAdmin middleware
 - [x] Login/Register modal Livewire
 - [x] Admin menu organizzato
-- [ ] Admin Preventivi (QuoteResource)
-- [ ] Notifiche Email
-- [ ] Generazione PDF
-
----
+- [ ] **Sviluppo Fase 2: Lavorazioni & Cart Refactor**
+- [ ] **Sviluppo Fase 2: User Profiles & GDPR**
+- [ ] **Sviluppo Fase 2: Stripe Payment Integration**
+- [ ] **Sviluppo Fase 2: Admin Order & Logistics (Invoices/Tracking)**
+- [ ] **Sviluppo Fase 2: CMS Pages & SEO (Sitemap/Robots)**
 
 ## 🚨 Rischi & Mitigation
 
