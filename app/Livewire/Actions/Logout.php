@@ -14,10 +14,10 @@ class Logout
      */
     public function __invoke()
     {
-        Auth::guard('web')->logout();
+        (new Auth)->guard('web')->logout();
 
-        Session::invalidate();
-        Session::regenerateToken();
+        (new Session)->invalidate();
+        (new Session)->regenerateToken();
 
         return redirect('/');
     }

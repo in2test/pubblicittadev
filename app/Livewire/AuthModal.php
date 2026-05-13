@@ -29,13 +29,15 @@ class AuthModal extends Component
     #[Computed]
     public function isAuthenticated(): bool
     {
-        return Auth::check();
+        return (new Auth)->check();
     }
 
     #[Computed]
     public function currentUser(): ?User
     {
-        return Auth::user();
+        $user = Auth::user();
+
+        return $user instanceof User ? $user : null;
     }
 
     #[On('open-auth-modal')]
@@ -69,7 +71,7 @@ class AuthModal extends Component
             'password' => $this->password,
         ];
 
-        if (Auth::attempt($credentials)) {
+        if ((new Auth)->attempt($credentials)) {
             $this->close();
             $this->js('window.location.reload()');
 
@@ -96,14 +98,14 @@ class AuthModal extends Component
             'is_active' => true,
         ]);
 
-        Auth::login($user);
+        (new Auth)->login($user);
         $this->close();
         $this->js('window.location.reload()');
     }
 
     public function logout(): void
     {
-        Auth::logout();
+        (new Auth)->logout();
         $this->close();
     }
 

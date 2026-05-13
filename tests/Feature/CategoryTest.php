@@ -41,7 +41,7 @@ it('deletes attached image from storage when a category is deleted', function ()
         ->toMediaCollection('images');
 
     expect($category->getMedia('images'))->toHaveCount(1);
-    expect(Storage::disk('public')->exists($media->id.'/'.$media->file_name))->toBeTrue();
+    expect((new Storage)->disk('public')->exists($media->id.'/'.$media->file_name))->toBeTrue();
 
     // Delete
     $category->delete();

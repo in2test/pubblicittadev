@@ -65,16 +65,28 @@ class CartManager
      * @param  string  $jobId  The unique UUID of the job in the cart.
      * @param  int  $quantity  The new quantity for the job.
      */
-    public function update(string $jobId, int $quantity): void
+    /**
+     * Update an existing job in the cart with a new configuration.
+     *
+     * This allows modifying the product, color, placements, and quantities
+     * for a specific job without changing its UUID.
+     *
+     * @param  string  $jobId  The unique UUID of the job to update.
+     * @param  array  $item  The new item data.
+     */
+    public function replace(string $jobId, array $item): void
     {
         $items = $this->getItems();
 
         if (isset($items[$jobId])) {
-            if ($quantity <= 0) {
-                unset($items[$jobId]);
-            } else {
-                $items[$jobId]['quantity'] = $quantity;
-            }
+            $item['job_id'] = $jobId;
+            $item['created_at'] = $items[$jobId]['created_at'] ?? now()->toDateTimeString();
+            $items[$jobId] = $item;
+        } else {
+            // If job doesn't exist, just add it as a new job
+            $this->add($item);
+
+            return;
         }
 
         Session::put(self::CART_KEY, $items);
@@ -143,15 +155,22 @@ class CartManager
             if (! empty($item['product_id'])) {
                 $product = Product::find((int) $item['product_id']);
                 if ($product) {
-                    // Discount is calculated for the quantity of THIS SPECIFIC job
-                    $disc = $product->getPriceForQuantity((int) ($item['quantity'] ?? 1));
+                    // Use sum of all size quantities when multi-size quantities are stored
+                    $qty = (isset($item['quantities']) && is_array($item['quantities']))
+                        ? array_sum($item['quantities'])
+                        : (int) ($item['quantity'] ?? 1);
+
+                    $disc = $product->getPriceForQuantity($qty);
                     if ($disc > 0) {
                         $price = (float) $disc;
                     }
                 }
             }
 
-            $qty = (int) ($item['quantity'] ?? 1);
+            $qty = (isset($item['quantities']) && is_array($item['quantities']))
+                ? array_sum($item['quantities'])
+                : (int) ($item['quantity'] ?? 1);
+
             $total += $price * max(0, $qty);
         }
 

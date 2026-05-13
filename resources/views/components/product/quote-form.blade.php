@@ -119,9 +119,10 @@
             </button>
 
             <button type="button" :disabled="totalQuantity < 1"
-                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''" @click="addToCart()"
+                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''" @click="$wire.addToCart()"
                 class="w-full bg-gray-950 text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-black">
-                Aggiungi al Carrello (<span x-text="totalQuantity">0</span> pezzi - €<span
+                <span x-text="$wire.jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello'"></span>
+                (<span x-text="totalQuantity">0</span> pezzi - €<span
                     x-text="totalPrice">0.00</span>)
             </button>
 

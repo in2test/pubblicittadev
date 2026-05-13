@@ -35,7 +35,7 @@ class DebugController extends Controller
         if (! $payload) {
             return response()->json(['error' => 'Full payload not available'], 404);
         }
-        $remote = method_exists($service, 'mapFullProductPayloadToRemoteImages') ? $service->mapFullProductPayloadToRemoteImages($payload) : [];
+        $remote = $service->mapFullProductPayloadToRemoteImages($payload);
 
         return response()->json(['sku' => $sku, 'mapped_remote_images' => $remote]);
     }
@@ -45,11 +45,11 @@ class DebugController extends Controller
         $language = $request->query('language', 'it');
         /** @var ProductAvailabilityService $service */
         $service = app(ProductAvailabilityService::class);
-        $payload = method_exists($service, 'fetchFullGraphQLProductData') ? $service->fetchFullGraphQLProductData($sku, $language) : null;
+        $payload = $service->fetchFullGraphQLProductData($sku, $language);
         if (! $payload) {
             return response()->json(['error' => 'Full payload not available'], 404);
         }
-        $remote = method_exists($service, 'mapFullProductPayloadToRemoteImages') ? $service->mapFullProductPayloadToRemoteImages($payload) : [];
+        $remote = $service->mapFullProductPayloadToRemoteImages($payload);
         $product = Product::where('sku', '=', $sku, 'and')->first();
         if (! $product) {
             return response()->json(['error' => 'Product not found'], 404);

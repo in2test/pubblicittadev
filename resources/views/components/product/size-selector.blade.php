@@ -34,7 +34,7 @@
 
 
                     <div>
-                        <input name="quantities[{{ $variant->size->id }}]" type="number" min="0"
+                        <input wire:model.live="quantities.{{ $variant->size->id }}" type="number" min="0"
                             @if ($variant->quantity > 0) max="{{ $variant->quantity }}" @else disabled @endif
                             class="w-16 h-12 border border-gray-600/20 bg-gray-50/30 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                     </div>
@@ -48,15 +48,16 @@
         </div>
 
         <div class="mt-4 p-4 bg-peachsouffle-200 rounded border border-primary/20 flex flex-col gap-2"
-            x-show="totalQuantity > 0">
+            @if($this->totalQuantity > 0) class="flex" @else class="hidden" @endif>
             <div class="flex justify-between items-center">
                 <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
-                <span class="text-lg font-bold text-primary" x-text="totalQuantity"></span>
+                <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
             </div>
-            <div class="flex justify-between items-center pt-2 border-t border-primary/20" x-show="totalPrice > 0">
+            <div class="flex justify-between items-center pt-2 border-t border-primary/20"
+                @if($this->totalPrice > 0) class="flex" @else class="hidden" @endif>
                 <span class="text-xs font-mono uppercase tracking-widest text-primary">Prezzo Totale (Stampe
                     incluse)</span>
-                <span class="text-lg font-bold text-primary font-mono">€<span x-text="totalPrice"></span></span>
+                <span class="text-lg font-bold text-primary font-mono">€{{ $this->totalPrice }}</span>
             </div>
         </div>
     </div>

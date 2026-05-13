@@ -1,6 +1,7 @@
 @props(['product', 'colorId'])
 
 @php
+    /** @var \App\Models\Product $product */
     $availableColors = $product->variations
         ->filter(fn($v) => $v->quantity > 0 && $v->is_available)
         ->pluck('color')

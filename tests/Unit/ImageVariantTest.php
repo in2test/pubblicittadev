@@ -31,15 +31,15 @@ test('uploaded image generates thumbnail medium and large webp variants', functi
     expect($image->large_path)->toBeString()->not()->toBeEmpty();
 
     /** @var FilesystemAdapter $disk */
-    $disk = Storage::disk('public');
+    $disk = (new Storage)->disk('public');
     $disk->assertExists($image->thumbnail_path);
     $disk->assertExists($image->medium_path);
     $disk->assertExists($image->large_path);
 
     $manager = ImageManager::usingDriver(GdDriver::class);
-    $thumbnail = $manager->decodePath(Storage::disk('public')->path($image->thumbnail_path));
-    $medium = $manager->decodePath(Storage::disk('public')->path($image->medium_path));
-    $large = $manager->decodePath(Storage::disk('public')->path($image->large_path));
+    $thumbnail = $manager->decodePath((new Storage)->disk('public')->path($image->thumbnail_path));
+    $medium = $manager->decodePath((new Storage)->disk('public')->path($image->medium_path));
+    $large = $manager->decodePath((new Storage)->disk('public')->path($image->large_path));
 
     expect($thumbnail->width())->toBeLessThanOrEqual(150);
     expect($thumbnail->height())->toBeLessThanOrEqual(150);

@@ -20,12 +20,26 @@
                     @php
                         $product = \App\Models\Product::find($item['product_id']);
                         $base = $product ? (float) $product->price : 0;
-                        $qty = (int) ($item['quantity'] ?? 1);
+                        // Compute total qty as sum of all size quantities when multi-size is used
+                        $qty = (isset($item['quantities']) && is_array($item['quantities']))
+                            ? array_sum($item['quantities'])
+                            : (int) ($item['quantity'] ?? 1);
                         $disc = $product ? $product->getPriceForQuantity($qty) : 0;
                         $isDiscounted = $disc > 0 && $disc < $base;
                         $catSlug = $product?->category?->slug ?? 'catalogo';
-                        $productImage = $product ? $product->getFirstMediaUrl('images', 'thumbnail') : null;
-                        $displayImage = $productImage ?: ($item['image_url'] ?? null);
+
+                        // Find the correct image for the chosen color
+                        $displayImage = null;
+                        if ($product && isset($item['color_id'])) {
+                            $colorImage = $product->images()->where('color_id', $item['color_id'])->first();
+                            if ($colorImage) {
+                                $displayImage = $colorImage->image_url;
+                            }
+                        }
+
+                        if (!$displayImage) {
+                            $displayImage = $product ? $product->getFirstMediaUrl('images', 'thumbnail') : ($item['image_url'] ?? null);
+                        }
                     @endphp
 
                     <div class="bg-surface-container-lowest p-6 flex flex-col md:flex-row gap-6 items-start md:items-center border-l-4 border-primary">
@@ -53,14 +67,65 @@
                                         </span>
                                     </div>
 
-                                    <div class="flex flex-wrap gap-x-4 gap-y-1">
+                                    <div class="flex flex-wrap gap-x-4 gap-y-2 mt-1">
                                         <p class="font-mono text-xs text-secondary">
                                             <span class="text-primary font-bold">Colore:</span> {{ $item['color_name'] ?? 'N/A' }}
                                         </p>
-                                        @if(!empty($item['size_name']))
-                                            <p class="font-mono text-xs text-secondary">
-                                                <span class="text-primary font-bold">Taglia:</span> {{ $item['size_name'] }}
-                                            </p>
+
+                                        @if(isset($item['quantities']) && is_array($item['quantities']))
+                                            {{-- Multi-size: per-size inline quantity controls --}}
+                                            @foreach($item['quantities'] as $sizeId => $sizeQty)
+                                                @if($sizeQty > 0)
+                                                    @php $size = \App\Models\Size::find($sizeId); @endphp
+                                                    <form action="{{ route('cart.update') }}" method="POST"
+                                                          class="flex items-center gap-1">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="key" value="{{ $jobId }}">
+                                                        <input type="hidden" name="update_type" value="size">
+                                                        <input type="hidden" name="size_id" value="{{ $sizeId }}">
+                                                        <span class="font-mono text-xs text-secondary mr-1">
+                                                            <span class="text-primary font-bold">{{ $size?->size_name ?? $sizeId }}:</span>
+                                                        </span>
+                                                        <button type="submit" name="quantity" value="{{ max(0, $sizeQty - 1) }}"
+                                                            class="w-6 h-6 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors text-secondary">
+                                                            <span class="material-symbols-outlined text-xs">remove</span>
+                                                        </button>
+                                                        <div class="w-10 h-6 flex items-center justify-center font-mono text-xs bg-surface-container-lowest border-x border-surface-container">
+                                                            {{ $sizeQty }}
+                                                        </div>
+                                                        <button type="submit" name="quantity" value="{{ $sizeQty + 1 }}"
+                                                            class="w-6 h-6 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors text-secondary">
+                                                            <span class="material-symbols-outlined text-xs">add</span>
+                                                        </button>
+                                                        <span class="font-mono text-[10px] text-secondary ml-1">pz</span>
+                                                    </form>
+                                                @endif
+                                            @endforeach
+
+                                        @elseif(!empty($item['size_name']))
+                                            {{-- Single-size: inline quantity control next to size --}}
+                                            <form action="{{ route('cart.update') }}" method="POST"
+                                                  class="flex items-center gap-1">
+                                                @csrf
+                                                @method('PUT')
+                                                <input type="hidden" name="key" value="{{ $jobId }}">
+                                                <span class="font-mono text-xs text-secondary mr-1">
+                                                    <span class="text-primary font-bold">Taglia:</span> {{ $item['size_name'] }}
+                                                </span>
+                                                <button type="submit" name="quantity" value="{{ max(0, $qty - 1) }}"
+                                                    class="w-6 h-6 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors text-secondary">
+                                                    <span class="material-symbols-outlined text-xs">remove</span>
+                                                </button>
+                                                <div class="w-10 h-6 flex items-center justify-center font-mono text-xs bg-surface-container-lowest border-x border-surface-container">
+                                                    {{ $qty }}
+                                                </div>
+                                                <button type="submit" name="quantity" value="{{ $qty + 1 }}"
+                                                    class="w-6 h-6 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors text-secondary">
+                                                    <span class="material-symbols-outlined text-xs">add</span>
+                                                </button>
+                                                <span class="font-mono text-[10px] text-secondary ml-1">pz</span>
+                                            </form>
                                         @endif
                                     </div>
 
@@ -81,12 +146,13 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <a href="{{ route('product', ['category' => $catSlug, 'slug' => $item['product_slug']]) }}"
+                                    <a href="{{ route('product', ['category' => $catSlug, 'slug' => $item['product_slug'], 'color_id' => $item['color_id'] ?? null, 'job_id' => $jobId]) }}"
                                        class="text-xs font-bold uppercase text-primary hover:underline flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">edit</span> Modifica
                                     </a>
-                                    <form action="{{ route('cart.remove') }}" method="DELETE">
+                                    <form action="{{ route('cart.remove') }}" method="POST">
                                         @csrf
+                                        @method('DELETE')
                                         <input type="hidden" name="key" value="{{ $jobId }}">
                                         <button type="submit" class="text-secondary hover:text-red-600 transition-colors">
                                             <span class="material-symbols-outlined">close</span>
@@ -95,28 +161,35 @@
                                 </div>
                             </div>
 
-                            <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
-                                <form action="{{ route('cart.update') }}" method="PUT" class="flex items-center gap-2">
-                                    @csrf
-                                    <input type="hidden" name="key" value="{{ $jobId }}">
-                                    <span class="text-xs font-bold uppercase text-secondary mr-4">Qtà</span>
-                                    <button type="submit" name="quantity" value="{{ $qty - 1 }}"
-                                        class="w-8 h-8 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
-                                        <span class="material-symbols-outlined text-sm">remove</span>
-                                    </button>
-                                    <div class="w-12 h-8 flex items-center justify-center font-mono text-sm bg-surface-container-lowest border-x border-surface-container">
-                                        {{ $qty }}
-                                    </div>
-                                    <button type="submit" name="quantity" value="{{ $qty + 1 }}"
-                                        class="w-8 h-8 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
-                                        <span class="material-symbols-outlined text-sm">add</span>
-                                    </button>
-                                </form>
+                            {{-- Global QTÀ control: only for no-size products (e.g. business cards) --}}
+                            @if(!isset($item['quantities']) && empty($item['size_name']))
+                                <div class="mt-6 flex flex-wrap items-center gap-2">
+                                    <form action="{{ route('cart.update') }}" method="POST" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="key" value="{{ $jobId }}">
+                                        <span class="text-xs font-bold uppercase text-secondary mr-4">Qtà</span>
+                                        <button type="submit" name="quantity" value="{{ max(0, $qty - 1) }}"
+                                            class="w-8 h-8 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
+                                            <span class="material-symbols-outlined text-sm">remove</span>
+                                        </button>
+                                        <div class="w-12 h-8 flex items-center justify-center font-mono text-sm bg-surface-container-lowest border-x border-surface-container">
+                                            {{ $qty }}
+                                        </div>
+                                        <button type="submit" name="quantity" value="{{ $qty + 1 }}"
+                                            class="w-8 h-8 bg-surface-container hover:bg-surface-container-high flex items-center justify-center transition-colors">
+                                            <span class="material-symbols-outlined text-sm">add</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
 
+                            {{-- Price summary --}}
+                            <div class="mt-4 flex justify-end">
                                 <div class="text-right">
                                     <p class="text-xs text-secondary uppercase font-bold tracking-tighter">Prezzo Unitario</p>
                                     @if ($isDiscounted)
-                                        <p class la="text-sm text-gray-400 line-through font-mono">€ {{ number_format($base, 2) }}</p>
+                                        <p class="text-sm text-gray-400 line-through font-mono">€ {{ number_format($base, 2) }}</p>
                                         <p class="text-xl font-black text-primary">€ {{ number_format($disc, 2) }}</p>
                                         <p class="text-xs text-green-600 font-bold">Sconto Quantità ({{ $qty }} pz)</p>
                                         <p class="text-xs text-secondary mt-1">Subtotale Job: € {{ number_format($disc * $qty, 2) }}</p>
@@ -154,7 +227,9 @@
                         foreach ($items as $item) {
                             $p = \App\Models\Product::find($item['product_id']);
                             if ($p) {
-                                $qty = (int) ($item['quantity'] ?? 1);
+                                $qty = (isset($item['quantities']) && is_array($item['quantities']))
+                                    ? array_sum($item['quantities'])
+                                    : (int) ($item['quantity'] ?? 1);
                                 $b = (float) $p->price;
                                 $d = $p->getPriceForQuantity($qty);
                                 $totalSavings += max(0, ($b - $d) * $qty);

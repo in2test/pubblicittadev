@@ -28,7 +28,7 @@ class ProductsTable
                 TextColumn::make('sku')
                     ->searchable()
                     ->tooltip(function (Product $record): ?HtmlString {
-                        $url = $record->getFirstImage()?->thumbnail_url ?? $record->getThumbnailUrl();
+                        $url = $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl();
                         if (! $url) {
                             return null;
                         }

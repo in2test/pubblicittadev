@@ -101,9 +101,9 @@ it('skips the remote image from the combined image gallery once it is downloaded
         ],
     ]);
 
-    Storage::disk('public')->makeDirectory('temp');
+    (new Storage)->disk('public')->makeDirectory('temp');
 
-    $temporaryPath = Storage::disk('public')->path('temp/test-image.png');
+    $temporaryPath = (new Storage)->disk('public')->path('temp/test-image.png');
     $imageResource = imagecreatetruecolor(1, 1);
     imagesavealpha($imageResource, true);
     $transparent = imagecolorallocatealpha($imageResource, 0, 0, 0, 127);
@@ -112,7 +112,7 @@ it('skips the remote image from the combined image gallery once it is downloaded
     imagedestroy($imageResource);
 
     $media = $product
-        ->addMedia(Storage::disk('public')->path('temp/test-image.png'))
+        ->addMedia((new Storage)->disk('public')->path('temp/test-image.png'))
         ->usingName('Downloaded remote')
         ->withCustomProperties([
             'remote_resource_url' => [
@@ -147,8 +147,8 @@ it('removes the image record when a downloaded local image is deleted', function
         ],
     ]);
 
-    Storage::disk('public')->makeDirectory('temp');
-    $temporaryPath = Storage::disk('public')->path('temp/test-image.png');
+    (new Storage)->disk('public')->makeDirectory('temp');
+    $temporaryPath = (new Storage)->disk('public')->path('temp/test-image.png');
     $imageResource = imagecreatetruecolor(1, 1);
     imagesavealpha($imageResource, true);
     $transparent = imagecolorallocatealpha($imageResource, 0, 0, 0, 127);

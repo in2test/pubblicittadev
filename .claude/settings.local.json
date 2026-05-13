@@ -16,7 +16,8 @@
       "Bash(vendor/bin/larastan analyze:*)",
       "Bash(vendor/bin/phpstan analyze:*)",
       "Bash(./vendor/bin/phpstan analyze *)",
-      "Bash(php -m)"
+      "Bash(php -m)",
+      "Bash(dir *)"
     ]
   },
   "enableAllProjectMcpServers": true,
