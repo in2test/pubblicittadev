@@ -1,5 +1,9 @@
 {
-    "agents": ["claude_code", "copilot", "gemini"],
+    "agents": [
+        "claude_code",
+        "copilot",
+        "gemini"
+    ],
     "cloud": false,
     "guidelines": true,
     "mcp": true,
