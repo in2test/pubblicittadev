@@ -115,13 +115,13 @@ class ProductSynchronizer
                 Image::updateOrCreate([
                     'product_id' => $product->id,
                     'image_url' => $img['url'],
+                    'color_id' => $img['color_id'] ?? null,
                 ], [
                     'order_by' => $remoteImageOrder++,
                     'image_description' => $product->name,
-                    'color_id' => $img['color_id'] ?? null,
-                    'thumbnail_url' => $img['thumb'] ?? null,
-                    'medium_url' => $img['medium'] ?? null,
-                    'large_url' => $img['large'] ?? null,
+                    'thumbnail_url' => $img['thumb'] ?: null,
+                    'medium_url' => $img['medium'] ?: null,
+                    'large_url' => $img['large'] ?: null,
                 ]);
                 Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
             }
@@ -232,5 +232,49 @@ class ProductSynchronizer
             'variations.color',
             'variations.size',
         ]);
+    }
+
+    /**
+     * Fast synchronization of just the quantities for all variations.
+     */
+    public function syncAvailability(Product $product): void
+    {
+        if ($product->type !== Product::TYPE_NEWWAVE || ! $product->sku) {
+            return;
+        }
+
+        $data = $this->apiClient->getProductAvailability($product->sku);
+
+        if (empty($data['variations'])) {
+            return;
+        }
+
+        foreach ($data['variations'] as $variationData) {
+            if (empty($variationData['skus'])) {
+                continue;
+            }
+
+            foreach ($variationData['skus'] as $item) {
+                $actualAvailability = (int) $item['availability'];
+                // Apply halving logic: floor(actual / 2)
+                $halvedQuantity = (int) floor($actualAvailability / 2);
+
+                $sku = $item['sku'];
+
+                // We update quantity and availability flag based on sku.
+                // Notice we do not upsert here, we simply update existing variations
+                // because we only want to update availability, not create missing mappings.
+                ProductVariation::where('product_id', $product->id)
+                    ->where('sku', $sku)
+                    ->update([
+                        'quantity' => $halvedQuantity,
+                        'is_available' => $halvedQuantity > 0,
+                        'updated_at' => now(),
+                    ]);
+            }
+        }
+
+        // Touch the product so its updated_at is refreshed
+        $product->touch();
     }
 }

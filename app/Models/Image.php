@@ -32,9 +32,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int|null $category_id
  * @property int|null $color_id
  * @property int $order_by
- * @property-read Product $product
- * @property-read Category $category
- * @property-read Color $color
+ * @property-read Product|null $product
+ * @property-read Category|null $category
+ * @property-read Color|null $color
  */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
 class Image extends Model
@@ -59,7 +59,7 @@ class Image extends Model
                 ]);
 
                 if ($oldPaths !== []) {
-                    (new Storage)->disk('public')->delete($oldPaths);
+                    Storage::disk('public')->delete($oldPaths);
                 }
 
                 $image->generateImageVariants();
@@ -147,7 +147,7 @@ class Image extends Model
             $this->large_path,
         ]);
 
-        (new Storage)->disk('public')->delete($paths);
+        Storage::disk('public')->delete($paths);
     }
 
     protected function generateImageVariants(): void
@@ -156,7 +156,7 @@ class Image extends Model
             return;
         }
 
-        $disk = (new Storage)->disk('public');
+        $disk = Storage::disk('public');
         $originalPath = $disk->path($this->image_path);
 
         if (! file_exists($originalPath)) {

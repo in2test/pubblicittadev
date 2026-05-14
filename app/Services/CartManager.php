@@ -57,14 +57,21 @@ class CartManager
         Session::put(self::CART_KEY, $items);
     }
 
-    /**
-     * Update the quantity of a specific job in the cart.
-     *
-     * If the quantity is set to 0 or less, the job is removed from the cart.
-     *
-     * @param  string  $jobId  The unique UUID of the job in the cart.
-     * @param  int  $quantity  The new quantity for the job.
-     */
+    public function update(string $jobId, int $quantity): void
+    {
+        if ($quantity <= 0) {
+            $this->remove($jobId);
+
+            return;
+        }
+
+        $items = $this->getItems();
+        if (isset($items[$jobId])) {
+            $items[$jobId]['quantity'] = $quantity;
+            Session::put(self::CART_KEY, $items);
+        }
+    }
+
     /**
      * Update an existing job in the cart with a new configuration.
      *

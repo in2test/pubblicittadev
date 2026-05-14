@@ -86,4 +86,12 @@ class ProductAvailabilityService
     {
         $this->synchronizer->syncProduct($product);
     }
+
+    /**
+     * Synchronize just the availability/quantities.
+     */
+    public function syncAvailability(Product $product): void
+    {
+        $this->synchronizer->syncAvailability($product);
+    }
 }

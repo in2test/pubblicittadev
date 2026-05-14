@@ -6,8 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductAvailabilityService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -45,6 +48,18 @@ class ProductController extends Controller
         }
 
         $product = $productQuery->firstOrFail();
+
+        // If NewWave product and last update > 12 hours ago, fast sync availability
+        if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at && $product->updated_at->diffInHours(now()) >= 12) {
+            try {
+                $availabilityService = app(ProductAvailabilityService::class);
+                $availabilityService->syncAvailability($product);
+            } catch (Exception $e) {
+                Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
+                // Silently fail and use existing data
+            }
+        }
+
         $category = Category::where('slug', '=', $category, 'and')->firstOrFail();
         $colorId = $request->query('color_id') ?? null;
         $jobId = $request->query('job_id') ?? null;

@@ -228,13 +228,19 @@ class Product extends Model implements HasMedia
                 $localRemoteUrls[] = $remoteUrl;
             }
 
+            $colorIds = $media->getCustomProperty('color_ids');
+            $colorId = $media->getCustomProperty('color_id');
+            // Allow matching if color_ids contains the color, or fallback to color_id
+            $resolvedColorId = is_array($colorIds) && count($colorIds) > 0 ? $colorIds[0] : $colorId;
+
             $images[] = (object) [
                 'id' => (string) $media->id,
                 'url' => $media->getUrl(),
-                'thumb' => $media->getUrl('thumbnail'),
-                'medium' => $media->getUrl('medium') ?: $media->getUrl(),
-                'large' => $media->getUrl() ?: $media->getUrl(),
-                'color_id' => $media->getCustomProperty('color_id'),
+                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
+                'color_id' => $resolvedColorId,
+                'color_ids' => is_array($colorIds) ? $colorIds : ($colorId ? [$colorId] : []),
                 'order' => $media->order_column,
                 'type' => 'local',
                 'is_remote' => false,

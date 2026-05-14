@@ -119,10 +119,10 @@ class CartController extends Controller
         ]);
 
         $key = $request->input('key');
-        $items = app(\App\Services\CartManager::class)->getItems();
+        $items = app(CartManager::class)->getItems();
         $item = $items[$key] ?? null;
 
-        if (!$item) {
+        if (! $item) {
             return back()->with('error', 'Item not found in cart.');
         }
 
@@ -130,29 +130,28 @@ class CartController extends Controller
             $sizeId = $request->input('size_id');
             $qty = (int) $request->input('quantity');
 
-            if (!isset($item['quantities'])) {
+            if (! isset($item['quantities'])) {
                 $item['quantities'] = [];
             }
 
             $item['quantities'][$sizeId] = $qty;
 
-            // If total quantity is 0, we might want to remove the whole job,
-            // but for now we just update the map.
+            // Recalculate total quantity for the job
             $item['quantity'] = array_sum($item['quantities']);
         } else {
             // Legacy single-size update
             $item['quantity'] = (int) $request->input('quantity');
         }
 
-        // Update the item in the cart
-        $cartManager = app(\App\Services\CartManager::class);
-        $allItems = $cartManager->getItems();
-        $allItems[$key] = $item;
+        // If total quantity is 0 or less, remove the whole job
+        if ($item['quantity'] <= 0) {
+            $this->cart->remove($key);
 
-        // Since CartManager doesn't have a direct 'saveAll' or 'replace' for a single key
-        // and replace() is for the whole item, we use the session directly or add a method to CartManager.
-        // Actually, let's just use CartManager::replace for the updated item.
-        $cartManager->replace($key, $item);
+            return back()->with('success', 'Prodotto rimosso dal carrello!');
+        }
+
+        // Update the item in the cart
+        $this->cart->replace($key, $item);
 
         return back()->with('success', 'Carrello aggiornato!');
     }

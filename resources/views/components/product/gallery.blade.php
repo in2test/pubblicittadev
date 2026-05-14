@@ -5,7 +5,7 @@
         @foreach ($images as $index => $image)
             <a href="#slide{{ $index }}"
                class="shrink-0 w-20 h-20 lg:w-24 lg:h-32  transition-all overflow-hidden bg-white">
-                <img src="{{ $image->getThumbnailUrlAttribute() }}"
+                <img src="{{ $image->thumb }}"
                      class="w-full h-full object-contain object-top"
                      alt="Thumbnail {{ $index + 1 }}" />
             </a>
@@ -22,7 +22,7 @@
             <div id="slide{{ $index }}"
                 class="absolute inset-0 w-full h-full z-1 transition-all duration-700 ease-in-out target:z-10 target:translate-y-0 -translate-y-full">
                 <!-- Placeholder Image for debugging -->
-                <img src="{{ $image->getLargeUrlAttribute() }}"
+                <img src="{{ $image->large }}"
                      class="h-full w-full object-contain object-top"
                      alt="Product image {{ $index + 1 }}" />
             </div>
@@ -31,7 +31,7 @@
         <!-- Default State image -->
         <div class="absolute inset-0 z-0 bg-white flex items-center justify-center">
              <!-- Placeholder Image for debugging -->
-             <img src="{{ $images->first()?->getLargeUrlAttribute() }}"
+             <img src="{{ collect($images)->first()?->large }}"
                   class="h-full w-full object-contain object-top"
                   alt="Default image" />
         </div>

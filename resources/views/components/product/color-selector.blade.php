@@ -19,25 +19,25 @@
                 @if ($colorId == $color->id)
                     <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only" checked>
 
-                    <a href="{{ route('product', ['slug' => $product->slug, 'category' => $product->category->slug]) }}">
-                        <div class="w-5 h-5 lg:w-10 lg:h-10 border ring   transition-all cursor-pointer border-vividauburn-700 ring-vividauburn-700"
-                            @style(['background-color: ' . ($color->color_hex ?: ' #000')]) title="{{ $color->color_name }}"></div>
+                    <div class="relative group">
+                        <div class="w-5 h-5 lg:w-10 lg:h-10 border ring transition-all cursor-default border-vividauburn-700 ring-vividauburn-700"
+                            style="background-color: {{ $color->color_hex ?: '#000' }}" title="{{ $color->color_name }}"></div>
                         <div
                             class="absolute -top-8 left-1/2 -translate-x-1/2 bg-highstyle-50 text-peachsouffle-800 text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                             {{ $color->color_name }}
                         </div>
-                    </a>
+                    </div>
                 @else
                     <input type="radio" name="color_id" value="{{ $color->id }}" class="sr-only">
-                    <a
-                        href="{{ route('product', ['slug' => $product->slug, 'category' => $product->category->slug]) }}?color_id={{ $color->id }}">
-                        <div class="w-5 h-5 lg:w-10 lg:h-10 border ring transition-all cursor-pointer border-gray-600/20"
-                            @style(['background-color: ' . ($color->color_hex ?: ' #000')]) title="{{ $color->color_name }}"></div>
+                    
+                    <button type="button" wire:click="setColor({{ $color->id }})" class="relative group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                        <div class="w-5 h-5 lg:w-10 lg:h-10 border ring transition-all cursor-pointer border-gray-600/20 hover:border-gray-500"
+                            style="background-color: {{ $color->color_hex ?: '#000' }}" title="{{ $color->color_name }}"></div>
                         <div
-                            class="absolute -top-8 left-1/2 -translate-x-1/2 bg-highstyle-50 text-peachsouffle-800 text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            class="absolute -top-8 left-1/2 -translate-x-1/2 bg-highstyle-50 text-peachsouffle-800 text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                             {{ $color->color_name }}
                         </div>
-                    </a>
+                    </button>
                 @endif
             @endforeach
         </div>

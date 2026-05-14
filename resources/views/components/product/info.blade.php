@@ -1,9 +1,17 @@
-@props(['product'])
+@props(['product', 'totalQuantity' => 0, 'totalPrice' => 0.0])
 
 @php
     /** @var \App\Models\Product $product */
     $isAdmin = auth()->check() && auth()->user()->isAdmin();
     $adminEditUrl = $product->getAdminEditUrl();
+    
+    $priceData = $product->getDisplayPriceData($totalQuantity > 0 ? $totalQuantity : 1);
+    
+    $currentUnitPrice = $totalQuantity > 0 ? ($totalPrice / $totalQuantity) : $priceData['price'];
+    
+    $onRequest = $priceData['on_request'];
+    $isDiscounted = $priceData['is_discounted'] || ($currentUnitPrice < $priceData['base_price']);
+    $basePrice = $priceData['base_price'];
 @endphp
 
 <div class="mb-2">
@@ -46,20 +54,19 @@
 @endif
 
 <div class="flex items-baseline gap-4 mb-8">
-    <template x-if="!onRequest">
+    @if(!$onRequest)
         <div class="flex items-baseline gap-4">
             <div class="flex items-baseline gap-2">
-                <span class="text-3xl font-black text-primary" x-text="'€' + unitPrice.toFixed(2)"></span>
-                <template x-if="unitPrice < basePrice">
-                    <span class="text-lg font-light text-gray-500 line-through tracking-tight" x-text="'€' + basePrice.toFixed(2)"></span>
-                </template>
+                <span class="text-3xl font-black text-primary">€{{ number_format($currentUnitPrice, 2, ',', '.') }}</span>
+                @if($currentUnitPrice < $basePrice)
+                    <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format($basePrice, 2, ',', '.') }}</span>
+                @endif
             </div>
             <span class="text-xs font-mono text-gray-800">IVA INCLUSA</span>
         </div>
-    </template>
-    <template x-if="onRequest">
+    @else
         <span class="text-3xl font-black text-primary uppercase">Su Richiesta</span>
-    </template>
+    @endif
 </div>
 
 <div class="mb-8 p-6 bg-surface-container-low border-l-4 border-primary">

@@ -52,7 +52,7 @@ class AdminProductActionsTest extends TestCase
             ->post(route('admin.products.sync', ['product' => $product->slug]));
 
         $response->assertRedirect();
-        (new Bus)->assertDispatched(SyncNewWaveProductJob::class, fn ($job) => $job->productId === $product->id);
+        Bus::assertDispatched(SyncNewWaveProductJob::class, fn ($job) => $job->productId === $product->id);
     }
 
     public function test_non_admin_cannot_perform_admin_product_actions(): void

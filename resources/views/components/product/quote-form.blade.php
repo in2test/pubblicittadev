@@ -1,4 +1,4 @@
-@props(['product', 'colorId'])
+@props(['product', 'colorId', 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null])
 
 @php
     /** @var \App\Models\Product $product */
@@ -34,17 +34,10 @@
                 <div class="grid grid-cols-2 gap-3">
                     @foreach ($product->printPlacements as $placement)
                         <label
-                            class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container"
-                            :class="selectedPlacements.find(p => p.id == {{ $placement->id }}) ? 'border-primary bg-primary/5' :
-                                ''">
+                            class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container {{ in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements) ? 'border-primary bg-primary/5' : '' }}">
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" name="print_placements[]" value="{{ $placement->id }}"
-                                    class="h-4 w-4 text-primary"
-                                    @change="
-                                    $el.checked 
-                                        ? selectedPlacements.push({ id: {{ $placement->id }}, price: {{ (float) ($placement->pivot->additional_price ?? 0) }} })
-                                        : selectedPlacements = selectedPlacements.filter(p => p.id != {{ $placement->id }})
-                                ">
+                                <input type="checkbox" wire:model.live="selectedPlacements" value="{{ $placement->id }}"
+                                    class="h-4 w-4 text-primary">
                                 <span class="text-sm font-bold">{{ $placement->name }}</span>
                             </div>
                             @if (($placement->pivot->additional_price ?? 0) > 0)
@@ -101,29 +94,18 @@
             @enderror
         </div>
 
-        {{-- Actions and Discounts --}}
+        {{-- Actions --}}
         <div class="grid grid-cols-1 gap-3">
-            @if ($discounts->isNotEmpty())
-                <div class="p-3 bg-surface-container rounded text-xs">
-                    <span class="font-bold">Sconti quantità:</span>
-                    @foreach ($discounts as $d)
-                        <span class="ml-2 inline-block">• {{ $d->min_quantity }}+ pezzi =
-                            -{{ $d->discount_value }}{{ $d->discount_type === 'percent' ? '%' : '€' }}</span>
-                    @endforeach
-                </div>
-            @endif
-
             <button type="submit"
                 class="w-full bg-primary text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-primary-700">
                 Richiedi Preventivo Personalizzato
             </button>
 
-            <button type="button" :disabled="totalQuantity < 1"
-                :class="totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : ''" @click="$wire.addToCart()"
-                class="w-full bg-gray-950 text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-black">
-                <span x-text="$wire.jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello'"></span>
-                (<span x-text="totalQuantity">0</span> pezzi - €<span
-                    x-text="totalPrice">0.00</span>)
+            <button type="button" @if($totalQuantity < 1) disabled @endif
+                class="w-full bg-gray-950 text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-black {{ $totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : '' }}" 
+                wire:click="addToCart">
+                <span>{{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }}</span>
+                ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
             </button>
 
             <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}"

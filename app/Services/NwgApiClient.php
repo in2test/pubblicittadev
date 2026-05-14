@@ -134,6 +134,46 @@ class NwgApiClient
         }
     }
 
+    public function getProductAvailability(string $productNumber): ?array
+    {
+        $query = <<<'GRAPHQL'
+            query getProductAvailability($productNumber: String!, $language: String!) {
+                productById(productNumber: $productNumber, language: $language) {
+                    variations {
+                        skus {
+                            availability
+                            sku
+                        }
+                    }
+                }
+            }
+        GRAPHQL;
+
+        try {
+            $response = Http::withoutVerifying()
+                ->withToken($this->token)
+                ->post($this->endpoint, [
+                    'query' => $query,
+                    'variables' => [
+                        'productNumber' => $productNumber,
+                        'language' => 'it',
+                    ],
+                ]);
+
+            if (! $response->successful()) {
+                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
+
+                return null;
+            }
+
+            return $response->json()['data']['productById'] ?? null;
+        } catch (Exception $e) {
+            Log::error("NWG API Exception: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
     // Fetch full GraphQL payload using the exact provided query
     public function fetchFullGraphQLProductData(string $productNumber, string $language): ?array
     {

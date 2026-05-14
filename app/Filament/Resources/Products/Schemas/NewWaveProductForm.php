@@ -93,7 +93,7 @@ class NewWaveProductForm
                                             );
                                         }
 
-                                        return ($record->getFirstImage()->thumbnail_url) ?? ($record->getThumbnailUrl() ?? 'Sconosciuto');
+                                        return $record->getFirstImage()->thumbnail_url ?? ($record->getThumbnailUrl() ?? 'Sconosciuto');
                                     }),
                                 Select::make('category_id')
                                     ->label('Categoria')
