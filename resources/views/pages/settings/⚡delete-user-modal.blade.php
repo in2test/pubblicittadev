@@ -19,7 +19,7 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        tap(auth()->user(), $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
     }

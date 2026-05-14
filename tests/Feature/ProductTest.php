@@ -12,7 +12,7 @@ it('deletes attached images from storage when a product is deleted', function ()
 
     $product = Product::factory()->create();
 
-    $imageFile = UploadedFile::fake()->image('test-image.jpg');
+    $imageFile = UploadedFile::fake()->image('test-image.png');
 
     $media = $product->addMedia($imageFile->getPathname())
         ->usingName('Product Image')

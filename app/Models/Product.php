@@ -359,7 +359,7 @@ class Product extends Model implements HasMedia
      */
     public function getAdditionalPriceForPlacements(array $placementIds): float
     {
-        if (empty($placementIds)) {
+        if ($placementIds === []) {
             return 0.0;
         }
 
@@ -432,19 +432,19 @@ class Product extends Model implements HasMedia
             ->width(150)
             ->height(150)
             ->sharpen(10)
-            ->format('webp');
+            ->format('png');
 
         $this->addMediaConversion('medium')
             ->width(600)
             ->height(600)
             ->sharpen(10)
-            ->format('webp');
+            ->format('png');
 
         $this->addMediaConversion('large')
             ->width(1200)
             ->height(1200)
             ->sharpen(10)
-            ->format('webp');
+            ->format('png');
     }
 
     /**

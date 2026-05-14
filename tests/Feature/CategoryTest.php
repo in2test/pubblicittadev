@@ -34,7 +34,7 @@ it('deletes attached image from storage when a category is deleted', function ()
 
     $category = Category::factory()->create();
 
-    $imageFile = UploadedFile::fake()->image('category-image.jpg');
+    $imageFile = UploadedFile::fake()->image('category-image.png');
 
     $media = $category->addMedia($imageFile->getPathname())
         ->usingName('Category Image')

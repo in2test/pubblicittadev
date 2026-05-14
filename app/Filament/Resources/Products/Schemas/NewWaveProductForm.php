@@ -14,13 +14,13 @@ use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -76,9 +76,9 @@ class NewWaveProductForm
                                     ->disabled(fn (?Product $record) => $record?->sync_status !== SyncStatus::Synced)
                                     ->helperText(fn (?Product $record) => $record?->sync_status !== SyncStatus::Synced ? 'Attivabile solo dopo una sincronizzazione completa con successo.' : 'Attiva per rendere visibile il prodotto.')
                                     ->default(false),
-                                Placeholder::make('sync_progress_display')
+                                TextEntry::make('sync_progress_display')
                                     ->label('Stato Sincronizzazione')
-                                    ->content(function (?Product $record) {
+                                    ->state(function (?Product $record) {
                                         if (! $record instanceof Product) {
                                             return 'Non sincronizzato';
                                         }
@@ -245,9 +245,9 @@ class NewWaveProductForm
                             ->grid(5)
                             ->schema([
                                 Hidden::make('id'),
-                                Placeholder::make('preview')
+                                TextEntry::make('preview')
                                     ->label('Anteprima')
-                                    ->content(fn (?Image $record) => $record instanceof Image ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
+                                    ->state(fn (?Image $record) => $record instanceof Image ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
                                 Select::make('color_id')
                                     ->label('Colore associato')
                                     ->options($colorOptions)

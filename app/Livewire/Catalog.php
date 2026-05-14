@@ -212,7 +212,7 @@ class Catalog extends Component
     protected function getBaseFilteredQuery(): Builder
     {
         $category = $this->getCategory();
-        $showInactive = Auth::check() && Auth::user()?->isAdmin() === true;
+        $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
         return Product::query()
             ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
@@ -260,7 +260,7 @@ class Catalog extends Component
     {
         $category = $this->getCategory();
 
-        $showInactive = Auth::check() && Auth::user()?->isAdmin() === true;
+        $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
         // Grouped view: only when viewing a category with children and NO filters are active
         if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {

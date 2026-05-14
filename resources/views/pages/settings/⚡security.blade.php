@@ -56,7 +56,7 @@ new #[Title('Security settings')] class extends Component {
             throw $e;
         }
 
-        Auth::user()->update([
+        auth()->user()->update([
             'password' => $validated['password'],
         ]);
 

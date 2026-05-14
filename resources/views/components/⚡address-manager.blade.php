@@ -3,11 +3,11 @@
 use App\Models\Address;
 use Livewire\Volt\Component;
 
-new class extends Component
+new class extends \Livewire\Component
 {
     public $addresses;
     public $showModal = false;
-    public $editingAddress = null;
+    public $editingAddress;
 
     public $type = 'shipping';
     public $name = '';
@@ -19,24 +19,24 @@ new class extends Component
     public $phone = '';
     public $is_default = false;
 
-    public function mount()
+    public function mount(): void
     {
         $this->loadAddresses();
     }
 
-    public function loadAddresses()
+    public function loadAddresses(): void
     {
         $this->addresses = auth()->user()->addresses()->latest()->get();
     }
 
-    public function openCreate()
+    public function openCreate(): void
     {
         $this->reset(['editingAddress', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'is_default']);
         $this->name = auth()->user()->name;
         $this->showModal = true;
     }
 
-    public function edit(Address $address)
+    public function edit(Address $address): void
     {
         if ($address->user_id !== auth()->id()) return;
 
@@ -53,7 +53,7 @@ new class extends Component
         $this->showModal = true;
     }
 
-    public function save()
+    public function save(): void
     {
         $this->validate([
             'name' => 'required|string|max:255',
@@ -90,7 +90,7 @@ new class extends Component
         $this->loadAddresses();
     }
 
-    public function delete(Address $address)
+    public function delete(Address $address): void
     {
         if ($address->user_id !== auth()->id()) return;
         $address->delete();

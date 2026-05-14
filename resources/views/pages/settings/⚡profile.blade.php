@@ -19,8 +19,8 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        $this->name = auth()->user()->name;
+        $this->email = auth()->user()->email;
     }
 
     /**
@@ -28,7 +28,7 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function updateProfileInformation(): void
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
         $validated = $this->validate($this->profileRules($user->id));
 
@@ -48,7 +48,7 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function resendVerificationNotification(): void
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
         if ($user->hasVerifiedEmail()) {
             $this->redirectIntended(default: route('dashboard', absolute: false));
@@ -58,20 +58,20 @@ new #[Title('Profile settings')] class extends Component {
 
         $user->sendEmailVerificationNotification();
 
-        Session::flash('status', 'verification-link-sent');
+        session()->flash('status', 'verification-link-sent');
     }
 
     #[Computed]
     public function hasUnverifiedEmail(): bool
     {
-        return Auth::user() instanceof MustVerifyEmail && ! Auth::user()->hasVerifiedEmail();
+        return auth()->user() instanceof MustVerifyEmail && ! auth()->user()->hasVerifiedEmail();
     }
 
     #[Computed]
     public function showDeleteUser(): bool
     {
-        return ! Auth::user() instanceof MustVerifyEmail
-            || (Auth::user() instanceof MustVerifyEmail && Auth::user()->hasVerifiedEmail());
+        return ! auth()->user() instanceof MustVerifyEmail
+            || (auth()->user() instanceof MustVerifyEmail && auth()->user()->hasVerifiedEmail());
     }
 }; ?>
 

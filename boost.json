@@ -2,7 +2,8 @@
     "agents": [
         "claude_code",
         "copilot",
-        "gemini"
+        "gemini",
+        "opencode"
     ],
     "cloud": false,
     "guidelines": true,

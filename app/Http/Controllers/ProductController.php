@@ -39,7 +39,7 @@ class ProductController extends Controller
             'media',
         ]);
 
-        if (! $product->is_active && ! Auth::user()?->isAdmin()) {
+        if (! $product->is_active && ! auth()->user()?->isAdmin()) {
             abort(404);
         }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\StatefulGuard;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -35,7 +35,7 @@ class AuthModal extends Component
     #[Computed]
     public function currentUser(): ?User
     {
-        $user = Auth::user();
+        $user = auth()->user();
 
         return $user instanceof User ? $user : null;
     }
@@ -71,7 +71,10 @@ class AuthModal extends Component
             'password' => $this->password,
         ];
 
-        if (auth()->attempt($credentials)) {
+        /** @var StatefulGuard $guard */
+        $guard = auth();
+
+        if ($guard->attempt($credentials)) {
             $this->close();
             $this->js('window.location.reload()');
 
@@ -98,14 +101,20 @@ class AuthModal extends Component
             'is_active' => true,
         ]);
 
-        auth()->login($user);
+        /** @var StatefulGuard $guard */
+        $guard = auth();
+
+        $guard->login($user);
         $this->close();
         $this->js('window.location.reload()');
     }
 
     public function logout(): void
     {
-        auth()->logout();
+        /** @var StatefulGuard $guard */
+        $guard = auth();
+
+        $guard->logout();
         $this->close();
     }
 

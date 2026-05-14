@@ -77,7 +77,7 @@ class CartManager
         $item = $items[$jobId];
 
         if ($sizeId !== null) {
-            $item['quantities'] = $item['quantities'] ?? [];
+            $item['quantities'] ??= [];
             $item['quantities'][$sizeId] = $quantity;
             $item['quantity'] = array_sum($item['quantities']);
         } else {
@@ -161,7 +161,7 @@ class CartManager
      */
     public function count(): int
     {
-        return (int) collect($this->getItems())->sum(fn ($item) => $this->getItemQuantity($item));
+        return (int) collect($this->getItems())->sum(fn (array $item) => $this->getItemQuantity($item));
     }
 
     /**
@@ -187,7 +187,7 @@ class CartManager
      */
     public function total(): float
     {
-        $total = collect($this->getItems())->sum(function ($item) {
+        $total = collect($this->getItems())->sum(function (array $item): int|float {
             $qty = $this->getItemQuantity($item);
             $price = (float) ($item['price'] ?? 0);
 

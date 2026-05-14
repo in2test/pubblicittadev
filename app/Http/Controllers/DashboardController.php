@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -16,13 +18,13 @@ class DashboardController extends Controller
     {
         $quotes = $request->user()->quotes()->with('items.product')->latest()->paginate(10);
 
-        return view('dashboard.quotes', compact('quotes'));
+        return view('dashboard.quotes', ['quotes' => $quotes]);
     }
 
     public function addresses(Request $request): View
     {
         $addresses = $request->user()->addresses()->latest()->get();
 
-        return view('dashboard.addresses', compact('addresses'));
+        return view('dashboard.addresses', ['addresses' => $addresses]);
     }
 }
