@@ -33,18 +33,13 @@ class CategoryController extends Controller
     /**
      * Display a specific category and its products.
      *
-     * @param  Request  $request  The incoming HTTP request.
-     * @param  string  $slug  The unique slug of the category to retrieve.
+     * @param  Category  $category  The category model (automatically bound by slug).
      * @return View The rendered category view.
-     *
-     * @throws ModelNotFoundException If the category slug is not found.
      */
-    public function show(Request $request, string $slug): View
+    public function show(Category $category): View
     {
-        $category = Category::query()->where('slug', '=', $slug, 'and')->with('parent')->firstOrFail();
+        $category->load('parent');
 
-        return view('categories', [
-            'category' => $category,
-        ]);
+        return view('categories', compact('category'));
     }
 }

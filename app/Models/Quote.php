@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * acting as the header for a set of specific QuoteItems.
  */
 #[Fillable([
+    'user_id',
     'quote_number',
     'customer_name',
     'customer_email',
@@ -30,6 +31,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Quote extends Model
 {
     use HasFactory;
+
+    /**
+     * Get the user who requested this quote.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the items associated with this quote.

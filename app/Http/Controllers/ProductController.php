@@ -27,56 +27,36 @@ class ProductController extends Controller
      * @param  string  $slug  The product slug from the URL
      * @param  Request  $request  The incoming HTTP request
      */
-    public function show(string $category, string $slug, Request $request): View
+    public function show(Category $category, Product $product, Request $request): View
     {
-        // Fetch the product with all necessary relationships for the detail page
-        $productQuery = Product::where('slug', '=', $slug, 'and')
-            ->with([
-                'category',
-                'category.parent',
-                'pricingTiers',
-                'variations.color',
-                'variations.size',
-                'variations.printPlacement',
-                'variations.printSide',
-                'media',
-            ]);
+        $product->load([
+            'category.parent',
+            'pricingTiers',
+            'variations.color',
+            'variations.size',
+            'variations.printPlacement',
+            'variations.printSide',
+            'media',
+        ]);
 
-        // Authorization: Only admins can view inactive products
-        if (! $this->shouldShowInactiveProducts()) {
-            $productQuery->where('is_active', '=', true, 'and');
+        if (! $product->is_active && ! Auth::user()?->isAdmin()) {
+            abort(404);
         }
-
-        $product = $productQuery->firstOrFail();
 
         // If NewWave product and last update > 12 hours ago, fast sync availability
-        if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at && $product->updated_at->diffInHours(now()) >= 12) {
+        if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at?->diffInHours(now()) >= 12) {
             try {
-                $availabilityService = app(ProductAvailabilityService::class);
-                $availabilityService->syncAvailability($product);
+                app(ProductAvailabilityService::class)->syncAvailability($product);
             } catch (Exception $e) {
                 Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
-                // Silently fail and use existing data
             }
         }
-
-        $category = Category::where('slug', '=', $category, 'and')->firstOrFail();
-        $colorId = $request->query('color_id') ?? null;
-        $jobId = $request->query('job_id') ?? null;
 
         return view('product', [
             'product' => $product,
             'category' => $category,
-            'colorId' => $colorId,
-            'jobId' => $jobId,
+            'colorId' => $request->query('color_id'),
+            'jobId' => $request->query('job_id'),
         ]);
-    }
-
-    /**
-     * Helper to determine if inactive products should be visible to the current user
-     */
-    private function shouldShowInactiveProducts(): bool
-    {
-        return Auth::check() && Auth::user()?->isAdmin() === true;
     }
 }

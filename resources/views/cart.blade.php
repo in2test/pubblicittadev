@@ -58,7 +58,7 @@
                                 <div class="space-y-1">
                                     <div class="flex items-center gap-2">
                                         <h3 class="text-xl font-bold uppercase tracking-tight">
-                                            <a href="{{ route('product', ['category' => $catSlug, 'slug' => $item['product_slug']]) }}">
+                                            <a href="{{ route('product', ['category' => $catSlug, 'product' => $item['product_slug']]) }}">
                                                 {{ $item['product_name'] }}
                                             </a>
                                         </h3>
@@ -146,7 +146,7 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <a href="{{ route('product', ['category' => $catSlug, 'slug' => $item['product_slug'], 'color_id' => $item['color_id'] ?? null, 'job_id' => $jobId]) }}"
+                                    <a href="{{ route('product', ['category' => $catSlug, 'product' => $item['product_slug'], 'color_id' => $item['color_id'] ?? null, 'job_id' => $jobId]) }}"
                                        class="text-xs font-bold uppercase text-primary hover:underline flex items-center gap-1">
                                         <span class="material-symbols-outlined text-sm">edit</span> Modifica
                                     </a>

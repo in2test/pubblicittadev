@@ -77,7 +77,7 @@ class ProductsTable
 
                         return route('product', [
                             'category' => (string) $category->slug,
-                            'slug' => (string) $record->getAttribute('slug'),
+                            'product' => (string) $record->getAttribute('slug'),
                         ]);
                     })
                     ->visible(fn (Product $record): bool => (bool) $record->category_id)

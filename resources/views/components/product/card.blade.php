@@ -15,7 +15,7 @@
 
 <article
     class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-vividauburn-700 transition-all duration-300 bg-gray-50">
-    <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'slug' => $product->slug]) }}"
+    <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug]) }}"
         class="flex flex-col h-full">
 
         {{-- Badges --}}

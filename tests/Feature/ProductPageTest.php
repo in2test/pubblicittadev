@@ -25,7 +25,7 @@ class ProductPageTest extends TestCase
             'price' => 75,
         ]);
 
-        $response = $this->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk();
         $response->assertViewHas('product');
@@ -40,7 +40,7 @@ class ProductPageTest extends TestCase
             'category_id' => $category->id,
         ]);
 
-        $response = $this->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertNotFound();
     }
@@ -54,7 +54,7 @@ class ProductPageTest extends TestCase
             'category_id' => $category->id,
         ]);
 
-        $response = $this->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk();
         $productData = $response->viewData('product');
@@ -71,7 +71,7 @@ class ProductPageTest extends TestCase
             'category_id' => $category->id,
         ]);
 
-        $response = $this->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk();
     }
@@ -80,7 +80,7 @@ class ProductPageTest extends TestCase
     {
         $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
 
-        $response = $this->get(route('product', ['category' => $category->slug, 'slug' => 'unknown-product']));
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => 'unknown-product']));
 
         $response->assertNotFound();
     }
@@ -89,7 +89,7 @@ class ProductPageTest extends TestCase
     {
         $product = Product::factory()->create(['is_active' => true]);
 
-        $response = $this->get(route('product', ['category' => 'unknown', 'slug' => $product->slug]));
+        $response = $this->get(route('product', ['category' => 'unknown', 'product' => $product->slug]));
 
         $response->assertNotFound();
     }
@@ -105,7 +105,7 @@ class ProductPageTest extends TestCase
 
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'is_active' => true]);
 
-        $response = $this->actingAs($admin)->get(route('product', ['category' => $category->slug, 'slug' => $product->slug]));
+        $response = $this->actingAs($admin)->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk();
         $response->assertViewHas('product');

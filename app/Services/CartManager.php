@@ -59,17 +59,38 @@ class CartManager
 
     public function update(string $jobId, int $quantity): void
     {
-        if ($quantity <= 0) {
+        $this->updateItemQuantity($jobId, $quantity);
+    }
+
+    /**
+     * Update the quantity of a specific job in the cart.
+     * Supports both single-size and multi-size (via sizeId) updates.
+     */
+    public function updateItemQuantity(string $jobId, int $quantity, ?int $sizeId = null): void
+    {
+        $items = $this->getItems();
+
+        if (! isset($items[$jobId])) {
+            return;
+        }
+
+        $item = $items[$jobId];
+
+        if ($sizeId !== null) {
+            $item['quantities'] = $item['quantities'] ?? [];
+            $item['quantities'][$sizeId] = $quantity;
+            $item['quantity'] = array_sum($item['quantities']);
+        } else {
+            $item['quantity'] = $quantity;
+        }
+
+        if ($item['quantity'] <= 0) {
             $this->remove($jobId);
 
             return;
         }
 
-        $items = $this->getItems();
-        if (isset($items[$jobId])) {
-            $items[$jobId]['quantity'] = $quantity;
-            Session::put(self::CART_KEY, $items);
-        }
+        $this->replace($jobId, $item);
     }
 
     /**
@@ -140,7 +161,19 @@ class CartManager
      */
     public function count(): int
     {
-        return array_sum(array_column($this->getItems(), 'quantity'));
+        return (int) collect($this->getItems())->sum(fn ($item) => $this->getItemQuantity($item));
+    }
+
+    /**
+     * Get the total quantity for a single cart item.
+     */
+    public function getItemQuantity(array $item): int
+    {
+        if (isset($item['quantities']) && is_array($item['quantities'])) {
+            return (int) array_sum($item['quantities']);
+        }
+
+        return (int) ($item['quantity'] ?? 1);
     }
 
     /**
@@ -154,32 +187,19 @@ class CartManager
      */
     public function total(): float
     {
-        $total = 0.0;
-        foreach ($this->getItems() as $item) {
+        $total = collect($this->getItems())->sum(function ($item) {
+            $qty = $this->getItemQuantity($item);
             $price = (float) ($item['price'] ?? 0);
 
-            // Recalculate price based on current product state and quantity discounts
             if (! empty($item['product_id'])) {
                 $product = Product::find((int) $item['product_id']);
                 if ($product) {
-                    // Use sum of all size quantities when multi-size quantities are stored
-                    $qty = (isset($item['quantities']) && is_array($item['quantities']))
-                        ? array_sum($item['quantities'])
-                        : (int) ($item['quantity'] ?? 1);
-
-                    $disc = $product->getPriceForQuantity($qty);
-                    if ($disc > 0) {
-                        $price = (float) $disc;
-                    }
+                    $price = $product->calculateFinalUnitPrice($qty, $item['print_placements'] ?? []);
                 }
             }
 
-            $qty = (isset($item['quantities']) && is_array($item['quantities']))
-                ? array_sum($item['quantities'])
-                : (int) ($item['quantity'] ?? 1);
-
-            $total += $price * max(0, $qty);
-        }
+            return $price * max(0, $qty);
+        });
 
         return (float) number_format($total, 2, '.', '');
     }

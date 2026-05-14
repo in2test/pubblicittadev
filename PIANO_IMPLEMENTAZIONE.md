@@ -67,13 +67,16 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ├── id, name, category, description, display_order
 
 📦 quotes (Preventivi / Pre-ordini)
-├── id, quote_number, customer_name, customer_email, customer_phone, customer_whatsapp
+├── id, user_id (FK), quote_number, customer_name, customer_email, customer_phone, customer_whatsapp
 ├── total_items, total_price, status, notes
 
 📦 quote_items
 ├── id, quote_id, product_id, color_id, quantity, unit_price, subtotal
 ├── customization_json (JSON con le opzioni selezionate)
 ├── design_file_path (Percorso file caricato)
+
+📦 addresses (NUOVO - Gestione Indirizzi Utente)
+├── id, user_id (FK), type (shipping|billing), name, street, city, state, zip, country, phone, is_default
 ```
 
 ---
@@ -110,6 +113,13 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 - [x] **Recalculation logic**: Sconti quantità applicati alla singola lavorazione per garantire precisione sui prezzi personalizzati.
 - [x] **Size Selector UI**: Interfaccia avanzata per selezione quantità multi-taglia con feedback "Total Articles".
 
+### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
+- [x] **User Management**: Ruoli (admin/client) e is_active.
+- [x] **Fortify Email Verification**: Obbligatoria per accedere alla dashboard.
+- [x] **Auth UI**: Modal Login/Register moderno con Flux UI.
+- [x] **Dashboard Cliente**: Visualizzazione cronologia preventivi associati.
+- [x] **Address Manager**: CRUD indirizzi in Livewire Volt + Flux UI.
+
 ---
 
 ## 📅 Checkpoint Aggiornati
@@ -119,11 +129,10 @@ MAGGIO 2026 (Stato Attuale)
 ├─ ✅ NewWave Sync v2.0 (Lazy-sync + Availability)
 ├─ ✅ Product Gallery v2.0 (Color mapping + Reordering)
 ├─ ✅ Job-Based Cart (Lavorazioni differenziate)
-├─ ✅ Admin Inventory Scaling
+├─ ✅ User Dashboard & Address Manager (Flux UI)
 └- ✅ Test Suite (145+ test Pest)
 
 PIANO PROSSIMI GIORNI
-├─ 🚧 User Profile & Dashboard Clienti
 ├─ 🚧 Stripe Payment Integration (Checkout)
 └─ 🚧 Order Management (Transizione da Quote a Order)
 ```
@@ -140,17 +149,17 @@ Creati **145 test** (Pest) che coprono:
 
 ## ⏭️ PHASE 2: Full E-commerce Transition
 
-### 📦 Modulo 1: L'Engine delle "Lavorazioni" (IN CORSO)
+### 📦 Modulo 1: L'Engine delle "Lavorazioni" (COMPLETATO)
 - [x] Refactoring del `CartManager` (Job-based).
 - [x] Logica Sconti per Lavorazione.
 - [x] Implementazione funzione "Modifica Lavorazione" nel carrello.
 
-### 👤 Modulo 2: User Lifecycle & Sicurezza
+### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
 - [x] User Management con ruoli (admin/client) e is_active.
 - [x] Filament UserResource.
-- [x] Login/Register modal Livewire.
-- [ ] Configurazione Fortify (Verifica Email).
-- [ ] Area "I miei Ordini" e gestione indirizzi.
+- [x] Login/Register modal Livewire (Refactored Flux UI).
+- [x] Configurazione Fortify (Verifica Email).
+- [x] Area "I miei Ordini" e gestione indirizzi.
 
 ### 💳 Modulo 3: Pagamenti & Checkout (Stripe)
 - [ ] Integrazione Stripe Checkout.

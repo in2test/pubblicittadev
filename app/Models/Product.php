@@ -326,9 +326,54 @@ class Product extends Model implements HasMedia
             return (float) $this->offer_price;
         }
 
+        // Priority 1: Product-specific pricing tiers
+        if ($tierPrice = $this->getTierPrice($quantity)) {
+            return $tierPrice;
+        }
+
+        // Priority 2: Category-based quantity discounts
         $service = app(QuantityDiscountService::class);
 
         return max(0.0, $service->calculatePrice($this, $quantity));
+    }
+
+    /**
+     * Get the applicable pricing tier for a given quantity.
+     */
+    public function getTierPrice(int $quantity): ?float
+    {
+        $tier = $this->pricingTiers()
+            ->where('min_quantity', '<=', $quantity)
+            ->where(function ($query) use ($quantity) {
+                $query->where('max_quantity', '>=', $quantity)
+                    ->orWhereNull('max_quantity');
+            })
+            ->orderByDesc('min_quantity')
+            ->first();
+
+        return $tier ? (float) $tier->price_per_unit : null;
+    }
+
+    /**
+     * Get the total additional price for a list of print placement IDs.
+     */
+    public function getAdditionalPriceForPlacements(array $placementIds): float
+    {
+        if (empty($placementIds)) {
+            return 0.0;
+        }
+
+        return (float) $this->printPlacements()
+            ->whereIn('print_placements.id', $placementIds)
+            ->sum('product_print_placement.additional_price');
+    }
+
+    /**
+     * Calculate the total unit price including quantity discounts and placements.
+     */
+    public function calculateFinalUnitPrice(int $quantity, array $placementIds = []): float
+    {
+        return $this->getPriceForQuantity($quantity) + $this->getAdditionalPriceForPlacements($placementIds);
     }
 
     /**
@@ -400,5 +445,22 @@ class Product extends Model implements HasMedia
             ->height(1200)
             ->sharpen(10)
             ->format('webp');
+    }
+
+    /**
+     * Scopes
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeVisibleTo($query, ?User $user = null)
+    {
+        if ($user?->isAdmin()) {
+            return $query;
+        }
+
+        return $query->active();
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteController;
@@ -31,7 +32,9 @@ Route::get('/cart/price', [CartController::class, 'price'])->name('cart.price');
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/quotes', [DashboardController::class, 'quotes'])->name('dashboard.quotes');
+    Route::get('/dashboard/addresses', [DashboardController::class, 'addresses'])->name('dashboard.addresses');
     Route::post('/logout', function (): Redirector|RedirectResponse {
         auth()->logout();
         request()->session()->invalidate();
@@ -49,9 +52,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 
-// dynamic routes for products and categories, these will be replaced with dynamic routes in the future
+// dynamic routes for products and categories
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
-Route::get('/catalogo/{category}', [CategoryController::class, 'show'])->name('category');
-Route::get('/catalogo/{category}/{slug}', [ProductController::class, 'show'])->name('product');
+Route::get('/catalogo/{category:slug}', [CategoryController::class, 'show'])->name('category');
+Route::get('/catalogo/{category:slug}/{product:slug}', [ProductController::class, 'show'])->name('product');
 Route::post('/quote', [QuoteController::class, 'store'])->name('quote.store');

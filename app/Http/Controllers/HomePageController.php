@@ -26,30 +26,12 @@ class HomePageController extends Controller
      */
     public function index(): View
     {
-        // 1. Fetch featured products first
-        $featuredProducts = Product::where('is_active', true)
-            ->where('is_featured', true)
+        $products = Product::active()
             ->with(['category', 'variations.color', 'media'])
-            ->latest()
+            ->orderByDesc('is_featured')
+            ->orderByDesc('created_at')
             ->take(9)
             ->get();
-
-        $count = $featuredProducts->count();
-
-        // 2. If we have fewer than 9 featured products, fill the gap with latest non-featured products
-        if ($count < 9) {
-            $remainingCount = 9 - $count;
-            $latestProducts = Product::where('is_active', true)
-                ->where('is_featured', false)
-                ->with(['category', 'variations.color', 'media'])
-                ->latest()
-                ->take($remainingCount)
-                ->get();
-
-            $products = $featuredProducts->merge($latestProducts);
-        } else {
-            $products = $featuredProducts;
-        }
 
         return view('welcome', ['products' => $products]);
     }

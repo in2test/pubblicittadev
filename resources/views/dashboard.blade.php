@@ -7,19 +7,45 @@
         </div>
     @endif
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {{-- Quotes Card --}}
+            <a href="{{ route('dashboard.quotes') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-amber-100 p-3 text-amber-600 dark:bg-amber-900/30">
+                        <span class="material-symbols-outlined text-3xl">request_quote</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">I miei Preventivi</h3>
+                        <p class="text-sm text-neutral-500">Visualizza la cronologia delle tue richieste.</p>
+                    </div>
+                </div>
+            </a>
+
+            {{-- Addresses Card --}}
+            <a href="{{ route('dashboard.addresses') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-amber-100 p-3 text-amber-600 dark:bg-amber-900/30">
+                        <span class="material-symbols-outlined text-3xl">location_on</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Indirizzi</h3>
+                        <p class="text-sm text-neutral-500">Gestisci i tuoi indirizzi di spedizione.</p>
+                    </div>
+                </div>
+            </a>
+
+            {{-- Profile Card (Coming soon) --}}
+            <div class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 dark:border-neutral-700 opacity-60">
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-neutral-100 p-3 text-neutral-600 dark:bg-neutral-800">
+                        <span class="material-symbols-outlined text-3xl">person</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Profilo</h3>
+                        <p class="text-sm text-neutral-500">Gestisci i tuoi dati personali.</p>
+                    </div>
+                </div>
             </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-        </div>
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
         </div>
     </div>
 </x-layouts::app>

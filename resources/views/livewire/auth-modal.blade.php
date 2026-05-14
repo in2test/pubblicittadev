@@ -1,82 +1,88 @@
-<div @style(['display: none' => !$showModal])>
-@if($showModal)
-    <div class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/50" wire:click="close"></div>
-        <div class="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <button wire:click="close" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
-                <span class="material-symbols-outlined">close</span>
-            </button>
+<div>
+    <flux:modal wire:model="showModal" class="w-full max-w-md">
+        <div class="space-y-6">
+            <div class="flex flex-col items-center justify-center text-center">
+                <flux:heading size="xl" class="uppercase tracking-widest">{{ $mode === 'login' ? 'Accedi' : 'Registrati' }}</flux:heading>
+                <flux:subheading>Benvenuto su Abbigliamento Personalizzato</flux:subheading>
+            </div>
 
-            <div class="mb-4 flex gap-4 border-b">
+            @if($error)
+                <flux:callout variant="danger" icon="exclamation-triangle">
+                    {{ $error }}
+                </flux:callout>
+            @endif
+
+            <div class="flex gap-4 border-b border-neutral-100 dark:border-neutral-800">
                 <button
                     wire:click="switchMode('login')"
-                    class="pb-2 {{ $mode === 'login' ? 'border-b-2 border-amber-500 font-bold text-gray-900' : 'text-gray-500' }}"
+                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'login' ? 'border-b-2 border-amber-500 text-gray-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600' }}"
                 >
                     Accedi
                 </button>
                 <button
                     wire:click="switchMode('register')"
-                    class="pb-2 {{ $mode === 'register' ? 'border-b-2 border-amber-500 font-bold text-gray-900' : 'text-gray-500' }}"
+                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'register' ? 'border-b-2 border-amber-500 text-gray-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600' }}"
                 >
                     Registrati
                 </button>
             </div>
 
-            @if($error)
-                <div class="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
-                    {{ $error }}
-                </div>
-            @endif
-
             @if($mode === 'login')
                 <form wire:submit.prevent="login" class="space-y-4">
-                    <div>
-                        <label for="auth-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="auth-email" wire:model="email" required autocomplete="email"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
+                    <flux:field>
+                        <flux:label>Email</flux:label>
+                        <flux:input type="email" wire:model="email" required placeholder="Inserisci la tua email" />
+                        <flux:error name="email" />
+                    </flux:field>
+
+                    <flux:field>
+                        <div class="flex justify-between">
+                            <flux:label>Password</flux:label>
+                            <a href="#" class="text-xs text-amber-600 hover:underline">Dimenticata?</a>
+                        </div>
+                        <flux:input type="password" wire:model="password" required viewable placeholder="••••••••" />
+                        <flux:error name="password" />
+                    </flux:field>
+
+                    <div class="pt-2">
+                        <flux:button type="submit" variant="primary" class="w-full">
+                            Entra
+                        </flux:button>
                     </div>
-                    <div>
-                        <label for="auth-password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" id="auth-password" wire:model="password" required autocomplete="current-password"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <a href="#" class="text-amber-600 hover:underline">Recupera credenziali</a>
-                    </div>
-                    <button type="submit"
-                        class="w-full rounded bg-amber-500 py-2 text-white hover:bg-amber-600">
-                        Accedi
-                    </button>
                 </form>
             @else
                 <form wire:submit.prevent="register" class="space-y-4">
-                    <div>
-                        <label for="reg-name" class="block text-sm font-medium text-gray-700">Nome</label>
-                        <input type="text" id="reg-name" wire:model="name" required autocomplete="name"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
+                    <flux:field>
+                        <flux:label>Nome Completo</flux:label>
+                        <flux:input wire:model="name" required placeholder="Nome e Cognome" />
+                        <flux:error name="name" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Email</flux:label>
+                        <flux:input type="email" wire:model="email" required placeholder="La tua email migliore" />
+                        <flux:error name="email" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Password</flux:label>
+                        <flux:input type="password" wire:model="password" required viewable placeholder="Minimo 8 caratteri" />
+                        <flux:error name="password" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Conferma Password</flux:label>
+                        <flux:input type="password" wire:model="passwordConfirmation" required placeholder="Ripeti la password" />
+                        <flux:error name="passwordConfirmation" />
+                    </flux:field>
+
+                    <div class="pt-2">
+                        <flux:button type="submit" variant="primary" class="w-full">
+                            Crea Account
+                        </flux:button>
                     </div>
-                    <div>
-                        <label for="reg-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="reg-email" wire:model="email" required autocomplete="email"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
-                    </div>
-                    <div>
-                        <label for="reg-password" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" id="reg-password" wire:model="password" required autocomplete="new-password"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
-                    </div>
-                    <div>
-                        <label for="reg-password-confirm" class="block text-sm font-medium text-gray-700">Conferma Password</label>
-                        <input type="password" id="reg-password-confirm" wire:model="passwordConfirmation" required autocomplete="new-password"
-                            class="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
-                    </div>
-                    <button type="submit"
-                        class="w-full rounded bg-amber-500 py-2 text-white hover:bg-amber-600">
-                        Registrati
-                    </button>
                 </form>
             @endif
         </div>
-    </div>
-@endif
+    </flux:modal>
 </div>
