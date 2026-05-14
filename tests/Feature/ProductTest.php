@@ -19,7 +19,7 @@ it('deletes attached images from storage when a product is deleted', function ()
         ->toMediaCollection('images');
 
     expect($product->getMedia('images'))->toHaveCount(1);
-    expect(Storage::disk('public')->exists($media->id.'/'.$media->file_name))->toBeTrue();
+    expect((new Storage)->disk('public')->exists($media->id.'/'.$media->file_name))->toBeTrue();
 
     // Delete the product
     $product->delete();

@@ -29,7 +29,7 @@ class CartManager
      */
     public function getItems(): array
     {
-        return Session::get(self::CART_KEY, []);
+        return (new Session)->get(self::CART_KEY, []);
     }
 
     /**
@@ -54,7 +54,7 @@ class CartManager
             'created_at' => now()->toDateTimeString(),
         ]);
 
-        Session::put(self::CART_KEY, $items);
+        (new Session)->put(self::CART_KEY, $items);
     }
 
     public function update(string $jobId, int $quantity): void
@@ -117,7 +117,7 @@ class CartManager
             return;
         }
 
-        Session::put(self::CART_KEY, $items);
+        (new Session)->put(self::CART_KEY, $items);
     }
 
     /**
@@ -129,7 +129,7 @@ class CartManager
     {
         $items = $this->getItems();
         unset($items[$jobId]);
-        Session::put(self::CART_KEY, $items);
+        (new Session)->put(self::CART_KEY, $items);
     }
 
     /**
@@ -143,7 +143,7 @@ class CartManager
         foreach ($jobIds as $jobId) {
             unset($items[$jobId]);
         }
-        Session::put(self::CART_KEY, $items);
+        (new Session)->put(self::CART_KEY, $items);
     }
 
     /**
@@ -151,7 +151,7 @@ class CartManager
      */
     public function clear(): void
     {
-        Session::forget(self::CART_KEY);
+        (new Session)->forget(self::CART_KEY);
     }
 
     /**

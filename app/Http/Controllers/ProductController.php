@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
