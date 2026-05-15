@@ -261,14 +261,11 @@
                     </div>
 
                     <div class="space-y-3">
-                        <form action="{{ route('checkout.session') }}" method="POST">
-                            @csrf
-                            <button type="submit"
-                                class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-lg hover:bg-black transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-3 text-center">
-                                Procedi al Pagamento
-                                <span class="material-symbols-outlined">payments</span>
-                            </button>
-                        </form>
+                        <a href="{{ route('checkout') }}"
+                            class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-lg hover:bg-black transition-all shadow-lg shadow-black/10 flex items-center justify-center gap-3 text-center">
+                            Procedi al Pagamento
+                            <span class="material-symbols-outlined">payments</span>
+                        </a>
 
                         <a href="{{ route('quote.store') }}"
                             class="w-full bg-white text-primary border-2 border-primary py-4 font-black uppercase tracking-tighter text-lg hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/10 flex items-center justify-center gap-3 text-center block">

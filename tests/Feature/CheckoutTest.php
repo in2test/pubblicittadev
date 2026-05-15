@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Address;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CartManager;
@@ -33,8 +34,13 @@ it('redirects to stripe checkout session and creates a pending order', function 
         ->once()
         ->andReturn((object) ['url' => 'https://checkout.stripe.com/test', 'id' => 'sess_test']);
 
+    $address = Address::factory()->create(['user_id' => $user->id]);
+
     actingAs($user)
-        ->post(route('checkout.session'))
+        ->post(route('checkout.session'), [
+            'shipping_address_id' => $address->id,
+            'billing_address_id' => $address->id,
+        ])
         ->assertRedirect('https://checkout.stripe.com/test');
 
     assertDatabaseHas('orders', [

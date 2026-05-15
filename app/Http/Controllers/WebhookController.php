@@ -29,12 +29,16 @@ class WebhookController extends Controller
                 $payload, $sig_header, $endpoint_secret
             );
         } catch (\UnexpectedValueException $e) {
-            // Invalid payload
+            Log::error('Stripe Webhook: Invalid payload', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Invalid payload'], 400);
         } catch (SignatureVerificationException $e) {
-            // Invalid signature
+            Log::error('Stripe Webhook: Invalid signature. Check STRIPE_WEBHOOK_SECRET.', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Invalid signature'], 400);
         }
+
+        Log::info('Stripe Webhook received', ['type' => $event->type]);
 
         // Handle the event
         if ($event->type === 'checkout.session.completed') {

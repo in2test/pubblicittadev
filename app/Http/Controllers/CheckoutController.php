@@ -20,7 +20,7 @@ class CheckoutController extends Controller
         // 1. Check if we are re-paying an existing order
         if ($request->has('order_id')) {
             $order = Order::with('items.product')->findOrFail($request->input('order_id'));
-            
+
             // Authorization
             if ($order->user_id !== auth()->id()) {
                 abort(403);
@@ -38,12 +38,19 @@ class CheckoutController extends Controller
                 return redirect()->route('cart')->with('error', 'Il tuo carrello è vuoto.');
             }
 
+            $request->validate([
+                'shipping_address_id' => 'required|exists:addresses,id',
+                'billing_address_id' => 'required|exists:addresses,id',
+            ]);
+
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
                 'status' => 'pending',
                 'total_price' => $this->cartManager->total(),
                 'total_items' => $this->cartManager->count(),
+                'shipping_address_id' => $request->input('shipping_address_id'),
+                'billing_address_id' => $request->input('billing_address_id'),
                 'notes' => $request->input('notes'),
             ]);
 

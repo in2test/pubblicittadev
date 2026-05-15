@@ -15,6 +15,7 @@ use App\Http\Controllers\WebhookController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
 
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/settings.php';
 
 Route::middleware(['auth'])->group(function () {
+    Volt::route('/checkout', 'pages.checkout')->name('checkout');
     Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'is_default'])]
+#[Fillable(['user_id', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'vat_number', 'fiscal_code', 'sdi_code', 'pec_email', 'is_default'])]
 class Address extends Model
 {
     use HasFactory;

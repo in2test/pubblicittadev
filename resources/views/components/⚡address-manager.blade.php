@@ -17,6 +17,10 @@ new class extends \Livewire\Component
     public $zip = '';
     public $country = 'IT';
     public $phone = '';
+    public $vat_number = '';
+    public $fiscal_code = '';
+    public $sdi_code = '';
+    public $pec_email = '';
     public $is_default = false;
 
     public function mount(): void
@@ -31,7 +35,7 @@ new class extends \Livewire\Component
 
     public function openCreate(): void
     {
-        $this->reset(['editingAddress', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'is_default']);
+        $this->reset(['editingAddress', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'vat_number', 'fiscal_code', 'sdi_code', 'pec_email', 'is_default']);
         $this->name = auth()->user()->name;
         $this->showModal = true;
     }
@@ -49,6 +53,10 @@ new class extends \Livewire\Component
         $this->zip = $address->zip;
         $this->country = $address->country;
         $this->phone = $address->phone;
+        $this->vat_number = $address->vat_number;
+        $this->fiscal_code = $address->fiscal_code;
+        $this->sdi_code = $address->sdi_code;
+        $this->pec_email = $address->pec_email;
         $this->is_default = $address->is_default;
         $this->showModal = true;
     }
@@ -61,6 +69,7 @@ new class extends \Livewire\Component
             'city' => 'required|string|max:255',
             'zip' => 'required|string|max:20',
             'country' => 'required|string|max:2',
+            'pec_email' => 'nullable|email',
         ]);
 
         $data = [
@@ -73,6 +82,10 @@ new class extends \Livewire\Component
             'zip' => $this->zip,
             'country' => $this->country,
             'phone' => $this->phone,
+            'vat_number' => $this->vat_number,
+            'fiscal_code' => $this->fiscal_code,
+            'sdi_code' => $this->sdi_code,
+            'pec_email' => $this->pec_email,
             'is_default' => (bool) $this->is_default,
         ];
 
@@ -128,6 +141,14 @@ new class extends \Livewire\Component
                     @if($address->phone)
                         <p class="mt-1 text-xs text-neutral-500">Tel: {{ $address->phone }}</p>
                     @endif
+                    @if($address->type === 'billing')
+                        <div class="mt-2 grid grid-cols-2 gap-x-2 text-[10px] uppercase text-neutral-500">
+                            @if($address->vat_number) <span>P.IVA: {{ $address->vat_number }}</span> @endif
+                            @if($address->fiscal_code) <span>C.F.: {{ $address->fiscal_code }}</span> @endif
+                            @if($address->sdi_code) <span>SDI: {{ $address->sdi_code }}</span> @endif
+                            @if($address->pec_email) <span class="col-span-2">PEC: {{ $address->pec_email }}</span> @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="mt-4 flex gap-2">
@@ -152,7 +173,7 @@ new class extends \Livewire\Component
             <form wire:submit.prevent="save" class="space-y-4">
                 <flux:field>
                     <flux:label>Tipo Indirizzo</flux:label>
-                    <flux:select wire:model="type">
+                    <flux:select wire:model.live="type">
                         <option value="shipping">Spedizione</option>
                         <option value="billing">Fatturazione</option>
                     </flux:select>
@@ -205,6 +226,33 @@ new class extends \Livewire\Component
                     <flux:input wire:model="phone" />
                     <flux:error name="phone" />
                 </flux:field>
+
+                @if($type === 'billing')
+                    <div class="grid grid-cols-2 gap-4 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                        <flux:field>
+                            <flux:label>Partita IVA</flux:label>
+                            <flux:input wire:model="vat_number" />
+                            <flux:error name="vat_number" />
+                        </flux:field>
+                        <flux:field>
+                            <flux:label>Codice Fiscale</flux:label>
+                            <flux:input wire:model="fiscal_code" />
+                            <flux:error name="fiscal_code" />
+                        </flux:field>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <flux:field>
+                            <flux:label>Codice SDI</flux:label>
+                            <flux:input wire:model="sdi_code" />
+                            <flux:error name="sdi_code" />
+                        </flux:field>
+                        <flux:field>
+                            <flux:label>Email PEC</flux:label>
+                            <flux:input wire:model="pec_email" type="email" />
+                            <flux:error name="pec_email" />
+                        </flux:field>
+                    </div>
+                @endif
 
                 <flux:checkbox wire:model="is_default" label="Imposta come predefinito" />
 
