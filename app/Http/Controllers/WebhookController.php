@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
 use Stripe\Webhook;
+use UnexpectedValueException;
 
 class WebhookController extends Controller
 {
@@ -28,7 +29,7 @@ class WebhookController extends Controller
             $event = Webhook::constructEvent(
                 $payload, $sig_header, $endpoint_secret
             );
-        } catch (\UnexpectedValueException $e) {
+        } catch (UnexpectedValueException $e) {
             Log::error('Stripe Webhook: Invalid payload', ['error' => $e->getMessage()]);
 
             return response()->json(['error' => 'Invalid payload'], 400);

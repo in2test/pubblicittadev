@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Color;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Services\CartManager;
 use Illuminate\Http\Request;
@@ -19,6 +21,7 @@ class CheckoutController extends Controller
     {
         // 1. Check if we are re-paying an existing order
         if ($request->has('order_id')) {
+            /** @var Order $order */
             $order = Order::with('items.product')->findOrFail($request->input('order_id'));
 
             // Authorization
@@ -34,7 +37,7 @@ class CheckoutController extends Controller
             // 2. Creating a new order from cart
             $items = $this->cartManager->getItems();
 
-            if (empty($items)) {
+            if ($items === []) {
                 return redirect()->route('cart')->with('error', 'Il tuo carrello è vuoto.');
             }
 
@@ -43,6 +46,7 @@ class CheckoutController extends Controller
                 'billing_address_id' => 'required|exists:addresses,id',
             ]);
 
+            /** @var Order $order */
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
@@ -54,7 +58,7 @@ class CheckoutController extends Controller
                 'notes' => $request->input('notes'),
             ]);
 
-            foreach ($items as $jobId => $item) {
+            foreach ($items as $item) {
                 $product = Product::find($item['product_id']);
                 if (! $product) {
                     continue;
@@ -77,12 +81,18 @@ class CheckoutController extends Controller
         Stripe::setApiKey(config('stripe.secret'));
 
         $lineItems = [];
+        /** @var OrderItem $item */
         foreach ($order->items as $item) {
+            /** @var Product|null $product */
+            $product = $item->product;
+            /** @var Color|null $color */
+            $color = $item->color;
+
             $lineItems[] = [
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
-                        'name' => $item->product->name.' - '.($item->color?->color_name ?? 'Standard'),
+                        'name' => ($product->name ?? 'Prodotto').' - '.($color->color_name ?? 'Standard'),
                         'description' => 'Item #'.$item->id,
                     ],
                     'unit_amount' => (int) round($item->unit_price * 100),

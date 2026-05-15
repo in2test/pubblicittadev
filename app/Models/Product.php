@@ -48,33 +48,31 @@ use Throwable;
     'disabled_colors',
     'remote_images',
 ])]
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $sku
+ * @property string $description
+ * @property float $price
+ * @property float $offer_price
+ * @property bool $is_featured
+ * @property int $category_id
+ * @property string $type
+ * @property string $sync_status
+ * @property Carbon $synced_at
+ * @property bool $is_active
+ * @property int $sync_progress
+ * @property bool $override_price
+ * @property bool $override_description
+ * @property array $disabled_colors
+ * @property array $remote_images
+ * @property-read Category $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariation> $variations
+ */
 class Product extends Model implements HasMedia
 {
-    /**
-     * @property int $id
-     * @property string $name
-     * @property string $slug
-     * @property string $sku
-     * @property string $description
-     * @property string $price
-     * @property string $offer_price
-     * @property bool $is_featured
-     * @property int $category_id
-     * @property string $type
-     * @property string $sync_status
-     * @property Carbon $synced_at
-     * @property bool $is_active
-     * @property int $sync_progress
-     * @property bool $override_price
-     * @property bool $override_description
-     * @property array $disabled_colors
-     * @property array $remote_images
-     * @property Category $category
-     * @property \Illuminate\Database\Eloquent\Collection<int, ProductVariation> $variations
-     * @property \Illuminate\Database\Eloquent\Collection<int, Image> $media
-     */
     use HasFactory;
-
     use InteractsWithMedia;
     use Searchable;
 

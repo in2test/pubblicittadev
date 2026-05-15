@@ -2,9 +2,11 @@
 
 use App\Models\Address;
 use App\Services\CartManager;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new class extends Component
+new #[Layout('layouts.app')] #[Title('Checkout')] class extends \Livewire\Component
 {
     public $shippingAddresses;
     public $billingAddresses;
@@ -62,7 +64,6 @@ new class extends Component
 };
 ?>
 
-<x-layouts::app title="Checkout">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="flex items-center gap-4 mb-8">
             <a href="{{ route('cart') }}" class="flex items-center justify-center w-10 h-10 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors">
@@ -170,7 +171,7 @@ new class extends Component
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-xs font-bold leading-tight line-clamp-1">{{ $product->name }}</p>
-                                        <p class="text-[10px] text-neutral-500">Quantità: {{ collect($item['sizes'])->sum() }}</p>
+                                        <p class="text-[10px] text-neutral-500">Quantità: {{ (isset($item['quantities']) && is_array($item['quantities'])) ? array_sum($item['quantities']) : ($item['quantity'] ?? 1) }}</p>
                                     </div>
                                 @endif
                             </div>
@@ -219,4 +220,3 @@ new class extends Component
             </div>
         </div>
     </div>
-</x-layouts::app>

@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 #[Fillable([
     'user_id',
@@ -22,6 +26,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'paid_at',
     'notes',
 ])]
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $order_number
+ * @property string $status
+ * @property float $total_price
+ * @property int $total_items
+ * @property int $shipping_address_id
+ * @property int $billing_address_id
+ * @property string|null $stripe_session_id
+ * @property Carbon|null $paid_at
+ * @property-read Collection<int, OrderItem> $items
+ */
 class Order extends Model
 {
     use HasFactory;

@@ -1,8 +1,9 @@
 <?php
 
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Product;
+use App\Models\User;
+
 use function Pest\Laravel\actingAs;
 
 it('shows user orders on dashboard', function () {
@@ -13,9 +14,7 @@ it('shows user orders on dashboard', function () {
     actingAs($user)
         ->get(route('dashboard.orders'))
         ->assertStatus(200)
-        ->assertViewHas('orders', function ($orders) {
-            return $orders->count() === 3;
-        });
+        ->assertViewHas('orders', fn ($orders) => $orders->count() === 3);
 });
 
 it('shows order details for owned order', function () {

@@ -203,4 +203,14 @@ class CartManager
 
         return (float) number_format($total, 2, '.', '');
     }
+
+    /**
+     * Check if the cart is empty.
+     *
+     * @return bool True if there are no items in the cart.
+     */
+    public function isEmpty(): bool
+    {
+        return $this->getItems() === [];
+    }
 }

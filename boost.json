@@ -21,6 +21,7 @@
         "scout-development",
         "fluxui-development",
         "livewire-development",
+        "volt-development",
         "pest-testing",
         "tailwindcss-development",
         "medialibrary-development",

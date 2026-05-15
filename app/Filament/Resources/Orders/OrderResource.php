@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Orders;
 
 use App\Filament\Resources\Orders\Pages\CreateOrder;
@@ -13,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Override;
 
 class OrderResource extends Resource
 {
@@ -20,16 +23,19 @@ class OrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return OrderForm::configure($schema);
     }
 
+    #[Override]
     public static function table(Table $table): Table
     {
         return OrdersTable::configure($table);
     }
 
+    #[Override]
     public static function getRelations(): array
     {
         return [
@@ -37,6 +43,7 @@ class OrderResource extends Resource
         ];
     }
 
+    #[Override]
     public static function getPages(): array
     {
         return [

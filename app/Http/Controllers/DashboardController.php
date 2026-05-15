@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -35,7 +36,7 @@ class DashboardController extends Controller
         return view('dashboard.orders', ['orders' => $orders]);
     }
 
-    public function showOrder(Request $request, \App\Models\Order $order): View
+    public function showOrder(Request $request, Order $order): View
     {
         // Ensure the order belongs to the user
         if ($order->user_id !== $request->user()->id) {

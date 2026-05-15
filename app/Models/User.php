@@ -55,8 +55,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get all the orders associated with the user.
-     *
-     * @return HasMany
      */
     public function orders(): HasMany
     {
