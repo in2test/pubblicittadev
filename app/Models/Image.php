@@ -59,7 +59,7 @@ class Image extends Model
                 ]);
 
                 if ($oldPaths !== []) {
-                    (new Storage)->disk('public')->delete($oldPaths);
+                    Storage::disk('public')->delete($oldPaths);
                 }
 
                 $image->generateImageVariants();
@@ -147,7 +147,7 @@ class Image extends Model
             $this->large_path,
         ]);
 
-        (new Storage)->disk('public')->delete($paths);
+        Storage::disk('public')->delete($paths);
     }
 
     protected function generateImageVariants(): void
@@ -156,7 +156,7 @@ class Image extends Model
             return;
         }
 
-        $disk = (new Storage)->disk('public');
+        $disk = Storage::disk('public');
         $originalPath = $disk->path($this->image_path);
 
         if (! file_exists($originalPath)) {

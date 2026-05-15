@@ -1,8 +1,8 @@
 # 📋 Piano di Implementazione - Abbigliamento Personalizzato
 
-**Status**: 🚧 IN CORSO (Sviluppo Fase 2)
+**Status**: 🚧 IN CORSO (Fase 2: Transizione E-commerce)
 **Scadenza MVP**: Raggiunta
-**Ultimo aggiornamento**: 14 Maggio 2026
+**Ultimo aggiornamento**: 15 Maggio 2026
 
 ---
 
@@ -116,7 +116,8 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
 - [x] **User Management**: Ruoli (admin/client) e is_active.
 - [x] **Fortify Email Verification**: Obbligatoria per accedere alla dashboard.
-- [x] **Auth UI**: Modal Login/Register moderno con Flux UI.
+- [x] **Auth UI**: Modal Login/Register moderno (Refactored to Minimal Alpine/Livewire).
+- [x] **Codebase Stability**: Risolti errori Facade instantiation (new Storage, etc.) e bug static analysis.
 - [x] **Dashboard Cliente**: Visualizzazione cronologia preventivi associati.
 - [x] **Address Manager**: CRUD indirizzi in Livewire Volt + Flux UI.
 
@@ -133,8 +134,9 @@ MAGGIO 2026 (Stato Attuale)
 └- ✅ Test Suite (145+ test Pest)
 
 PIANO PROSSIMI GIORNI
-├─ 🚧 Stripe Payment Integration (Checkout)
-└─ 🚧 Order Management (Transizione da Quote a Order)
+├─ 🚧 Stripe Payment Integration (Laravel Cashier/SDK)
+├─ 🚧 Order Management (Transizione da Quote a Order)
+└─ 🚧 Email Notifications (Conferma ordine)
 ```
 
 ---
@@ -157,7 +159,7 @@ Creati **145 test** (Pest) che coprono:
 ### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
 - [x] User Management con ruoli (admin/client) e is_active.
 - [x] Filament UserResource.
-- [x] Login/Register modal Livewire (Refactored Flux UI).
+- [x] Login/Register modal Livewire (Minimal Alpine/Livewire Refactor).
 - [x] Configurazione Fortify (Verifica Email).
 - [x] Area "I miei Ordini" e gestione indirizzi.
 

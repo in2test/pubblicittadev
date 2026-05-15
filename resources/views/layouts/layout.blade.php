@@ -39,6 +39,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    @fluxAppearance
 </head>
 
 
@@ -60,9 +61,14 @@
     </main>
     <x-footer />
     @livewireScripts
+    @fluxScripts
     <script>
         function openAuthModal() {
-            window.dispatchEvent(new CustomEvent('open-auth-modal'));
+            if (window.Livewire) {
+                Livewire.dispatch('open-auth-modal');
+            } else {
+                window.dispatchEvent(new CustomEvent('open-auth-modal'));
+            }
         }
     </script>
     @livewire(\App\Livewire\AuthModal::class)

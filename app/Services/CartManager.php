@@ -29,7 +29,7 @@ class CartManager
      */
     public function getItems(): array
     {
-        return (new Session)->get(self::CART_KEY, []);
+        return Session::get(self::CART_KEY, []);
     }
 
     /**
@@ -54,7 +54,7 @@ class CartManager
             'created_at' => now()->toDateTimeString(),
         ]);
 
-        (new Session)->put(self::CART_KEY, $items);
+        Session::put(self::CART_KEY, $items);
     }
 
     public function update(string $jobId, int $quantity): void
@@ -117,7 +117,7 @@ class CartManager
             return;
         }
 
-        (new Session)->put(self::CART_KEY, $items);
+        Session::put(self::CART_KEY, $items);
     }
 
     /**
@@ -129,7 +129,7 @@ class CartManager
     {
         $items = $this->getItems();
         unset($items[$jobId]);
-        (new Session)->put(self::CART_KEY, $items);
+        Session::put(self::CART_KEY, $items);
     }
 
     /**
@@ -143,7 +143,7 @@ class CartManager
         foreach ($jobIds as $jobId) {
             unset($items[$jobId]);
         }
-        (new Session)->put(self::CART_KEY, $items);
+        Session::put(self::CART_KEY, $items);
     }
 
     /**
@@ -151,7 +151,7 @@ class CartManager
      */
     public function clear(): void
     {
-        (new Session)->forget(self::CART_KEY);
+        Session::forget(self::CART_KEY);
     }
 
     /**
@@ -187,7 +187,7 @@ class CartManager
      */
     public function total(): float
     {
-        $total = collect($this->getItems())->sum(function (array $item): int|float {
+        $total = collect($this->getItems())->sum(function (array $item): float {
             $qty = $this->getItemQuantity($item);
             $price = (float) ($item['price'] ?? 0);
 

@@ -22,7 +22,7 @@ class AuthModal extends Component
 
     public string $name = '';
 
-    public string $passwordConfirmation = '';
+    public string $password_confirmation = '';
 
     public string $error = '';
 
@@ -50,7 +50,7 @@ class AuthModal extends Component
     public function close(): void
     {
         $this->showModal = false;
-        $this->reset(['email', 'password', 'name', 'passwordConfirmation', 'error']);
+        $this->reset(['email', 'password', 'name', 'password_confirmation', 'error']);
     }
 
     public function switchMode(string $mode): void
@@ -90,7 +90,7 @@ class AuthModal extends Component
             'name' => 'required|min:2',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
-            'passwordConfirmation' => 'required',
+            'password_confirmation' => 'required',
         ]);
 
         $user = User::create([
@@ -109,13 +109,18 @@ class AuthModal extends Component
         $this->js('window.location.reload()');
     }
 
-    public function logout(): void
+    public function messages(): array
     {
-        /** @var StatefulGuard $guard */
-        $guard = auth();
-
-        $guard->logout();
-        $this->close();
+        return [
+            'email.required' => "L'indirizzo email è obbligatorio.",
+            'email.email' => 'Inserisci un indirizzo email valido.',
+            'email.unique' => 'Questa email è già registrata.',
+            'password.required' => 'La password è obbligatoria.',
+            'password.min' => 'La password deve avere almeno :min caratteri.',
+            'password.confirmed' => 'La conferma della password non coincide.',
+            'name.required' => 'Il nome è obbligatorio.',
+            'name.min' => 'Il nome deve avere almeno :min caratteri.',
+        ];
     }
 
     public function render()

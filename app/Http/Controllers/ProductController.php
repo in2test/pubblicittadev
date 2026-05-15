@@ -21,10 +21,6 @@ class ProductController extends Controller
 {
     /**
      * Display the specified product detail page.
-     *
-     * @param  string  $category  The category slug from the URL
-     * @param  string  $slug  The product slug from the URL
-     * @param  Request  $request  The incoming HTTP request
      */
     public function show(Category $category, Product $product, Request $request): View
     {

@@ -342,6 +342,9 @@ class Product extends Model implements HasMedia
      */
     public function getTierPrice(int $quantity): ?float
     {
+        /**
+         * @var PricingTier|null $tier
+         */
         $tier = $this->pricingTiers()
             ->where('min_quantity', '<=', $quantity)
             ->where(function ($query) use ($quantity) {
