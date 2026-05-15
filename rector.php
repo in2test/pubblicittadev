@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Php70\Rector\StaticCall\StaticCallOnNonStaticToInstanceCallRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictTypedCallRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnUnionTypeRector;
@@ -31,6 +32,7 @@ return RectorConfig::configure()
             __DIR__.'/resources/views',
         ],
         AddArrowFunctionReturnTypeRector::class,
+        StaticCallOnNonStaticToInstanceCallRector::class,
     ])
     ->withPhpSets()
     ->withSetProviders(LaravelSetProvider::class)
