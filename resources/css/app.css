@@ -176,11 +176,9 @@
 }
 
 .bg-grid-subtle {
-    background-image: radial-gradient(
-        circle,
-        var(--color-gray-100) 1px,
-        transparent 1px
-    );
+    background-image: radial-gradient(circle,
+            var(--color-gray-100) 1px,
+            transparent 1px);
     background-size: 32px 32px;
 }
 
@@ -199,7 +197,7 @@
 
 @layer components {
     .mega-nav {
-        @apply border-b border-gray-200 bg-gray-50  fixed z-55 top-0 left-0 w-full shadow-lg font-body;
+        @apply border-b border-gray-200 bg-gray-50 fixed z-55 top-0 left-0 w-full shadow-lg font-body;
     }
 
     .mega-nav-shell {
@@ -211,11 +209,11 @@
     }
 
     .mega-logo {
-        @apply text-2xl font-bold text-vividauburn-500  border-gray-50 hover:text-vividauburn-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
+        @apply text-2xl font-bold text-vividauburn-500 border-gray-50 hover:text-vividauburn-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
     }
 
     .mega-mobile-toggle {
-        @apply p-2 hover:bg-gray-100  transition-all active:scale-95 duration-150 lg:hidden;
+        @apply p-2 hover:bg-gray-100 transition-all active:scale-95 duration-150 lg:hidden;
     }
 
     .mega-menu-root {
@@ -238,11 +236,11 @@
         @apply invisible absolute left-0 top-full -ml-6 z-50 w-screen max-w-4xl border-2 border-gray-400 bg-gray-50 p-6 opacity-0 shadow-xl transition duration-200;
     }
 
-    .mega-item[data-open="true"] > .mega-panel {
+    .mega-item[data-open="true"]>.mega-panel {
         @apply visible opacity-100;
     }
 
-    .mega-item[data-open="true"] > .mega-trigger {
+    .mega-item[data-open="true"]>.mega-trigger {
         @apply text-gray-950 border-gray-400;
     }
 
@@ -263,7 +261,7 @@
     }
 
     .mega-link {
-        @apply block px-3 py-3 transition hover:bg-gray-100;
+        @apply block px-3 py-1 transition hover:bg-gray-100;
     }
 
     .mega-link-title {
@@ -291,11 +289,11 @@
     }
 
     .mega-feature-cta {
-        @apply mt-4 inline-flex items-center  bg-vividauburn-500 px-4 py-2 text-base font-medium text-gray-50 transition hover:bg-vividauburn-600;
+        @apply mt-4 inline-flex items-center bg-vividauburn-500 px-4 py-2 text-base font-medium text-gray-50 transition hover:bg-vividauburn-600;
     }
 
     .mega-simple-link {
-        @apply inline-flex items-center  px-4 py-3 text-base font-medium  text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
+        @apply inline-flex items-center px-4 py-3 text-base font-medium text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors;
     }
 
     .mega-mobile-panel {
@@ -319,7 +317,7 @@
     }
 
     .mega-mobile-close {
-        @apply inline-flex items-center justify-center  border border-gray-300 bg-gray-50 p-2 text-gray-700;
+        @apply inline-flex items-center justify-center border border-gray-300 bg-gray-50 p-2 text-gray-700;
     }
 
     .mega-mobile-group {
@@ -327,18 +325,18 @@
     }
 
     .mega-mobile-trigger {
-        @apply flex w-full items-center justify-between  px-3 py-3 text-left text-base font-medium text-gray-800 transition hover:bg-gray-100;
+        @apply flex w-full items-center justify-between px-3 py-3 text-left text-base font-medium text-gray-800 transition hover:bg-gray-100;
     }
 
     .mega-mobile-submenu {
         @apply hidden space-y-1 px-2 pb-2 pt-1;
     }
 
-    .mega-mobile-group[data-open="true"] > .mega-mobile-submenu {
+    .mega-mobile-group[data-open="true"]>.mega-mobile-submenu {
         @apply block;
     }
 
     .mega-mobile-sublink {
-        @apply block  px-3 py-2 text-base text-gray-600 transition hover:bg-gray-100 hover:text-gray-900;
+        @apply block px-3 py-2 text-base text-gray-600 transition hover:bg-gray-100 hover:text-gray-900;
     }
 }

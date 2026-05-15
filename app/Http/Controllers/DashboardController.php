@@ -27,4 +27,23 @@ class DashboardController extends Controller
 
         return view('dashboard.addresses', ['addresses' => $addresses]);
     }
+
+    public function orders(Request $request): View
+    {
+        $orders = $request->user()->orders()->with('items.product')->latest()->paginate(10);
+
+        return view('dashboard.orders', ['orders' => $orders]);
+    }
+
+    public function showOrder(Request $request, \App\Models\Order $order): View
+    {
+        // Ensure the order belongs to the user
+        if ($order->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $order->load(['items.product', 'items.color', 'shippingAddress', 'billingAddress']);
+
+        return view('dashboard.order-details', ['order' => $order]);
+    }
 }

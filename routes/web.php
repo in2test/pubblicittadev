@@ -5,11 +5,13 @@ declare(strict_types=1);
 use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/quotes', [DashboardController::class, 'quotes'])->name('dashboard.quotes');
     Route::get('/dashboard/addresses', [DashboardController::class, 'addresses'])->name('dashboard.addresses');
+    Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
+    Route::get('/dashboard/orders/{order}', [DashboardController::class, 'showOrder'])->name('dashboard.orders.show');
     Route::post('/logout', function (): Redirector|RedirectResponse {
         auth()->logout();
         request()->session()->invalidate();
@@ -51,6 +55,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+});
+
+// Webhook route (excluded from CSRF in bootstrap/app.php)
+Route::post('/webhooks/stripe', [WebhookController::class, 'handle'])->name('webhooks.stripe');
 
 // dynamic routes for products and categories
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');

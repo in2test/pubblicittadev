@@ -8,6 +8,19 @@
     @endif
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {{-- Orders Card --}}
+            <a href="{{ route('dashboard.orders') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+                <div class="flex items-center gap-4">
+                    <div class="rounded-lg bg-green-100 p-3 text-green-600 dark:bg-green-900/30">
+                        <span class="material-symbols-outlined text-3xl">shopping_bag</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">I miei Ordini</h3>
+                        <p class="text-sm text-neutral-500">Visualizza i tuoi ordini e lo stato del pagamento.</p>
+                    </div>
+                </div>
+            </a>
+
             {{-- Quotes Card --}}
             <a href="{{ route('dashboard.quotes') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
                 <div class="flex items-center gap-4">
