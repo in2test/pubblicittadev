@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Schemas;
 
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -21,101 +20,69 @@ class OrderForm
             ->components([
                 Section::make('Dettagli Ordine')
                     ->schema([
-                        Grid::make(3)->schema([
-                            TextInput::make('order_number')
-                                ->required()
-                                ->unique(ignoreRecord: true),
-                            Select::make('status')
-                                ->options([
-                                    'pending' => 'In Attesa',
-                                    'paid' => 'Pagato',
-                                    'failed' => 'Fallito',
-                                    'cancelled' => 'Annullato',
-                                    'completed' => 'Completato',
-                                ])
-                                ->required()
-                                ->default('pending'),
-                            DateTimePicker::make('paid_at'),
-                        ]),
                         Grid::make(2)->schema([
-                            Select::make('user_id')
-                                ->relationship('user', 'name')
-                                ->searchable()
+                            TextInput::make('order_number')
+                                ->label('Numero Ordine')
+                                ->disabled()
                                 ->required(),
-                            Select::make('quote_id')
-                                ->relationship('quote', 'quote_number')
-                                ->searchable()
-                                ->placeholder('Opzionale'),
+                            Select::make('status')
+                                ->label('Stato')
+                                ->options([
+                                    'pending' => 'In attesa',
+                                    'paid' => 'Pagato',
+                                    'shipped' => 'Spedito',
+                                    'cancelled' => 'Annullato',
+                                ])
+                                ->required(),
+                        ]),
+                        Grid::make(3)->schema([
+                            TextInput::make('total_price')
+                                ->label('Totale')
+                                ->numeric()
+                                ->prefix('€')
+                                ->disabled(),
+                            TextInput::make('total_items')
+                                ->label('Articoli Totali')
+                                ->numeric()
+                                ->disabled(),
+                            DateTimePicker::make('paid_at')
+                                ->label('Pagato il')
+                                ->disabled(),
                         ]),
                     ]),
 
-                Section::make('Indirizzi')
+                Section::make('Cliente & Indirizzi')
                     ->schema([
+                        Select::make('user_id')
+                            ->relationship('user', 'name')
+                            ->label('Cliente')
+                            ->disabled()
+                            ->required(),
                         Grid::make(2)->schema([
                             Select::make('shipping_address_id')
                                 ->relationship('shippingAddress', 'name')
-                                ->searchable(),
+                                ->label('Indirizzo Spedizione')
+                                ->disabled(),
                             Select::make('billing_address_id')
                                 ->relationship('billingAddress', 'name')
-                                ->searchable(),
-                        ]),
-                    ])->collapsible(),
-
-                Section::make('Stripe')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('stripe_session_id')
+                                ->label('Indirizzo Fatturazione')
                                 ->disabled(),
-                            TextInput::make('stripe_payment_intent_id')
-                                ->disabled(),
-                        ]),
-                    ])->collapsible(),
-
-                Section::make('Articoli Ordine')
-                    ->schema([
-                        Repeater::make('items')
-                            ->relationship()
-                            ->schema([
-                                Select::make('product_id')
-                                    ->relationship('product', 'name')
-                                    ->required()
-                                    ->columnSpan(2),
-                                Select::make('color_id')
-                                    ->relationship('color', 'color_name')
-                                    ->columnSpan(1),
-                                TextInput::make('quantity')
-                                    ->numeric()
-                                    ->required()
-                                    ->columnSpan(1),
-                                TextInput::make('unit_price')
-                                    ->numeric()
-                                    ->required()
-                                    ->prefix('€')
-                                    ->columnSpan(1),
-                                TextInput::make('subtotal')
-                                    ->numeric()
-                                    ->required()
-                                    ->prefix('€')
-                                    ->columnSpan(1),
-                                Textarea::make('customization_json')
-                                    ->json()
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(6)
-                            ->columnSpanFull(),
-
-                        Grid::make(2)->schema([
-                            TextInput::make('total_items')
-                                ->required()
-                                ->numeric(),
-                            TextInput::make('total_price')
-                                ->required()
-                                ->numeric()
-                                ->prefix('€'),
                         ]),
                     ]),
 
+                Section::make('Stripe Info')
+                    ->collapsed()
+                    ->schema([
+                        TextInput::make('stripe_session_id')
+                            ->label('Session ID')
+                            ->disabled(),
+                        TextInput::make('stripe_payment_intent_id')
+                            ->label('Payment Intent ID')
+                            ->disabled(),
+                    ]),
+
                 Textarea::make('notes')
+                    ->label('Note Cliente')
                     ->columnSpanFull(),
             ]);
     }

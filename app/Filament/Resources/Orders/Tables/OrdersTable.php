@@ -20,8 +20,7 @@ class OrdersTable
                     ->label('N. Ordine')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold')
-                    ->copyable(),
+                    ->weight('bold'),
                 TextColumn::make('user.name')
                     ->label('Cliente')
                     ->searchable()
@@ -31,37 +30,26 @@ class OrdersTable
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'paid' => 'success',
-                        'failed' => 'danger',
-                        'cancelled' => 'gray',
-                        'completed' => 'info',
+                        'shipped' => 'info',
+                        'cancelled' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'In Attesa',
                         'paid' => 'Pagato',
-                        'failed' => 'Fallito',
+                        'shipped' => 'Spedito',
                         'cancelled' => 'Annullato',
-                        'completed' => 'Completato',
                         default => $state,
                     })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'pending' => 'heroicon-o-clock',
-                        'paid' => 'heroicon-o-check-circle',
-                        'failed' => 'heroicon-o-x-circle',
-                        'cancelled' => 'heroicon-o-minus-circle',
-                        'completed' => 'heroicon-o-archive-box',
-                        default => 'heroicon-o-question-mark-circle',
-                    }),
+                    ->searchable(),
                 TextColumn::make('total_price')
                     ->label('Totale')
                     ->money('EUR')
-                    ->sortable()
-                    ->alignEnd(),
+                    ->sortable(),
                 TextColumn::make('total_items')
                     ->label('Articoli')
                     ->numeric()
-                    ->sortable()
-                    ->alignCenter(),
+                    ->sortable(),
                 TextColumn::make('paid_at')
                     ->label('Pagato il')
                     ->dateTime()

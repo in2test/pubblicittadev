@@ -15,9 +15,9 @@
 @endphp
 
 <div class="mb-2">
-    <span class="font-mono text-[10px] tracking-tighter text-gray-800 bg-surface-container px-2 py-1">
+    <flux:badge size="sm" variant="subtle" color="gray">
         SKU: {{ $product->sku }}
-    </span>
+    </flux:badge>
 </div>
 
 <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950 mb-4 leading-none uppercase">
@@ -25,29 +25,28 @@
 </h1>
 
 @if ($isAdmin)
-    <div class=" mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-wrap gap-2">
-            <span
-                class="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-700 shadow-sm border border-slate-200">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+        <div class="flex flex-wrap gap-2 items-center">
+            <flux:badge size="sm" color="{{ $product->is_active ? 'zinc' : 'red' }}">
                 {{ $product->is_active ? 'Prodotto attivo' : 'Prodotto non attivo' }}
-            </span>
-            <a href="{{ $adminEditUrl }}"
-                class="inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-primary-700 transition-colors">
-                Modifica prodotto
-            </a>
-            <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}" class="inline">
+            </flux:badge>
+            
+            <flux:button href="{{ $adminEditUrl }}" size="sm" color="primary">
+                Modifica
+            </flux:button>
+            
+            <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}" class="inline m-0">
                 @csrf
-                <button type="submit"
-                    class="inline-flex items-center rounded-full {{ $product->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors">
-                    {{ $product->is_active ? 'Disattiva prodotto' : 'Attiva prodotto' }}
-                </button>
+                <flux:button type="submit" size="sm" color="{{ $product->is_active ? 'danger' : 'success' }}">
+                    {{ $product->is_active ? 'Disattiva' : 'Attiva' }}
+                </flux:button>
             </form>
-            <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline">
+            
+            <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline m-0">
                 @csrf
-                <button type="submit"
-                    class="inline-flex items-center rounded-full bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-sky-700 transition-colors">
-                    Sincronizza prodotto
-                </button>
+                <flux:button type="submit" size="sm" color="zinc">
+                    Sincronizza
+                </flux:button>
             </form>
         </div>
     </div>

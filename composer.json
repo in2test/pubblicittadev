@@ -30,6 +30,7 @@
         "larastan/larastan": "3.9.6",
         "laravel/boost": "^2.4",
         "laravel/pail": "^1.2.5",
+        "laravel/pao": "^1.0",
         "laravel/pint": "^1.27",
         "laravel/sail": "^1.53",
         "mockery/mockery": "^1.6",
@@ -66,11 +67,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://127.0.0.1:8000/webhooks/stripe\""
         ],
         "devherd": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' --host"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://pubblicittadev.test/webhooks/stripe\""
         ],
         "lint": [
             "pint --parallel"

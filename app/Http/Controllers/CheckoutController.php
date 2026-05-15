@@ -79,6 +79,7 @@ class CheckoutController extends Controller
         }
 
         Stripe::setApiKey(config('stripe.secret'));
+        Stripe::setApiVersion(config('stripe.api_version'));
 
         $lineItems = [];
         /** @var OrderItem $item */
@@ -102,7 +103,6 @@ class CheckoutController extends Controller
         }
 
         $session = Session::create([
-            'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'mode' => 'payment',
             'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',

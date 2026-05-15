@@ -20,6 +20,7 @@ class WebhookController extends Controller
     public function handle(Request $request)
     {
         Stripe::setApiKey(config('stripe.secret'));
+        Stripe::setApiVersion(config('stripe.api_version'));
 
         $payload = $request->getContent();
         $sig_header = $request->header('Stripe-Signature');
@@ -75,13 +76,9 @@ class WebhookController extends Controller
             return;
         }
 
-        $order->update([
-            'status' => 'paid',
-            'stripe_payment_intent_id' => $session->payment_intent,
-            'paid_at' => now(),
-        ]);
+        $order->completePayment($session->payment_intent);
 
-        Log::info('Stripe Webhook: Order marked as paid', ['order_id' => $orderId, 'stripe_session' => $session->id]);
+        Log::info('Stripe Webhook: Order marked as paid and inventory decremented', ['order_id' => $orderId, 'stripe_session' => $session->id]);
 
         // Here you can trigger order confirmation emails or other post-payment logic
     }

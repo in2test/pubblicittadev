@@ -43,90 +43,73 @@
     </div>
 </section>
 
-
-
-
-<section class="py-24 px-8 3xl:px-32 mx-auto bg-surface-container-lowest">
+<section class="py-24 px-8 3xl:px-32 mx-auto bg-white">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
         <div class="">
-            <span class="text-sm font-mono font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
-                <span class="w-8 h-px bg-primary mr-4"></span>PRODOTTO->TEMPLATE->CONTROLLO->SPEDIZIONE</span>
-            <h2 class="text-4xl font-bold tracking-tight text-on-surface leading-tighttext-right md:text-left">Come
-                funziona</h2>
+            <span class="text-sm font-mono font-bold uppercase tracking-widest text-vividauburn-500 mb-4 flex items-center">
+                <span class="w-8 h-px bg-vividauburn-500 mr-4"></span>PRODOTTO -> TEMPLATE -> CONTROLLO -> SPEDIZIONE</span>
+            <h2 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950 leading-tight text-left">Come funziona</h2>
         </div>
-        <div class="max-w-md text-right">
-            <p class="text-secondary font-mono text-sm leading-relaxed">Abbiamo reso tutto semplice, anche per chi non è
+        <div class="max-w-md md:text-right">
+            <p class="text-gray-600 font-mono text-sm leading-relaxed">Abbiamo reso tutto semplice, anche per chi non è
                 del mestiere, senza complicazioni tecniche.</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 h-full md:h-150">
-
-        <div class="md:col-span-2 group relative overflow-hidden bg-zinc-100 flex flex-col justify-end p-8">
-            <div class="absolute top-0 right-0 p-4 opacity-10">
-                <span class="text-6xl font-black">1</span>
-            </div>
-
-            <div class="absolute inset-0 bg-zinc-900/40 group-hover:bg-zinc-900/20 transition-colors"></div>
-            <div class="relative z-10 text-white">
-                <h3 class="text-xl lg:text-3xl font-black mb-2">Scegli il tuo prodotto</h3>
-                <p class="mb-6 max-w-xs opacity-80">Consulta il catalogo e individua quello che ti serve davvero:
-                    biglietti da visita, t-shirt, volantini, pannelli, insegne o altri materiali personalizzati .</p>
-                <div class="mt-auto">
-                    <a href="{{ route('catalog') }}"
-                        class="font-mono text-xs font-bold bg-white px-2 py-1 text-primary hover:bg-primary hover:text-white transition-colors uppercase">Catalogo
-                        completo</a>
-                </div>
-            </div>
-        </div>
-        <!-- Style 2: Iconic (Standard) -->
-        <div
-            class="group relative overflow-hidden bg-surface-container-high flex flex-col p-8 border-l-4 border-primary">
-            <div class="absolute top-0 right-0 p-4 opacity-10">
-                <span class="text-6xl font-black">2</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <!-- Step 1 -->
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col justify-between p-8 border border-gray-200 min-h-[300px]">
+            <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
+                <span class="text-8xl font-black text-gray-950">1</span>
             </div>
             <div class="relative z-10">
-                <h3 class="text-xl lg:text-3xl font-black mb-2">Scarica il template e aggiungi la tua grafica</h3>
-                <p class="text-sm text-secondary leading-relaxed mb-6">Se hai già il materiale pronto, puoi usare il
-                    template corretto per preparare il file con misure e impostazioni giuste. Se non hai ancora la
-                    grafica, puoi contattarci direttamente e ti aiutiamo noi.</p>
-
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Scegli il tuo prodotto</h3>
+                <p class="text-gray-600 leading-relaxed">Consulta il catalogo e individua quello che ti serve davvero:
+                    biglietti da visita, t-shirt, volantini o materiali personalizzati.</p>
+            </div>
+            <div class="relative z-10 mt-8">
+                <a href="{{ route('catalog') }}"
+                    class="inline-block font-mono text-xs font-bold bg-gray-950 px-4 py-2 text-white hover:bg-vividauburn-500 transition-colors uppercase">Catalogo completo</a>
             </div>
         </div>
 
-
-        <div class="group relative overflow-hidden bg-zinc-800 flex flex-col justify-between p-8 text-white">
-            <div class="absolute top-0 right-0 p-4 opacity-10">
-                <span class="text-6xl font-black">3</span>
+        <!-- Step 2 -->
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-[300px]">
+            <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
+                <span class="text-8xl font-black text-gray-950">2</span>
             </div>
-            <h3 class="text-xl lg:text-3xl font-black mb-2">Invia il file e attendi la conferma</h3>
-            <div class="space-y-2 font-mono text-xs opacity-60">
-                <p>Una volta caricato il file, il nostro team lo controlla gratuitamente. Se è tutto corretto, avviamo
-                    la produzione. Altrimenti ti contatteremo per sistemare insieme eventuali problemi.</p>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Aggiungi la tua grafica</h3>
+                <p class="text-gray-600 leading-relaxed">Usa i nostri template per preparare il file correttamente. Non hai la grafica? Contattaci e ti aiutiamo noi a crearla.</p>
             </div>
-
         </div>
-        <!-- Style 4: Bento Info (Wide) -->
-        <div
-            class="md:col-span-2 group relative overflow-hidden bg-surface-container-lowest p-8 flex items-center border border-surface-container">
-            <div class="absolute top-0 right-0 p-4 opacity-10">
-                <span class="text-6xl font-black">4</span>
+
+        <!-- Step 3 -->
+        <div class="group relative overflow-hidden bg-gray-950 flex flex-col p-8 text-white min-h-[300px]">
+            <div class="absolute top-0 right-0 p-4 opacity-20 select-none pointer-events-none">
+                <span class="text-8xl font-black text-white">3</span>
             </div>
-            <div class="flex-1">
-                <h3 class="text-xl lg:text-3xl font-black mb-2">Ricevi il tuo prodotto personalizzato
-                </h3>
-                <p class="text-secondary max-w-sm mb-8">Dopo la conferma, passiamo alla produzione e spediamo in tutta
-                    Italia. Per progetti più complessi in Centro Italia possiamo offrirti anche un supporto diretto sul
-                    posto .</p>
-                <ul class="grid grid-cols-2 gap-y-3 font-mono text-[11px] text-primary font-bold">
-                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary"></span>PRODUZIONE</li>
-                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary"></span>SPEDIZIONE</li>
-                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary"></span>CONSEGNA</li>
-                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary"></span>ASSISTENZA</li>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black mb-4">Controllo Gratuito</h3>
+                <p class="opacity-80 leading-relaxed text-sm">Controlliamo ogni file gratuitamente. Se c'è qualche problema tecnico, ti contattiamo per risolverlo insieme prima di stampare.</p>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-[300px]">
+            <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
+                <span class="text-8xl font-black text-gray-950">4</span>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Ricevi a casa</h3>
+                <p class="text-gray-600 leading-relaxed mb-6">Produciamo in tempi rapidi e spediamo in tutta Italia con corriere espresso.</p>
+                <ul class="grid grid-cols-2 gap-y-2 font-mono text-[10px] text-vividauburn-500 font-bold uppercase">
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Produzione</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Qualità</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Spedizione</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Assistenza</li>
                 </ul>
             </div>
-
         </div>
-
     </div>
 </section>

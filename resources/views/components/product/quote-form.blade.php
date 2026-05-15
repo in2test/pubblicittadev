@@ -16,7 +16,7 @@
 <form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">
-    <input type="hidden" name="quantity" :value="totalQuantity">
+    <input type="hidden" name="quantity" value="{{ $totalQuantity }}">
 
     {{-- Variation Selectors --}}
     <x-product.color-selector :$product :$colorId />
@@ -95,38 +95,21 @@
         </div>
 
         {{-- Actions --}}
-        <div class="grid grid-cols-1 gap-3">
-            <button type="submit"
-                class="w-full bg-primary text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-primary-700">
+        <div class="flex flex-col gap-3 mt-6">
+            <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 uppercase tracking-widest font-bold">
                 Richiedi Preventivo Personalizzato
-            </button>
+            </flux:button>
 
-            <button type="button" @if($totalQuantity < 1) disabled @endif
-                class="w-full bg-gray-950 text-white py-5 px-8 font-bold text-sm tracking-widest uppercase transition-transform active:scale-[0.98] hover:bg-black {{ $totalQuantity < 1 ? 'opacity-50 cursor-not-allowed' : '' }}" 
-                wire:click="addToCart">
-                <span>{{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }}</span>
+            <flux:button type="button" variant="filled" color="zinc" class="w-full h-14 uppercase tracking-widest font-bold" 
+                wire:click="addToCart" :disabled="$totalQuantity < 1">
+                {{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }} 
                 ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
-            </button>
+            </flux:button>
 
-            <a href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}"
-                class="w-full inline-flex items-center justify-center border border-on-surface/20 text-on-surface py-5 px-8 font-mono text-xs tracking-widest uppercase hover:bg-surface-container transition-colors">
+            <flux:button href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
                 Contattaci via email
-            </a>
+            </flux:button>
         </div>
     </div>
 </form>
 
-{{-- Hidden Cart Helper Form --}}
-<form x-ref="cartForm" action="{{ route('cart.add') }}" method="POST" class="hidden">
-    @csrf
-    <input type="hidden" name="product_id" value="{{ $product->id }}">
-    <input type="hidden" name="product_name" value="{{ $product->name }}">
-    <input type="hidden" name="product_slug" value="{{ $product->slug }}">
-    <input type="hidden" name="image_url" value="{{ $product->getFirstImageUrl('thumbnail') }}">
-    <input type="hidden" name="color_id" :value="activeColorId">
-    <input type="hidden" name="color_name" :value="activeColorId ? colorNames[activeColorId] : ''">
-    <input type="hidden" name="print_placements" :value="JSON.stringify(selectedPlacements.map(p => p.id))">
-    <input type="hidden" name="quantity" :value="totalQuantity">
-    <input type="hidden" name="size_id" :value="activeSizeId">
-    <input type="hidden" name="size_name" :value="activeSizeId ? sizeNames[activeSizeId] : ''">
-</form>

@@ -131,12 +131,15 @@ MAGGIO 2026 (Stato Attuale)
 ├─ ✅ Product Gallery v2.0 (Color mapping + Reordering)
 ├─ ✅ Job-Based Cart (Lavorazioni differenziate)
 ├─ ✅ User Dashboard & Address Manager (Flux UI)
-└- ✅ Test Suite (145+ test Pest)
+├─ ✅ Stripe Checkout & Webhooks
+├─ ✅ Inventory Management (Auto-decrement on payment)
+├─ ✅ Admin Order Management (Filament Resource)
+└─ ✅ Test Suite (145+ test Pest)
 
 PIANO PROSSIMI GIORNI
-├─ 🚧 Stripe Payment Integration (Laravel Cashier/SDK)
-├─ 🚧 Order Management (Transizione da Quote a Order)
-└─ 🚧 Email Notifications (Conferma ordine)
+├─ 🚧 Email Notifications (Conferma ordine - Basic implemented)
+├─ 🚧 Invoice Generation (PDF invoices)
+└─ 🚧 Shipping Tracking integration
 ```
 
 ---
@@ -163,15 +166,15 @@ Creati **145 test** (Pest) che coprono:
 - [x] Configurazione Fortify (Verifica Email).
 - [x] Area "I miei Ordini" e gestione indirizzi.
 
-### 💳 Modulo 3: Pagamenti & Checkout (Stripe)
-- [ ] Integrazione Stripe Checkout.
-- [ ] Stripe Webhooks per creazione ordine.
-- [ ] Incremento/Decremento automatico inventario al pagamento.
+### 💳 Modulo 3: Pagamenti & Checkout (Stripe) (COMPLETATO)
+- [x] Integrazione Stripe Checkout.
+- [x] Stripe Webhooks per creazione ordine.
+- [x] Incremento/Decremento automatico inventario al pagamento.
 
-### 🛠️ Modulo 4: Admin Order Management
-- [ ] `OrderResource` in Filament.
+### 🛠️ Modulo 4: Admin Order Management (IN CORSO)
+- [x] `OrderResource` in Filament.
 - [ ] Gestione Fatture & Tracking Spedizioni.
-- [ ] Sistema Notifiche Email automatiche.
+- [x] Sistema Notifiche Email automatiche (Basic Paid Confirmation).
 
 ---
 
