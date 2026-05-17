@@ -159,14 +159,15 @@ class Product extends Model implements HasMedia
         return $all->first();
     }
 
-    /**
-     * Get the URL for the first available image
-     */
     public function getFirstImageUrl(string $conversion = 'medium'): string
     {
         $image = $this->getFirstImage();
         if (! $image) {
             return 'https://placehold.co/600x800?text='.urlencode($this->name);
+        }
+
+        if ($conversion === 'thumbnail') {
+            $conversion = 'thumb';
         }
 
         return $image->{$conversion} ?? $image->url;
@@ -429,15 +430,11 @@ class Product extends Model implements HasMedia
          * Only index products that are active and synced (for NewWave products)
          * This ensures that only ready-to-sell products appear in search results.
          */
-        /** @var Category|null $category */
-        $category = $this->category;
-
         return [
             'id' => (int) $this->id,
             'name' => $this->name,
             'sku' => (string) $this->sku,
             'description' => (string) $this->description,
-            'category_name' => $category?->name,
         ];
     }
 

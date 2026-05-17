@@ -70,17 +70,17 @@
     --color-deepcove-900: #040c2f;
     --color-deepcove-950: #020618;
     /*Vivid auburn*/
-    --color-vividauburn-50: #faebeb;
-    --color-vividauburn-100: #f5d7d6;
-    --color-vividauburn-200: #ebafad;
-    --color-vividauburn-300: #e18784;
-    --color-vividauburn-400: #d75f5b;
-    --color-vividauburn-500: #cd3732;
-    --color-vividauburn-600: #a42c28;
-    --color-vividauburn-700: #7b211e;
-    --color-vividauburn-800: #521614;
-    --color-vividauburn-900: #290b0a;
-    --color-vividauburn-950: #140505;
+    --color-accent-50: #faebeb;
+    --color-accent-100: #f5d7d6;
+    --color-accent-200: #ebafad;
+    --color-accent-300: #e18784;
+    --color-accent-400: #d75f5b;
+    --color-accent-500: #cd3732;
+    --color-accent-600: #a42c28;
+    --color-accent-700: #7b211e;
+    --color-accent-800: #521614;
+    --color-accent-900: #290b0a;
+    --color-accent-950: #140505;
     /*Gray*/
     --color-gray-50: #f4f1f2;
     --color-gray-100: #e8e3e6;
@@ -149,17 +149,17 @@
         --color-deepcove-100: #040c2f;
         --color-deepcove-50: #020618;
         /*Vivid auburn*/
-        --color-vividauburn-950: #faebeb;
-        --color-vividauburn-900: #f5d7d6;
-        --color-vividauburn-800: #ebafad;
-        --color-vividauburn-700: #e18784;
-        --color-vividauburn-600: #d75f5b;
-        --color-vividauburn-500: #cd3732;
-        --color-vividauburn-400: #a42c28;
-        --color-vividauburn-300: #7b211e;
-        --color-vividauburn-200: #521614;
-        --color-vividauburn-100: #290b0a;
-        --color-vividauburn-50: #140505;
+        --color-accent-950: #faebeb;
+        --color-accent-900: #f5d7d6;
+        --color-accent-800: #ebafad;
+        --color-accent-700: #e18784;
+        --color-accent-600: #d75f5b;
+        --color-accent-500: #cd3732;
+        --color-accent-400: #a42c28;
+        --color-accent-300: #7b211e;
+        --color-accent-200: #521614;
+        --color-accent-100: #290b0a;
+        --color-accent-50: #140505;
         /*Gray*/
         --color-gray-950: #f4f1f2;
         --color-gray-900: #e8e3e6;
@@ -197,146 +197,79 @@
 
 @layer components {
     .mega-nav {
-        @apply border-b-2 border-gray-950 bg-gray-50 fixed z-55 top-0 left-0 w-full shadow-md font-mono uppercase tracking-widest text-[11px];
+        @apply bg-gray-50 sticky z-40 top-0 left-0 w-full border-b border-gray-200 font-mono uppercase tracking-widest text-[11px] transition-colors duration-300;
     }
 
     .mega-nav-shell {
-        @apply mx-auto px-6 3xl:px-32;
+        @apply mx-auto px-6 lg:px-12 3xl:px-24;
     }
 
     .mega-nav-row {
-        @apply flex items-center justify-between gap-4 py-0; /* Changed from py-4 to py-0 to allow full-height links */
+        @apply flex justify-between items-center py-0 w-full min-h-[64px] lg:grid lg:grid-cols-[1fr_auto_1fr];
     }
 
     .mega-logo {
-        @apply text-xl font-black text-gray-950 uppercase tracking-tighter hover:bg-gray-950 hover:text-white px-4 py-4 transition-colors;
-    }
-
-    .mega-mobile-toggle {
-        @apply p-4 border-l-2 border-transparent hover:border-gray-950 hover:bg-gray-200 transition-all duration-150 lg:hidden;
+        @apply text-base lg:text-lg font-bold text-gray-950 uppercase tracking-[0.25em] transition-colors text-left lg:text-center block py-4 hover:text-accent-500;
     }
 
     .mega-menu-root {
-        @apply hidden items-center gap-0 lg:flex;
+        @apply hidden items-center gap-4 lg:flex h-full;
     }
 
     .mega-trigger {
-        @apply inline-flex items-center gap-2 py-4 px-4 font-bold text-gray-800 border-x border-transparent hover:border-gray-950 hover:bg-gray-200 transition-all cursor-pointer;
+        @apply inline-flex items-center gap-1.5 h-[64px] px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
     }
 
     .mega-trigger-icon {
-        @apply h-3 w-3 text-gray-950 transition-transform duration-200;
+        @apply text-gray-400 transition-transform duration-300;
     }
 
     .mega-item {
-        @apply relative;
+        @apply uppercase;
     }
 
     .mega-panel {
-        @apply invisible absolute left-0 top-full -ml-px z-50 w-screen max-w-5xl border-b-4 border-x-2 border-t border-gray-950 bg-gray-50 p-8 opacity-0 transition-all duration-150;
+        @apply invisible absolute left-0 top-full z-50 w-full bg-gray-50 opacity-0 transition-all duration-300 py-8 px-6 lg:px-12 3xl:px-24 border-b border-gray-200 shadow-lg;
     }
 
-    .mega-item[data-open="true"] > .mega-panel {
+    .mega-panel.visible {
         @apply visible opacity-100 mt-0;
     }
 
-    .mega-item[data-open="true"] > .mega-trigger {
-        @apply bg-gray-950 text-white border-gray-950;
-    }
-
-    .mega-item[data-open="true"] .mega-trigger-icon {
-        @apply rotate-180 text-white;
-    }
-
     .mega-panel-grid {
-        @apply grid gap-8 lg:grid-cols-4;
+        @apply grid gap-8;
+        grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
     }
 
     .mega-col-title {
-        @apply mb-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 border-b-2 border-gray-950;
+        @apply mb-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-gray-200;
     }
 
     .mega-link-list {
-        @apply space-y-0;
+        @apply space-y-2;
     }
 
     .mega-link {
-        @apply block px-3 py-2 border-l-2 border-transparent transition-all hover:bg-gray-200 hover:border-gray-950;
+        @apply block transition-colors hover:text-accent-500;
     }
 
     .mega-link-title {
-        @apply block text-xs font-bold text-gray-950;
+        @apply block text-[11px] font-semibold text-gray-900;
     }
 
     .mega-link-copy {
-        @apply block mt-1 text-[10px] leading-relaxed text-gray-600 font-sans normal-case tracking-normal;
-    }
-
-    .mega-feature {
-        @apply bg-gray-950 p-6 border-2 border-vividauburn-500 text-white;
-    }
-
-    .mega-feature-kicker {
-        @apply mb-2 text-[10px] font-black uppercase tracking-widest text-vividauburn-500;
-    }
-
-    .mega-feature-title {
-        @apply text-sm font-bold text-white uppercase tracking-wider mb-2;
-    }
-
-    .mega-feature-copy {
-        @apply mt-2 text-xs leading-relaxed text-gray-400 font-sans normal-case tracking-normal;
-    }
-
-    .mega-feature-cta {
-        @apply mt-6 inline-flex items-center bg-vividauburn-500 px-4 py-3 text-xs font-bold text-white transition-all hover:bg-white hover:text-vividauburn-500 uppercase tracking-widest w-full justify-center;
+        @apply block mt-1 text-[10px] leading-relaxed text-gray-400 font-sans normal-case tracking-normal;
     }
 
     .mega-simple-link {
-        @apply inline-flex items-center gap-2 py-4 px-4 font-bold text-gray-800 border-x border-transparent hover:border-gray-950 hover:bg-gray-200 transition-all cursor-pointer;
-    }
-
-    .mega-mobile-panel {
-        @apply fixed inset-y-0 left-0 z-50 w-[92%] max-w-sm -translate-x-full overflow-y-auto border-r-4 border-gray-950 bg-gray-50 p-6 shadow-2xl transition duration-300 lg:hidden font-mono uppercase tracking-widest;
-    }
-
-    .mega-nav[data-mobile-open="true"] .mega-mobile-panel {
-        @apply translate-x-0;
+        @apply inline-flex items-center h-[64px] px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
     }
 
     .mega-mobile-backdrop {
-        @apply pointer-events-none fixed inset-0 z-40 bg-gray-950/50 opacity-0 transition lg:hidden backdrop-blur-sm;
+        @apply pointer-events-none fixed inset-0 z-40 bg-gray-950/40 opacity-0 transition-opacity duration-300 lg:hidden backdrop-blur-sm;
     }
 
-    .mega-nav[data-mobile-open="true"] .mega-mobile-backdrop {
-        @apply pointer-events-auto opacity-100;
-    }
-
-    .mega-mobile-header {
-        @apply mb-8 pb-4 flex items-center justify-between border-b-2 border-gray-950;
-    }
-
-    .mega-mobile-close {
-        @apply inline-flex items-center justify-center border-2 border-gray-950 bg-gray-50 p-2 text-gray-950 hover:bg-gray-950 hover:text-white transition-colors w-10 h-10 font-bold;
-    }
-
-    .mega-mobile-group {
-        @apply border-b border-gray-300 py-0;
-    }
-
-    .mega-mobile-trigger {
-        @apply flex w-full items-center justify-between px-3 py-4 text-left text-xs font-bold text-gray-950 transition hover:bg-gray-200;
-    }
-
-    .mega-mobile-submenu {
-        @apply hidden space-y-0 bg-gray-100 border-y border-gray-200;
-    }
-
-    .mega-mobile-group[data-open="true"] > .mega-mobile-submenu {
-        @apply block;
-    }
-
-    .mega-mobile-sublink {
-        @apply block px-6 py-3 text-[10px] font-bold text-gray-600 transition hover:bg-gray-950 hover:text-white border-l-2 border-transparent hover:border-vividauburn-500;
+    .mega-mobile-backdrop.opacity-100 {
+        @apply opacity-100;
     }
 }
