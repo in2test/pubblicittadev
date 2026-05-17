@@ -53,17 +53,22 @@ it('synchronizes product data correctly from API', function () {
     app(ProductSynchronizer::class)->syncProduct($product);
 
     $product->refresh();
+    $product->load('skus.options.type');
 
     expect($product->name)->toBe('New API Name');
     expect((float) $product->price)->toBe(99.99);
     expect($product->description)->toBe('Description from API');
-    expect($product->variations)->toHaveCount(1);
+    expect($product->skus)->toHaveCount(1);
 
-    $variation = $product->variations->first();
-    expect($variation->sku)->toBe('TEST-SKU-10-M');
-    expect($variation->quantity)->toBe(10); // Halving logic: floor(20 / 2)
-    expect($variation->color->color_code)->toBe('10');
-    expect($variation->size->size_code)->toBe('M');
+    $sku = $product->skus->first();
+    expect($sku->sku)->toBe('TEST-SKU-10-M');
+    expect($sku->quantity)->toBe(10); // Halving logic: floor(20 / 2)
+
+    $colorOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Color');
+    $sizeOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Size');
+
+    expect($colorOption->value)->toBe('10');
+    expect($sizeOption->value)->toBe('M');
 });
 
 it('does not update price if override_price is set', function () {

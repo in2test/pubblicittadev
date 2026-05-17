@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Color;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -69,7 +68,6 @@ class CheckoutController extends Controller
 
                 $order->items()->create([
                     'product_id' => $item['product_id'],
-                    'color_id' => $item['color_id'] ?? null,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'subtotal' => $unitPrice * $qty,
@@ -86,14 +84,11 @@ class CheckoutController extends Controller
         foreach ($order->items as $item) {
             /** @var Product|null $product */
             $product = $item->product;
-            /** @var Color|null $color */
-            $color = $item->color;
-
             $lineItems[] = [
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
-                        'name' => ($product->name ?? 'Prodotto').' - '.($color->color_name ?? 'Standard'),
+                        'name' => $product->name ?? 'Prodotto',
                         'description' => 'Item #'.$item->id,
                     ],
                     'unit_amount' => (int) round($item->unit_price * 100),

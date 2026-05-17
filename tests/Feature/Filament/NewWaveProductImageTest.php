@@ -59,8 +59,8 @@ it('assigns a remote variation image to its color when syncing NewWave data', fu
         ->first();
 
     expect($image)->not->toBeNull();
-    expect($image->color_id)->not->toBeNull();
-    expect($image->color->color_code)->toBe('99');
+    expect($image->variation_option_id)->not->toBeNull();
+    expect($image->variationOption->value)->toBe('99');
 });
 
 it('can download a remote image url into the product media library', function () {

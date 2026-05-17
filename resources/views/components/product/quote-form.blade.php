@@ -1,10 +1,58 @@
-@props(['product', 'colorId', 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null])
 
 @php
     /** @var \App\Models\Product $product */
     $discounts = $product->getQuantityDiscounts();
     $hasPlacements = $product->printPlacements->isNotEmpty();
-    $hasSides = $product->printSides->isNotEmpty();
+    
+    // We don't use printSides anymore or we can leave it if the model has it
+    $hasSides = false;
+
+    $variationTypes = $product->variationTypes;
+    
+    // Matrix type is the LAST variation type (where quantities are entered)
+    $matrixType = $variationTypes->last();
+    $selectorTypes = $variationTypes->slice(0, -1);
+    
+    // Filter SKUs based on the selected options of selectorTypes.
+    // If any selector type has NO selection, return empty so the matrix stays hidden
+    // until the user has chosen a value for every selector (e.g. a color).
+    $matchingSkus = collect();
+    $allSelectorsChosen = true;
+
+    if ($variationTypes->isNotEmpty()) {
+        // Check that every selector type has a chosen option
+        foreach ($selectorTypes as $type) {
+            if (empty($selectedOptions[$type->id])) {
+                $allSelectorsChosen = false;
+                break;
+            }
+        }
+
+        if ($allSelectorsChosen) {
+            $matchingSkus = $product->skus;
+            foreach ($selectorTypes as $type) {
+                $selectedId = $selectedOptions[$type->id] ?? null;
+                if ($selectedId) {
+                    $matchingSkus = $matchingSkus->filter(function ($sku) use ($selectedId) {
+                        return $sku->options->contains('id', $selectedId);
+                    });
+                }
+            }
+
+            // Sort matching SKUs by the sort_order of the matrixOption
+            if ($matrixType) {
+                $matchingSkus = $matchingSkus->sortBy(function ($sku) use ($matrixType) {
+                    $option = $sku->options->firstWhere('variation_type_id', $matrixType->id);
+
+                    return $option ? $option->sort_order : 0;
+                });
+            }
+        }
+    } else {
+        // Simple product with no variation selectors — always show SKUs
+        $matchingSkus = $product->skus;
+    }
 @endphp
 
 @if (session('quoteSuccess'))
@@ -13,16 +61,129 @@
     </div>
 @endif
 
-<form action="{{ route('quote.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
-    @csrf
+<form action="#" wire:submit.prevent="addToCart" class="space-y-8">
     <input type="hidden" name="product_id" value="{{ $product->id }}">
     <input type="hidden" name="quantity" value="{{ $totalQuantity }}">
 
     {{-- Variation Selectors --}}
-    <x-product.color-selector :$product :$colorId />
-    <x-product.size-selector :$product :$colorId />
+    @foreach ($selectorTypes as $type)
+        <div class="space-y-4">
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                {{ $type->name }}
+            </label>
+            <div class="flex flex-wrap gap-2">
+                @php
+                    $productOptions = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->sortBy('sort_order');
+                @endphp
+                @foreach ($productOptions as $option)
+                    @php $isActive = ($selectedOptions[$type->id] ?? null) == $option->id; @endphp
+
+                    @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
+                        @php
+                            $hexColors = $option->getHexColors();
+                            // Build the CSS background: diagonal split for 2 colours, solid for 1
+                            $swatchStyle = count($hexColors) >= 2
+                                ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
+                                : 'background-color: ' . $hexColors[0];
+                        @endphp
+                        <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                            @class([
+                                'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
+                                'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                'border-gray-300' => !$isActive
+                            ])
+                            @style([$swatchStyle])
+                            title="{{ $option->name }}"
+                        ></button>
+                    @else
+                        <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                            @class([
+                                'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                'bg-primary text-white border-primary' => $isActive,
+                                'bg-white border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                            ])
+                        >
+                            {{ $option->name }}
+                        </button>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+
+    {{-- Matrix / Quantities --}}
+    @if ($matchingSkus->isNotEmpty())
+        <div class="space-y-4 pt-4 border-t border-outline-variant/10">
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                {{ $matrixType ? $matrixType->name . ' e Quantità' : 'Quantità' }}
+            </label>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+                @foreach ($matchingSkus as $sku)
+                    @php
+                        $label = 'Unica';
+                        if ($matrixType) {
+                            $matrixOption = $sku->options->firstWhere('variation_type_id', $matrixType->id);
+                            if ($matrixOption) $label = $matrixOption->name;
+                        }
+                    @endphp
+                    <div class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all {{ $sku->quantity <= 0 && $product->type === 'newwave' ? 'opacity-50 grayscale-[0.5]' : '' }}">
+                        <div class="flex flex-col">
+                            <span class="font-mono text-sm font-bold">{{ $label }}</span>
+                            <span class="text-[9px] text-gray-500 uppercase tracking-tighter mt-1">
+                                @if ($product->type === 'newwave')
+                                    @if ($sku->quantity > 0)
+                                        <span>Disponibili:
+                                            <span class="font-bold text-primary/70">
+                                                {{ $sku->quantity }}
+                                            </span>
+                                        </span>
+                                    @else
+                                        <span class="text-red-500 font-bold">Esaurito</span>
+                                    @endif
+                                @else
+                                    <span class="text-emerald-600 font-bold">In Produzione</span>
+                                @endif
+                            </span>
+                        </div>
+
+                        <div>
+                            <input wire:model.live="quantities.{{ $sku->id }}" type="number" min="0"
+                                @if ($product->type === 'newwave' && $sku->quantity <= 0) disabled @endif
+                                class="w-16 h-12 border border-gray-600/20 bg-white px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            @if($this->totalQuantity > 0)
+                <div class="mt-4 p-4 bg-peachsouffle-200 rounded border border-primary/20 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
+                        <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
+                    </div>
+                    
+                    @if($this->totalPrice > 0)
+                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
+                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Prezzo Totale (Stampe incluse)</span>
+                            <span class="text-lg font-bold text-primary font-mono">€{{ number_format($this->totalPrice, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+    @elseif ($selectorTypes->isNotEmpty() && !$allSelectorsChosen)
+        {{-- Prompt shown when color (or another selector) hasn't been chosen yet --}}
+        <div class="pt-4 border-t border-outline-variant/10">
+            <p class="text-xs font-mono uppercase tracking-widest text-secondary/60 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">palette</span>
+                Seleziona {{ $selectorTypes->map(fn($t) => $t->name)->implode(' e ') }} per vedere le taglie disponibili
+            </p>
+        </div>
+    @endif
 
     {{-- Printing Options --}}
+    @if ($hasPlacements || $hasSides)
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">
 
         {{-- Print Placements --}}
@@ -69,47 +230,42 @@
                 </div>
             </div>
         @endif
+    </div>
+    @endif
 
-        {{-- File Upload --}}
-        <div>
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                Carica il tuo design
-            </label>
-            <input type="file" name="design_file" accept="image/*,.pdf"
-                class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
-            @error('design_file')
-                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-            @enderror
-        </div>
+    {{-- File Upload --}}
+    <div>
+        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+            Carica il tuo design
+        </label>
+        <input type="file" name="design_file" accept="image/*,.pdf"
+            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
+        @error('design_file')
+            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+        @enderror
+    </div>
 
-        {{-- Notes --}}
-        <div>
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                Note aggiuntive
-            </label>
-            <textarea name="notes" rows="4"
-                class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
-            @error('notes')
-                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-            @enderror
-        </div>
+    {{-- Notes --}}
+    <div>
+        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+            Note aggiuntive
+        </label>
+        <textarea name="notes" rows="4"
+            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
+        @error('notes')
+            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+        @enderror
+    </div>
 
-        {{-- Actions --}}
-        <div class="flex flex-col gap-3 mt-6">
-            <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 uppercase tracking-widest font-bold">
-                Richiedi Preventivo Personalizzato
-            </flux:button>
+    {{-- Actions --}}
+    <div class="flex flex-col gap-3 mt-6">
+        <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 uppercase tracking-widest font-bold" :disabled="$totalQuantity < 1">
+            {{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }} 
+            ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
+        </flux:button>
 
-            <flux:button type="button" variant="filled" color="zinc" class="w-full h-14 uppercase tracking-widest font-bold" 
-                wire:click="addToCart" :disabled="$totalQuantity < 1">
-                {{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }} 
-                ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
-            </flux:button>
-
-            <flux:button href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
-                Contattaci via email
-            </flux:button>
-        </div>
+        <flux:button href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
+            Contattaci via email
+        </flux:button>
     </div>
 </form>
-

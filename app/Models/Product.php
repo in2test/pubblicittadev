@@ -28,6 +28,27 @@ use Throwable;
  *
  * Represents a customizable apparel item. Can be a standard product
  * or synced from the NewWave API.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $sku
+ * @property string $description
+ * @property float $price
+ * @property float $offer_price
+ * @property bool $is_featured
+ * @property int $category_id
+ * @property string $type
+ * @property SyncStatus|null $sync_status
+ * @property Carbon $synced_at
+ * @property bool $is_active
+ * @property int $sync_progress
+ * @property bool $override_price
+ * @property bool $override_description
+ * @property array $remote_images
+ * @property-read Category $category
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $variationTypes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
  */
 #[Fillable([
     'sku',
@@ -45,31 +66,8 @@ use Throwable;
     'sync_progress',
     'override_price',
     'override_description',
-    'disabled_colors',
     'remote_images',
 ])]
-/**
- * @property int $id
- * @property string $name
- * @property string $slug
- * @property string $sku
- * @property string $description
- * @property float $price
- * @property float $offer_price
- * @property bool $is_featured
- * @property int $category_id
- * @property string $type
- * @property string $sync_status
- * @property Carbon $synced_at
- * @property bool $is_active
- * @property int $sync_progress
- * @property bool $override_price
- * @property bool $override_description
- * @property array $disabled_colors
- * @property array $remote_images
- * @property-read Category $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariation> $variations
- */
 class Product extends Model implements HasMedia
 {
     use HasFactory;
@@ -89,7 +87,6 @@ class Product extends Model implements HasMedia
         'sync_status' => SyncStatus::class,
         'override_price' => 'boolean',
         'override_description' => 'boolean',
-        'disabled_colors' => 'array',
         'remote_images' => 'array',
     ];
 
@@ -101,14 +98,24 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Category::class);
     }
 
-    public function variations(): HasMany
+    public function variationTypes(): BelongsToMany
     {
-        return $this->hasMany(ProductVariation::class);
+        return $this->belongsToMany(VariationType::class, 'product_variation_types')
+            ->using(ProductVariationType::class)
+            ->withPivot('id', 'has_images', 'affects_price', 'sort_order')
+            ->orderByPivot('sort_order');
+    }
+
+    public function skus(): HasMany
+    {
+        return $this->hasMany(ProductSku::class);
     }
 
     public function printPlacements(): BelongsToMany
     {
-        return $this->belongsToMany(PrintPlacement::class, 'product_print_placement');
+        return $this->belongsToMany(PrintPlacement::class, 'product_print_placement')
+            ->withPivot('additional_price')
+            ->withTimestamps();
     }
 
     public function productPrintPlacements(): HasMany
@@ -118,7 +125,8 @@ class Product extends Model implements HasMedia
 
     public function printSides(): BelongsToMany
     {
-        return $this->belongsToMany(PrintSide::class, 'product_print_side');
+        return $this->belongsToMany(PrintSide::class, 'product_print_side')
+            ->withTimestamps();
     }
 
     public function images(): HasMany
@@ -175,20 +183,35 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get a list of unique colors available for this product (for preview)
+     * Get a list of unique options for the visual variation (e.g., Color) for preview
      */
     public function getPreviewColors(int $limit = 8): array
     {
-        $colors = $this->variations
-            ->pluck('color')
-            ->unique('id')
-            ->filter()
-            ->sortBy('sort_order');
+        $visualType = $this->variationTypes->firstWhere('pivot.has_images', true);
+        if (! $visualType) {
+            return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+        }
+
+        // Get all options associated with this product's visual type
+        /** @var ProductVariationType|null $productVariationType */
+        $productVariationType = ProductVariationType::where('product_id', $this->id)
+            ->where('variation_type_id', $visualType->id)
+            ->first();
+
+        if ($productVariationType === null) {
+            return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+        }
+
+        $productVariationTypeId = $productVariationType->id;
+
+        $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($productVariationTypeId) {
+            $query->where('product_variation_type_id', $productVariationTypeId);
+        })->orderBy('sort_order')->get();
 
         return [
-            'display' => $colors->take($limit),
-            'remaining' => max(0, $colors->count() - $limit),
-            'total' => $colors->count(),
+            'display' => $options->take($limit),
+            'remaining' => max(0, $options->count() - $limit),
+            'total' => $options->count(),
         ];
     }
 
@@ -237,8 +260,8 @@ class Product extends Model implements HasMedia
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
                 'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
                 'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'color_id' => $resolvedColorId,
-                'color_ids' => is_array($colorIds) ? $colorIds : ($colorId ? [$colorId] : []),
+                'variation_option_id' => $resolvedColorId,
+                'variation_option_ids' => is_array($colorIds) ? $colorIds : ($colorId ? [$colorId] : []),
                 'order' => $media->order_column,
                 'type' => 'local',
                 'is_remote' => false,
@@ -261,7 +284,7 @@ class Product extends Model implements HasMedia
                 'thumb' => $remote->thumbnail_url ?: $remote->image_url,
                 'medium' => $remote->medium_url ?: $remote->image_url,
                 'large' => $remote->large_url ?: $remote->image_url,
-                'color_id' => $remote->color_id,
+                'variation_option_id' => $remote->variation_option_id,
                 'order' => $remote->order_by,
                 'type' => 'remote',
                 'alt' => $remote->alt,
@@ -292,7 +315,7 @@ class Product extends Model implements HasMedia
                     ],
                     [
                         'image_description' => $remote['image_description'] ?? null,
-                        'color_id' => $remote['color_id'] ?? null,
+                        'variation_option_id' => $remote['variation_option_id'] ?? $remote['color_id'] ?? null,
                     ]
                 );
             }

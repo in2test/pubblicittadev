@@ -30,7 +30,6 @@ return new class extends Migration
             $table->decimal('offer_price', 10, 2)->nullable();
             $table->boolean('override_price')->default(false);
 
-            $table->json('disabled_colors')->nullable();
             $table->boolean('is_featured')->default(false);
 
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');

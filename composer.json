@@ -67,11 +67,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://127.0.0.1:8000/webhooks/stripe\""
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://127.0.0.1:8000/webhooks/stripe\" \"mailpit.exe\""
         ],
         "devherd": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://pubblicittadev.test/webhooks/stripe\""
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite' \"stripe listen --forward-to http://pubblicittadev.test/webhooks/stripe\" \"mailpit.exe\""
         ],
         "lint": [
             "pint --parallel"

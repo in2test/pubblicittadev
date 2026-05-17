@@ -43,7 +43,7 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        $order->load(['items.product', 'items.color', 'shippingAddress', 'billingAddress']);
+        $order->load(['items.product', 'shippingAddress', 'billingAddress']);
 
         return view('dashboard.order-details', ['order' => $order]);
     }

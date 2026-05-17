@@ -48,59 +48,55 @@
                 </ul>
             </div>
 
-            {{-- Filter: Colors --}}
-            @if($this->availableColors->isNotEmpty())
-                <div class="pt-10 border-t border-gray-100">
-                    <h3 class="text-[10px] font-mono uppercase tracking-[0.3em] text-secondary mb-8 flex items-center gap-3">
-                        <span class="w-2 h-2 bg-primary"></span>
-                        Colore
-                    </h3>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($this->availableColors as $color)
-                            @php $isActive = in_array($color->id, $selectedColors); @endphp
-                            <button
-                                wire:click="toggleColor({{ $color->id }})"
-                                @class([
-                                    'w-6 h-6 border transition-all duration-200 flex items-center justify-center relative group',
-                                    'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
-                                    'border-gray-200' => !$isActive
-                                ])
-                                @style(['background-color: ' . ($color->color_hex ?: '#ccc')])
-                                title="{{ $color->color_name }}"
-                            >
-                                @if($isActive)
-                                    <span class="material-symbols-outlined text-[10px] text-white mix-blend-difference">check</span>
-                                @endif
-                            </button>
-                        @endforeach
+            {{-- Generic Filters --}}
+            @foreach($this->availableVariationTypes as $variationType)
+                @if($variationType->options->isNotEmpty())
+                    <div class="pt-10 border-t border-gray-100">
+                        <h3 class="text-[10px] font-mono uppercase tracking-[0.3em] text-secondary mb-8 flex items-center gap-3">
+                            <span class="w-2 h-2 bg-primary"></span>
+                            {{ $variationType->name }}
+                        </h3>
+                        
+                        @if($variationType->presentation_type === 'color_swatch')
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($variationType->options as $option)
+                                    @php $isActive = in_array($option->id, $selectedOptions); @endphp
+                                    <button
+                                        wire:click="toggleOption({{ $option->id }})"
+                                        @class([
+                                            'w-6 h-6 border transition-all duration-200 flex items-center justify-center relative group',
+                                            'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                            'border-gray-200' => !$isActive
+                                        ])
+                                        @style(['background-color: ' . ($option->value ?: '#ccc')])
+                                        title="{{ $option->name }}"
+                                    >
+                                        @if($isActive)
+                                            <span class="material-symbols-outlined text-[10px] text-white mix-blend-difference">check</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="grid grid-cols-4 gap-1">
+                                @foreach($variationType->options as $option)
+                                    @php $isActive = in_array($option->id, $selectedOptions); @endphp
+                                    <button 
+                                        wire:click="toggleOption({{ $option->id }})"
+                                        @class([
+                                            'aspect-square border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                            'bg-primary text-white border-primary' => $isActive,
+                                            'bg-white border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                                        ])
+                                    >
+                                        {{ $option->name }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
-                </div>
-            @endif
-
-            {{-- Filter: Sizes --}}
-            @if($this->availableSizes->isNotEmpty())
-                <div class="pt-10 border-t border-gray-100">
-                    <h3 class="text-[10px] font-mono uppercase tracking-[0.3em] text-secondary mb-8 flex items-center gap-3">
-                        <span class="w-2 h-2 bg-primary"></span>
-                        Taglia
-                    </h3>
-                    <div class="grid grid-cols-4 gap-1">
-                        @foreach($this->availableSizes as $size)
-                            @php $isActive = in_array($size->id, $selectedSizes); @endphp
-                            <button 
-                                wire:click="toggleSize({{ $size->id }})"
-                                @class([
-                                    'aspect-square border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                    'bg-primary text-white border-primary' => $isActive,
-                                    'bg-white border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
-                                ])
-                            >
-                                {{ $size->size }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+                @endif
+            @endforeach
 
             {{-- Reset All Filters --}}
             @if($this->isFiltering)

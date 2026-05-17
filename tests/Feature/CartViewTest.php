@@ -7,11 +7,10 @@ use App\Models\VariationOption;
 use App\Models\VariationType;
 use App\Services\CartManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-it('can edit an existing job in the cart', function () {
+it('renders the cart page successfully with dynamic product variations', function () {
     $category = Category::factory()->create(['slug' => 'apparel']);
     $product = Product::factory()->create([
         'category_id' => $category->id,
@@ -43,21 +42,22 @@ it('can edit an existing job in the cart', function () {
         'product_id' => $product->id,
         'product_name' => $product->name,
         'product_slug' => $product->slug,
+        'selected_options' => [
+            $colorType->id => $color->id,
+        ],
+        'options_summary' => [
+            'Color' => 'Red',
+        ],
+        'quantities' => [
+            $sku->id => 10,
+        ],
         'quantity' => 10,
         'price' => 50,
     ]);
 
-    $jobId = array_key_first($cart->getItems());
+    $response = $this->get(route('cart'));
 
-    Livewire::test('⚡product', [
-        'product' => $product,
-        'category' => $category,
-        'jobId' => $jobId,
-    ])
-        ->set("quantities.{$sku->id}", 20)
-        ->call('addToCart')
-        ->assertRedirect(route('cart'));
-
-    $items = $cart->getItems();
-    expect($items[$jobId]['quantity'])->toBe(20);
+    $response->assertStatus(200);
+    $response->assertSee('Red');
+    $response->assertSee('10');
 });

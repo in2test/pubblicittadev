@@ -64,9 +64,9 @@ class CartManager
 
     /**
      * Update the quantity of a specific job in the cart.
-     * Supports both single-size and multi-size (via sizeId) updates.
+     * Supports both single-size and multi-size (via skuId) updates.
      */
-    public function updateItemQuantity(string $jobId, int $quantity, ?int $sizeId = null): void
+    public function updateItemQuantity(string $jobId, int $quantity, ?int $skuId = null): void
     {
         $items = $this->getItems();
 
@@ -76,9 +76,9 @@ class CartManager
 
         $item = $items[$jobId];
 
-        if ($sizeId !== null) {
+        if ($skuId !== null) {
             $item['quantities'] ??= [];
-            $item['quantities'][$sizeId] = $quantity;
+            $item['quantities'][$skuId] = $quantity;
             $item['quantity'] = array_sum($item['quantities']);
         } else {
             $item['quantity'] = $quantity;

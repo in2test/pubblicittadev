@@ -107,43 +107,24 @@ class Order extends Model
         foreach ($this->items as $item) {
             $config = $item->customization_json;
             $productId = $item->product_id;
-            $colorId = $item->color_id;
             $quantities = $config['quantities'] ?? [];
 
             if (empty($quantities)) {
                 // Fallback for single quantity if quantities array is missing
-                $this->updateVariationQuantity($productId, $colorId, null, (int) ($config['quantity'] ?? 1));
+                $sku = ProductSku::where('product_id', $productId)->first();
+                if ($sku !== null) {
+                    $sku->decrement('quantity', (int) ($config['quantity'] ?? 1));
+                }
 
                 continue;
             }
 
-            foreach ($quantities as $sizeId => $qty) {
-                $this->updateVariationQuantity($productId, $colorId, (int) $sizeId, (int) $qty);
+            foreach ($quantities as $skuId => $qty) {
+                $sku = ProductSku::find((int) $skuId);
+                if ($sku !== null) {
+                    $sku->decrement('quantity', (int) $qty);
+                }
             }
-        }
-    }
-
-    /**
-     * Update the quantity for a specific variation.
-     */
-    protected function updateVariationQuantity(int $productId, ?int $colorId, ?int $sizeId, int $qty): void
-    {
-        $query = ProductVariation::where('product_id', $productId);
-
-        if ($colorId) {
-            $query->where('color_id', $colorId);
-        }
-
-        if ($sizeId) {
-            $query->where('size_id', $sizeId);
-        }
-
-        // We take the first matching variation. In our system, stock is usually
-        // tracked by product+color+size, ignoring placements for stock levels.
-        $variation = $query->first();
-
-        if ($variation) {
-            $variation->decrement('quantity', $qty);
         }
     }
 }

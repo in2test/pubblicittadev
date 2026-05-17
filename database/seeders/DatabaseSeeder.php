@@ -14,8 +14,7 @@ class DatabaseSeeder extends Seeder
             PrintPlacementSeeder::class,
             PrintSideSeeder::class,
             CategorySeeder::class,
-            SizeSeeder::class,
-            ColorSeeder::class,
+            VariationOptionSeeder::class,
             NewWaveProductSeeder::class,
         ]);
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\Category;
-use App\Models\Color;
 use App\Models\PrintPlacement;
 use App\Models\Product;
+use App\Models\VariationOption;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
@@ -130,7 +130,7 @@ class ProductForm
                                 Select::make('custom_properties.color_ids')
                                     ->label('Associa a uno o più colori')
                                     ->multiple()
-                                    ->options(fn ($record) => Color::pluck('color_name', 'id'))
+                                    ->options(fn ($record) => VariationOption::pluck('name', 'id'))
                                     ->preload()
                                     ->searchable()
                                     ->columnSpan(2),

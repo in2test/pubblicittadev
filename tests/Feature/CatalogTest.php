@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Category;
-use App\Models\Color;
 use App\Models\Product;
-use App\Models\ProductVariation;
-use App\Models\Size;
+use App\Models\ProductSku;
+use App\Models\VariationOption;
+use App\Models\VariationType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -51,34 +51,36 @@ it('can filter products by category', function () {
         ->assertDontSee('Pants B');
 });
 
-it('can filter products by color', function () {
+it('can filter products by variation option', function () {
     $category = Category::factory()->create(['name' => 'Shirts', 'slug' => 'shirts']);
-    $colorBlue = Color::factory()->create(['color_name' => 'Blue']);
-    $colorRed = Color::factory()->create(['color_name' => 'Red']);
+
+    $colorType = VariationType::factory()->create(['name' => 'Color', 'presentation_type' => 'color_swatch']);
+
+    $colorBlue = VariationOption::factory()->create(['variation_type_id' => $colorType->id, 'name' => 'Blue']);
+    $colorRed = VariationOption::factory()->create(['variation_type_id' => $colorType->id, 'name' => 'Red']);
 
     $product1 = Product::factory()->create(['name' => 'Blue Shirt', 'category_id' => $category->id, 'is_active' => true]);
     $product2 = Product::factory()->create(['name' => 'Red Shirt', 'category_id' => $category->id, 'is_active' => true]);
 
-    $size = Size::factory()->create();
+    $product1->variationTypes()->attach($colorType->id);
+    $product2->variationTypes()->attach($colorType->id);
 
-    ProductVariation::factory()->create([
+    $sku1 = ProductSku::factory()->create([
         'product_id' => $product1->id,
-        'color_id' => $colorBlue->id,
-        'size_id' => $size->id,
         'is_available' => true,
         'quantity' => 10,
     ]);
+    $sku1->options()->attach($colorBlue->id);
 
-    ProductVariation::factory()->create([
+    $sku2 = ProductSku::factory()->create([
         'product_id' => $product2->id,
-        'color_id' => $colorRed->id,
-        'size_id' => $size->id,
         'is_available' => true,
         'quantity' => 10,
     ]);
+    $sku2->options()->attach($colorRed->id);
 
     Livewire::test('catalog', ['categorySlug' => 'shirts'])
-        ->set('selectedColors', [$colorBlue->id])
+        ->set('selectedOptions', [$colorBlue->id])
         ->assertSee('Blue Shirt')
         ->assertDontSee('Red Shirt');
 });

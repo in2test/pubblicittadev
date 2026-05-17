@@ -30,13 +30,13 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $alt
  * @property int $product_id
  * @property int|null $category_id
- * @property int|null $color_id
+ * @property int|null $variation_option_id
  * @property int $order_by
  * @property-read Product|null $product
  * @property-read Category|null $category
- * @property-read Color|null $color
+ * @property-read VariationOption|null $variationOption
  */
-#[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'color_id', 'order_by'])]
+#[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'variation_option_id', 'order_by'])]
 class Image extends Model
 {
     use HasFactory;
@@ -81,9 +81,9 @@ class Image extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function color()
+    public function variationOption()
     {
-        return $this->belongsTo(Color::class);
+        return $this->belongsTo(VariationOption::class, 'variation_option_id');
     }
 
     public function getThumbnailUrlAttribute(): ?string

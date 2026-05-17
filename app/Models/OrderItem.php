@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'order_id',
     'product_id',
-    'color_id',
     'quantity',
     'unit_price',
     'subtotal',
@@ -23,13 +22,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $order_id
  * @property int $product_id
- * @property int|null $color_id
  * @property int $quantity
  * @property float $unit_price
  * @property float $subtotal
  * @property array $customization_json
  * @property-read Product $product
- * @property-read Color|null $color
  */
 class OrderItem extends Model
 {
@@ -49,10 +46,5 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function color(): BelongsTo
-    {
-        return $this->belongsTo(Color::class);
     }
 }

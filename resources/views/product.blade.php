@@ -1,3 +1,3 @@
 <x-layout>
-    <livewire:product :product="$product" :category="$category" :colorId="$colorId" :jobId="$jobId" />
+    <livewire:product :product="$product" :category="$category" :jobId="$jobId" />
 </x-layout>

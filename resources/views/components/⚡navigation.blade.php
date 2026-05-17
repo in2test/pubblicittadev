@@ -140,7 +140,7 @@ new class extends Component {
                     $user = Illuminate\Support\Facades\Auth::user();
                 @endphp
                 <a href="{{ route('cart') }}"
-                    class="p-2 hover:bg-gray-100  text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors">
+                    class="relative p-2 hover:bg-gray-100  text-gray-700 border-gray-50 hover:text-gray-950 focus:outline-none border-b-2 focus:border-gray-400 transition-colors">
                     <span class="material-symbols-outlined">shopping_cart</span>
                     @if ($count > 0)
                         <span

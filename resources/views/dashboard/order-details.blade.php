@@ -25,7 +25,13 @@
                             <div class="flex-1">
                                 <h4 class="font-bold">{{ $item->product->name }}</h4>
                                 <p class="text-sm text-neutral-500">
-                                    Colore: <span class="font-medium text-neutral-900">{{ $item->color?->color_name ?? 'Standard' }}</span>
+                                    @if(isset($item->customization_json['options_summary']) && is_array($item->customization_json['options_summary']))
+                                        @foreach($item->customization_json['options_summary'] as $type => $option)
+                                            <span class="mr-3">{{ $type }}: <span class="font-medium text-neutral-900">{{ $option }}</span></span>
+                                        @endforeach
+                                    @else
+                                        Colore: <span class="font-medium text-neutral-900">Standard</span>
+                                    @endif
                                 </p>
                                 <div class="mt-2 flex items-center justify-between">
                                     <span class="text-sm">Quantità: <span class="font-bold">{{ $item->quantity }}</span></span>

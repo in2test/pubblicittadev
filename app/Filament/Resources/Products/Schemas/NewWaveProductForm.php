@@ -6,10 +6,10 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use App\Enums\SyncStatus;
 use App\Models\Category;
-use App\Models\Color;
 use App\Models\Image;
 use App\Models\PrintPlacement;
 use App\Models\Product;
+use App\Models\VariationOption;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
@@ -37,7 +37,7 @@ class NewWaveProductForm
 {
     public static function configure(Schema $schema): Schema
     {
-        $colorOptions = Color::pluck('color_name', 'id')->all();
+        $colorOptions = VariationOption::pluck('name', 'id')->all();
 
         $generalTab = Tab::make('Configurazione Generale')
             ->icon('heroicon-o-cog-6-tooth')
@@ -176,9 +176,11 @@ class NewWaveProductForm
                                     ->label('Nascondi Colori')
                                     ->multiple()
                                     ->options(fn (?Product $record) => $record instanceof Model
-                                        ? Color::whereHas('variations', fn ($q) => $q->where('product_id', $record->id))
-                                            ->pluck('color_name', 'id')
-                                            ->all()
+                                        ? VariationOption::whereHas('productVariationOptions', function ($query) use ($record) {
+                                            $query->whereHas('productVariationType', function ($q) use ($record) {
+                                                $q->where('product_id', $record->id);
+                                            });
+                                        })->pluck('name', 'id')->all()
                                         : []
                                     )
                                     ->helperText('Questi colori non saranno visibili o acquistabili.'),

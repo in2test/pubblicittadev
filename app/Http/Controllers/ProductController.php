@@ -27,10 +27,10 @@ class ProductController extends Controller
         $product->load([
             'category.parent',
             'pricingTiers',
-            'variations.color',
-            'variations.size',
-            'variations.printPlacement',
-            'variations.printSide',
+            'variationTypes.options',
+            'skus.options.type',
+            'printPlacements',
+            'printSides',
             'media',
         ]);
 
@@ -50,7 +50,6 @@ class ProductController extends Controller
         return view('product', [
             'product' => $product,
             'category' => $category,
-            'colorId' => $request->query('color_id'),
             'jobId' => $request->query('job_id'),
         ]);
     }

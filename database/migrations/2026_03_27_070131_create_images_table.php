@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('image_description')->nullable();
             $table->foreignId('product_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('color_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('variation_option_id')->nullable()->constrained()->onDelete('set null');
 
             $table->integer('order_by')->nullable();
             $table->timestamps();

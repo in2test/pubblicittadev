@@ -6,7 +6,10 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductSku;
 use App\Models\User;
+use App\Models\VariationOption;
+use App\Models\VariationType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -58,8 +61,51 @@ class ProductPageTest extends TestCase
 
         $response->assertOk();
         $productData = $response->viewData('product');
-        $this->assertTrue($productData->relationLoaded('variations'));
+        $this->assertTrue($productData->relationLoaded('variationTypes'));
+        $this->assertTrue($productData->relationLoaded('skus'));
         $this->assertTrue($productData->relationLoaded('pricingTiers'));
+    }
+
+    public function test_product_page_with_skus_and_variation_options(): void
+    {
+        $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'slug' => 'test-product-with-skus',
+            'category_id' => $category->id,
+        ]);
+
+        $colorType = VariationType::create([
+            'name' => 'Color',
+            'presentation_type' => 'color_swatch',
+        ]);
+
+        $colorOption = VariationOption::create([
+            'variation_type_id' => $colorType->id,
+            'name' => 'Red',
+            'value' => '#FF0000',
+        ]);
+
+        $sku = ProductSku::create([
+            'product_id' => $product->id,
+            'sku' => 'TEST-SKU-RED',
+            'quantity' => 10,
+            'is_available' => true,
+        ]);
+
+        $sku->options()->attach($colorOption->id);
+
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
+
+        $response->assertOk();
+        $productData = $response->viewData('product');
+        $this->assertTrue($productData->relationLoaded('skus'));
+
+        $loadedSku = $productData->skus->first();
+        $this->assertTrue($loadedSku->relationLoaded('options'));
+
+        $loadedOption = $loadedSku->options->first();
+        $this->assertTrue($loadedOption->relationLoaded('type'));
     }
 
     public function test_product_page_with_no_variations(): void

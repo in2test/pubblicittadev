@@ -1,4 +1,4 @@
-<div class="flex flex-col-reverse lg:flex-row gap-4 w-full mx-auto h-fit items-start" x-data="{ activeSlide: 0 }">
+<div class="flex flex-col-reverse lg:flex-row gap-4 w-full mx-auto h-fit items-start" x-data="{ activeSlide: 0 }" wire:key="gallery-{{ md5(json_encode(collect($images)->pluck('large')->toArray())) }}">
     <!-- Thumbnail Sidebar -->
     <div class="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto shrink-0 no-scrollbar">
         @foreach ($images as $index => $image)

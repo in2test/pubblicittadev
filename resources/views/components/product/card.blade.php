@@ -74,7 +74,7 @@
             @if ($colorData['total'] > 0)
                 <div class="mb-6 flex flex-wrap gap-1 items-center">
                     @foreach ($colorData['display'] as $color)
-                        <div class="w-3 h-3 border border-gray-200" @style(['background-color: ' . ($color->color_hex ?: '#ccc')]) title="{{ $color->color_name }}">
+                        <div class="w-3 h-3 border border-gray-200" @style(['background-color: ' . ($color->value ?: '#ccc')]) title="{{ $color->name }}">
                         </div>
                     @endforeach
 

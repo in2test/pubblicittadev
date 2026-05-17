@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'quote_id',
     'product_id',
-    'color_id',
     'quantity',
     'unit_price',
     'subtotal',
@@ -53,15 +52,5 @@ class QuoteItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    /**
-     * Get the color associated with this quote item.
-     *
-     * @return BelongsTo The relationship with the color.
-     */
-    public function color(): BelongsTo
-    {
-        return $this->belongsTo(Color::class);
     }
 }

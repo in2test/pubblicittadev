@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Color;
 use App\Models\Image;
 use App\Models\Product;
-use App\Models\ProductVariation;
-use App\Models\Size;
+use App\Models\ProductSku;
+use App\Models\ProductVariationOption;
+use App\Models\ProductVariationType;
+use App\Models\VariationOption;
+use App\Models\VariationType;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ProductSynchronizer
@@ -28,6 +31,17 @@ class ProductSynchronizer
 
         $product->update(['sync_progress' => 10]);
 
+        // Get or Create generic variation types for Color and Size
+        $colorType = VariationType::firstOrCreate(
+            ['name' => 'Color'],
+            ['presentation_type' => 'color_swatch']
+        );
+
+        $sizeType = VariationType::firstOrCreate(
+            ['name' => 'Size'],
+            ['presentation_type' => 'select']
+        );
+
         // For NewWave products, we cache/update the product metadata as well
         if ($product->type === Product::TYPE_NEWWAVE) {
             // Update basic info
@@ -45,19 +59,21 @@ class ProductSynchronizer
 
             $updateData['sync_progress'] = 20;
 
-            $colorsCache = Color::all()->keyBy('color_code');
+            $colorOptionsCache = $colorType->options()->get()->keyBy('value');
             if (! empty($data['variations'])) {
                 foreach ($data['variations'] as $variationData) {
                     $variationColorCode = (string) ($variationData['itemColorCode'] ?? '');
-                    if ($variationColorCode !== '' && $variationColorCode !== '0' && ! $colorsCache->has($variationColorCode)) {
+                    if ($variationColorCode !== '' && $variationColorCode !== '0' && ! $colorOptionsCache->has($variationColorCode)) {
                         $variationColorName = is_array($variationData['itemWebColor'] ?? null)
                             ? ($variationData['itemWebColor'][0] ?? '')
                             : (string) ($variationData['itemWebColor'] ?? '');
 
-                        $colorsCache->put($variationColorCode, Color::create([
-                            'color_code' => $variationColorCode,
-                            'color_name' => $variationColorName ?: 'Color '.$variationColorCode,
-                            'color_hex' => '#CCCCCC',
+                        // Only create if no pre-seeded record exists (preserves Italian names + hex)
+                        $colorOptionsCache->put($variationColorCode, VariationOption::create([
+                            'variation_type_id' => $colorType->id,
+                            // Fallback name used only when no pre-seeded record was found
+                            'name' => $variationColorName ?: 'Color '.$variationColorCode,
+                            'value' => $variationColorCode,
                         ]));
                     }
                 }
@@ -76,8 +92,7 @@ class ProductSynchronizer
                             'thumb' => $img['thumbnailUrl'] ?? '',
                             'medium' => $img['largeThumbnailUrl'] ?? '',
                             'large' => $img['standardUrl'] ?? '',
-                            'color_ids' => [],
-                            'color_id' => null,
+                            'variation_option_id' => null,
                         ];
 
                         Log::info("Remote image for SKU {$product->sku}: {$url}");
@@ -87,8 +102,8 @@ class ProductSynchronizer
             if (! empty($data['variations'])) {
                 foreach ($data['variations'] as $v) {
                     $colorCode = (string) ($v['itemColorCode'] ?? '');
-                    $color = $colorsCache->get($colorCode);
-                    $colorIds = $color ? [$color->id] : [];
+                    /** @var VariationOption|null $colorOption */
+                    $colorOption = $colorOptionsCache->get($colorCode);
 
                     if (! empty($v['pictures'])) {
                         foreach ($v['pictures'] as $idx => $vImg) {
@@ -100,8 +115,7 @@ class ProductSynchronizer
                                     'thumb' => $vImg['thumbnailUrl'] ?? '',
                                     'medium' => $vImg['largeThumbnailUrl'] ?? '',
                                     'large' => $vImg['standardUrl'] ?? '',
-                                    'color_ids' => $colorIds,
-                                    'color_id' => $color?->id,
+                                    'variation_option_id' => $colorOption?->id,
                                 ];
                             }
                         }
@@ -115,7 +129,7 @@ class ProductSynchronizer
                 Image::updateOrCreate([
                     'product_id' => $product->id,
                     'image_url' => $img['url'],
-                    'color_id' => $img['color_id'] ?? null,
+                    'variation_option_id' => $img['variation_option_id'],
                 ], [
                     'order_by' => $remoteImageOrder++,
                     'image_description' => $product->name,
@@ -139,40 +153,47 @@ class ProductSynchronizer
             return;
         }
 
-        // 2. Pre-load Colors and Sizes into local cache for 1-to-1 mapping
-        $colorsCache = Color::all()->keyBy('color_code');
-        $sizesCache = Size::all()->keyBy('size_code');
+        // Attach types to product
+        $productColorType = ProductVariationType::firstOrCreate([
+            'product_id' => $product->id,
+            'variation_type_id' => $colorType->id,
+        ], [
+            'has_images' => true,
+        ]);
 
-        $variationsToUpsert = [];
+        $productSizeType = ProductVariationType::firstOrCreate([
+            'product_id' => $product->id,
+            'variation_type_id' => $sizeType->id,
+        ], [
+            'has_images' => false,
+        ]);
+
+        $colorOptionsCache = $colorType->options()->get()->keyBy('value');
+        $sizeOptionsCache = $sizeType->options()->get()->keyBy('value');
+
+        $skusToUpsert = [];
         $totalVariations = count($data['variations']);
         $processedVariations = 0;
+
+        $usedColorOptionIds = [];
+        $usedSizeOptionIds = [];
 
         foreach ($data['variations'] as $variationData) {
             $processedVariations++;
 
-            // Only update progress every 10 variations to reduce DB writes
             if ($processedVariations % 10 === 0 || $processedVariations === $totalVariations) {
                 $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
                 $product->update(['sync_progress' => $progress]);
             }
 
-            // Find or create Color for this variation
             $colorCode = (string) ($variationData['itemColorCode'] ?? '');
-            $colorName = is_array($variationData['itemWebColor'] ?? null)
-                ? ($variationData['itemWebColor'][0] ?? '')
-                : (string) ($variationData['itemWebColor'] ?? '');
-            $color = null;
+            $colorOption = null;
 
             if ($colorCode !== '' && $colorCode !== '0') {
-                $color = $colorsCache->get($colorCode);
-
-                if (! $color) {
-                    $color = Color::create([
-                        'color_code' => $colorCode,
-                        'color_name' => $colorName ?: 'Color '.$colorCode,
-                        'color_hex' => '#CCCCCC',
-                    ]);
-                    $colorsCache->put($colorCode, $color);
+                /** @var VariationOption|null $colorOption */
+                $colorOption = $colorOptionsCache->get($colorCode);
+                if ($colorOption) {
+                    $usedColorOptionIds[$colorOption->id] = true;
                 }
             }
 
@@ -182,55 +203,113 @@ class ProductSynchronizer
 
             foreach ($variationData['skus'] as $item) {
                 $actualAvailability = (int) $item['availability'];
-                // Apply halving logic: floor(actual / 2)
                 $halvedQuantity = (int) floor($actualAvailability / 2);
 
-                // Find or create Size
                 $sizeName = $item['skuSize']['webtext'] ?? null;
                 $sizeCode = (string) ($item['skuSize']['size'] ?? '');
-                $size = null;
+                $sizeOption = null;
 
                 if ($sizeCode !== '') {
-                    $size = $sizesCache->get($sizeCode);
+                    /** @var VariationOption|null $sizeOption */
+                    $sizeOption = $sizeOptionsCache->get($sizeCode);
 
-                    if (! $size && $sizeName) {
-                        $size = Size::create([
-                            'size_code' => $sizeCode,
-                            'size' => $sizeName,
-                            'size_name' => $sizeName,
+                    if (! $sizeOption && $sizeName) {
+                        // Only create if no pre-seeded record exists (preserves canonical size names)
+                        $sizeOption = VariationOption::create([
+                            'variation_type_id' => $sizeType->id,
+                            'name' => $sizeName,
+                            'value' => $sizeCode,
                         ]);
-                        $sizesCache->put($sizeCode, $size);
+                        $sizeOptionsCache->put($sizeCode, $sizeOption);
+                    }
+
+                    if ($sizeOption) {
+                        $usedSizeOptionIds[$sizeOption->id] = true;
                     }
                 }
 
-                if ($color && $size) {
-                    $variationsToUpsert[] = [
-                        'sku' => $item['sku'],
-                        'product_id' => $product->id,
-                        'color_id' => $color->id,
-                        'size_id' => $size->id,
-                        'quantity' => $halvedQuantity,
-                        'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                $skusToUpsert[] = [
+                    'sku' => $item['sku'],
+                    'product_id' => $product->id,
+                    'quantity' => $halvedQuantity,
+                    'is_available' => ($item['active'] ?? true) && $halvedQuantity > 0,
+                    'created_at' => now()->toDateTimeString(),
+                    'updated_at' => now()->toDateTimeString(),
+                ];
+            }
+        }
+
+        // Batch upsert SKUs
+        if ($skusToUpsert !== []) {
+            ProductSku::upsert(
+                $skusToUpsert,
+                ['sku'],
+                ['quantity', 'is_available', 'updated_at']
+            );
+        }
+
+        // Fetch back SKUs to map their options
+        $skuRecords = ProductSku::where('product_id', $product->id)->get()->keyBy('sku');
+        $skuOptionsData = [];
+
+        foreach ($data['variations'] as $variationData) {
+            $colorCode = (string) ($variationData['itemColorCode'] ?? '');
+            /** @var VariationOption|null $colorOption */
+            $colorOption = $colorOptionsCache->get($colorCode);
+
+            foreach ($variationData['skus'] as $item) {
+                /** @var ProductSku|null $skuObj */
+                $skuObj = $skuRecords->get($item['sku']);
+                if ($skuObj) {
+                    if ($colorOption) {
+                        $skuOptionsData[] = [
+                            'product_sku_id' => $skuObj->id,
+                            'variation_option_id' => $colorOption->id,
+                        ];
+                    }
+
+                    $sizeCode = (string) ($item['skuSize']['size'] ?? '');
+                    /** @var VariationOption|null $sizeOption */
+                    $sizeOption = $sizeOptionsCache->get($sizeCode);
+                    if ($sizeOption) {
+                        $skuOptionsData[] = [
+                            'product_sku_id' => $skuObj->id,
+                            'variation_option_id' => $sizeOption->id,
+                        ];
+                    }
                 }
             }
         }
 
-        // 3. Batch upsert variations for high performance
-        if ($variationsToUpsert !== []) {
-            ProductVariation::upsert(
-                $variationsToUpsert,
-                ['sku'],
-                ['color_id', 'size_id', 'quantity', 'is_available', 'updated_at']
-            );
+        // Assign valid options to product variations
+        foreach (array_keys($usedColorOptionIds) as $optId) {
+            ProductVariationOption::firstOrCreate([
+                'product_variation_type_id' => $productColorType->id,
+                'variation_option_id' => $optId,
+            ]);
+        }
+        foreach (array_keys($usedSizeOptionIds) as $optId) {
+            ProductVariationOption::firstOrCreate([
+                'product_variation_type_id' => $productSizeType->id,
+                'variation_option_id' => $optId,
+            ]);
         }
 
-        // Re-load variations
+        // Delete old pivot entries and insert new ones
+        if ($skuRecords->isNotEmpty()) {
+            $skuIds = $skuRecords->pluck('id')->toArray();
+            DB::table('product_sku_options')->whereIn('product_sku_id', $skuIds)->delete();
+
+            // Chunk inserts if too many
+            foreach (array_chunk($skuOptionsData, 500) as $chunk) {
+                DB::table('product_sku_options')->insertOrIgnore($chunk);
+            }
+        }
+
+        // Re-load variations with nested option relation
         $product->load([
-            'variations.color',
-            'variations.size',
+            'variationTypes',
+            'skus.options.type',
         ]);
     }
 
@@ -256,15 +335,11 @@ class ProductSynchronizer
 
             foreach ($variationData['skus'] as $item) {
                 $actualAvailability = (int) $item['availability'];
-                // Apply halving logic: floor(actual / 2)
                 $halvedQuantity = (int) floor($actualAvailability / 2);
 
                 $sku = $item['sku'];
 
-                // We update quantity and availability flag based on sku.
-                // Notice we do not upsert here, we simply update existing variations
-                // because we only want to update availability, not create missing mappings.
-                ProductVariation::where('product_id', $product->id)
+                ProductSku::where('product_id', $product->id)
                     ->where('sku', $sku)
                     ->update([
                         'quantity' => $halvedQuantity,
@@ -274,7 +349,6 @@ class ProductSynchronizer
             }
         }
 
-        // Touch the product so its updated_at is refreshed
         $product->touch();
     }
 }

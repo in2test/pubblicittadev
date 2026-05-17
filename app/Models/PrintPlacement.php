@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * PrintPlacement Model
@@ -22,16 +21,6 @@ class PrintPlacement extends Model
 {
     /** @use HasFactory<PrintPlacementFactory> */
     use HasFactory;
-
-    /**
-     * Get the product variations that use this print placement.
-     *
-     * @return HasMany The relationship with product variations.
-     */
-    public function productVariations(): HasMany
-    {
-        return $this->hasMany(ProductVariation::class);
-    }
 
     /**
      * Get the products that support this print placement.
