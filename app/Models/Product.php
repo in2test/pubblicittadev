@@ -214,13 +214,13 @@ class Product extends Model implements HasMedia
                 ->first();
         }
 
-        if ($productVariationType === null) {
+        if (! $productVariationType instanceof ProductVariationType) {
             return ['display' => collect(), 'remaining' => 0, 'total' => 0];
         }
 
         if ($productVariationType->relationLoaded('options')) {
             $options = $productVariationType->options
-                ->map(fn ($pvo) => $pvo->relationLoaded('option') ? $pvo->option : null)
+                ->map(fn (ProductVariationOption $pvo) => $pvo->relationLoaded('option') ? $pvo->option : null)
                 ->filter()
                 ->sortBy('sort_order')
                 ->values();
@@ -385,17 +385,13 @@ class Product extends Model implements HasMedia
         return max(0.0, $service->calculatePrice($this, $quantity));
     }
 
-    /**
-     * Get the applicable pricing tier for a given quantity.
-     */
     public function getTierPrice(int $quantity): ?float
     {
-        /**
-         * @var PricingTier|null $tier
-         */
+        $tier = null;
+
         if ($this->relationLoaded('pricingTiers')) {
             $tier = $this->pricingTiers
-                ->filter(fn ($t) => $t->min_quantity <= $quantity && ($t->max_quantity >= $quantity || is_null($t->max_quantity)))
+                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity && ($t->max_quantity >= $quantity || is_null($t->max_quantity)))
                 ->sortByDesc('min_quantity')
                 ->first();
         } else {
@@ -409,7 +405,11 @@ class Product extends Model implements HasMedia
                 ->first();
         }
 
-        return $tier ? (float) $tier->price_per_unit : null;
+        if (! $tier instanceof PricingTier) {
+            return null;
+        }
+
+        return (float) $tier->price_per_unit;
     }
 
     /**

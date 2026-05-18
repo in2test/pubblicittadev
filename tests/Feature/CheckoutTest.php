@@ -102,13 +102,19 @@ it('renders the checkout page successfully', function () {
     $product = Product::factory()->create(['price' => 10.00]);
     $address = Address::factory()->create(['user_id' => $user->id]);
 
-    $this->cartManager->add([
-        'product_id' => $product->id,
-        'product_name' => $product->name,
-        'product_slug' => $product->slug,
-        'quantity' => 1,
-        'price' => 10.00,
+    $mockCartManager = Mockery::mock(CartManager::class);
+    $mockCartManager->shouldReceive('isEmpty')->andReturn(false);
+    $mockCartManager->shouldReceive('total')->andReturn(10.00);
+    $mockCartManager->shouldReceive('getItems')->andReturn([
+        [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_slug' => $product->slug,
+            'quantity' => 1,
+            'price' => 10.00,
+        ],
     ]);
+    app()->instance(CartManager::class, $mockCartManager);
 
     actingAs($user);
 

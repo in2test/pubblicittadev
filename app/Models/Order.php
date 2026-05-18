@@ -17,21 +17,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Override;
 
-#[Fillable([
-    'user_id',
-    'quote_id',
-    'order_number',
-    'payment_status',
-    'work_status',
-    'total_price',
-    'total_items',
-    'shipping_address_id',
-    'billing_address_id',
-    'stripe_session_id',
-    'stripe_payment_intent_id',
-    'paid_at',
-    'notes',
-])]
 /**
  * @property int $id
  * @property int $user_id
@@ -47,6 +32,21 @@ use Override;
  * @property User $user
  * @property-read Collection<int, OrderItem> $items
  */
+#[Fillable([
+    'user_id',
+    'quote_id',
+    'order_number',
+    'payment_status',
+    'work_status',
+    'total_price',
+    'total_items',
+    'shipping_address_id',
+    'billing_address_id',
+    'stripe_session_id',
+    'stripe_payment_intent_id',
+    'paid_at',
+    'notes',
+])]
 class Order extends Model
 {
     use HasFactory;

@@ -101,11 +101,11 @@ class CartController extends Controller
                 $selectedOptionIds = array_values($item['selected_options'] ?? []);
                 if ($selectedOptionIds !== []) {
                     $colorImage = $product->images()->whereIn('variation_option_id', $selectedOptionIds)->first();
-                    $displayImage = $colorImage?->image_url;
+                    $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
                 }
                 if (! $displayImage && isset($item['color_id'])) {
                     $colorImage = $product->images()->where('variation_option_id', $item['color_id'])->first();
-                    $displayImage = $colorImage?->image_url;
+                    $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
                 }
                 if (! $displayImage) {
                     $displayImage = $product->getFirstMediaUrl('images', 'thumbnail') ?: null;
@@ -132,7 +132,8 @@ class CartController extends Controller
             $placementNames = [];
             foreach ($item['print_placements'] ?? [] as $pid) {
                 $id = (int) (is_array($pid) ? $pid['id'] : $pid);
-                $placementNames[] = $placements->get($id)?->name ?? ('Pos. #'.$id);
+                $placement = $placements->get($id);
+                $placementNames[] = $placement ? $placement->name : ('Pos. #'.$id);
             }
 
             // Resolve size rows
@@ -143,7 +144,7 @@ class CartController extends Controller
                 }
                 $sku = $skus->get((int) $skuId);
                 $sizeName = $sku && $sku->options->isNotEmpty()
-                    ? $sku->options->map(fn ($o) => $o->name)->implode(' / ')
+                    ? $sku->options->map(fn (VariationOption $o) => $o->name)->implode(' / ')
                     : 'Unica';
 
                 $sizeRows[] = [
@@ -154,7 +155,10 @@ class CartController extends Controller
                 ];
             }
 
-            $catSlug = $product?->category?->slug ?? 'catalogo';
+            $catSlug = 'catalogo';
+            if ($product) {
+                $catSlug = $product->category->slug;
+            }
 
             $items[$jobId] = array_merge($item, [
                 'job_id' => $jobId,

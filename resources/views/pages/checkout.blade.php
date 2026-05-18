@@ -6,7 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.app')] #[Title('Checkout')] class extends \Livewire\Component
+new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
 {
     public $shippingAddresses;
     public $billingAddresses;
@@ -18,6 +18,9 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends \Livewire\Compon
 
     public function mount(CartManager $cartManager): void
     {
+        $this->shippingAddresses = collect();
+        $this->billingAddresses = collect();
+
         if ($cartManager->isEmpty()) {
             $this->redirect(route('cart'));
             return;
