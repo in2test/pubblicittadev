@@ -17,12 +17,12 @@ class VariationOptionSeeder extends Seeder
     {
         // 1. Ensure Color and Size variation types exist
         $colorType = VariationType::firstOrCreate(
-            ['name' => 'Color'],
+            ['name' => 'Colore'],
             ['presentation_type' => 'color_swatch']
         );
 
         $sizeType = VariationType::firstOrCreate(
-            ['name' => 'Size'],
+            ['name' => 'Taglia'],
             ['presentation_type' => 'select']
         );
 

@@ -78,7 +78,7 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="grid grid-cols-4 gap-1">
+                        <div class="grid grid-cols-7 gap-2">
                             @foreach($variationType->options as $option)
                                 @php 
                                     $isActive = in_array($option->id, $selectedOptions);

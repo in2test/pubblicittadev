@@ -285,3 +285,14 @@ nav[role="navigation"] span[aria-current="page"] > button {
 nav[role="navigation"] a:hover {
     color: var(--color-accent-600) !important;
 }
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}

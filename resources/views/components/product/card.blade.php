@@ -30,8 +30,8 @@
         </div>
 
         {{-- Product Image --}}
-        <div class="aspect-4/5 overflow-hidden relative bg-gray-50 border border-gray-100 flex">
-            <img class="m-auto object-cover grayscale-60 group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+        <div class="aspect-5/6 relative bg-white border border-gray-100 overflow-hidden">
+            <img class="w-full h-full object-contain grayscale-40 group-hover:grayscale-0 transition-all duration-400 ease-in-out group-hover:scale-90"
                 src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy" />
         </div>
 
@@ -45,8 +45,7 @@
                 {{-- Pricing --}}
                 <div class="flex flex-col items-end">
                     @if ($priceData['on_request'])
-                        <span
-                            class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
+                        <span class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
                             Su Richiesta
                         </span>
                     @elseif ($priceData['is_discounted'])
@@ -100,8 +99,8 @@
 
                 @if ($isAdmin)
                     <div class="flex items-center gap-2" onclick="event.preventDefault()">
-                        <a href="{{ $adminEditUrl }}"
-                            class="p-2 border border-gray-100 hover:bg-gray-100 transition-colors" target="_blank">
+                        <a href="{{ $adminEditUrl }}" class="p-2 border border-gray-100 hover:bg-gray-100 transition-colors"
+                            target="_blank">
                             <span class="material-symbols-outlined text-sm text-gray-400">edit</span>
                         </a>
                         <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}">

@@ -38,7 +38,7 @@
     keeps the main layout clean and focuses on a fluid, industrial sidebar experience.
 --}}
 <aside class="w-full lg:w-72 shrink-0">
-    <div class="sticky top-24 space-y-12">
+    <div class="sticky top-24 space-y-12 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-none pr-4">
         {{-- 1. Category Tree Navigation --}}
         <x-catalog.category-tree
             :root-categories="$rootCategories"
