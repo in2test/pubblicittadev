@@ -14,14 +14,14 @@
 @endphp
 
 <article
-    class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-vividauburn-700 transition-all duration-300 bg-gray-50">
+    class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-accent-700 transition-all duration-300 bg-gray-50">
     <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug]) }}"
         class="flex flex-col h-full">
 
         {{-- Badges --}}
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
             @if ($product->is_featured)
-                <div class="bg-vividauburn-700 text-gray-100 text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
+                <div class="bg-accent-700 text-gray-100 text-[10px] font-bold px-2 py-1 uppercase tracking-widest">
                     Evidenza
                 </div>
             @endif
@@ -30,7 +30,7 @@
         </div>
 
         {{-- Product Image --}}
-        <div class="aspect-4/5 overflow-hidden relative bg-white border border-gray-100 flex">
+        <div class="aspect-4/5 overflow-hidden relative bg-gray-50 border border-gray-100 flex">
             <img class="m-auto object-cover grayscale-60 group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
                 src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy" />
         </div>
@@ -74,7 +74,13 @@
             @if ($colorData['total'] > 0)
                 <div class="mb-6 flex flex-wrap gap-1 items-center">
                     @foreach ($colorData['display'] as $color)
-                        <div class="w-3 h-3 border border-gray-200" @style(['background-color: ' . ($color->value ?: '#ccc')]) title="{{ $color->name }}">
+                        @php
+                            $hexColors = $color->getHexColors();
+                            $swatchStyle = count($hexColors) >= 2
+                                ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
+                                : 'background-color: ' . $hexColors[0];
+                        @endphp
+                        <div class="w-3 h-3 border border-gray-200 shadow-sm" @style([$swatchStyle]) title="{{ $color->name }}">
                         </div>
                     @endforeach
 

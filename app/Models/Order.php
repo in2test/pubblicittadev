@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Mail\AdminOrderPaidNotification;
 use App\Mail\OrderPaidConfirmation;
+use App\Mail\OrderStatusChangedNotification;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,12 +15,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Override;
 
 #[Fillable([
     'user_id',
     'quote_id',
     'order_number',
-    'status',
+    'payment_status',
+    'work_status',
     'total_price',
     'total_items',
     'shipping_address_id',
@@ -32,7 +36,8 @@ use Illuminate\Support\Facades\Mail;
  * @property int $id
  * @property int $user_id
  * @property string $order_number
- * @property string $status
+ * @property string $payment_status
+ * @property string $work_status
  * @property float $total_price
  * @property int $total_items
  * @property int $shipping_address_id
@@ -76,17 +81,61 @@ class Order extends Model
         return $this->belongsTo(Address::class, 'billing_address_id');
     }
 
+    public function getPaymentStatusLabel(): string
+    {
+        return match ($this->payment_status) {
+            'pending' => 'In Attesa',
+            'paid' => 'Pagato',
+            'cancelled' => 'Annullato',
+            default => $this->payment_status,
+        };
+    }
+
+    public function getWorkStatusLabel(): string
+    {
+        return match ($this->work_status) {
+            'pending' => 'In Attesa',
+            'processing' => 'In Lavorazione',
+            'ready' => 'Pronto per Spedizione',
+            'shipped' => 'Spedito',
+            'completed' => 'Completato',
+            default => $this->work_status,
+        };
+    }
+
+    #[Override]
+    protected static function booted(): void
+    {
+        static::updated(function (Order $order) {
+            if ($order->wasChanged('payment_status') || $order->wasChanged('work_status')) {
+                // Do not send generic update email if it was just marked as paid, since completePayment handles its own paid confirmation emails
+                if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
+                    return;
+                }
+
+                // Send email to customer
+                Mail::to($order->user->email)->send(new OrderStatusChangedNotification($order));
+
+                // Send email to all administrators
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    Mail::to($admin->email)->send(new OrderStatusChangedNotification($order));
+                }
+            }
+        });
+    }
+
     /**
      * Complete the payment process for this order.
      */
     public function completePayment(string $paymentIntentId): void
     {
-        if ($this->status === 'paid') {
+        if ($this->payment_status === 'paid') {
             return;
         }
 
         $this->update([
-            'status' => 'paid',
+            'payment_status' => 'paid',
             'stripe_payment_intent_id' => $paymentIntentId,
             'paid_at' => now(),
         ]);
@@ -96,6 +145,12 @@ class Order extends Model
         /** @var User $user */
         $user = $this->user;
         Mail::to($user->email)->send(new OrderPaidConfirmation($this));
+
+        // Notify all administrators of the new paid order
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Mail::to($admin->email)->send(new AdminOrderPaidNotification($this));
+        }
     }
 
     /**

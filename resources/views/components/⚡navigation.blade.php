@@ -4,9 +4,23 @@ use Livewire\Component;
 use Livewire\Attributes\Computed;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\CartManager;
+use Illuminate\Support\Facades\Auth;
 
 new class extends Component {
-    public $searchQuery = '';
+    public string $searchQuery = '';
+
+    #[Computed]
+    public function cartCount(): int
+    {
+        return app(CartManager::class)->count();
+    }
+
+    #[Computed]
+    public function authUser(): ?\App\Models\User
+    {
+        return Auth::user();
+    }
 
     #[Computed]
     public function categories()
@@ -17,7 +31,7 @@ new class extends Component {
     #[Computed]
     public function searchResults()
     {
-        $queryStr = trim((string) $this->searchQuery);
+        $queryStr = trim($this->searchQuery);
         if ($queryStr === '' || $queryStr === '0') {
             return collect();
         }
@@ -57,7 +71,7 @@ new class extends Component {
                                             class="mega-link block hover:text-accent-500 transition-colors py-1">
                                             <span class="mega-link-title block font-semibold text-gray-900">{{ $categoryChild->name }}</span>
                                             <span
-                                                class="mega-link-copy block text-[10px] leading-relaxed text-gray-400 font-sans normal-case tracking-normal mt-0.5">{{ Str::limit($categoryChild->description, 60) }}</span>
+                                                class="mega-link-copy block text-[10px] leading-relaxed text-gray-400 font-sans normal-case tracking-normal mt-0.5">{{ Str::limit($categoryChild->description ?? '', 60) }}</span>
                                         </a>
                                     </li>
                                     @endforeach
@@ -77,12 +91,6 @@ new class extends Component {
 
             <!-- Right Section: Actions/Icons -->
             <div class="flex items-center gap-2 lg:gap-4 justify-self-end">
-                @php
-                $cartCount = \Illuminate\Support\Facades\Session::get('cart_items', []);
-                $count = is_array($cartCount) ? array_sum(array_column($cartCount, 'quantity')) : 0;
-                $user = Illuminate\Support\Facades\Auth::user();
-                @endphp
-
                 <!-- Search trigger button -->
                 <button id="search-trigger" aria-label="Cerca"
                     class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full"
@@ -94,16 +102,16 @@ new class extends Component {
                 <a href="{{ route('cart') }}"
                     class="relative p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full">
                     <span class="material-symbols-outlined">shopping_cart</span>
-                    @if ($count > 0)
+                    @if ($this->cartCount > 0)
                     <span
                         class="absolute -top-1 -right-1 bg-accent-500 text-gray-50 text-[10px] w-4.5 h-4.5 flex items-center justify-center rounded-full font-bold">
-                        {{ $count }}
+                        {{ $this->cartCount }}
                     </span>
                     @endif
                 </a>
 
                 <!-- Account dropdown / trigger button -->
-                @if ($user)
+                @if ($this->authUser)
                 <div class="relative" x-data="{ open: false }">
                     <button id="user-menu-button" aria-label="Account menu" @click="open = !open"
                         @mouseenter="open = true"
@@ -113,8 +121,8 @@ new class extends Component {
                     <div id="user-dropdown" x-show="open" @click.away="open = false" x-transition.opacity
                         class="absolute right-0 top-full mt-1 w-48 rounded-md bg-gray-50 py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                         <div class="px-4 py-2 border-b border-gray-100">
-                            <p class="text-[11px] font-semibold text-gray-900">{{ $user->name }}</p>
-                            <p class="text-[10px] text-gray-500 truncate normal-case tracking-normal">{{ $user->email }}</p>
+                            <p class="text-[11px] font-semibold text-gray-900">{{ $this->authUser->name }}</p>
+                            <p class="text-[10px] text-gray-500 truncate normal-case tracking-normal">{{ $this->authUser->email }}</p>
                         </div>
                         <a href="{{ route('dashboard') }}"
                             class="block px-4 py-2 text-[11px] text-gray-700 hover:bg-gray-100">
@@ -224,11 +232,11 @@ new class extends Component {
             </div>
 
             <div class="pt-6 border-t border-gray-200 flex items-center justify-between">
-                @if ($user)
+                @if ($this->authUser)
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-green-600">verified_user</span>
                     <div class="text-[10px]">
-                        <div class="font-bold text-gray-900 leading-none">{{ $user->name }}</div>
+                        <div class="font-bold text-gray-900 leading-none">{{ $this->authUser->name }}</div>
                         <a href="{{ route('dashboard') }}" class="text-gray-500 hover:text-accent-500 transition-colors">Dashboard</a>
                     </div>
                 </div>

@@ -6,6 +6,8 @@ use Laravel\Fortify\Features;
 use Livewire\Livewire;
 
 beforeEach(function () {
+    app()->setLocale('en');
+
     if (method_exists($this, 'skipUnlessFortifyFeature')) {
         $this->skipUnlessFortifyFeature(Features::twoFactorAuthentication());
     } else {

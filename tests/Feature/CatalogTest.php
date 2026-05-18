@@ -106,3 +106,13 @@ it('can sort products by price descending', function () {
         ->set('sort', 'price_desc')
         ->assertSeeInOrder(['Expensive Shirt', 'Cheap Shirt']);
 });
+
+it('expands categories down to the selected subcategory in category-tree component', function () {
+    $parent = Category::factory()->create(['name' => 'Apparel', 'slug' => 'apparel']);
+    $child = Category::factory()->create(['name' => 'Shirts', 'slug' => 'shirts', 'parent_id' => $parent->id]);
+    $grandchild = Category::factory()->create(['name' => 'T-Shirts', 'slug' => 't-shirts', 'parent_id' => $child->id]);
+
+    $test = Livewire::test('catalog', ['categorySlug' => 't-shirts']);
+
+    expect($test->instance()->category->id)->toBe($grandchild->id);
+});

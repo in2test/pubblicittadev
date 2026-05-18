@@ -23,11 +23,11 @@ new class extends Component {
     public function mount(\App\Models\Product $product, $category, $options = [], ?string $jobId = null): void
     {
         $this->product = $product;
-        $this->product->load(['variationTypes', 'skus.options.type']);
+        $this->product->loadMissing(['variationTypes', 'skus.options.type']);
         // Eager-load each pivot's product-specific options and the linked VariationOption record
         // ($type->pivot is a ProductVariationType; we load its options.option relation to avoid N+1)
         $this->product->variationTypes->each(
-            fn($type) => $type->pivot->load('options.option')
+            fn($type) => $type->pivot->loadMissing('options.option')
         );
         $this->category = $product?->category ?? $category;
         

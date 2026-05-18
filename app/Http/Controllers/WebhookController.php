@@ -72,7 +72,7 @@ class WebhookController extends Controller
             return;
         }
 
-        if ($order->status === 'paid') {
+        if ($order->payment_status === 'paid') {
             return;
         }
 

@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
 use App\Observers\MediaObserver;
+use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
-        //
+        $this->app->singleton(QuantityDiscountService::class);
     }
 
     /**

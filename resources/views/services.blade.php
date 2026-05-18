@@ -119,7 +119,7 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div
-                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-white shadow-sm">
+                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-gray-50 shadow-sm">
                     <div
                         class="w-12 h-12 flex items-center justify-center bg-surface-container-low mb-6 text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-all">
                         <span class="material-symbols-outlined">description</span>
@@ -135,7 +135,7 @@
                     </a>
                 </div>
                 <div
-                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-white shadow-sm">
+                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-gray-50 shadow-sm">
                     <div
                         class="w-12 h-12 flex items-center justify-center bg-surface-container-low mb-6 text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-all">
                         <span class="material-symbols-outlined">eco</span>
@@ -151,7 +151,7 @@
                     </a>
                 </div>
                 <div
-                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-white shadow-sm">
+                    class="group p-8 border border-surface-container hover:border-primary-container transition-colors bg-gray-50 shadow-sm">
                     <div
                         class="w-12 h-12 flex items-center justify-center bg-surface-container-low mb-6 text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-all">
                         <span class="material-symbols-outlined">health_and_safety</span>

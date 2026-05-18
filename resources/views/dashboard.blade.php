@@ -1,64 +1,52 @@
 <x-layouts::app :title="__('Dashboard')">
-    @if(auth()->user()?->isAdmin())
-        <div class="mb-4">
-            <a href="{{ url('/admin') }}" class="rounded-lg bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">
-                Pannello Admin
-            </a>
+    <div class="space-y-8">
+        <div>
+            <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">Pannello Utente</h2>
+            <p class="text-gray-500 text-sm mt-1">Benvenuto nella tua area personale, {{ auth()->user()->name }}.</p>
         </div>
-    @endif
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {{-- Orders Card --}}
-            <a href="{{ route('dashboard.orders') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+            <a href="{{ route('dashboard.orders') }}" 
+               class="group relative overflow-hidden border-2 border-gray-950 p-6 bg-gray-50 hover:bg-gray-100 transition-colors shadow-md shadow-gray-950/5">
                 <div class="flex items-center gap-4">
-                    <div class="rounded-lg bg-green-100 p-3 text-green-600 dark:bg-green-900/30">
-                        <span class="material-symbols-outlined text-3xl">shopping_bag</span>
+                    <div class="border-2 border-gray-950 bg-secondary text-gray-50 p-3 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl font-bold">shopping_bag</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">I miei Ordini</h3>
-                        <p class="text-sm text-neutral-500">Visualizza i tuoi ordini e lo stato del pagamento.</p>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-gray-950">I Miei Ordini</h3>
+                        <p class="text-xs text-gray-500 mt-1 font-medium">Visualizza gli ordini effettuati e il loro stato.</p>
                     </div>
                 </div>
             </a>
 
             {{-- Quotes Card --}}
-            <a href="{{ route('dashboard.quotes') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+            <a href="{{ route('dashboard.quotes') }}" 
+               class="group relative overflow-hidden border-2 border-gray-950 p-6 bg-gray-50 hover:bg-gray-100 transition-colors shadow-md shadow-gray-950/5">
                 <div class="flex items-center gap-4">
-                    <div class="rounded-lg bg-amber-100 p-3 text-amber-600 dark:bg-amber-900/30">
-                        <span class="material-symbols-outlined text-3xl">request_quote</span>
+                    <div class="border-2 border-gray-950 bg-secondary text-gray-50 p-3 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl font-bold">request_quote</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">I miei Preventivi</h3>
-                        <p class="text-sm text-neutral-500">Visualizza la cronologia delle tue richieste.</p>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-gray-950">I Miei Preventivi</h3>
+                        <p class="text-xs text-gray-500 mt-1 font-medium">Visualizza le tue richieste di preventivo.</p>
                     </div>
                 </div>
             </a>
 
             {{-- Addresses Card --}}
-            <a href="{{ route('dashboard.addresses') }}" class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 transition-all hover:border-amber-500 hover:shadow-lg dark:border-neutral-700">
+            <a href="{{ route('dashboard.addresses') }}" 
+               class="group relative overflow-hidden border-2 border-gray-950 p-6 bg-gray-50 hover:bg-gray-100 transition-colors shadow-md shadow-gray-950/5">
                 <div class="flex items-center gap-4">
-                    <div class="rounded-lg bg-amber-100 p-3 text-amber-600 dark:bg-amber-900/30">
-                        <span class="material-symbols-outlined text-3xl">location_on</span>
+                    <div class="border-2 border-gray-950 bg-secondary text-gray-50 p-3 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl font-bold">location_on</span>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Indirizzi</h3>
-                        <p class="text-sm text-neutral-500">Gestisci i tuoi indirizzi di spedizione.</p>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-gray-950">I Miei Indirizzi</h3>
+                        <p class="text-xs text-gray-500 mt-1 font-medium">Gestisci gli indirizzi di spedizione e fatturazione.</p>
                     </div>
                 </div>
             </a>
-
-            {{-- Profile Card (Coming soon) --}}
-            <div class="group relative overflow-hidden rounded-xl border border-neutral-200 p-6 dark:border-neutral-700 opacity-60">
-                <div class="flex items-center gap-4">
-                    <div class="rounded-lg bg-neutral-100 p-3 text-neutral-600 dark:bg-neutral-800">
-                        <span class="material-symbols-outlined text-3xl">person</span>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold">Profilo</h3>
-                        <p class="text-sm text-neutral-500">Gestisci i tuoi dati personali.</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </x-layouts::app>

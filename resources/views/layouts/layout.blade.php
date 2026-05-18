@@ -74,7 +74,7 @@
             }
         }
     </script>
-    @livewire(\App\Livewire\AuthModal::class)
+    <livewire:auth-modal />
 </body>
 
 </html>

@@ -20,18 +20,27 @@ class OrderForm
             ->components([
                 Section::make('Dettagli Ordine')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             TextInput::make('order_number')
                                 ->label('Numero Ordine')
                                 ->disabled()
                                 ->required(),
-                            Select::make('status')
-                                ->label('Stato')
+                            Select::make('payment_status')
+                                ->label('Stato Pagamento')
                                 ->options([
-                                    'pending' => 'In attesa',
+                                    'pending' => 'In Attesa',
                                     'paid' => 'Pagato',
-                                    'shipped' => 'Spedito',
                                     'cancelled' => 'Annullato',
+                                ])
+                                ->required(),
+                            Select::make('work_status')
+                                ->label('Stato Lavorazione')
+                                ->options([
+                                    'pending' => 'In Attesa',
+                                    'processing' => 'In Lavorazione',
+                                    'ready' => 'Pronto per Spedizione',
+                                    'shipped' => 'Spedito',
+                                    'completed' => 'Completato',
                                 ])
                                 ->required(),
                         ]),

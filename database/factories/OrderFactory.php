@@ -20,7 +20,8 @@ class OrderFactory extends Factory
     {
         return [
             'order_number' => 'ORD-'.strtoupper(fake()->unique()->bothify('??####')),
-            'status' => fake()->randomElement(['pending', 'paid', 'completed', 'cancelled']),
+            'payment_status' => fake()->randomElement(['pending', 'paid', 'cancelled']),
+            'work_status' => fake()->randomElement(['pending', 'processing', 'ready', 'shipped', 'completed']),
             'total_price' => fake()->randomFloat(2, 50, 500),
             'total_items' => fake()->numberBetween(1, 10),
             'user_id' => User::factory(),

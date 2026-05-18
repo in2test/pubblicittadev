@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\CartManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
 
@@ -29,7 +32,7 @@ class CheckoutController extends Controller
             }
 
             // Only pending orders can be re-paid
-            if ($order->status !== 'pending') {
+            if ($order->payment_status !== 'pending') {
                 return redirect()->route('dashboard.orders')->with('error', 'Questo ordine è già stato elaborato.');
             }
         } else {
@@ -49,7 +52,8 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id' => auth()->id(),
                 'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
-                'status' => 'pending',
+                'payment_status' => 'pending',
+                'work_status' => 'pending',
                 'total_price' => $this->cartManager->total(),
                 'total_items' => $this->cartManager->count(),
                 'shipping_address_id' => $request->input('shipping_address_id'),
@@ -74,7 +78,22 @@ class CheckoutController extends Controller
                     'customization_json' => $item,
                 ]);
             }
+
+            // Load the newly created items with their products
+            $order->load('items.product');
+
+            // Send order placement confirmation email to customer
+            Mail::to($order->user->email)->send(new OrderPlacedNotification($order));
+
+            // Notify all administrators of the new pending order
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new OrderPlacedNotification($order));
+            }
         }
+
+        // Ensure items and product relationships are fully preloaded to prevent any empty Stripe line_items exceptions
+        $order->loadMissing('items.product');
 
         Stripe::setApiKey(config('stripe.secret'));
         Stripe::setApiVersion(config('stripe.api_version'));

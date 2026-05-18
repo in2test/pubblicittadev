@@ -64,8 +64,8 @@ it('synchronizes product data correctly from API', function () {
     expect($sku->sku)->toBe('TEST-SKU-10-M');
     expect($sku->quantity)->toBe(10); // Halving logic: floor(20 / 2)
 
-    $colorOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Color');
-    $sizeOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Size');
+    $colorOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Colore');
+    $sizeOption = $sku->options->first(fn ($opt) => $opt->type->name === 'Taglia');
 
     expect($colorOption->value)->toBe('10');
     expect($sizeOption->value)->toBe('M');

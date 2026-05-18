@@ -6,7 +6,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div class="lg:sticky top-32">
                 <h2 class="text-sm font-mono font-bold uppercase tracking-widest text-gray-900 mb-4 flex items-center">
-                    <span class="w-8 h-px bg-vividauburn-500 mr-4"></span>
+                    <span class="w-8 h-px bg-accent-500 mr-4"></span>
                     I Servizi più richiesti
                 </h2>
                 <p class="text-4xl font-bold tracking-tight text-gray-900 leading-tight">
@@ -43,11 +43,11 @@
     </div>
 </section>
 
-<section class="py-24 px-8 3xl:px-32 mx-auto bg-white">
+<section class="py-24 px-8 3xl:px-32 mx-auto bg-gray-50">
     <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
         <div class="">
-            <span class="text-sm font-mono font-bold uppercase tracking-widest text-vividauburn-500 mb-4 flex items-center">
-                <span class="w-8 h-px bg-vividauburn-500 mr-4"></span>PRODOTTO -> TEMPLATE -> CONTROLLO -> SPEDIZIONE</span>
+            <span class="text-sm font-mono font-bold uppercase tracking-widest text-accent-500 mb-4 flex items-center">
+                <span class="w-8 h-px bg-accent-500 mr-4"></span>PRODOTTO -> TEMPLATE -> CONTROLLO -> SPEDIZIONE</span>
             <h2 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950 leading-tight text-left">Come funziona</h2>
         </div>
         <div class="max-w-md md:text-right">
@@ -69,7 +69,7 @@
             </div>
             <div class="relative z-10 mt-8">
                 <a href="{{ route('catalog') }}"
-                    class="inline-block font-mono text-xs font-bold bg-gray-950 px-4 py-2 text-white hover:bg-vividauburn-500 transition-colors uppercase">Catalogo completo</a>
+                    class="inline-block font-mono text-xs font-bold bg-gray-950 px-4 py-2 text-gray-50 hover:bg-accent-500 transition-colors uppercase">Catalogo completo</a>
             </div>
         </div>
 
@@ -85,9 +85,9 @@
         </div>
 
         <!-- Step 3 -->
-        <div class="group relative overflow-hidden bg-gray-950 flex flex-col p-8 text-white min-h-[300px]">
+        <div class="group relative overflow-hidden bg-gray-950 flex flex-col p-8 text-gray-50 min-h-[300px]">
             <div class="absolute top-0 right-0 p-4 opacity-20 select-none pointer-events-none">
-                <span class="text-8xl font-black text-white">3</span>
+                <span class="text-8xl font-black text-gray-50">3</span>
             </div>
             <div class="relative z-10">
                 <h3 class="text-2xl font-black mb-4">Controllo Gratuito</h3>
@@ -103,11 +103,11 @@
             <div class="relative z-10">
                 <h3 class="text-2xl font-black mb-4 text-gray-900">Ricevi a casa</h3>
                 <p class="text-gray-600 leading-relaxed mb-6">Produciamo in tempi rapidi e spediamo in tutta Italia con corriere espresso.</p>
-                <ul class="grid grid-cols-2 gap-y-2 font-mono text-[10px] text-vividauburn-500 font-bold uppercase">
-                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Produzione</li>
-                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Qualità</li>
-                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Spedizione</li>
-                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-vividauburn-500 rounded-full"></span>Assistenza</li>
+                <ul class="grid grid-cols-2 gap-y-2 font-mono text-[10px] text-accent-500 font-bold uppercase">
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-accent-500 rounded-full"></span>Produzione</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-accent-500 rounded-full"></span>Qualità</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-accent-500 rounded-full"></span>Spedizione</li>
+                    <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-accent-500 rounded-full"></span>Assistenza</li>
                 </ul>
             </div>
         </div>

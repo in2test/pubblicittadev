@@ -1,34 +1,21 @@
 <?php
 
-declare(strict_types=1);
-
-namespace App\Livewire;
-
+use Livewire\Component;
+use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\VariationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-/**
- * Catalog Livewire Component
- */
-class Catalog extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public ?string $categorySlug = null;
-
     public string $search = '';
-
     public array $selectedOptions = [];
-
     public string $sort = 'name';
-
-    public ?Category $category = null;
-
     public bool $isFiltering = false;
 
     protected $queryString = [
@@ -82,13 +69,16 @@ class Catalog extends Component
         $this->reset(['search', 'selectedOptions']);
     }
 
-    public function getCategory(): ?Category
+    #[Computed]
+    public function category(): ?Category
     {
         if (! $this->categorySlug) {
             return null;
         }
 
-        return Category::where('slug', '=', $this->categorySlug, 'and')->with('children')->first();
+        return Category::where('slug', '=', $this->categorySlug, 'and')
+            ->with(['children' => fn ($q) => $q->withCount('products'), 'parent.parent'])
+            ->first();
     }
 
     public function getIsFiltering(): bool
@@ -96,7 +86,8 @@ class Catalog extends Component
         return $this->search !== '' && $this->search !== '0' || $this->selectedOptions !== [];
     }
 
-    public function getAvailableVariationTypesProperty(): Collection
+    #[Computed]
+    public function availableVariationTypes(): Collection
     {
         $productQuery = $this->getBaseFilteredQuery();
 
@@ -111,7 +102,7 @@ class Catalog extends Component
 
     protected function getBaseFilteredQuery(): Builder
     {
-        $category = $this->getCategory();
+        $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
         return Product::query()
@@ -134,14 +125,14 @@ class Catalog extends Component
                 }
             })
             ->when($this->selectedOptions !== [], function ($q) {
-                // If they picked options, products must have these options in their SKUs
                 $q->whereHas('skus.options', fn ($sq) => $sq->whereIn('variation_options.id', $this->selectedOptions));
             });
     }
 
-    public function getCatalogData(): array
+    #[Computed]
+    public function catalogData(): array
     {
-        $category = $this->getCategory();
+        $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
         if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
@@ -149,14 +140,14 @@ class Catalog extends Component
                 'category' => $child,
                 'products' => $child->products()
                     ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
-                    ->with(['media', 'category', 'variationTypes.options'])
+                    ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
                     ->take(8)
                     ->get(),
             ]);
 
             $ownProducts = $category->products()
                 ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
-                ->with(['media', 'category', 'variationTypes.options'])
+                ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
                 ->get();
 
             return [
@@ -167,7 +158,7 @@ class Catalog extends Component
         }
 
         $products = $this->getBaseFilteredQuery()
-            ->with(['media', 'category', 'variationTypes.options'])
+            ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
             ->orderBy(
                 $this->sort === 'price_asc' ? 'price' : ($this->sort === 'price_desc' ? 'price' : 'name'),
                 $this->sort === 'price_desc' ? 'desc' : 'asc'
@@ -180,11 +171,42 @@ class Catalog extends Component
         ];
     }
 
-    public function render()
+    #[Computed]
+    public function rootCategories(): Collection
     {
-        return view('livewire.catalog', [
-            'catalogData' => $this->getCatalogData(),
-            'rootCategories' => Category::whereNull('parent_id', 'and', false)->with('children')->get(),
-        ]);
+        return Category::whereNull('parent_id')->with('children.children')->get();
     }
-}
+};
+?>
+
+<div class="flex flex-col lg:flex-row gap-12 px-8 3xl:px-32 mt-12 mb-24 border-t border-gray-200 pt-12">
+
+    {{-- Left Sidebar: Navigation and Filters --}}
+    <x-catalog.sidebar
+        :root-categories="$this->rootCategories"
+        :category-slug="$categorySlug"
+        :category="$this->category"
+        :available-variation-types="$this->availableVariationTypes"
+        :selected-options="$selectedOptions"
+        :is-filtering="$this->getIsFiltering()"
+    />
+
+    {{-- Main Content Area --}}
+    <main class="flex-1">
+        
+        {{-- Toolbar: Search, Filtering, and Sorting options --}}
+        <x-catalog.toolbar
+            :search="$search"
+            :category-slug="$categorySlug"
+        />
+
+        {{-- Products Grid/Grouped Display & Pagination --}}
+        <x-catalog.results
+            :catalog-data="$this->catalogData"
+            :category-slug="$categorySlug"
+            :search="$search"
+        />
+
+    </main>
+</div>
+

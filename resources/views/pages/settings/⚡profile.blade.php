@@ -78,42 +78,45 @@ new #[Title('Profile settings')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
-
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+            <div class="space-y-2">
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome</label>
+                <input wire:model="name" type="text" required autofocus autocomplete="name" 
+                       class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                @error('name') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
+            </div>
 
-            <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+            <div class="space-y-2">
+                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Email</label>
+                <input wire:model="email" type="email" required autocomplete="email" 
+                       class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                @error('email') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
 
                 @if ($this->hasUnverifiedEmail)
-                    <div>
-                        <flux:text class="mt-4">
+                    <div class="mt-4 p-4 border border-dashed border-gray-300 bg-gray-50">
+                        <p class="text-xs text-gray-600 font-mono">
                             {{ __('Your email address is unverified.') }}
-
-                            <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
+                            <button type="button" wire:click.prevent="resendVerificationNotification" class="text-secondary hover:underline ml-1 font-bold">
                                 {{ __('Click here to re-send the verification email.') }}
-                            </flux:link>
-                        </flux:text>
+                            </button>
+                        </p>
 
                         @if (session('status') === 'verification-link-sent')
-                            <flux:text class="mt-2 font-medium !dark:text-green-400 !text-green-600">
+                            <p class="mt-2 text-xs font-bold uppercase tracking-wider text-green-600">
                                 {{ __('A new verification link has been sent to your email address.') }}
-                            </flux:text>
+                            </p>
                         @endif
                     </div>
                 @endif
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
-                    </flux:button>
-                </div>
+            <div class="flex items-center gap-4 pt-4">
+                <button type="submit" class="px-6 py-3 bg-secondary text-gray-50 border-2 border-gray-950 text-xs font-black uppercase tracking-wider hover:bg-gray-950 transition-colors" data-test="update-profile-button">
+                    {{ __('Salva') }}
+                </button>
 
-                <x-action-message class="me-3" on="profile-updated">
+                <x-action-message class="text-xs font-bold uppercase tracking-wider text-green-600" on="profile-updated">
                     {{ __('Saved.') }}
                 </x-action-message>
             </div>

@@ -33,12 +33,12 @@ class ProductSynchronizer
 
         // Get or Create generic variation types for Color and Size
         $colorType = VariationType::firstOrCreate(
-            ['name' => 'Color'],
+            ['name' => 'Colore'],
             ['presentation_type' => 'color_swatch']
         );
 
         $sizeType = VariationType::firstOrCreate(
-            ['name' => 'Size'],
+            ['name' => 'Taglia'],
             ['presentation_type' => 'select']
         );
 

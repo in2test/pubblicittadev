@@ -1,9 +1,12 @@
 <?php
 
+use App\Mail\OrderPlacedNotification;
 use App\Models\Address;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CartManager;
+use Illuminate\Support\Facades\Mail;
+use Livewire\Volt\Volt;
 use Stripe\Checkout\Session;
 
 use function Pest\Laravel\actingAs;
@@ -14,8 +17,11 @@ beforeEach(function () {
     $this->cartManager->clear();
 });
 
-it('redirects to stripe checkout session and creates a pending order', function () {
+it('redirects to stripe checkout session, creates a pending order, and sends placement emails', function () {
+    Mail::fake();
+
     $user = User::factory()->create();
+    $admin = User::factory()->create(['role' => 'admin']);
     $product = Product::factory()->create(['price' => 10.00]);
 
     // Add item to cart
@@ -45,7 +51,8 @@ it('redirects to stripe checkout session and creates a pending order', function 
 
     assertDatabaseHas('orders', [
         'user_id' => $user->id,
-        'status' => 'pending',
+        'payment_status' => 'pending',
+        'work_status' => 'pending',
         'total_price' => 20.00,
         'stripe_session_id' => 'sess_test',
     ]);
@@ -56,6 +63,12 @@ it('redirects to stripe checkout session and creates a pending order', function 
         'unit_price' => 10.00,
         'subtotal' => 20.00,
     ]);
+
+    // Assert customer received OrderPlacedNotification
+    Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($user->email));
+
+    // Assert admin received OrderPlacedNotification
+    Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
 });
 
 it('prevents checkout with an empty cart', function () {
@@ -82,4 +95,25 @@ it('clears cart on success page', function () {
         ->assertStatus(200);
 
     expect($this->cartManager->getItems())->toBeEmpty();
+});
+
+it('renders the checkout page successfully', function () {
+    $user = User::factory()->create();
+    $product = Product::factory()->create(['price' => 10.00]);
+    $address = Address::factory()->create(['user_id' => $user->id]);
+
+    $this->cartManager->add([
+        'product_id' => $product->id,
+        'product_name' => $product->name,
+        'product_slug' => $product->slug,
+        'quantity' => 1,
+        'price' => 10.00,
+    ]);
+
+    actingAs($user);
+
+    Volt::test('pages.checkout')
+        ->assertSee('Checkout')
+        ->assertSee($address->name)
+        ->assertHasNoErrors();
 });

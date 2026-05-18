@@ -25,23 +25,44 @@ class OrdersTable
                     ->label('Cliente')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('payment_status')
+                    ->label('Stato Pagamento')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'paid' => 'success',
-                        'shipped' => 'info',
                         'cancelled' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'In Attesa',
                         'paid' => 'Pagato',
-                        'shipped' => 'Spedito',
                         'cancelled' => 'Annullato',
                         default => $state,
                     })
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('work_status')
+                    ->label('Stato Lavorazione')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'processing' => 'info',
+                        'ready' => 'success',
+                        'shipped' => 'gray',
+                        'completed' => 'gray',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'In Attesa',
+                        'processing' => 'In Lavorazione',
+                        'ready' => 'Pronto per Spedizione',
+                        'shipped' => 'Spedito',
+                        'completed' => 'Completato',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('total_price')
                     ->label('Totale')
                     ->money('EUR')

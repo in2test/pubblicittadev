@@ -12,6 +12,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    QuantityDiscountService::clearCache();
+});
+
 it('calculates the correct discounted price for a product', function () {
     $service = app(QuantityDiscountService::class);
     $category = Category::factory()->create();

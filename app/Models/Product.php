@@ -74,6 +74,8 @@ class Product extends Model implements HasMedia
     use InteractsWithMedia;
     use Searchable;
 
+    private ?Collection $quantityDiscountsCache = null;
+
     public const TYPE_STANDARD = 'standard';
 
     public const TYPE_NEWWAVE = 'newwave';
@@ -139,6 +141,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(PricingTier::class);
     }
 
+    public function productVariationTypes(): HasMany
+    {
+        return $this->hasMany(ProductVariationType::class);
+    }
+
     #[Override]
     public function getRouteKeyName(): string
     {
@@ -195,19 +202,34 @@ class Product extends Model implements HasMedia
 
         // Get all options associated with this product's visual type
         /** @var ProductVariationType|null $productVariationType */
-        $productVariationType = ProductVariationType::where('product_id', $this->id)
-            ->where('variation_type_id', $visualType->id)
-            ->first();
+        $productVariationType = null;
+        if ($this->relationLoaded('productVariationTypes')) {
+            $productVariationType = $this->productVariationTypes
+                ->firstWhere('variation_type_id', $visualType->id);
+        }
+
+        if ($productVariationType === null) {
+            $productVariationType = ProductVariationType::where('product_id', $this->id)
+                ->where('variation_type_id', $visualType->id)
+                ->first();
+        }
 
         if ($productVariationType === null) {
             return ['display' => collect(), 'remaining' => 0, 'total' => 0];
         }
 
-        $productVariationTypeId = $productVariationType->id;
-
-        $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($productVariationTypeId) {
-            $query->where('product_variation_type_id', $productVariationTypeId);
-        })->orderBy('sort_order')->get();
+        if ($productVariationType->relationLoaded('options')) {
+            $options = $productVariationType->options
+                ->map(fn ($pvo) => $pvo->relationLoaded('option') ? $pvo->option : null)
+                ->filter()
+                ->sortBy('sort_order')
+                ->values();
+        } else {
+            $productVariationTypeId = $productVariationType->id;
+            $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($productVariationTypeId) {
+                $query->where('product_variation_type_id', $productVariationTypeId);
+            })->orderBy('sort_order')->get();
+        }
 
         return [
             'display' => $options->take($limit),
@@ -271,7 +293,11 @@ class Product extends Model implements HasMedia
         }
 
         // 2. Add remote images from the dedicated 'images' table
-        $remoteImages = $this->images()->orderBy('order_by', 'asc')->get();
+        if ($this->relationLoaded('images')) {
+            $remoteImages = $this->images->sortBy('order_by');
+        } else {
+            $remoteImages = $this->images()->orderBy('order_by', 'asc')->get();
+        }
         foreach ($remoteImages as $remote) {
             /** @var Image $remote */
             // Skip remote images that have already been downloaded locally
@@ -367,14 +393,21 @@ class Product extends Model implements HasMedia
         /**
          * @var PricingTier|null $tier
          */
-        $tier = $this->pricingTiers()
-            ->where('min_quantity', '<=', $quantity)
-            ->where(function ($query) use ($quantity) {
-                $query->where('max_quantity', '>=', $quantity)
-                    ->orWhereNull('max_quantity');
-            })
-            ->orderByDesc('min_quantity')
-            ->first();
+        if ($this->relationLoaded('pricingTiers')) {
+            $tier = $this->pricingTiers
+                ->filter(fn ($t) => $t->min_quantity <= $quantity && ($t->max_quantity >= $quantity || is_null($t->max_quantity)))
+                ->sortByDesc('min_quantity')
+                ->first();
+        } else {
+            $tier = $this->pricingTiers()
+                ->where('min_quantity', '<=', $quantity)
+                ->where(function ($query) use ($quantity) {
+                    $query->where('max_quantity', '>=', $quantity)
+                        ->orWhereNull('max_quantity');
+                })
+                ->orderByDesc('min_quantity')
+                ->first();
+        }
 
         return $tier ? (float) $tier->price_per_unit : null;
     }
@@ -407,15 +440,18 @@ class Product extends Model implements HasMedia
      */
     public function getQuantityDiscounts(): Collection
     {
-        $categoryIds = collect([$this->category_id]);
-
-        $category = $this->category;
-        while ($category && $category->parent_id) {
-            $categoryIds->push($category->parent_id);
-            $category = $category->parent;
+        if ($this->quantityDiscountsCache instanceof Collection) {
+            return $this->quantityDiscountsCache;
         }
 
-        return CategoryQuantityDiscount::whereIn('category_id', $categoryIds)
+        if (! $this->category_id) {
+            return $this->quantityDiscountsCache = collect();
+        }
+
+        $service = app(QuantityDiscountService::class);
+        $categoryIds = $service->getCategoryPathIds($this->category_id);
+
+        return $this->quantityDiscountsCache = CategoryQuantityDiscount::whereIn('category_id', $categoryIds)
             ->where('min_quantity', '>', 1)
             ->orderBy('min_quantity', 'asc')
             ->get();

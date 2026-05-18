@@ -19,6 +19,7 @@ class QuantityDiscountServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        QuantityDiscountService::clearCache();
         $this->service = new QuantityDiscountService;
     }
 

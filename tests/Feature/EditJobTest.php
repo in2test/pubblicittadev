@@ -49,7 +49,7 @@ it('can edit an existing job in the cart', function () {
 
     $jobId = array_key_first($cart->getItems());
 
-    Livewire::test('⚡product', [
+    Livewire::test('product', [
         'product' => $product,
         'category' => $category,
         'jobId' => $jobId,

@@ -7,9 +7,54 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 
 class QuantityDiscountService
 {
+    /** @var array<int, Category|null> */
+    protected static array $categories = [];
+
+    /** @var array<int, array<int>> */
+    protected static array $categoryPaths = [];
+
+    /** @var array<string, CategoryQuantityDiscount|null> */
+    protected static array $discounts = [];
+
+    /** @var Collection<int, CategoryQuantityDiscount>|null */
+    protected static ?Collection $allDiscounts = null;
+
+    /**
+     * Clear the static request-level caches.
+     */
+    public static function clearCache(): void
+    {
+        self::$categories = [];
+        self::$categoryPaths = [];
+        self::$discounts = [];
+        self::$allDiscounts = null;
+    }
+
+    /**
+     * Get a category by its ID, using static cache to prevent duplicate queries.
+     */
+    protected function getCategoryById(int $id): ?Category
+    {
+        if (! array_key_exists($id, self::$categories)) {
+            if (self::$categories === []) {
+                $all = Category::all();
+                foreach ($all as $cat) {
+                    self::$categories[$cat->id] = $cat;
+                }
+            }
+
+            if (! array_key_exists($id, self::$categories)) {
+                self::$categories[$id] = Category::find($id);
+            }
+        }
+
+        return self::$categories[$id];
+    }
+
     /**
      * Calculate the final price for a product based on its category and quantity.
      */
@@ -33,11 +78,22 @@ class QuantityDiscountService
         $path = $this->buildCategoryPath($categoryId);
 
         foreach ($path as $catId) {
-            $discount = CategoryQuantityDiscount::where('category_id', '=', $catId, 'and')
-                ->where('min_quantity', '<=', $quantity, 'and')
-                ->orderByDesc('min_quantity')
-                ->orderByDesc('discount_value')
-                ->first();
+            $cacheKey = "{$catId}-{$quantity}";
+            if (! array_key_exists($cacheKey, self::$discounts)) {
+                if (! self::$allDiscounts instanceof Collection) {
+                    self::$allDiscounts = CategoryQuantityDiscount::all();
+                }
+
+                self::$discounts[$cacheKey] = self::$allDiscounts
+                    ->filter(fn ($d) => $d->category_id === $catId && $d->min_quantity <= $quantity)
+                    ->sortBy([
+                        ['min_quantity', 'desc'],
+                        ['discount_value', 'desc'],
+                    ])
+                    ->first();
+            }
+
+            $discount = self::$discounts[$cacheKey];
             if ($discount) {
                 return $discount;
             }
@@ -47,18 +103,34 @@ class QuantityDiscountService
     }
 
     /**
+     * Public helper to retrieve the list of category IDs in the tree path, utilizing cache.
+     *
+     * @return array<int>
+     */
+    public function getCategoryPathIds(int $categoryId): array
+    {
+        return $this->buildCategoryPath($categoryId);
+    }
+
+    /**
      * Build path from starting category up to root (closest to farthest).
      */
     protected function buildCategoryPath(int $startCategoryId): array
     {
+        if (isset(self::$categoryPaths[$startCategoryId])) {
+            return self::$categoryPaths[$startCategoryId];
+        }
+
         $path = [];
-        $current = Category::find($startCategoryId, ['*']);
-        while ($current && $current->parent) {
-            $path[] = $current->parent->id;
-            $current = $current->parent;
+        $current = $this->getCategoryById($startCategoryId);
+        while ($current && $current->parent_id) {
+            $path[] = $current->parent_id;
+            $current = $this->getCategoryById($current->parent_id);
         }
         // Ensure we test starting category first
         array_unshift($path, $startCategoryId);
+
+        self::$categoryPaths[$startCategoryId] = $path;
 
         return $path;
     }

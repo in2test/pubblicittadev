@@ -4,11 +4,11 @@
     <div class="w-full lg:w-1/2 bg-gray-50 flex items-center px-8 3xl:px-32 py-14 relative z-10">
         <div class="max-w-4xl">
             <div class="flex items-center gap-4 mb-8">
-                <span class="font-mono text-xs tracking-[0.3em] uppercase text-vividauburn-500 font-bold">Stampa, grafica e personalizzazione dal 1990</span>
-                <div class="h-px w-12 bg-vividauburn-500/30"></div>
+                <span class="font-mono text-xs tracking-[0.3em] uppercase text-accent-500 font-bold">Stampa, grafica e personalizzazione dal 1990</span>
+                <div class="h-px w-12 bg-accent-500/30"></div>
             </div>
             <h1 class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-gray-950 leading-[0.9] mb-10">
-                STAMPA PERFETTA, FILE O NO <span class="text-vividauburn-700">TI GUIDIAMO NOI.</span>
+                STAMPA PERFETTA, FILE O NO <span class="text-accent-700">TI GUIDIAMO NOI.</span>
             </h1>
             <p class="text-lg lg:text-xl text-gray-900 mb-12 font-light leading-relaxed">
                 Hai già il file pronto? Lo controlliamo gratuitamente e stampiamo in tempi rapidi. Non ce l’hai ancora?
@@ -19,7 +19,7 @@
             </p>
             <div class="flex flex-wrap gap-4">
                 <a href="{{ route('catalog') }}"
-                    class="bg-vividauburn-500 hover:bg-vividauburn-700 text-gray-50 px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all flex items-center gap-3">
+                    class="bg-accent-500 hover:bg-accent-700 text-gray-50 px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all flex items-center gap-3">
                     VEDI CATALOGO
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
@@ -38,7 +38,7 @@
         </div>
     </div>
     <!-- Right Side: Imagery -->
-    <div class="w-full lg:w-1/2 relative bg-zinc-900 group">
+    <div class="w-full lg:w-1/2 relative bg-gray-950 group">
         <img alt="Industrial Workwear Detail"
             class="object-cover grayscale brightness-75 dark:brightness-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300 w-full h-full"
             data-alt="Close up of high quality technical workwear fabric and stitching"
@@ -51,12 +51,12 @@
         </div>
         <!-- Floating Card -->
         <div class="absolute top-20 left-12 lg:left-20 bg-gray-50/80 p-6 shadow-2xl max-w-xs hidden md:block backdrop-blur-sm">
-            <div class="font-mono text-[10px] text-vividauburn-500 mb-4">SYSTEM_STATUS: ACTIVE</div>
+            <div class="font-mono text-[10px] text-accent-500 mb-4">SYSTEM_STATUS: ACTIVE</div>
             <h3 class="text-xl font-bold mb-2 text-gray-900">Abbigliamento Premium</h3>
             <p class="text-sm text-gray-700 mb-4 leading-snug">Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.</p>
-            <div class="flex justify-between items-center border-t border-vividauburn-500 pt-4">
+            <div class="flex justify-between items-center border-t border-accent-500 pt-4">
                 <span class="font-mono text-xs text-gray-900">Qualità Certificata</span>
-                <span class="material-symbols-outlined text-vividauburn-500">verified_user</span>
+                <span class="material-symbols-outlined text-accent-500">verified_user</span>
             </div>
         </div>
     </div>

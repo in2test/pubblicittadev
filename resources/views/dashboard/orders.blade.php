@@ -1,55 +1,71 @@
-<x-layouts::app :title="__('I miei Ordini')">
-    <div class="mb-6 flex items-center justify-between">
+<x-layouts::app :title="__('I Miei Ordini')">
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold uppercase tracking-tight">I miei Ordini</h1>
-            <p class="text-neutral-500">Cronologia dei tuoi acquisti e stato delle lavorazioni.</p>
+            <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">I Miei Ordini</h2>
+            <p class="text-gray-500 text-sm mt-1">Cronologia dei tuoi acquisti e stato delle lavorazioni.</p>
         </div>
-        <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-gray-900">
-            <span class="material-symbols-outlined text-sm">arrow_back</span> Torna alla Dashboard
+        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-gray-950">
+            <span class="material-symbols-outlined text-lg">arrow_back</span>
+            <span>Torna alla Dashboard</span>
         </a>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700">
-        <table class="w-full text-left text-sm">
-            <thead class="bg-neutral-50 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:bg-neutral-800">
+    <div class="border-2 border-gray-950 bg-gray-50 overflow-x-auto shadow-md shadow-gray-950/5">
+        <table class="w-full text-left text-sm border-collapse">
+            <thead class="bg-gray-950 text-gray-50 text-[10px] font-mono uppercase tracking-widest border-b-2 border-gray-950">
                 <tr>
                     <th class="px-6 py-4">Ordine</th>
                     <th class="px-6 py-4">Data</th>
                     <th class="px-6 py-4">Articoli</th>
                     <th class="px-6 py-4 text-right">Totale</th>
-                    <th class="px-6 py-4 text-center">Status</th>
+                    <th class="px-6 py-4 text-center">Pagamento</th>
+                    <th class="px-6 py-4 text-center">Lavorazione</th>
                     <th class="px-6 py-4"></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <tbody class="divide-y-2 divide-gray-950">
                 @forelse($orders as $order)
-                    <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                        <td class="px-6 py-4 font-bold">{{ $order->order_number }}</td>
-                        <td class="px-6 py-4 text-neutral-500">{{ $order->created_at->format('d/m/Y') }}</td>
-                        <td class="px-6 py-4">{{ $order->total_items }}</td>
-                        <td class="px-6 py-4 text-right font-medium">€{{ number_format($order->total_price, 2) }}</td>
+                    <tr class="hover:bg-gray-100 transition-colors">
+                        <td class="px-6 py-4 font-mono font-bold text-gray-950">{{ $order->order_number }}</td>
+                        <td class="px-6 py-4 text-gray-500 font-medium">{{ $order->created_at->format('d/m/Y') }}</td>
+                        <td class="px-6 py-4 text-gray-950 font-bold">{{ $order->total_items }}</td>
+                        <td class="px-6 py-4 text-right font-bold text-gray-950">€{{ number_format($order->total_price, 2) }}</td>
                         <td class="px-6 py-4 text-center">
-                            <span class="inline-flex rounded-full px-2 py-1 text-xs font-bold uppercase tracking-wide
-                                {{ $order->status === 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
-                                {{ $order->status === 'paid' ? 'bg-green-100 text-green-700' : '' }}
-                                {{ $order->status === 'completed' ? 'bg-blue-100 text-blue-700' : '' }}
-                                {{ $order->status === 'failed' ? 'bg-red-100 text-red-700' : '' }}
-                                {{ $order->status === 'cancelled' ? 'bg-neutral-100 text-neutral-700' : '' }}
+                            <span class="inline-block px-2.5 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider border rounded-sm
+                                {{ $order->payment_status === 'pending' ? 'bg-amber-100 border-amber-950 text-amber-950' : '' }}
+                                {{ $order->payment_status === 'paid' ? 'bg-emerald-100 border-emerald-950 text-emerald-950' : '' }}
+                                {{ $order->payment_status === 'cancelled' ? 'bg-gray-100 border-gray-950 text-gray-950' : '' }}
                             ">
-                                {{ $order->status }}
+                                {{ $order->getPaymentStatusLabel() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-block px-2.5 py-0.5 text-[9px] font-mono font-black uppercase tracking-wider border rounded-sm
+                                {{ $order->work_status === 'pending' ? 'bg-amber-100 border-amber-950 text-amber-950' : '' }}
+                                {{ $order->work_status === 'processing' ? 'bg-indigo-100 border-indigo-950 text-indigo-950' : '' }}
+                                {{ $order->work_status === 'ready' ? 'bg-teal-100 border-teal-950 text-teal-950' : '' }}
+                                {{ $order->work_status === 'shipped' ? 'bg-blue-100 border-blue-950 text-blue-950' : '' }}
+                                {{ $order->work_status === 'completed' ? 'bg-emerald-100 border-emerald-950 text-emerald-950' : '' }}
+                            ">
+                                {{ $order->getWorkStatusLabel() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('dashboard.orders.show', $order) }}" class="text-primary hover:text-primary-container font-bold uppercase text-xs">Dettagli</a>
+                            <a href="{{ route('dashboard.orders.show', $order) }}" 
+                               class="inline-block px-3 py-1 bg-secondary text-gray-50 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-950 hover:text-gray-50 transition-colors">
+                                Dettagli
+                            </a>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <span class="material-symbols-outlined text-4xl text-neutral-300">shopping_bag</span>
-                                <p class="text-neutral-500">Non hai ancora effettuato alcun ordine.</p>
-                                <a href="{{ route('catalog') }}" class="mt-2 text-primary hover:underline">Sfoglia il catalogo</a>
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <span class="material-symbols-outlined text-4xl text-gray-400">shopping_bag</span>
+                                <p class="text-gray-500 font-medium text-sm">Non hai ancora effettuato alcun ordine.</p>
+                                <a href="{{ route('catalog') }}" class="mt-2 inline-block px-4 py-2 bg-secondary text-gray-50 text-xs font-black uppercase tracking-wider border-2 border-gray-950 hover:bg-gray-950 transition-colors">
+                                    Sfoglia il catalogo
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -58,7 +74,7 @@
         </table>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-8">
         {{ $orders->links() }}
     </div>
 </x-layouts::app>

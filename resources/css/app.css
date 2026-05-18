@@ -273,3 +273,15 @@
         @apply opacity-100;
     }
 }
+
+/* Custom Pagination Accent Override */
+nav[role="navigation"] span[aria-current="page"] > span,
+nav[role="navigation"] span[aria-current="page"] > button {
+    background-color: var(--color-accent-500) !important;
+    border-color: var(--color-accent-600) !important;
+    color: var(--color-gray-50) !important;
+}
+
+nav[role="navigation"] a:hover {
+    color: var(--color-accent-600) !important;
+}

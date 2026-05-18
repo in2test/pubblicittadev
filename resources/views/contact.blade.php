@@ -3,9 +3,8 @@
     <div class="industrial-grid absolute inset-0 pointer-events-none"></div>
     <div class="max-w-screen-2xl mx-auto px-6 py-16 md:py-24">
         <!-- Hero Header -->
-        <div class="mb-16 md:mb-24">
-            <span class="font-mono text-xs uppercase tracking-[0.3em] text-primary mb-4 block">Communication
-                Protocol</span>
+            <div class="mb-16 md:mb-24">
+            <span class="font-mono text-xs uppercase tracking-[0.3em] text-primary mb-4 block">Protocollo di Comunicazione</span>
             <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-on-surface leading-tight max-w-4xl">
                 Supporto Tecnico <br />e Commerciale
             </h1>
@@ -137,10 +136,10 @@
                     <div
                         class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors z-10 pointer-events-none">
                     </div>
-                    <img alt="Technical map view of industrial district" class="w-full h-full object-cover"
-                        data-alt="Technical map view of industrial district" data-location="Milano"
+                    <img alt="Vista mappa tecnica dell'area industriale" class="w-full h-full object-cover"
+                        data-alt="Vista mappa tecnica dell'area industriale" data-location="Milano"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYGJrboMpsfLGJC8PqUvDTTnMW2m01J8oDLwwNXIXK4s8o8xAN2P4538k5hdAAtpPVPqo53SX8qBF5NoA8zRNyONy34VOMa6bO-hvcIh8JO0SVzIdXNPDtShYePK9ac6MNlZW2zTbPzKR99QLfV0OvhPrWbw8FapwKqt41-dRzdQBLAh1R-BrRZrj8I5BJBVTLtGK13AcpPfT7ppdFxcXnEJMNvFeINvHfv9JM7cW6l28ptIBgGtsVW7YkEDWTh3H-igy0y4TwQa8" />
-                    <div class="absolute bottom-4 left-4 bg-white px-4 py-2 shadow-xl z-20">
+                    <div class="absolute bottom-4 left-4 bg-gray-50 px-4 py-2 shadow-xl z-20">
                         <span class="font-mono text-[10px] uppercase tracking-tighter">Lat: 45.4642 | Long:
                             9.1900</span>
                     </div>

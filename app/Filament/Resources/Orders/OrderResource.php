@@ -52,4 +52,14 @@ class OrderResource extends Resource
             'edit' => EditOrder::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::where('work_status', '=', 'pending')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::where('work_status', '=', 'pending')->count() > 0 ? 'warning' : 'gray';
+    }
 }

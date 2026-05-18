@@ -99,8 +99,8 @@
                         <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                             @class([
                                 'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                'bg-primary text-white border-primary' => $isActive,
-                                'bg-white border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                                'bg-primary text-gray-50 border-primary' => $isActive,
+                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
                             ])
                         >
                             {{ $option->name }}
@@ -150,14 +150,14 @@
                         <div>
                             <input wire:model.live="quantities.{{ $sku->id }}" type="number" min="0"
                                 @if ($product->type === 'newwave' && $sku->quantity <= 0) disabled @endif
-                                class="w-16 h-12 border border-gray-600/20 bg-white px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
+                                class="w-16 h-12 border border-gray-600/20 bg-gray-50 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                         </div>
                     </div>
                 @endforeach
             </div>
 
             @if($this->totalQuantity > 0)
-                <div class="mt-4 p-4 bg-peachsouffle-200 rounded border border-primary/20 flex flex-col gap-2">
+                <div class="mt-4 p-4 bg-accent-100 rounded border border-accent-200/50 flex flex-col gap-2">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
                         <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
@@ -239,7 +239,7 @@
             Carica il tuo design
         </label>
         <input type="file" name="design_file" accept="image/*,.pdf"
-            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-white file:px-4" />
+            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-gray-50 file:px-4" />
         @error('design_file')
             <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
         @enderror
