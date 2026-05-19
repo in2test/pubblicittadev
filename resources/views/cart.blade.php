@@ -75,6 +75,12 @@
                                 <span class="font-mono text-xs text-secondary">{{ $item['color_name'] }}</span>
                             </div>
                             @endif
+                            @if (isset($item['width']) && isset($item['height']))
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="material-symbols-outlined text-sm text-secondary" style="font-variation-settings: 'FILL' 0, 'wght' 400;">aspect_ratio</span>
+                                <span class="font-mono text-xs text-secondary">Dimensioni: {{ $item['width'] }} × {{ $item['height'] }} cm</span>
+                            </div>
+                            @endif
                         </div>
 
                         {{-- Edit / Remove --}}

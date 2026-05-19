@@ -99,8 +99,19 @@ class CartController extends Controller
                 ? array_sum(array_map(intval(...), $item['quantities']))
                 : (int) ($item['quantity'] ?? 1);
 
-            $base = $product ? (float) $product->price : 0.0;
-            $disc = $product ? $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null) : 0.0;
+            $base = 0.0;
+            $disc = 0.0;
+            if ($product) {
+                if ($product->pricing_model === 'area' && isset($item['width']) && isset($item['height'])) {
+                    $area = ((float) $item['width'] * (float) $item['height']) / 10000.0;
+                    $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
+                    $base = (float) $product->price * $billedArea;
+                    $disc = $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null) * $billedArea;
+                } else {
+                    $base = (float) $product->price;
+                    $disc = $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null);
+                }
+            }
 
             // Resolve display image (colour-specific or fallback)
             $displayImage = null;
@@ -227,9 +238,12 @@ class CartController extends Controller
         $quantity = (int) $validated['quantity'];
         $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
+        $width = isset($validated['width']) ? (float) $validated['width'] : null;
+        $height = isset($validated['height']) ? (float) $validated['height'] : null;
+
         $this->cart->add(array_merge($validated, [
             'print_placements' => $printPlacements,
-            'price' => $product->calculateFinalUnitPrice($quantity, $printPlacements, $printSideId),
+            'price' => $product->calculateFinalUnitPrice($quantity, $printPlacements, $printSideId, $width, $height),
             'quantity' => $quantity,
         ]));
 
@@ -310,20 +324,32 @@ class CartController extends Controller
             'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
             'print_placements' => 'nullable|string',
+            'width' => 'nullable|numeric|min:0.1',
+            'height' => 'nullable|numeric|min:0.1',
+            'print_side_id' => 'nullable|integer|exists:print_sides,id',
         ]);
 
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];
         $placements = json_decode((string) ($validated['print_placements'] ?? '[]'), true) ?? [];
+        $width = isset($validated['width']) ? (float) $validated['width'] : null;
+        $height = isset($validated['height']) ? (float) $validated['height'] : null;
+        $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
-        $unitPrice = $product->getPriceForQuantity($quantity);
-        $finalUnitPrice = $product->calculateFinalUnitPrice($quantity, $placements);
+        $unitPrice = $product->getPriceForQuantity($quantity, $printSideId);
+        $billedArea = 1.0;
+        if ($product->pricing_model === 'area' && $width > 0 && $height > 0) {
+            $area = ($width * $height) / 10000.0;
+            $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
+            $unitPrice = $unitPrice * $billedArea;
+        }
+        $finalUnitPrice = $product->calculateFinalUnitPrice($quantity, $placements, $printSideId, $width, $height);
 
         return response()->json([
             'unit_price' => $unitPrice,
             'total_price' => $finalUnitPrice * $quantity,
             'quantity' => $quantity,
-            'discount_applied' => $unitPrice < $product->price,
+            'discount_applied' => $unitPrice < ($product->pricing_model === 'area' && $width > 0 && $height > 0 ? (float) $product->price * $billedArea : $product->price),
         ]);
     }
 }

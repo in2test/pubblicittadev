@@ -298,4 +298,37 @@ class CartTest extends TestCase
         $this->assertEquals(3, $itemValues[0]['quantity']);
         $this->assertEquals(2, $itemValues[1]['quantity']);
     }
+
+    public function test_add_item_with_area_pricing(): void
+    {
+        $product = Product::factory()->create([
+            'price' => 10.0, // €10 per sqm
+            'pricing_model' => 'area',
+            'min_area' => 0.5,
+        ]);
+
+        // 1. Standard calculation: 200cm x 150cm = 3 sqm. Quantity = 2.
+        // Total unit price should be: 3 sqm * €10 = €30 per unit.
+        $this->post(route('cart.add'), [
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_slug' => $product->slug,
+            'quantity' => 2,
+            'width' => 200,
+            'height' => 150,
+        ]);
+
+        $cart = new CartManager;
+        $items = $cart->getItems();
+        $item = reset($items);
+
+        $this->assertEquals(30.0, $item['price']);
+        $this->assertEquals(200.0, $item['width']);
+        $this->assertEquals(150.0, $item['height']);
+
+        // Check index view returns correct calculations for area pricing
+        $response = $this->get(route('cart'));
+        $response->assertOk();
+        $response->assertSee('Dimensioni: 200 × 150 cm');
+    }
 }

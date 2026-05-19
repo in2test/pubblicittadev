@@ -1,4 +1,4 @@
-@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null, 'width' => null, 'height' => null])
 
 @php
     /** @var \App\Models\Product $product */
@@ -109,6 +109,49 @@
             </div>
         </div>
     @endforeach
+
+    {{-- Custom Dimensions for Area-based Pricing --}}
+    @if ($product->pricing_model === 'area')
+        <div class="space-y-4 pt-4 border-t border-outline-variant/10">
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                Dimensioni Personalizzate (in cm)
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (cm)</label>
+                    <div class="relative">
+                        <input wire:model.live="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
+                            class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (cm)</label>
+                    <div class="relative">
+                        <input wire:model.live="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
+                            class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
+                    </div>
+                </div>
+            </div>
+            @if ($product->min_area > 0)
+                <p class="text-[10px] font-mono text-secondary uppercase">
+                    Nota: Area minima fatturabile di {{ $product->min_area }} mq per articolo.
+                </p>
+            @endif
+            @if ($width > 0 && $height > 0)
+                @php
+                    $calculatedArea = ($width * $height) / 10000;
+                @endphp
+                <div class="mt-2 text-xs font-mono text-secondary">
+                    Area calcolata: <span class="font-bold text-on-surface">{{ number_format($calculatedArea, 2, ',', '.') }} mq</span>
+                    @if ($product->min_area && $calculatedArea < (float) $product->min_area)
+                        <span class="text-amber-600 font-bold">(Applicato minimo fatturabile: {{ number_format((float) $product->min_area, 2, ',', '.') }} mq)</span>
+                    @endif
+                </div>
+            @endif
+        </div>
+    @endif
 
     {{-- Matrix / Quantities --}}
     @if ($matchingSkus->isNotEmpty())

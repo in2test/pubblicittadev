@@ -194,7 +194,13 @@ class CartManager
             if (! empty($item['product_id'])) {
                 $product = Product::find((int) $item['product_id']);
                 if ($product) {
-                    $price = $product->calculateFinalUnitPrice($qty, $item['print_placements'] ?? [], isset($item['print_side_id']) ? (int) $item['print_side_id'] : null);
+                    $price = $product->calculateFinalUnitPrice(
+                        $qty,
+                        $item['print_placements'] ?? [],
+                        isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
+                        isset($item['width']) ? (float) $item['width'] : null,
+                        isset($item['height']) ? (float) $item['height'] : null
+                    );
                 }
             }
 

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             VariationOptionSeeder::class,
             NewWaveProductSeeder::class,
+            StandardProductSeeder::class,
         ]);
 
     }

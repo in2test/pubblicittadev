@@ -69,7 +69,13 @@ class CheckoutController extends Controller
                 }
 
                 $qty = $this->cartManager->getItemQuantity($item);
-                $unitPrice = $product->calculateFinalUnitPrice($qty, $item['print_placements'] ?? [], isset($item['print_side_id']) ? (int) $item['print_side_id'] : null);
+                $unitPrice = $product->calculateFinalUnitPrice(
+                    $qty,
+                    $item['print_placements'] ?? [],
+                    isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
+                    isset($item['width']) ? (float) $item['width'] : null,
+                    isset($item['height']) ? (float) $item['height'] : null
+                );
 
                 $order->items()->create([
                     'product_id' => $item['product_id'],

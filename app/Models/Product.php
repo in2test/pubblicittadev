@@ -68,6 +68,8 @@ use Throwable;
     'override_price',
     'override_description',
     'remote_images',
+    'pricing_model',
+    'min_area',
 ])]
 class Product extends Model implements HasMedia
 {
@@ -91,6 +93,7 @@ class Product extends Model implements HasMedia
         'override_price' => 'boolean',
         'override_description' => 'boolean',
         'remote_images' => 'array',
+        'min_area' => 'float',
     ];
 
     /**
@@ -463,9 +466,17 @@ class Product extends Model implements HasMedia
     /**
      * Calculate the total unit price including quantity discounts, placements, and print side.
      */
-    public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null): float
+    public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null, ?float $width = null, ?float $height = null): float
     {
-        return $this->getPriceForQuantity($quantity, $printSideId) + $this->getAdditionalPriceForPlacements($placementIds);
+        if ($this->pricing_model === 'area' && $width !== null && $height !== null) {
+            $area = ($width * $height) / 10000.0;
+            $billedArea = $this->min_area ? max($area, (float) $this->min_area) : $area;
+            $basePrice = $this->getPriceForQuantity($quantity, $printSideId) * $billedArea;
+        } else {
+            $basePrice = $this->getPriceForQuantity($quantity, $printSideId);
+        }
+
+        return $basePrice + $this->getAdditionalPriceForPlacements($placementIds);
     }
 
     /**

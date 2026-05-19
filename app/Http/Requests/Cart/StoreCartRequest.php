@@ -33,6 +33,8 @@ class StoreCartRequest extends FormRequest
             'product_name' => 'required|string',
             'product_slug' => 'required|string',
             'image_url' => 'nullable|string',
+            'width' => 'nullable|numeric|min:0.1',
+            'height' => 'nullable|numeric|min:0.1',
         ];
     }
 }

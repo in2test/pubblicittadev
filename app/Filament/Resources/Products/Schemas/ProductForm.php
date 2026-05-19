@@ -13,15 +13,16 @@ use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
@@ -52,6 +53,8 @@ class ProductForm
                         Grid::make(2)->schema([
                             static::getPriceField(),
                             static::getOfferPriceField(),
+                            static::getPricingModelField(),
+                            static::getMinAreaField(),
                         ]),
                         static::getVariationTypesField(),
                         static::getSkusRepeater(),
@@ -199,6 +202,7 @@ class ProductForm
     {
         return Repeater::make('skus')
             ->relationship('skus')
+            ->defaultItems(0)
             ->label('Varianti e Inventario (SKU)')
             ->schema([
                 TextInput::make('sku')
@@ -231,6 +235,7 @@ class ProductForm
     {
         return Repeater::make('pricingTiers')
             ->relationship('pricingTiers')
+            ->defaultItems(0)
             ->label('Prezzi a Scaglioni (Sconti per Quantità)')
             ->schema([
                 TextInput::make('min_quantity')
@@ -283,22 +288,11 @@ class ProductForm
             ->schema([
                 Repeater::make('media')
                     ->relationship('media', fn ($query) => $query->where('collection_name', 'images'))
+                    ->defaultItems(0)
                     ->schema([
-                        Hidden::make('collection_name')
-                            ->default('images'),
-                        Hidden::make('name')
-                            ->default('product-image'),
-                        Hidden::make('file_name')
-                            ->default('product-image.jpg'),
-                        Hidden::make('disk')
-                            ->default('public'),
-                        Hidden::make('size')
-                            ->default(0),
-                        Hidden::make('manipulations')
-                            ->default('[]'),
-                        TextEntry::make('preview')
+                        Placeholder::make('preview')
                             ->label('Immagine')
-                            ->state(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),
+                            ->content(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),
                         Select::make('custom_properties.color_ids')
                             ->label('Associa a uno o più colori')
                             ->multiple()
@@ -327,6 +321,7 @@ class ProductForm
     {
         return Repeater::make('printPlacements')
             ->relationship('printPlacements')
+            ->defaultItems(0)
             ->label('Posizioni di Stampa')
             ->schema([
                 Select::make('print_placement_id')
@@ -380,5 +375,30 @@ class ProductForm
             ->label('Prodotto in Evidenza')
             ->default(false)
             ->required();
+    }
+
+    public static function getPricingModelField(): Select
+    {
+        return Select::make('pricing_model')
+            ->label('Modello di Prezzo')
+            ->options([
+                'fixed' => 'Fisso (Prezzo base del catalogo)',
+                'quantity' => 'A Scaglioni (Sconti per quantità)',
+                'area' => 'A Metratura / Area (Prezzo per mq)',
+            ])
+            ->default('fixed')
+            ->live()
+            ->required();
+    }
+
+    public static function getMinAreaField(): TextInput
+    {
+        return TextInput::make('min_area')
+            ->label('Area Minima Fatturabile (mq)')
+            ->numeric()
+            ->default(0.1)
+            ->step(0.01)
+            ->placeholder('es. 0.1')
+            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
     }
 }

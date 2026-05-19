@@ -20,6 +20,9 @@ new class extends Component {
     public array $quantities = [];
     public array $selectedPlacements = [];
     public ?int $selectedPrintSide = null;
+    
+    public ?float $width = null;
+    public ?float $height = null;
 
     public function mount(\App\Models\Product $product, $category, $options = [], ?string $jobId = null): void
     {
@@ -68,6 +71,8 @@ new class extends Component {
                 $placements = $item['print_placements'] ?? [];
                 $this->selectedPlacements = collect($placements)->map(fn($p) => is_array($p) && isset($p['id']) ? (string) $p['id'] : (string) $p)->toArray();
                 $this->selectedPrintSide = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
+                $this->width = isset($item['width']) ? (float) $item['width'] : null;
+                $this->height = isset($item['height']) ? (float) $item['height'] : null;
             }
         } else {
             if ($this->product->printSides->isNotEmpty()) {
@@ -158,13 +163,17 @@ new class extends Component {
         $total = 0.0;
         $product = $this->product();
 
+        if ($product->pricing_model === 'area' && (empty($this->width) || empty($this->height))) {
+            return 0.0;
+        }
+
         foreach ($this->quantities as $skuId => $qty) {
             $qty = (int) $qty; // wire:model sends strings; cast before arithmetic
             if ($qty > 0) {
                 // Find sku
                 $sku = $product->skus->firstWhere('id', $skuId);
                 // Base price + SKU override price if any
-                $unitPrice = $product->getPriceForQuantity($qty, $this->selectedPrintSide);
+                $unitPrice = $product->calculateFinalUnitPrice($qty, [], $this->selectedPrintSide, $this->width ? (float) $this->width : null, $this->height ? (float) $this->height : null);
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
                 }
@@ -192,6 +201,17 @@ new class extends Component {
 
         $product = $this->product();
 
+        if ($product->pricing_model === 'area') {
+            if (empty($this->width) || $this->width <= 0) {
+                session()->flash('error', 'Inserisci una larghezza valida.');
+                return;
+            }
+            if (empty($this->height) || $this->height <= 0) {
+                session()->flash('error', 'Inserisci un\'altezza valida.');
+                return;
+            }
+        }
+
         $itemData = [
             'product_id' => $product->id,
             'product_name' => $product->name,
@@ -204,6 +224,11 @@ new class extends Component {
             'quantity' => $this->totalQuantity(),
             'quantities' => $this->quantities, 
         ];
+
+        if ($product->pricing_model === 'area') {
+            $itemData['width'] = (float) $this->width;
+            $itemData['height'] = (float) $this->height;
+        }
 
         // We can store a summary of options 
         $optionsSummary = [];
@@ -262,7 +287,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :$jobId />
+            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :$jobId :$width :$height />
 
             <x-product.trust-badges />
         </div>
