@@ -9,6 +9,7 @@ use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
 use App\Services\QuantityDiscountService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -366,34 +367,53 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the price for a specific quantity
+     * Calculate the price for a specific quantity, optionally including a print side option.
      */
-    public function getPriceForQuantity(int $quantity = 1): float
+    public function getPriceForQuantity(int $quantity = 1, ?int $printSideId = null): float
     {
-        if ($this->offer_price > 0) {
+        if ($this->offer_price > 0 && is_null($printSideId)) {
             return (float) $this->offer_price;
         }
 
         // Priority 1: Product-specific pricing tiers
-        if ($tierPrice = $this->getTierPrice($quantity)) {
+        if ($tierPrice = $this->getTierPrice($quantity, $printSideId)) {
             return $tierPrice;
         }
 
-        // Priority 2: Category-based quantity discounts
-        $service = app(QuantityDiscountService::class);
+        // Priority 2: Category-based quantity discounts (only if no printSideId is selected)
+        if (is_null($printSideId)) {
+            $service = app(QuantityDiscountService::class);
 
-        return max(0.0, $service->calculatePrice($this, $quantity));
+            return max(0.0, $service->calculatePrice($this, $quantity));
+        }
+
+        // Fallback: If printSideId was passed but not found, get base price of quantity
+        return $this->getPriceForQuantity($quantity, null);
     }
 
-    public function getTierPrice(int $quantity): ?float
+    public function getTierPrice(int $quantity, ?int $printSideId = null): ?float
     {
         $tier = null;
 
         if ($this->relationLoaded('pricingTiers')) {
             $tier = $this->pricingTiers
-                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity && ($t->max_quantity >= $quantity || is_null($t->max_quantity)))
+                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
+                    ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
+                    $t->print_side_id === $printSideId
+                )
                 ->sortByDesc('min_quantity')
                 ->first();
+
+            // If we searched for a print_side_id and didn't find it, fallback to default (null) print_side_id
+            if (! $tier && ! is_null($printSideId)) {
+                $tier = $this->pricingTiers
+                    ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
+                        ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
+                        is_null($t->print_side_id)
+                    )
+                    ->sortByDesc('min_quantity')
+                    ->first();
+            }
         } else {
             $tier = $this->pricingTiers()
                 ->where('min_quantity', '<=', $quantity)
@@ -401,8 +421,22 @@ class Product extends Model implements HasMedia
                     $query->where('max_quantity', '>=', $quantity)
                         ->orWhereNull('max_quantity');
                 })
+                ->where('print_side_id', '=', $printSideId, 'and')
                 ->orderByDesc('min_quantity')
                 ->first();
+
+            // Fallback to null print_side_id if not found
+            if (! $tier && ! is_null($printSideId)) {
+                $tier = $this->pricingTiers()
+                    ->where('min_quantity', '<=', $quantity)
+                    ->where(function ($query) use ($quantity) {
+                        $query->where('max_quantity', '>=', $quantity)
+                            ->orWhereNull('max_quantity');
+                    })
+                    ->whereNull('print_side_id')
+                    ->orderByDesc('min_quantity')
+                    ->first();
+            }
         }
 
         if (! $tier instanceof PricingTier) {
@@ -427,11 +461,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the total unit price including quantity discounts and placements.
+     * Calculate the total unit price including quantity discounts, placements, and print side.
      */
-    public function calculateFinalUnitPrice(int $quantity, array $placementIds = []): float
+    public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null): float
     {
-        return $this->getPriceForQuantity($quantity) + $this->getAdditionalPriceForPlacements($placementIds);
+        return $this->getPriceForQuantity($quantity, $printSideId) + $this->getAdditionalPriceForPlacements($placementIds);
     }
 
     /**
@@ -451,7 +485,7 @@ class Product extends Model implements HasMedia
         $service = app(QuantityDiscountService::class);
         $categoryIds = $service->getCategoryPathIds($this->category_id);
 
-        return $this->quantityDiscountsCache = CategoryQuantityDiscount::whereIn('category_id', $categoryIds)
+        return $this->quantityDiscountsCache = CategoryQuantityDiscount::whereIn('category_id', $categoryIds, 'and', false)
             ->where('min_quantity', '>', 1)
             ->orderBy('min_quantity', 'asc')
             ->get();
@@ -507,12 +541,12 @@ class Product extends Model implements HasMedia
     /**
      * Scopes
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', '=', true, 'and');
     }
 
-    public function scopeVisibleTo($query, ?User $user = null)
+    public function scopeVisibleTo(Builder $query, ?User $user = null): Builder
     {
         if ($user?->isAdmin()) {
             return $query;

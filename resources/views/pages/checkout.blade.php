@@ -8,10 +8,10 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
 {
-    public $shippingAddresses;
-    public $billingAddresses;
-    public $selectedShippingAddressId;
-    public $selectedBillingAddressId;
+    public ?\Illuminate\Support\Collection $shippingAddresses = null;
+    public ?\Illuminate\Support\Collection $billingAddresses = null;
+    public ?int $selectedShippingAddressId = null;
+    public ?int $selectedBillingAddressId = null;
     public $notes = '';
     public $total = 0;
     public $items = [];
@@ -45,7 +45,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
         $this->billingAddresses = $allAddresses; // Let user choose any address for billing
     }
 
-    public function updated($propertyName): void
+    public function updated(string $propertyName): void
     {
         if ($propertyName === 'selectedShippingAddressId' || $propertyName === 'selectedBillingAddressId') {
             // Any specific logic when address changes
@@ -55,12 +55,12 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
     // This allows the address manager modal to refresh the list
     protected $listeners = ['addressSaved' => 'loadAddresses'];
 
-    public function selectShipping($id): void
+    public function selectShipping(int $id): void
     {
         $this->selectedShippingAddressId = $id;
     }
 
-    public function selectBilling($id): void
+    public function selectBilling(int $id): void
     {
         $this->selectedBillingAddressId = $id;
     }
@@ -169,7 +169,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                             <div class="flex gap-3">
                                 @php $product = \App\Models\Product::find($item['product_id']); @endphp
                                 @if($product)
-                                    <div class="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
+                                    <div class="w-12 h-12 rounded-lg bg-gray-100 shrink-0 overflow-hidden border border-gray-200">
                                         <img src="{{ $product->getThumbnailUrl() }}" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex-1">
@@ -208,7 +208,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                         <flux:button 
                             type="submit" 
                             variant="primary" 
-                            class="w-full h-14 !bg-secondary hover:!bg-gray-950 !text-gray-50 !font-black !uppercase !tracking-tighter !text-lg shadow-lg shadow-gray-950/10"
+                            class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tighter! text-lg! shadow-lg shadow-gray-950/10"
                             :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
                         >
                             Paga Ora con Stripe

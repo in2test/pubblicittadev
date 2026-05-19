@@ -27,7 +27,8 @@ new class extends Component {
     {
         $this->categorySlug = $categorySlug;
         if ($this->search === '' || $this->search === '0') {
-            $this->search = (string) request()->query('search', '');
+            $searchQuery = request()->query('search');
+            $this->search = is_string($searchQuery) ? $searchQuery : '';
         }
     }
 
@@ -174,7 +175,7 @@ new class extends Component {
     #[Computed]
     public function rootCategories(): Collection
     {
-        return Category::whereNull('parent_id')->with('children.children')->get();
+        return Category::whereNull('parent_id', 'and', false)->with('children.children')->get();
     }
 };
 ?>

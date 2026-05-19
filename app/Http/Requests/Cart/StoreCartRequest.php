@@ -29,6 +29,7 @@ class StoreCartRequest extends FormRequest
             'size_id' => 'nullable|integer',
             'size_name' => 'nullable|string',
             'print_placements' => 'nullable|string',
+            'print_side_id' => 'nullable|integer|exists:print_sides,id',
             'product_name' => 'required|string',
             'product_slug' => 'required|string',
             'image_url' => 'nullable|string',

@@ -7,8 +7,10 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
+use Stripe\StripeObject;
 use Stripe\Webhook;
 use UnexpectedValueException;
 
@@ -54,7 +56,7 @@ class WebhookController extends Controller
     /**
      * Update the order status to 'paid' when the checkout session is completed.
      */
-    protected function handleCheckoutSessionCompleted($session): void
+    protected function handleCheckoutSessionCompleted(StripeObject $session): void
     {
         $orderId = $session->metadata->order_id ?? null;
 

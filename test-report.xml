@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\sites\pubblicittadev\phpunit.xml" tests="157" assertions="344" errors="0" failures="1" skipped="3" time="58.662736">
+    <testsuite name="Unit" tests="40" assertions="71" errors="0" failures="0" skipped="0" time="3.513258">
+      <testsuite name="Tests\Unit\CartManagerTest" file="Cart Manager (Tests\Unit\CartManager)" tests="12" assertions="14" errors="0" failures="0" skipped="0" time="1.437279">
+        <testcase name="Adds item to empty cart" file="Cart Manager (Tests\Unit\CartManager)::Adds item to empty cart" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.737480"/>
+        <testcase name="Adds same product creates separate jobs" file="Cart Manager (Tests\Unit\CartManager)::Adds same product creates separate jobs" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="3" time="0.062140"/>
+        <testcase name="Adds same product different color creates new line" file="Cart Manager (Tests\Unit\CartManager)::Adds same product different color creates new line" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.063004"/>
+        <testcase name="Updates existing item quantity" file="Cart Manager (Tests\Unit\CartManager)::Updates existing item quantity" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.067632"/>
+        <testcase name="Update to zero removes item" file="Cart Manager (Tests\Unit\CartManager)::Update to zero removes item" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.071596"/>
+        <testcase name="Removes single item" file="Cart Manager (Tests\Unit\CartManager)::Removes single item" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.061574"/>
+        <testcase name="Removes multiple items" file="Cart Manager (Tests\Unit\CartManager)::Removes multiple items" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.063994"/>
+        <testcase name="Clears entire cart" file="Cart Manager (Tests\Unit\CartManager)::Clears entire cart" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.065607"/>
+        <testcase name="Counts total items" file="Cart Manager (Tests\Unit\CartManager)::Counts total items" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.062548"/>
+        <testcase name="Counts zero on empty cart" file="Cart Manager (Tests\Unit\CartManager)::Counts zero on empty cart" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.058305"/>
+        <testcase name="Generates different keys for different print placements" file="Cart Manager (Tests\Unit\CartManager)::Generates different keys for different print placements" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.062175"/>
+        <testcase name="Generates unique jobs for same print placements" file="Cart Manager (Tests\Unit\CartManager)::Generates unique jobs for same print placements" class="Tests\Unit\CartManagerTest" classname="Tests.Unit.CartManagerTest" assertions="1" time="0.061224"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\CartPricingTest" file="Cart Pricing (Tests\Unit\CartPricing)" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.072639">
+        <testcase name="Cart total uses discounts" file="Cart Pricing (Tests\Unit\CartPricing)::Cart total uses discounts" class="Tests\Unit\CartPricingTest" classname="Tests.Unit.CartPricingTest" assertions="1" time="0.072639"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\CategoryDiscountModelTest" file="Category Discount Model (Tests\Unit\CategoryDiscountModel)" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.063889">
+        <testcase name="Discount cascade on delete" file="Category Discount Model (Tests\Unit\CategoryDiscountModel)::Discount cascade on delete" class="Tests\Unit\CategoryDiscountModelTest" classname="Tests.Unit.CategoryDiscountModelTest" assertions="1" time="0.063889"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\DiscountServiceTest" file="Discount Service (Tests\Unit\DiscountService)" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="0.061397">
+        <testcase name="Discount resolution with child and root" file="Discount Service (Tests\Unit\DiscountService)::Discount resolution with child and root" class="Tests\Unit\DiscountServiceTest" classname="Tests.Unit.DiscountServiceTest" assertions="6" time="0.061397"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\ExampleTest" file="tests\Unit\ExampleTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.005285">
+        <testcase name="that true is true" file="tests\Unit\ExampleTest.php::that true is true" class="Tests\Unit\ExampleTest" classname="Tests.Unit.ExampleTest" assertions="1" time="0.005285"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\ImageVariantTest" file="tests\Unit\ImageVariantTest.php" tests="1" assertions="21" errors="0" failures="0" skipped="0" time="0.473610">
+        <testcase name="uploaded image generates thumbnail medium and large webp variants" file="tests\Unit\ImageVariantTest.php::uploaded image generates thumbnail medium and large webp variants" class="Tests\Unit\ImageVariantTest" classname="Tests.Unit.ImageVariantTest" assertions="21" time="0.473610"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\NewWaveProductFilterTest" file="New Wave Product Filter (Tests\Unit\NewWaveProductFilter)" tests="1" assertions="4" errors="0" failures="0" skipped="0" time="0.060181">
+        <testcase name="Filter by category works on newwave table query" file="New Wave Product Filter (Tests\Unit\NewWaveProductFilter)::Filter by category works on newwave table query" class="Tests\Unit\NewWaveProductFilterTest" classname="Tests.Unit.NewWaveProductFilterTest" assertions="4" time="0.060181"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\ProductDiscountTest" file="Product Discount (Tests\Unit\ProductDiscount)" tests="11" assertions="11" errors="0" failures="0" skipped="0" time="0.657563">
+        <testcase name="Returns base price when no discount" file="Product Discount (Tests\Unit\ProductDiscount)::Returns base price when no discount" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.058014"/>
+        <testcase name="Returns base price when no category" file="Product Discount (Tests\Unit\ProductDiscount)::Returns base price when no category" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.056545"/>
+        <testcase name="Returns zero when price is zero" file="Product Discount (Tests\Unit\ProductDiscount)::Returns zero when price is zero" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.056348"/>
+        <testcase name="Returns zero when price is negative" file="Product Discount (Tests\Unit\ProductDiscount)::Returns zero when price is negative" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.055941"/>
+        <testcase name="Applies child category discount" file="Product Discount (Tests\Unit\ProductDiscount)::Applies child category discount" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.058380"/>
+        <testcase name="Applies root category discount when no child discount" file="Product Discount (Tests\Unit\ProductDiscount)::Applies root category discount when no child discount" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.059998"/>
+        <testcase name="Uses best discount in category tree" file="Product Discount (Tests\Unit\ProductDiscount)::Uses best discount in category tree" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.062467"/>
+        <testcase name="Applies fixed discount" file="Product Discount (Tests\Unit\ProductDiscount)::Applies fixed discount" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.060328"/>
+        <testcase name="Quantity below minimum uses no discount" file="Product Discount (Tests\Unit\ProductDiscount)::Quantity below minimum uses no discount" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.066505"/>
+        <testcase name="Returns base price when service throws" file="Product Discount (Tests\Unit\ProductDiscount)::Returns base price when service throws" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.060128"/>
+        <testcase name="Handles root category" file="Product Discount (Tests\Unit\ProductDiscount)::Handles root category" class="Tests\Unit\ProductDiscountTest" classname="Tests.Unit.ProductDiscountTest" assertions="1" time="0.062909"/>
+      </testsuite>
+      <testsuite name="Tests\Unit\QuantityDiscountServiceTest" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)" tests="11" assertions="12" errors="0" failures="0" skipped="0" time="0.681414">
+        <testcase name="Returns null when no category" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Returns null when no category" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.055505"/>
+        <testcase name="Returns null when category id is zero" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Returns null when category id is zero" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.059734"/>
+        <testcase name="Returns null when no discount exists" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Returns null when no discount exists" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.060207"/>
+        <testcase name="Uses closest parent discount when child has none" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Uses closest parent discount when child has none" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="2" time="0.062316"/>
+        <testcase name="Uses child discount preferentially" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Uses child discount preferentially" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.069373"/>
+        <testcase name="Uses highest min quantity when multiple match" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Uses highest min quantity when multiple match" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.062617"/>
+        <testcase name="Uses highest discount value when equal min quantity" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Uses highest discount value when equal min quantity" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.067294"/>
+        <testcase name="Fixed discount subtracts from base price" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Fixed discount subtracts from base price" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.064708"/>
+        <testcase name="Fixed discount caps at zero" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Fixed discount caps at zero" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.060221"/>
+        <testcase name="Percent discount caps at zero" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Percent discount caps at zero" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.056173"/>
+        <testcase name="Multi level category tree" file="Quantity Discount Service (Tests\Unit\QuantityDiscountService)::Multi level category tree" class="Tests\Unit\QuantityDiscountServiceTest" classname="Tests.Unit.QuantityDiscountServiceTest" assertions="1" time="0.063266"/>
+      </testsuite>
+    </testsuite>
+    <testsuite name="Feature" tests="117" assertions="273" errors="0" failures="1" skipped="3" time="55.149479">
+      <testsuite name="Tests\Feature\AdminProductActionsTest" file="Admin Product Actions (Tests\Feature\AdminProductActions)" tests="3" assertions="5" errors="0" failures="0" skipped="0" time="0.280278">
+        <testcase name="Admin can toggle product active state" file="Admin Product Actions (Tests\Feature\AdminProductActions)::Admin can toggle product active state" class="Tests\Feature\AdminProductActionsTest" classname="Tests.Feature.AdminProductActionsTest" assertions="2" time="0.121127"/>
+        <testcase name="Admin can dispatch product sync" file="Admin Product Actions (Tests\Feature\AdminProductActions)::Admin can dispatch product sync" class="Tests\Feature\AdminProductActionsTest" classname="Tests.Feature.AdminProductActionsTest" assertions="2" time="0.080422"/>
+        <testcase name="Non admin cannot perform admin product actions" file="Admin Product Actions (Tests\Feature\AdminProductActions)::Non admin cannot perform admin product actions" class="Tests\Feature\AdminProductActionsTest" classname="Tests.Feature.AdminProductActionsTest" assertions="1" time="0.078729"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\AuthenticationTest" file="tests\Feature\Auth\AuthenticationTest.php" tests="5" assertions="13" errors="0" failures="0" skipped="0" time="3.089190">
+        <testcase name="login screen can be rendered" file="tests\Feature\Auth\AuthenticationTest.php::login screen can be rendered" class="Tests\Feature\Auth\AuthenticationTest" classname="Tests.Feature.Auth.AuthenticationTest" assertions="1" time="2.741946"/>
+        <testcase name="users can authenticate using the login screen" file="tests\Feature\Auth\AuthenticationTest.php::users can authenticate using the login screen" class="Tests\Feature\Auth\AuthenticationTest" classname="Tests.Feature.Auth.AuthenticationTest" assertions="4" time="0.114218"/>
+        <testcase name="users can not authenticate with invalid password" file="tests\Feature\Auth\AuthenticationTest.php::users can not authenticate with invalid password" class="Tests\Feature\Auth\AuthenticationTest" classname="Tests.Feature.Auth.AuthenticationTest" assertions="2" time="0.080057"/>
+        <testcase name="users with two factor enabled are redirected to two factor challenge" file="tests\Feature\Auth\AuthenticationTest.php::users with two factor enabled are redirected to two factor challenge" class="Tests\Feature\Auth\AuthenticationTest" classname="Tests.Feature.Auth.AuthenticationTest" assertions="3" time="0.080642"/>
+        <testcase name="users can logout" file="tests\Feature\Auth\AuthenticationTest.php::users can logout" class="Tests\Feature\Auth\AuthenticationTest" classname="Tests.Feature.Auth.AuthenticationTest" assertions="3" time="0.072328"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\EmailVerificationTest" file="tests\Feature\Auth\EmailVerificationTest.php" tests="4" assertions="10" errors="0" failures="0" skipped="0" time="0.722929">
+        <testcase name="email verification screen can be rendered" file="tests\Feature\Auth\EmailVerificationTest.php::email verification screen can be rendered" class="Tests\Feature\Auth\EmailVerificationTest" classname="Tests.Feature.Auth.EmailVerificationTest" assertions="1" time="0.477274"/>
+        <testcase name="email can be verified" file="tests\Feature\Auth\EmailVerificationTest.php::email can be verified" class="Tests\Feature\Auth\EmailVerificationTest" classname="Tests.Feature.Auth.EmailVerificationTest" assertions="4" time="0.101049"/>
+        <testcase name="email is not verified with invalid hash" file="tests\Feature\Auth\EmailVerificationTest.php::email is not verified with invalid hash" class="Tests\Feature\Auth\EmailVerificationTest" classname="Tests.Feature.Auth.EmailVerificationTest" assertions="1" time="0.072646"/>
+        <testcase name="already verified user visiting verification link is redirected without firing event again" file="tests\Feature\Auth\EmailVerificationTest.php::already verified user visiting verification link is redirected without firing event again" class="Tests\Feature\Auth\EmailVerificationTest" classname="Tests.Feature.Auth.EmailVerificationTest" assertions="4" time="0.071959"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\PasswordConfirmationTest" file="tests\Feature\Auth\PasswordConfirmationTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.451290">
+        <testcase name="confirm password screen can be rendered" file="tests\Feature\Auth\PasswordConfirmationTest.php::confirm password screen can be rendered" class="Tests\Feature\Auth\PasswordConfirmationTest" classname="Tests.Feature.Auth.PasswordConfirmationTest" assertions="1" time="0.451290"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\PasswordResetTest" file="tests\Feature\Auth\PasswordResetTest.php" tests="4" assertions="8" errors="0" failures="0" skipped="0" time="1.972315">
+        <testcase name="reset password link screen can be rendered" file="tests\Feature\Auth\PasswordResetTest.php::reset password link screen can be rendered" class="Tests\Feature\Auth\PasswordResetTest" classname="Tests.Feature.Auth.PasswordResetTest" assertions="1" time="0.557796"/>
+        <testcase name="reset password link can be requested" file="tests\Feature\Auth\PasswordResetTest.php::reset password link can be requested" class="Tests\Feature\Auth\PasswordResetTest" classname="Tests.Feature.Auth.PasswordResetTest" assertions="1" time="0.337578"/>
+        <testcase name="reset password screen can be rendered" file="tests\Feature\Auth\PasswordResetTest.php::reset password screen can be rendered" class="Tests\Feature\Auth\PasswordResetTest" classname="Tests.Feature.Auth.PasswordResetTest" assertions="2" time="0.789771"/>
+        <testcase name="password can be reset with valid token" file="tests\Feature\Auth\PasswordResetTest.php::password can be reset with valid token" class="Tests\Feature\Auth\PasswordResetTest" classname="Tests.Feature.Auth.PasswordResetTest" assertions="4" time="0.287171"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\RegistrationTest" file="tests\Feature\Auth\RegistrationTest.php" tests="2" assertions="5" errors="0" failures="0" skipped="0" time="1.682937">
+        <testcase name="registration screen can be rendered" file="tests\Feature\Auth\RegistrationTest.php::registration screen can be rendered" class="Tests\Feature\Auth\RegistrationTest" classname="Tests.Feature.Auth.RegistrationTest" assertions="1" time="0.756574"/>
+        <testcase name="new users can register" file="tests\Feature\Auth\RegistrationTest.php::new users can register" class="Tests\Feature\Auth\RegistrationTest" classname="Tests.Feature.Auth.RegistrationTest" assertions="4" time="0.926363"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Auth\TwoFactorChallengeTest" file="tests\Feature\Auth\TwoFactorChallengeTest.php" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.172520">
+        <testcase name="two factor challenge redirects to login when not authenticated" file="tests\Feature\Auth\TwoFactorChallengeTest.php::two factor challenge redirects to login when not authenticated" class="Tests\Feature\Auth\TwoFactorChallengeTest" classname="Tests.Feature.Auth.TwoFactorChallengeTest" assertions="2" time="0.099283"/>
+        <testcase name="two factor challenge can be rendered" file="tests\Feature\Auth\TwoFactorChallengeTest.php::two factor challenge can be rendered" class="Tests\Feature\Auth\TwoFactorChallengeTest" classname="Tests.Feature.Auth.TwoFactorChallengeTest" assertions="2" time="0.073237"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\CartPriceAjaxTest" file="Cart Price Ajax (Tests\Feature\CartPriceAjax)" tests="1" assertions="0" errors="0" failures="0" skipped="1" time="0.078738">
+        <testcase name="Cart price requires seeded data" file="Cart Price Ajax (Tests\Feature\CartPriceAjax)::Cart price requires seeded data" class="Tests\Feature\CartPriceAjaxTest" classname="Tests.Feature.CartPriceAjaxTest" assertions="0" time="0.078738">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Feature\CartTest" file="Cart (Tests\Feature\Cart)" tests="13" assertions="30" errors="0" failures="0" skipped="1" time="1.873453">
+        <testcase name="Adds item to cart" file="Cart (Tests\Feature\Cart)::Adds item to cart" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="4" time="0.072764"/>
+        <testcase name="Add item applies quantity discount" file="Cart (Tests\Feature\Cart)::Add item applies quantity discount" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="1" time="0.097680"/>
+        <testcase name="Add item with print placements" file="Cart (Tests\Feature\Cart)::Add item with print placements" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="0" time="0.317152">
+          <skipped/>
+        </testcase>
+        <testcase name="Add item with color and size" file="Cart (Tests\Feature\Cart)::Add item with color and size" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="4" time="0.275392"/>
+        <testcase name="Add item validates required fields" file="Cart (Tests\Feature\Cart)::Add item validates required fields" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="5" time="0.196535"/>
+        <testcase name="Add item validates product exists" file="Cart (Tests\Feature\Cart)::Add item validates product exists" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.061227"/>
+        <testcase name="Update cart item quantity" file="Cart (Tests\Feature\Cart)::Update cart item quantity" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.063505"/>
+        <testcase name="Update cart item to zero removes item" file="Cart (Tests\Feature\Cart)::Update cart item to zero removes item" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="1" time="0.069570"/>
+        <testcase name="Remove cart item" file="Cart (Tests\Feature\Cart)::Remove cart item" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.067599"/>
+        <testcase name="Remove multiple cart items" file="Cart (Tests\Feature\Cart)::Remove multiple cart items" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.068022"/>
+        <testcase name="Clear cart" file="Cart (Tests\Feature\Cart)::Clear cart" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.063825"/>
+        <testcase name="Cart index returns view" file="Cart (Tests\Feature\Cart)::Cart index returns view" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="2" time="0.440494"/>
+        <testcase name="Adding same product creates separate jobs" file="Cart (Tests\Feature\Cart)::Adding same product creates separate jobs" class="Tests\Feature\CartTest" classname="Tests.Feature.CartTest" assertions="3" time="0.079688"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\CartViewTest" file="tests\Feature\CartViewTest.php" tests="1" assertions="3" errors="0" failures="0" skipped="0" time="0.122118">
+        <testcase name="it renders the cart page successfully with dynamic product variations" file="tests\Feature\CartViewTest.php::it renders the cart page successfully with dynamic product variations" class="Tests\Feature\CartViewTest" classname="Tests.Feature.CartViewTest" assertions="3" time="0.122118"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\CatalogTest" file="tests\Feature\CatalogTest.php" tests="7" assertions="10" errors="0" failures="0" skipped="0" time="1.652221">
+        <testcase name="it can render the catalog component" file="tests\Feature\CatalogTest.php::it can render the catalog component" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="1" time="1.022045"/>
+        <testcase name="it can filter products by search query" file="tests\Feature\CatalogTest.php::it can filter products by search query" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="2" time="0.119699"/>
+        <testcase name="it can filter products by category" file="tests\Feature\CatalogTest.php::it can filter products by category" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="2" time="0.086808"/>
+        <testcase name="it can filter products by variation option" file="tests\Feature\CatalogTest.php::it can filter products by variation option" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="2" time="0.095254"/>
+        <testcase name="it can sort products by price ascending" file="tests\Feature\CatalogTest.php::it can sort products by price ascending" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="1" time="0.109890"/>
+        <testcase name="it can sort products by price descending" file="tests\Feature\CatalogTest.php::it can sort products by price descending" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="1" time="0.117392"/>
+        <testcase name="it expands categories down to the selected subcategory in category-tree component" file="tests\Feature\CatalogTest.php::it expands categories down to the selected subcategory in category-tree component" class="Tests\Feature\CatalogTest" classname="Tests.Feature.CatalogTest" assertions="1" time="0.101134"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\CategoryTest" file="tests\Feature\CategoryTest.php" tests="2" assertions="5" errors="0" failures="0" skipped="0" time="1.433257">
+        <testcase name="it shows inactive products to admins on category listing" file="tests\Feature\CategoryTest.php::it shows inactive products to admins on category listing" class="Tests\Feature\CategoryTest" classname="Tests.Feature.CategoryTest" assertions="2" time="0.245013"/>
+        <testcase name="it deletes attached image from storage when a category is deleted" file="tests\Feature\CategoryTest.php::it deletes attached image from storage when a category is deleted" class="Tests\Feature\CategoryTest" classname="Tests.Feature.CategoryTest" assertions="3" time="1.188244"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\CheckoutTest" file="tests\Feature\CheckoutTest.php" tests="4" assertions="16" errors="0" failures="0" skipped="0" time="8.821666">
+        <testcase name="it redirects to stripe checkout session, creates a pending order, and sends placement emails" file="tests\Feature\CheckoutTest.php::it redirects to stripe checkout session, creates a pending order, and sends placement emails" class="Tests\Feature\CheckoutTest" classname="Tests.Feature.CheckoutTest" assertions="7" time="0.136212"/>
+        <testcase name="it prevents checkout with an empty cart" file="tests\Feature\CheckoutTest.php::it prevents checkout with an empty cart" class="Tests\Feature\CheckoutTest" classname="Tests.Feature.CheckoutTest" assertions="3" time="0.071060"/>
+        <testcase name="it clears cart on success page" file="tests\Feature\CheckoutTest.php::it clears cart on success page" class="Tests\Feature\CheckoutTest" classname="Tests.Feature.CheckoutTest" assertions="3" time="0.103615"/>
+        <testcase name="it renders the checkout page successfully" file="tests\Feature\CheckoutTest.php::it renders the checkout page successfully" class="Tests\Feature\CheckoutTest" classname="Tests.Feature.CheckoutTest" assertions="3" time="8.510780"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\DashboardOrderTest" file="tests\Feature\DashboardOrderTest.php" tests="3" assertions="6" errors="0" failures="0" skipped="0" time="2.237331">
+        <testcase name="it shows user orders on dashboard" file="tests\Feature\DashboardOrderTest.php::it shows user orders on dashboard" class="Tests\Feature\DashboardOrderTest" classname="Tests.Feature.DashboardOrderTest" assertions="2" time="1.162166"/>
+        <testcase name="it shows order details for owned order" file="tests\Feature\DashboardOrderTest.php::it shows order details for owned order" class="Tests\Feature\DashboardOrderTest" classname="Tests.Feature.DashboardOrderTest" assertions="3" time="0.870014"/>
+        <testcase name="it prevents viewing other users order details" file="tests\Feature\DashboardOrderTest.php::it prevents viewing other users order details" class="Tests\Feature\DashboardOrderTest" classname="Tests.Feature.DashboardOrderTest" assertions="1" time="0.205151"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\DashboardTest" file="tests\Feature\DashboardTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.164418">
+        <testcase name="guests are redirected to the login page" file="tests\Feature\DashboardTest.php::guests are redirected to the login page" class="Tests\Feature\DashboardTest" classname="Tests.Feature.DashboardTest" assertions="2" time="0.080876"/>
+        <testcase name="authenticated users can visit the dashboard" file="tests\Feature\DashboardTest.php::authenticated users can visit the dashboard" class="Tests\Feature\DashboardTest" classname="Tests.Feature.DashboardTest" assertions="1" time="0.083543"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\EditJobTest" file="tests\Feature\EditJobTest.php" tests="1" assertions="3" errors="0" failures="0" skipped="0" time="1.907081">
+        <testcase name="it can edit an existing job in the cart" file="tests\Feature\EditJobTest.php::it can edit an existing job in the cart" class="Tests\Feature\EditJobTest" classname="Tests.Feature.EditJobTest" assertions="3" time="1.907081"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Filament\CategoryResourceTest" file="tests\Feature\Filament\CategoryResourceTest.php" tests="3" assertions="8" errors="0" failures="0" skipped="0" time="8.351998">
+        <testcase name="it can render category list page" file="tests\Feature\Filament\CategoryResourceTest.php::it can render category list page" class="Tests\Feature\Filament\CategoryResourceTest" classname="Tests.Feature.Filament.CategoryResourceTest" assertions="1" time="5.043635"/>
+        <testcase name="it can list categories" file="tests\Feature\Filament\CategoryResourceTest.php::it can list categories" class="Tests\Feature\Filament\CategoryResourceTest" classname="Tests.Feature.Filament.CategoryResourceTest" assertions="3" time="1.297440"/>
+        <testcase name="it can create a category" file="tests\Feature\Filament\CategoryResourceTest.php::it can create a category" class="Tests\Feature\Filament\CategoryResourceTest" classname="Tests.Feature.Filament.CategoryResourceTest" assertions="4" time="2.010922"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Filament\NewWaveProductImageTest" file="tests\Feature\Filament\NewWaveProductImageTest.php" tests="5" assertions="14" errors="0" failures="0" skipped="0" time="9.533118">
+        <testcase name="it persists remote image urls in the image model from the NewWave product form" file="tests\Feature\Filament\NewWaveProductImageTest.php::it persists remote image urls in the image model from the NewWave product form" class="Tests\Feature\Filament\NewWaveProductImageTest" classname="Tests.Feature.Filament.NewWaveProductImageTest" assertions="4" time="3.114326"/>
+        <testcase name="it assigns a remote variation image to its color when syncing NewWave data" file="tests\Feature\Filament\NewWaveProductImageTest.php::it assigns a remote variation image to its color when syncing NewWave data" class="Tests\Feature\Filament\NewWaveProductImageTest" classname="Tests.Feature.Filament.NewWaveProductImageTest" assertions="3" time="0.123330"/>
+        <testcase name="it can download a remote image url into the product media library" file="tests\Feature\Filament\NewWaveProductImageTest.php::it can download a remote image url into the product media library" class="Tests\Feature\Filament\NewWaveProductImageTest" classname="Tests.Feature.Filament.NewWaveProductImageTest" assertions="2" time="1.993625"/>
+        <testcase name="it skips the remote image from the combined image gallery once it is downloaded locally" file="tests\Feature\Filament\NewWaveProductImageTest.php::it skips the remote image from the combined image gallery once it is downloaded locally" class="Tests\Feature\Filament\NewWaveProductImageTest" classname="Tests.Feature.Filament.NewWaveProductImageTest" assertions="3" time="1.980084"/>
+        <testcase name="it removes the image record when a downloaded local image is deleted" file="tests\Feature\Filament\NewWaveProductImageTest.php::it removes the image record when a downloaded local image is deleted" class="Tests\Feature\Filament\NewWaveProductImageTest" classname="Tests.Feature.Filament.NewWaveProductImageTest" assertions="2" time="2.321754"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Filament\ProductResourceTest" file="tests\Feature\Filament\ProductResourceTest.php" tests="4" assertions="9" errors="0" failures="0" skipped="0" time="0.868051">
+        <testcase name="it can render newwave product list page" file="tests\Feature\Filament\ProductResourceTest.php::it can render newwave product list page" class="Tests\Feature\Filament\ProductResourceTest" classname="Tests.Feature.Filament.ProductResourceTest" assertions="1" time="0.174046"/>
+        <testcase name="it can render newwave product edit page" file="tests\Feature\Filament\ProductResourceTest.php::it can render newwave product edit page" class="Tests\Feature\Filament\ProductResourceTest" classname="Tests.Feature.Filament.ProductResourceTest" assertions="1" time="0.207057"/>
+        <testcase name="it can list newwave products" file="tests\Feature\Filament\ProductResourceTest.php::it can list newwave products" class="Tests\Feature\Filament\ProductResourceTest" classname="Tests.Feature.Filament.ProductResourceTest" assertions="5" time="0.143623"/>
+        <testcase name="it can search newwave products by name" file="tests\Feature\Filament\ProductResourceTest.php::it can search newwave products by name" class="Tests\Feature\Filament\ProductResourceTest" classname="Tests.Feature.Filament.ProductResourceTest" assertions="2" time="0.343325"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Filament\UserResourceTest" file="tests\Feature\Filament\UserResourceTest.php" tests="3" assertions="5" errors="0" failures="0" skipped="0" time="0.421971">
+        <testcase name="it can render user list page" file="tests\Feature\Filament\UserResourceTest.php::it can render user list page" class="Tests\Feature\Filament\UserResourceTest" classname="Tests.Feature.Filament.UserResourceTest" assertions="1" time="0.151661"/>
+        <testcase name="it can list users" file="tests\Feature\Filament\UserResourceTest.php::it can list users" class="Tests\Feature\Filament\UserResourceTest" classname="Tests.Feature.Filament.UserResourceTest" assertions="3" time="0.136668"/>
+        <testcase name="it can search users by email" file="tests\Feature\Filament\UserResourceTest.php::it can search users by email" class="Tests\Feature\Filament\UserResourceTest" classname="Tests.Feature.Filament.UserResourceTest" assertions="1" time="0.133641"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\HomePageTest" file="Home Page (Tests\Feature\HomePage)" tests="3" assertions="13" errors="0" failures="0" skipped="0" time="0.802722">
+        <testcase name="Homepage loads successfully" file="Home Page (Tests\Feature\HomePage)::Homepage loads successfully" class="Tests\Feature\HomePageTest" classname="Tests.Feature.HomePageTest" assertions="3" time="0.604721"/>
+        <testcase name="Homepage eager loads relationships" file="Home Page (Tests\Feature\HomePage)::Homepage eager loads relationships" class="Tests\Feature\HomePageTest" classname="Tests.Feature.HomePageTest" assertions="4" time="0.103080"/>
+        <testcase name="Homepage renders dynamic variation swatches" file="Home Page (Tests\Feature\HomePage)::Homepage renders dynamic variation swatches" class="Tests\Feature\HomePageTest" classname="Tests.Feature.HomePageTest" assertions="6" time="0.094921"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\OrderNotificationsTest" file="tests\Feature\OrderNotificationsTest.php" tests="3" assertions="8" errors="0" failures="0" skipped="0" time="0.224839">
+        <testcase name="it sends confirmation emails to user and admins when payment is completed" file="tests\Feature\OrderNotificationsTest.php::it sends confirmation emails to user and admins when payment is completed" class="Tests\Feature\OrderNotificationsTest" classname="Tests.Feature.OrderNotificationsTest" assertions="5" time="0.071159"/>
+        <testcase name="it sends status changed emails to user and admins when order status is updated to shipped or cancelled" file="tests\Feature\OrderNotificationsTest.php::it sends status changed emails to user and admins when order status is updated to shipped or cancelled" class="Tests\Feature\OrderNotificationsTest" classname="Tests.Feature.OrderNotificationsTest" assertions="2" time="0.075463"/>
+        <testcase name="it does not send status changed emails when status is updated to paid to avoid duplication" file="tests\Feature\OrderNotificationsTest.php::it does not send status changed emails when status is updated to paid to avoid duplication" class="Tests\Feature\OrderNotificationsTest" classname="Tests.Feature.OrderNotificationsTest" assertions="1" time="0.078217"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\PestQuantityDiscountServiceTest" file="tests\Feature\PestQuantityDiscountServiceTest.php" tests="3" assertions="5" errors="0" failures="0" skipped="0" time="0.220649">
+        <testcase name="it calculates the correct discounted price for a product" file="tests\Feature\PestQuantityDiscountServiceTest.php::it calculates the correct discounted price for a product" class="Tests\Feature\PestQuantityDiscountServiceTest" classname="Tests.Feature.PestQuantityDiscountServiceTest" assertions="3" time="0.071885"/>
+        <testcase name="it respects fixed discount type" file="tests\Feature\PestQuantityDiscountServiceTest.php::it respects fixed discount type" class="Tests\Feature\PestQuantityDiscountServiceTest" classname="Tests.Feature.PestQuantityDiscountServiceTest" assertions="1" time="0.072305"/>
+        <testcase name="it walks up the category tree for discounts" file="tests\Feature\PestQuantityDiscountServiceTest.php::it walks up the category tree for discounts" class="Tests\Feature\PestQuantityDiscountServiceTest" classname="Tests.Feature.PestQuantityDiscountServiceTest" assertions="1" time="0.076458"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\ProductPageTest" file="Product Page (Tests\Feature\ProductPage)" tests="8" assertions="16" errors="0" failures="0" skipped="0" time="0.942694">
+        <testcase name="Product page returns product details" file="Product Page (Tests\Feature\ProductPage)::Product page returns product details" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="2" time="0.152741"/>
+        <testcase name="Inactive product returns 404" file="Product Page (Tests\Feature\ProductPage)::Inactive product returns 404" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="1" time="0.120378"/>
+        <testcase name="Product page eager loads relationships" file="Product Page (Tests\Feature\ProductPage)::Product page eager loads relationships" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="4" time="0.140848"/>
+        <testcase name="Product page with skus and variation options" file="Product Page (Tests\Feature\ProductPage)::Product page with skus and variation options" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="4" time="0.122792"/>
+        <testcase name="Product page with no variations" file="Product Page (Tests\Feature\ProductPage)::Product page with no variations" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="1" time="0.112999"/>
+        <testcase name="Product page returns 404 for unknown product" file="Product Page (Tests\Feature\ProductPage)::Product page returns 404 for unknown product" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="1" time="0.073886"/>
+        <testcase name="Product page returns 404 for unknown category" file="Product Page (Tests\Feature\ProductPage)::Product page returns 404 for unknown category" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="1" time="0.079334"/>
+        <testcase name="Admin can view inactive product page" file="Product Page (Tests\Feature\ProductPage)::Admin can view inactive product page" class="Tests\Feature\ProductPageTest" classname="Tests.Feature.ProductPageTest" assertions="2" time="0.139716"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\ProductSyncTest" file="tests\Feature\ProductSyncTest.php" tests="2" assertions="10" errors="0" failures="0" skipped="0" time="0.209649">
+        <testcase name="it synchronizes product data correctly from API" file="tests\Feature\ProductSyncTest.php::it synchronizes product data correctly from API" class="Tests\Feature\ProductSyncTest" classname="Tests.Feature.ProductSyncTest" assertions="9" time="0.123875"/>
+        <testcase name="it does not update price if override_price is set" file="tests\Feature\ProductSyncTest.php::it does not update price if override_price is set" class="Tests\Feature\ProductSyncTest" classname="Tests.Feature.ProductSyncTest" assertions="1" time="0.085774"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\ProductTest" file="tests\Feature\ProductTest.php" tests="1" assertions="3" errors="0" failures="0" skipped="0" time="1.993105">
+        <testcase name="it deletes attached images from storage when a product is deleted" file="tests\Feature\ProductTest.php::it deletes attached images from storage when a product is deleted" class="Tests\Feature\ProductTest" classname="Tests.Feature.ProductTest" assertions="3" time="1.993105"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\QuoteTest" file="Quote (Tests\Feature\Quote)" tests="14" assertions="27" errors="0" failures="0" skipped="1" time="1.576041">
+        <testcase name="Creates quote with valid data" file="Quote (Tests\Feature\Quote)::Creates quote with valid data" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="3" time="0.089683"/>
+        <testcase name="Uses pricing tier when available" file="Quote (Tests\Feature\Quote)::Uses pricing tier when available" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.062499"/>
+        <testcase name="Uses base price when no pricing tier" file="Quote (Tests\Feature\Quote)::Uses base price when no pricing tier" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.062220"/>
+        <testcase name="Creates quote item linked to quote" file="Quote (Tests\Feature\Quote)::Creates quote item linked to quote" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.061606"/>
+        <testcase name="Calculates quote number" file="Quote (Tests\Feature\Quote)::Calculates quote number" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.069426"/>
+        <testcase name="Validates required customer fields" file="Quote (Tests\Feature\Quote)::Validates required customer fields" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="3" time="0.061779"/>
+        <testcase name="Validates product exists" file="Quote (Tests\Feature\Quote)::Validates product exists" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.057003"/>
+        <testcase name="Validates minimum quantity" file="Quote (Tests\Feature\Quote)::Validates minimum quantity" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.219620"/>
+        <testcase name="Validates email format" file="Quote (Tests\Feature\Quote)::Validates email format" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.345020"/>
+        <testcase name="Accepts optional color association" file="Quote (Tests\Feature\Quote)::Accepts optional color association" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="0" time="0.230398">
+          <skipped/>
+        </testcase>
+        <testcase name="Accepts design file upload" file="Quote (Tests\Feature\Quote)::Accepts design file upload" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.084470"/>
+        <testcase name="Accepts whatsapp number" file="Quote (Tests\Feature\Quote)::Accepts whatsapp number" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.074323"/>
+        <testcase name="Accepts notes" file="Quote (Tests\Feature\Quote)::Accepts notes" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="2" time="0.064662"/>
+        <testcase name="Accepts customization points" file="Quote (Tests\Feature\Quote)::Accepts customization points" class="Tests\Feature\QuoteTest" classname="Tests.Feature.QuoteTest" assertions="1" time="0.093332"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Settings\ProfileUpdateTest" file="tests\Feature\Settings\ProfileUpdateTest.php" tests="5" assertions="16" errors="0" failures="0" skipped="0" time="1.212505">
+        <testcase name="profile page is displayed" file="tests\Feature\Settings\ProfileUpdateTest.php::profile page is displayed" class="Tests\Feature\Settings\ProfileUpdateTest" classname="Tests.Feature.Settings.ProfileUpdateTest" assertions="1" time="0.762925"/>
+        <testcase name="profile information can be updated" file="tests\Feature\Settings\ProfileUpdateTest.php::profile information can be updated" class="Tests\Feature\Settings\ProfileUpdateTest" classname="Tests.Feature.Settings.ProfileUpdateTest" assertions="4" time="0.140265"/>
+        <testcase name="email verification status is unchanged when email address is unchanged" file="tests\Feature\Settings\ProfileUpdateTest.php::email verification status is unchanged when email address is unchanged" class="Tests\Feature\Settings\ProfileUpdateTest" classname="Tests.Feature.Settings.ProfileUpdateTest" assertions="2" time="0.115019"/>
+        <testcase name="user can delete their account" file="tests\Feature\Settings\ProfileUpdateTest.php::user can delete their account" class="Tests\Feature\Settings\ProfileUpdateTest" classname="Tests.Feature.Settings.ProfileUpdateTest" assertions="5" time="0.096974"/>
+        <testcase name="correct password must be provided to delete account" file="tests\Feature\Settings\ProfileUpdateTest.php::correct password must be provided to delete account" class="Tests\Feature\Settings\ProfileUpdateTest" classname="Tests.Feature.Settings.ProfileUpdateTest" assertions="4" time="0.097323"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\Settings\SecurityTest" file="tests\Feature\Settings\SecurityTest.php" tests="6" assertions="15" errors="0" failures="0" skipped="0" time="1.971578">
+        <testcase name="security settings page can be rendered" file="tests\Feature\Settings\SecurityTest.php::security settings page can be rendered" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="3" time="1.532073"/>
+        <testcase name="security settings page requires password confirmation when enabled" file="tests\Feature\Settings\SecurityTest.php::security settings page requires password confirmation when enabled" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="2" time="0.081970"/>
+        <testcase name="security settings page renders without two factor when feature is disabled" file="tests\Feature\Settings\SecurityTest.php::security settings page renders without two factor when feature is disabled" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="3" time="0.074860"/>
+        <testcase name="two factor authentication disabled when confirmation abandoned between requests" file="tests\Feature\Settings\SecurityTest.php::two factor authentication disabled when confirmation abandoned between requests" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="2" time="0.084120"/>
+        <testcase name="password can be updated" file="tests\Feature\Settings\SecurityTest.php::password can be updated" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="2" time="0.100231"/>
+        <testcase name="correct password must be provided to update password" file="tests\Feature\Settings\SecurityTest.php::correct password must be provided to update password" class="Tests\Feature\Settings\SecurityTest" classname="Tests.Feature.Settings.SecurityTest" assertions="3" time="0.098323"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\WebhookTest" file="tests\Feature\WebhookTest.php" tests="2" assertions="2" errors="0" failures="1" skipped="0" time="0.158817">
+        <testcase name="stripe webhook endpoint returns 400 when signature is missing" file="tests\Feature\WebhookTest.php::stripe webhook endpoint returns 400 when signature is missing" class="Tests\Feature\WebhookTest" classname="Tests.Feature.WebhookTest" assertions="1" time="0.064126"/>
+        <testcase name="stripe webhook handles checkout.session.completed and marks order as paid" file="tests\Feature\WebhookTest.php::stripe webhook handles checkout.session.completed and marks order as paid" class="Tests\Feature\WebhookTest" classname="Tests.Feature.WebhookTest" assertions="1" time="0.094691">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">stripe webhook handles checkout.session.completed and marks order as paidExpected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.&#13;
+&#13;
+The following exception occurred during the last request:
+
+Error: Undefined constant Stripe\Checkout\Session::OBJECT_NAME in C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\Util\ObjectTypes.php:44
+Stack trace:
+#0 C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\Util\Util.php(49): [constant expression]()
+#1 C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\StripeObject.php(348): Stripe\Util\Util::convertToStripeObject('evt_test_123', NULL, 'v1')
+#2 C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\StripeObject.php(322): Stripe\StripeObject-&gt;updateAttributes(Array, NULL, false, 'v1')
+#3 C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\StripeObject.php(276): Stripe\StripeObject-&gt;refreshFrom(Array, NULL, false, 'v1')
+#4 C:\sites\pubblicittadev\vendor\stripe\stripe-php\lib\Webhook.php(46): Stripe\StripeObject::constructFrom(Array)
+#5 C:\sites\pubblicittadev\app\Http\Controllers\WebhookController.php(32): Stripe\Webhook::constructEvent('{"id":"evt_test...', 't=1779169448,v1...', 'whsec_test')
+#6 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\ControllerDispatcher.php(46): App\Http\Controllers\WebhookController-&gt;handle(Object(Illuminate\Http\Request))
+#7 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Route.php(269): Illuminate\Routing\ControllerDispatcher-&gt;dispatch(Object(Illuminate\Routing\Route), Object(App\Http\Controllers\WebhookController), 'handle')
+#8 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Route.php(215): Illuminate\Routing\Route-&gt;runController()
+#9 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Router.php(822): Illuminate\Routing\Route-&gt;run()
+#10 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Routing\Router-&gt;{closure:Illuminate\Routing\Router::runRouteWithinStack():821}(Object(Illuminate\Http\Request))
+#11 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Middleware\SubstituteBindings.php(52): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#12 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#13 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestForgery.php(104): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#14 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestForgery-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#15 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\View\Middleware\ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#16 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#17 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php(120): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#18 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php(63): Illuminate\Session\Middleware\StartSession-&gt;handleStatefulRequest(Object(Illuminate\Http\Request), Object(Illuminate\Session\Store), Object(Closure))
+#19 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Session\Middleware\StartSession-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#20 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#21 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#22 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Cookie\Middleware\EncryptCookies.php(74): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#23 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#24 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#25 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Router.php(821): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#26 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Router.php(800): Illuminate\Routing\Router-&gt;runRouteWithinStack(Object(Illuminate\Routing\Route), Object(Illuminate\Http\Request))
+#27 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Router.php(764): Illuminate\Routing\Router-&gt;runRoute(Object(Illuminate\Http\Request), Object(Illuminate\Routing\Route))
+#28 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Routing\Router.php(753): Illuminate\Routing\Router-&gt;dispatchToRoute(Object(Illuminate\Http\Request))
+#29 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(200): Illuminate\Routing\Router-&gt;dispatch(Object(Illuminate\Http\Request))
+#30 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Foundation\Http\Kernel-&gt;{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}(Object(Illuminate\Http\Request))
+#31 C:\sites\pubblicittadev\vendor\livewire\livewire\src\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline-&gt;{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}(Object(Illuminate\Http\Request))
+#32 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#33 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#34 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#35 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#36 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#37 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#38 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#39 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#40 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#41 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#42 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#43 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Http\Middleware\HandleCors.php(61): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#44 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\HandleCors-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#45 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Http\Middleware\TrustProxies.php(58): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#46 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#47 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#48 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#49 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePathEncoding.php(28): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#50 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding-&gt;handle(Object(Illuminate\Http\Request), Object(Closure))
+#51 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline-&gt;{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}(Object(Illuminate\Http\Request))
+#52 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(175): Illuminate\Pipeline\Pipeline-&gt;then(Object(Closure))
+#53 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(144): Illuminate\Foundation\Http\Kernel-&gt;sendRequestThroughRouter(Object(Illuminate\Http\Request))
+#54 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel-&gt;handle(Object(Illuminate\Http\Request))
+#55 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase-&gt;call('POST', '/webhooks/strip...', Array, Array, Array, Array, '{"id":"evt_test...')
+#56 C:\sites\pubblicittadev\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase-&gt;json('POST', '/webhooks/strip...', Array, Array, 0)
+#57 C:\sites\pubblicittadev\tests\Feature\WebhookTest.php(53): Illuminate\Foundation\Testing\TestCase-&gt;postJson('/webhooks/strip...', Array, Array)
+#58 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Factories\TestCaseMethodFactory.php(177): P\Tests\Feature\WebhookTest-&gt;{closure:C:\sites\pubblicittadev\tests\Feature\WebhookTest.php:13}()
+#59 [internal function]: P\Tests\Feature\WebhookTest-&gt;{closure:Pest\Factories\TestCaseMethodFactory::getClosure():167}()
+#60 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Concerns\Testable.php(576): call_user_func_array(Object(Closure), Array)
+#61 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Support\ExceptionTrace.php(26): P\Tests\Feature\WebhookTest-&gt;{closure:Pest\Concerns\Testable::__callClosure():576}()
+#62 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Concerns\Testable.php(576): Pest\Support\ExceptionTrace::ensure(Object(Closure))
+#63 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Concerns\Testable.php(403): P\Tests\Feature\WebhookTest-&gt;__callClosure(Object(Closure), Array)
+#64 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Factories\TestCaseFactory.php(175) : eval()'d code(26): P\Tests\Feature\WebhookTest-&gt;__runTest(Object(Closure))
+#65 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestCase.php(1310): P\Tests\Feature\WebhookTest-&gt;__pest_evaluable_stripe_webhook_handles_checkout_session_completed_and_marks_order_as_paid()
+#66 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestCase.php(1344): PHPUnit\Framework\TestCase-&gt;invokeTestMethod('__pest_evaluabl...', Array)
+#67 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestCase.php(520): PHPUnit\Framework\TestCase-&gt;runTest()
+#68 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestRunner\TestRunner.php(99): PHPUnit\Framework\TestCase-&gt;runBare()
+#69 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestCase.php(360): PHPUnit\Framework\TestRunner-&gt;run(Object(P\Tests\Feature\WebhookTest))
+#70 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestSuite.php(374): PHPUnit\Framework\TestCase-&gt;run()
+#71 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestSuite.php(374): PHPUnit\Framework\TestSuite-&gt;run()
+#72 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\Framework\TestSuite.php(374): PHPUnit\Framework\TestSuite-&gt;run()
+#73 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\TextUI\TestRunner.php(64): PHPUnit\Framework\TestSuite-&gt;run()
+#74 C:\sites\pubblicittadev\vendor\phpunit\phpunit\src\TextUI\Application.php(229): PHPUnit\TextUI\TestRunner-&gt;run(Object(PHPUnit\TextUI\Configuration\Configuration), Object(PHPUnit\Runner\ResultCache\DefaultResultCache), Object(PHPUnit\Framework\TestSuite))
+#75 C:\sites\pubblicittadev\vendor\pestphp\pest\src\Kernel.php(117): PHPUnit\TextUI\Application-&gt;run(Array)
+#76 C:\sites\pubblicittadev\vendor\pestphp\pest\bin\pest(207): Pest\Kernel-&gt;handle(Array, Array)
+#77 C:\sites\pubblicittadev\vendor\pestphp\pest\bin\pest(215): {closure:C:\sites\pubblicittadev\vendor\pestphp\pest\bin\pest:21}()
+#78 C:\sites\pubblicittadev\vendor\bin\pest(119): include('C:\\sites\\pubbli...')
+#79 {main}
+
+----------------------------------------------------------------------------------
+
+Undefined constant Stripe\Checkout\Session::OBJECT_NAME&#13;
+&#13;
+at vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+at vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:176
+at tests\Feature\WebhookTest.php:57</failure>
+        </testcase>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

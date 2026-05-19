@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Cart\StoreCartRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Models\PrintPlacement;
+use App\Models\PrintSide;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
@@ -75,17 +76,23 @@ class CartController extends Controller
 
         // Collect every print-placement id referenced in print_placements
         $allPlacementIds = [];
+        $allPrintSideIds = [];
         foreach ($rawItems as $item) {
             foreach ($item['print_placements'] ?? [] as $pid) {
                 $allPlacementIds[] = (int) (is_array($pid) ? $pid['id'] : $pid);
             }
+            if (isset($item['print_side_id'])) {
+                $allPrintSideIds[] = (int) $item['print_side_id'];
+            }
         }
-        $placements = PrintPlacement::whereIn('id', array_unique($allPlacementIds))->get()->keyBy('id');
+        $placements = PrintPlacement::whereIn('id', array_unique($allPlacementIds), 'and', false)->get()->keyBy('id');
+        $printSides = PrintSide::whereIn('id', array_unique($allPrintSideIds))->get()->keyBy('id');
 
         // --- Build enriched item list ---
 
         $items = [];
         foreach ($rawItems as $jobId => $item) {
+            /** @var Product|null $product */
             $product = $products->get((int) $item['product_id']);
 
             $qty = isset($item['quantities']) && is_array($item['quantities'])
@@ -93,18 +100,18 @@ class CartController extends Controller
                 : (int) ($item['quantity'] ?? 1);
 
             $base = $product ? (float) $product->price : 0.0;
-            $disc = $product ? $product->getPriceForQuantity($qty) : 0.0;
+            $disc = $product ? $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null) : 0.0;
 
             // Resolve display image (colour-specific or fallback)
             $displayImage = null;
             if ($product) {
                 $selectedOptionIds = array_values($item['selected_options'] ?? []);
                 if ($selectedOptionIds !== []) {
-                    $colorImage = $product->images()->whereIn('variation_option_id', $selectedOptionIds)->first();
+                    $colorImage = $product->images()->whereIn('variation_option_id', $selectedOptionIds, 'and', false)->first();
                     $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
                 }
                 if (! $displayImage && isset($item['color_id'])) {
-                    $colorImage = $product->images()->where('variation_option_id', $item['color_id'])->first();
+                    $colorImage = $product->images()->where('variation_option_id', '=', $item['color_id'], 'and')->first();
                     $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
                 }
                 if (! $displayImage) {
@@ -116,6 +123,7 @@ class CartController extends Controller
             $colorName = null;
             $colorHexes = [];
             foreach ($item['selected_options'] ?? [] as $optionId) {
+                /** @var VariationOption|null $opt */
                 $opt = $options->get((int) $optionId);
                 $type = $opt ? $types->get($opt->variation_type_id) : null;
                 if ($type && $type->presentation_type === 'color_swatch') {
@@ -127,6 +135,11 @@ class CartController extends Controller
             if (! $colorName) {
                 $colorName = $item['color_name'] ?? null;
             }
+
+            // Resolve print side name
+            $printSideId = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
+            $printSide = $printSideId ? $printSides->get($printSideId) : null;
+            $printSideName = $printSide ? $printSide->name : null;
 
             // Resolve print placement names
             $placementNames = [];
@@ -171,6 +184,7 @@ class CartController extends Controller
                 'display_image' => $displayImage,
                 'color_name' => $colorName,
                 'color_hexes' => $colorHexes,
+                'print_side_name' => $printSideName,
                 'placement_names' => $placementNames,
                 'size_rows' => $sizeRows,
             ]);
@@ -211,10 +225,11 @@ class CartController extends Controller
 
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];
+        $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
         $this->cart->add(array_merge($validated, [
             'print_placements' => $printPlacements,
-            'price' => $product->calculateFinalUnitPrice($quantity, $printPlacements),
+            'price' => $product->calculateFinalUnitPrice($quantity, $printPlacements, $printSideId),
             'quantity' => $quantity,
         ]));
 

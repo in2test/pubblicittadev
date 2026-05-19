@@ -117,7 +117,7 @@ class Order extends Model
                 Mail::to($order->user->email)->send(new OrderStatusChangedNotification($order));
 
                 // Send email to all administrators
-                $admins = User::where('role', 'admin')->get();
+                $admins = User::where('role', '=', 'admin', 'and')->get();
                 foreach ($admins as $admin) {
                     Mail::to($admin->email)->send(new OrderStatusChangedNotification($order));
                 }
@@ -147,7 +147,7 @@ class Order extends Model
         Mail::to($user->email)->send(new OrderPaidConfirmation($this));
 
         // Notify all administrators of the new paid order
-        $admins = User::where('role', 'admin')->get();
+        $admins = User::where('role', '=', 'admin', 'and')->get();
         foreach ($admins as $admin) {
             Mail::to($admin->email)->send(new AdminOrderPaidNotification($this));
         }

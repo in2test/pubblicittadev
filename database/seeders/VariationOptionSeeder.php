@@ -26,8 +26,8 @@ class VariationOptionSeeder extends Seeder
             ['presentation_type' => 'select']
         );
 
-        // 2. Parse and seed ColorSeeder_old.php
-        $colorFile = database_path('seeders/ColorSeeder_old.php');
+        // 2. Parse and seed ColorSeeder_old.txt
+        $colorFile = database_path('seeders/ColorSeeder_old.txt');
         if (file_exists($colorFile)) {
             $content = file_get_contents($colorFile);
             preg_match_all(
@@ -49,8 +49,8 @@ class VariationOptionSeeder extends Seeder
             }
         }
 
-        // 3. Parse and seed SizeSeeder_old.php
-        $sizeFile = database_path('seeders/SizeSeeder_old.php');
+        // 3. Parse and seed SizeSeeder_old.txt
+        $sizeFile = database_path('seeders/SizeSeeder_old.txt');
         if (file_exists($sizeFile)) {
             $content = file_get_contents($sizeFile);
             preg_match_all(

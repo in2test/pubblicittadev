@@ -15,8 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * Defines the side of the garment where a print is placed (e.g., Front, Back, Left, Right).
  * Used to differentiate between placements on the same area of the garment.
+ *
+ * @property string|null $template_path
  */
-#[Fillable(['name', 'description', 'sort_order'])]
+#[Fillable(['name', 'description', 'sort_order', 'template_path'])]
 class PrintSide extends Model
 {
     /** @use HasFactory<PrintSideFactory> */

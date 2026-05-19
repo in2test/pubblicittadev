@@ -32,6 +32,7 @@ test('stripe webhook handles checkout.session.completed and marks order as paid'
         'data' => [
             'object' => [
                 'id' => 'cs_test_123',
+                'object' => 'checkout.session',
                 'payment_intent' => 'pi_test_123',
                 'metadata' => [
                     'order_id' => $order->id,

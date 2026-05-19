@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Mail\OrderPlacedNotification;
 use App\Models\Address;
 use App\Models\Product;
@@ -7,119 +9,142 @@ use App\Models\User;
 use App\Services\CartManager;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Volt\Volt;
-use Stripe\Checkout\Session;
+use Mockery;
+use Stripe\ApiRequestor;
+use Stripe\HttpClient\ClientInterface;
+use Tests\TestCase;
 
-use function Pest\Laravel\actingAs;
-use function Pest\Laravel\assertDatabaseHas;
+class CheckoutTest extends TestCase
+{
+    protected CartManager $cartManager;
 
-beforeEach(function () {
-    $this->cartManager = app(CartManager::class);
-    $this->cartManager->clear();
-});
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-it('redirects to stripe checkout session, creates a pending order, and sends placement emails', function () {
-    Mail::fake();
+        $this->cartManager = app(CartManager::class);
+        $this->cartManager->clear();
+    }
 
-    $user = User::factory()->create();
-    $admin = User::factory()->create(['role' => 'admin']);
-    $product = Product::factory()->create(['price' => 10.00]);
+    protected function tearDown(): void
+    {
+        ApiRequestor::setHttpClient(null);
+        parent::tearDown();
+    }
 
-    // Add item to cart
-    $this->cartManager->add([
-        'product_id' => $product->id,
-        'product_name' => $product->name,
-        'product_slug' => $product->slug,
-        'quantity' => 2,
-        'price' => 10.00,
-    ]);
+    public function test_redirects_to_stripe_checkout_session_creates_pending_order_and_sends_emails()
+    {
+        Mail::fake();
 
-    // Mock Stripe Session
-    // We use a partial mock or a class-level alias for Stripe classes
-    $mockSession = Mockery::mock('alias:Stripe\Checkout\Session');
-    $mockSession->shouldReceive('create')
-        ->once()
-        ->andReturn((object) ['url' => 'https://checkout.stripe.com/test', 'id' => 'sess_test']);
+        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $product = Product::factory()->create(['price' => 10.00]);
 
-    $address = Address::factory()->create(['user_id' => $user->id]);
-
-    actingAs($user)
-        ->post(route('checkout.session'), [
-            'shipping_address_id' => $address->id,
-            'billing_address_id' => $address->id,
-        ])
-        ->assertRedirect('https://checkout.stripe.com/test');
-
-    assertDatabaseHas('orders', [
-        'user_id' => $user->id,
-        'payment_status' => 'pending',
-        'work_status' => 'pending',
-        'total_price' => 20.00,
-        'stripe_session_id' => 'sess_test',
-    ]);
-
-    assertDatabaseHas('order_items', [
-        'product_id' => $product->id,
-        'quantity' => 2,
-        'unit_price' => 10.00,
-        'subtotal' => 20.00,
-    ]);
-
-    // Assert customer received OrderPlacedNotification
-    Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($user->email));
-
-    // Assert admin received OrderPlacedNotification
-    Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
-});
-
-it('prevents checkout with an empty cart', function () {
-    $user = User::factory()->create();
-
-    actingAs($user)
-        ->post(route('checkout.session'))
-        ->assertRedirect(route('cart'))
-        ->assertSessionHas('error', 'Il tuo carrello è vuoto.');
-});
-
-it('clears cart on success page', function () {
-    $user = User::factory()->create();
-    $this->cartManager->add([
-        'product_id' => 1,
-        'product_name' => 'Test',
-        'quantity' => 1,
-    ]);
-
-    expect($this->cartManager->getItems())->not->toBeEmpty();
-
-    actingAs($user)
-        ->get(route('checkout.success'))
-        ->assertStatus(200);
-
-    expect($this->cartManager->getItems())->toBeEmpty();
-});
-
-it('renders the checkout page successfully', function () {
-    $user = User::factory()->create();
-    $product = Product::factory()->create(['price' => 10.00]);
-    $address = Address::factory()->create(['user_id' => $user->id]);
-
-    $mockCartManager = Mockery::mock(CartManager::class);
-    $mockCartManager->shouldReceive('isEmpty')->andReturn(false);
-    $mockCartManager->shouldReceive('total')->andReturn(10.00);
-    $mockCartManager->shouldReceive('getItems')->andReturn([
-        [
+        $this->cartManager->add([
             'product_id' => $product->id,
             'product_name' => $product->name,
             'product_slug' => $product->slug,
-            'quantity' => 1,
+            'quantity' => 2,
             'price' => 10.00,
-        ],
-    ]);
-    app()->instance(CartManager::class, $mockCartManager);
+        ]);
 
-    actingAs($user);
+        // Mock Stripe's HTTP Client to intercept the API call made by Session::create()
+        $mockHttpClient = Mockery::mock(ClientInterface::class);
+        $mockHttpClient->shouldReceive('request')
+            ->once()
+            ->andReturn([
+                json_encode([
+                    'id' => 'sess_test',
+                    'object' => 'checkout.session',
+                    'url' => 'https://checkout.stripe.com/test',
+                ]),
+                200,
+                [],
+            ]);
+        ApiRequestor::setHttpClient($mockHttpClient);
 
-    Volt::test('pages.checkout')
-        ->assertSee('Checkout')
-        ->assertSee($address->name)
-        ->assertHasNoErrors();
-});
+        $address = Address::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->post(route('checkout.session'), [
+                'shipping_address_id' => $address->id,
+                'billing_address_id' => $address->id,
+            ])
+            ->assertRedirect('https://checkout.stripe.com/test');
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'payment_status' => 'pending',
+            'work_status' => 'pending',
+            'total_price' => 20.00,
+            'stripe_session_id' => 'sess_test',
+        ]);
+
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 10.00,
+            'subtotal' => 20.00,
+        ]);
+
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
+    }
+
+    public function test_prevents_checkout_with_empty_cart()
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('checkout.session'))
+            ->assertRedirect(route('cart'))
+            ->assertSessionHas('error', 'Il tuo carrello è vuoto.');
+    }
+
+    public function test_clears_cart_on_success_page()
+    {
+        $user = User::factory()->create();
+
+        $this->cartManager->add([
+            'product_id' => 1,
+            'product_name' => 'Test',
+            'quantity' => 1,
+        ]);
+
+        $this->assertNotEmpty($this->cartManager->getItems());
+
+        $this->actingAs($user)
+            ->get(route('checkout.success'))
+            ->assertStatus(200);
+
+        $this->assertEmpty($this->cartManager->getItems());
+    }
+
+    public function test_renders_checkout_page_successfully()
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 10.00]);
+        $address = Address::factory()->create(['user_id' => $user->id]);
+
+        $mockCartManager = Mockery::mock(CartManager::class);
+        $mockCartManager->shouldReceive('isEmpty')->andReturn(false);
+        $mockCartManager->shouldReceive('total')->andReturn(10.00);
+        $mockCartManager->shouldReceive('getItems')->andReturn([
+            [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'product_slug' => $product->slug,
+                'quantity' => 1,
+                'price' => 10.00,
+            ],
+        ]);
+        $this->app->instance(CartManager::class, $mockCartManager);
+
+        $this->actingAs($user);
+
+        Volt::test('pages.checkout')
+            ->assertSee('Checkout')
+            ->assertSee($address->name)
+            ->assertHasNoErrors();
+    }
+}

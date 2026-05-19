@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\StandardProducts\Pages;
 
+use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
 use App\Models\Product;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Wizard\Step;
 use Override;
 
 class CreateStandardProduct extends CreateRecord
 {
+    use CreateRecord\Concerns\HasWizard;
+
     protected static string $resource = StandardProductResource::class;
 
     #[Override]
@@ -19,5 +25,53 @@ class CreateStandardProduct extends CreateRecord
         $data['type'] = Product::TYPE_STANDARD;
 
         return $data;
+    }
+
+    protected function getSteps(): array
+    {
+        return [
+            Step::make('Informazioni di Base')
+                ->description('Nome, categoria, descrizione e tipo di personalizzazione')
+                ->schema([
+                    ProductForm::getTypeField(),
+                    Grid::make(2)->schema([
+                        ProductForm::getNameField(),
+                        ProductForm::getSlugField(),
+                        ProductForm::getSkuField(),
+                        ProductForm::getCategoryField(),
+                        ProductForm::getPersonalizationTypeField(),
+                    ]),
+                    ProductForm::getDescriptionField(),
+                ]),
+
+            Step::make('Prezzi, Varianti e Inventario')
+                ->description('Prezzi base, varianti di prodotto e scaglioni di prezzo')
+                ->schema([
+                    Grid::make(2)->schema([
+                        ProductForm::getPriceField(),
+                        ProductForm::getOfferPriceField(),
+                    ]),
+                    ProductForm::getVariationTypesField(),
+                    ProductForm::getSkusRepeater(),
+                    ProductForm::getPricingTiersRepeater(),
+                ]),
+
+            Step::make('Personalizzazione e Stato')
+                ->description('Immagini, posizioni di stampa e stato di pubblicazione')
+                ->schema([
+                    ProductForm::getImagesField(),
+                    ProductForm::getColorGallerySection(),
+                    Grid::make(2)->schema([
+                        ProductForm::getIsActiveField(),
+                        ProductForm::getIsFeaturedField(),
+                    ]),
+                    Section::make('Personalizzazione Stampa')
+                        ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
+                        ->schema([
+                            ProductForm::getPrintPlacementsRepeater(),
+                            ProductForm::getPrintSidesField(),
+                        ]),
+                ]),
+        ];
     }
 }

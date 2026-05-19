@@ -1,12 +1,11 @@
-@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null])
 
 @php
     /** @var \App\Models\Product $product */
     $discounts = $product->getQuantityDiscounts();
     $hasPlacements = $product->printPlacements->isNotEmpty();
     
-    // We don't use printSides anymore or we can leave it if the model has it
-    $hasSides = false;
+    $hasSides = $product->printSides->isNotEmpty();
 
     $variationTypes = $product->variationTypes;
     
@@ -218,14 +217,64 @@
                 <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                     Lati di Stampa
                 </label>
-                <div class="grid grid-cols-2 gap-3">
-                    @foreach ($product->printSides as $side)
-                        <label
-                            class="flex items-center gap-3 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container">
-                            <input type="checkbox" name="print_sides[]" value="{{ $side->id }}"
-                                class="h-4 w-4 text-primary">
-                            <span class="text-sm">{{ $side->name }}</span>
-                        </label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($product->printSides->sortBy('sort_order') as $side)
+                        @php $isActive = $selectedPrintSide == $side->id; @endphp
+                        <button type="button" wire:click="$set('selectedPrintSide', {{ $side->id }})"
+                            @class([
+                                'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                'bg-primary text-gray-50 border-primary' => $isActive,
+                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                            ])
+                        >
+                            {{ $side->name }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Printable Templates --}}
+        @php
+            $templates = collect();
+            if ($selectedPrintSide) {
+                $side = $product->printSides->firstWhere('id', $selectedPrintSide);
+                if ($side && $side->template_path) {
+                    $templates->push([
+                        'name' => "Template: {$side->name}",
+                        'path' => $side->template_path,
+                    ]);
+                }
+            }
+            if (!empty($selectedPlacements)) {
+                foreach ($product->printPlacements as $placement) {
+                    if (in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements)) {
+                        if ($placement->template_path) {
+                            $templates->push([
+                                'name' => "Template: {$placement->name}",
+                                'path' => $placement->template_path,
+                            ]);
+                        }
+                    }
+                }
+            }
+        @endphp
+
+        @if ($templates->isNotEmpty())
+            <div class="p-4 border border-primary/20 bg-primary/5 rounded space-y-3">
+                <h4 class="text-[10px] font-mono uppercase tracking-widest text-primary font-bold">
+                    Template di Stampa Disponibili
+                </h4>
+                <p class="text-xs text-gray-600">
+                    Scarica i template per inserire la tua grafica e rispedirceli pronti per la stampa.
+                </p>
+                <div class="flex flex-col gap-2">
+                    @foreach ($templates as $tpl)
+                        <a href="{{ Storage::url($tpl['path']) }}" download target="_blank"
+                           class="flex items-center gap-2 text-xs font-mono text-primary hover:underline">
+                            <span class="material-symbols-outlined text-sm">download</span>
+                            {{ $tpl['name'] }}
+                        </a>
                     @endforeach
                 </div>
             </div>

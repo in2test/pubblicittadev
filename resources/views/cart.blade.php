@@ -189,18 +189,24 @@
                     {{-- Footer row: personalizzazioni + subtotal --}}
                     <div class="flex items-end justify-between gap-4 pt-2 border-t border-outline-variant/10">
 
-                        {{-- Print placements --}}
+                        {{-- Print placements & Print Sides --}}
                         <div>
                             <p class="text-[10px] font-mono uppercase tracking-widest text-secondary mb-1">Personalizzazioni</p>
-                            @if (!empty($item['placement_names']))
                             <div class="flex flex-wrap gap-1">
-                                @foreach ($item['placement_names'] as $pname)
-                                <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 font-mono uppercase border border-primary/20">
-                                    {{ $pname }}
+                                @if (!empty($item['print_side_name']))
+                                <span class="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 font-mono uppercase border border-secondary/20" title="Lato di Stampa">
+                                    {{ $item['print_side_name'] }}
                                 </span>
-                                @endforeach
+                                @endif
+                                @if (!empty($item['placement_names']))
+                                    @foreach ($item['placement_names'] as $pname)
+                                    <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 font-mono uppercase border border-primary/20" title="Posizione di Stampa">
+                                        {{ $pname }}
+                                    </span>
+                                    @endforeach
+                                @endif
                             </div>
-                            @else
+                            @if (empty($item['print_side_name']) && empty($item['placement_names']))
                             <span class="text-xs text-outline italic">Nessuna</span>
                             @endif
                         </div>

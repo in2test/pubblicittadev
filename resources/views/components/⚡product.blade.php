@@ -19,11 +19,12 @@ new class extends Component {
     // Key: product_sku_id, Value: quantity
     public array $quantities = [];
     public array $selectedPlacements = [];
+    public ?int $selectedPrintSide = null;
 
     public function mount(\App\Models\Product $product, $category, $options = [], ?string $jobId = null): void
     {
         $this->product = $product;
-        $this->product->loadMissing(['variationTypes', 'skus.options.type']);
+        $this->product->loadMissing(['variationTypes', 'skus.options.type', 'printSides', 'printPlacements']);
         // Eager-load each pivot's product-specific options and the linked VariationOption record
         // ($type->pivot is a ProductVariationType; we load its options.option relation to avoid N+1)
         $this->product->variationTypes->each(
@@ -66,6 +67,11 @@ new class extends Component {
 
                 $placements = $item['print_placements'] ?? [];
                 $this->selectedPlacements = collect($placements)->map(fn($p) => is_array($p) && isset($p['id']) ? (string) $p['id'] : (string) $p)->toArray();
+                $this->selectedPrintSide = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
+            }
+        } else {
+            if ($this->product->printSides->isNotEmpty()) {
+                $this->selectedPrintSide = $this->product->printSides->sortBy('sort_order')->first()->id;
             }
         }
 
@@ -158,7 +164,7 @@ new class extends Component {
                 // Find sku
                 $sku = $product->skus->firstWhere('id', $skuId);
                 // Base price + SKU override price if any
-                $unitPrice = $product->getPriceForQuantity($qty);
+                $unitPrice = $product->getPriceForQuantity($qty, $this->selectedPrintSide);
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
                 }
@@ -193,6 +199,7 @@ new class extends Component {
             'image_url' => $product->getFirstImageUrl('thumbnail'),
             'selected_options' => $this->selectedOptions,
             'print_placements' => $this->selectedPlacements,
+            'print_side_id' => $this->selectedPrintSide,
             'price' => ($this->totalPrice() / $this->totalQuantity()),
             'quantity' => $this->totalQuantity(),
             'quantities' => $this->quantities, 
@@ -255,7 +262,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :$jobId />
+            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :$jobId />
 
             <x-product.trust-badges />
         </div>

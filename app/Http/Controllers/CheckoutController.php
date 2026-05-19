@@ -62,13 +62,14 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($items as $item) {
-                $product = Product::find($item['product_id']);
+                /** @var Product|null $product */
+                $product = Product::find($item['product_id'], ['*']);
                 if (! $product) {
                     continue;
                 }
 
                 $qty = $this->cartManager->getItemQuantity($item);
-                $unitPrice = $product->calculateFinalUnitPrice($qty, $item['print_placements'] ?? []);
+                $unitPrice = $product->calculateFinalUnitPrice($qty, $item['print_placements'] ?? [], isset($item['print_side_id']) ? (int) $item['print_side_id'] : null);
 
                 $order->items()->create([
                     'product_id' => $item['product_id'],
@@ -86,7 +87,7 @@ class CheckoutController extends Controller
             Mail::to($order->user->email)->send(new OrderPlacedNotification($order));
 
             // Notify all administrators of the new pending order
-            $admins = User::where('role', 'admin')->get();
+            $admins = User::where('role', '=', 'admin', 'and')->get();
             foreach ($admins as $admin) {
                 Mail::to($admin->email)->send(new OrderPlacedNotification($order));
             }

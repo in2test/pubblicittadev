@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
+use App\Models\PrintSide;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -148,5 +149,66 @@ class ProductDiscountTest extends TestCase
         $root = Category::create(['name' => 'Root', 'slug' => 'root', 'description' => null]);
         $product = Product::factory()->create(['price' => 50, 'category_id' => $root->id]);
         $this->assertEquals(50.0, $product->getPriceForQuantity(10));
+    }
+
+    public function test_applies_pricing_tier_without_print_side(): void
+    {
+        $product = Product::factory()->create(['price' => 50]);
+        $product->pricingTiers()->create([
+            'min_quantity' => 10,
+            'max_quantity' => 49,
+            'price_per_unit' => 45.00,
+        ]);
+        $product->pricingTiers()->create([
+            'min_quantity' => 50,
+            'max_quantity' => null,
+            'price_per_unit' => 40.00,
+        ]);
+
+        $this->assertEquals(50.00, $product->getPriceForQuantity(1));
+        $this->assertEquals(45.00, $product->getPriceForQuantity(10));
+        $this->assertEquals(40.00, $product->getPriceForQuantity(100));
+    }
+
+    public function test_applies_pricing_tier_with_specific_print_side(): void
+    {
+        $product = Product::factory()->create(['price' => 50]);
+        $printSideA = PrintSide::create(['name' => 'Side A', 'slug' => 'side-a']);
+        $printSideB = PrintSide::create(['name' => 'Side B', 'slug' => 'side-b']);
+
+        // Default pricing tiers (no print side)
+        $product->pricingTiers()->create([
+            'min_quantity' => 10,
+            'max_quantity' => null,
+            'price_per_unit' => 45.00,
+        ]);
+
+        // Pricing tiers for Side A
+        $product->pricingTiers()->create([
+            'min_quantity' => 10,
+            'max_quantity' => null,
+            'price_per_unit' => 48.00,
+            'print_side_id' => $printSideA->id,
+        ]);
+
+        // Pricing tiers for Side B
+        $product->pricingTiers()->create([
+            'min_quantity' => 10,
+            'max_quantity' => null,
+            'price_per_unit' => 52.00,
+            'print_side_id' => $printSideB->id,
+        ]);
+
+        // Standard lookup without print side
+        $this->assertEquals(45.00, $product->getPriceForQuantity(10));
+
+        // Side A lookup
+        $this->assertEquals(48.00, $product->getPriceForQuantity(10, $printSideA->id));
+
+        // Side B lookup
+        $this->assertEquals(52.00, $product->getPriceForQuantity(10, $printSideB->id));
+
+        // Side C (non-existent in tiers) fallback to default
+        $this->assertEquals(45.00, $product->getPriceForQuantity(10, 99999));
     }
 }

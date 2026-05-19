@@ -15,8 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * Defines possible print locations on a garment (e.g., Chest, Back, Sleeve).
  * Placements are linked to products with an associated additional price.
+ *
+ * @property string|null $template_path
  */
-#[Fillable(['name', 'description', 'sort_order'])]
+#[Fillable(['name', 'description', 'sort_order', 'template_path'])]
 class PrintPlacement extends Model
 {
     /** @use HasFactory<PrintPlacementFactory> */

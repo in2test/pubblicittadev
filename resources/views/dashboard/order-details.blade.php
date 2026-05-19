@@ -20,7 +20,7 @@
                 <div class="divide-y-2 divide-gray-950">
                     @foreach($order->items as $item)
                         <div class="p-6 flex flex-col sm:flex-row gap-6">
-                            <div class="h-24 w-24 flex-shrink-0 border-2 border-gray-950 bg-gray-250">
+                            <div class="h-24 w-24 shrink-0 border-2 border-gray-950 bg-gray-250">
                                 <img src="{{ $item->product->getFirstImageUrl('thumbnail') }}" alt="{{ $item->product->name }}" class="h-full w-full object-cover">
                             </div>
                             <div class="flex-1">
@@ -43,6 +43,9 @@
                                     <div class="mt-4 bg-gray-100 p-4 border-2 border-gray-950 text-xs space-y-2 font-mono">
                                         <p class="font-black uppercase tracking-wider text-[10px] text-gray-400">Dettagli Personalizzazioni</p>
                                         @php $custom = $item->customization_json; @endphp
+                                        @if(isset($custom['print_side_name']))
+                                            <p class="text-gray-900">Lato di Stampa: <span class="font-bold text-gray-950">{{ $custom['print_side_name'] }}</span></p>
+                                        @endif
                                         @if(isset($custom['print_placements']))
                                             <p class="text-gray-900">Posizioni Stampa: <span class="font-bold text-gray-950">{{ count($custom['print_placements']) }} stampe</span></p>
                                         @endif
