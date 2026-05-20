@@ -10,8 +10,10 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CartManager;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
 
@@ -19,24 +21,20 @@ class CheckoutController extends Controller
 {
     public function __construct(protected CartManager $cartManager) {}
 
-    public function createSession(Request $request)
+    public function createSession(Request $request): RedirectResponse
     {
-        // 1. Check if we are re-paying an existing order
         if ($request->has('order_id')) {
             /** @var Order $order */
             $order = Order::with('items.product')->findOrFail($request->input('order_id'));
 
-            // Authorization
-            if ($order->user_id !== auth()->id()) {
+            if ($order->user_id !== $request->user()->id) {
                 abort(403);
             }
 
-            // Only pending orders can be re-paid
             if ($order->payment_status !== 'pending') {
                 return redirect()->route('dashboard.orders')->with('error', 'Questo ordine è già stato elaborato.');
             }
         } else {
-            // 2. Creating a new order from cart
             $items = $this->cartManager->getItems();
 
             if ($items === []) {
@@ -50,7 +48,7 @@ class CheckoutController extends Controller
 
             /** @var Order $order */
             $order = Order::create([
-                'user_id' => auth()->id(),
+                'user_id' => $request->user()->id,
                 'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
                 'payment_status' => 'pending',
                 'work_status' => 'pending',
@@ -62,9 +60,7 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($items as $item) {
-                /** @var Product|null $product */
-                $product = Product::find($item['product_id'], ['*']);
-                if (! $product) {
+                if (! $product = Product::find($item['product_id'])) {
                     continue;
                 }
 
@@ -77,40 +73,37 @@ class CheckoutController extends Controller
                     isset($item['height']) ? (float) $item['height'] : null
                 );
 
+                // Controlliamo se l'articolo richiede personalizzazione (es. stampe, file di design, posizioni)
+                // Se sì, lo stato iniziale sarà 'awaiting_file', altrimenti 'pending' (articolo neutro).
+                $hasPersonalization = ! empty($item['print_placements']) || ! empty($item['print_side_id']) || ! empty($item['design_file_path']);
+                $initialWorkStatus = $hasPersonalization ? 'awaiting_file' : 'pending';
+
                 $order->items()->create([
-                    'product_id' => $item['product_id'],
+                    'product_id' => $product->id,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'subtotal' => $unitPrice * $qty,
                     'customization_json' => $item,
+                    'work_status' => $initialWorkStatus,
                 ]);
             }
 
-            // Load the newly created items with their products
             $order->load('items.product');
 
-            // Send order placement confirmation email to customer
-            Mail::to($order->user->email)->send(new OrderPlacedNotification($order));
-
-            // Notify all administrators of the new pending order
-            $admins = User::where('role', '=', 'admin', 'and')->get();
-            foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new OrderPlacedNotification($order));
-            }
+            Mail::to($request->user())->send(new OrderPlacedNotification($order));
+            Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
         }
 
-        // Ensure items and product relationships are fully preloaded to prevent any empty Stripe line_items exceptions
         $order->loadMissing('items.product');
 
         Stripe::setApiKey(config('stripe.secret'));
         Stripe::setApiVersion(config('stripe.api_version'));
 
-        $lineItems = [];
-        /** @var OrderItem $item */
-        foreach ($order->items as $item) {
+        $lineItems = $order->items->map(function (OrderItem $item): array {
             /** @var Product|null $product */
             $product = $item->product;
-            $lineItems[] = [
+
+            return [
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => [
@@ -121,14 +114,14 @@ class CheckoutController extends Controller
                 ],
                 'quantity' => $item->quantity,
             ];
-        }
+        })->toArray();
 
         $session = Session::create([
             'line_items' => $lineItems,
             'mode' => 'payment',
             'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('checkout.cancel'),
-            'customer_email' => auth()->user()->email,
+            'customer_email' => $request->user()->email,
             'metadata' => [
                 'order_id' => $order->id,
             ],
@@ -139,15 +132,14 @@ class CheckoutController extends Controller
         return redirect($session->url);
     }
 
-    public function success(Request $request)
+    public function success(Request $request): View
     {
-        // Clear cart after success
         $this->cartManager->clear();
 
         return view('checkout.success');
     }
 
-    public function cancel()
+    public function cancel(): View
     {
         return view('checkout.cancel');
     }

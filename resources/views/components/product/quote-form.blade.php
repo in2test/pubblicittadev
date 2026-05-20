@@ -9,9 +9,10 @@
 
     $variationTypes = $product->variationTypes;
     
-    // Matrix type is the LAST variation type (where quantities are entered)
-    $matrixType = $variationTypes->last();
-    $selectorTypes = $variationTypes->slice(0, -1);
+    $isAreaPricing = $product->pricing_model === 'area';
+    // Matrix type is the LAST variation type (where quantities are entered), unless it's area pricing
+    $matrixType = $isAreaPricing ? null : $variationTypes->last();
+    $selectorTypes = $isAreaPricing ? $variationTypes : $variationTypes->slice(0, -1);
     
     // Filter SKUs based on the selected options of selectorTypes.
     // If any selector type has NO selection, return empty so the matrix stays hidden
@@ -120,7 +121,7 @@
                 <div class="space-y-2">
                     <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (cm)</label>
                     <div class="relative">
-                        <input wire:model.live="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.600ms="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
                     </div>
@@ -128,7 +129,7 @@
                 <div class="space-y-2">
                     <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (cm)</label>
                     <div class="relative">
-                        <input wire:model.live="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.600ms="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
                     </div>
@@ -141,29 +142,84 @@
             @endif
             @if ($width > 0 && $height > 0)
                 @php
-                    $calculatedArea = ($width * $height) / 10000;
+                    $qty = $this->totalQuantity() ?: 1;
+                    $actualArea = ($width * $height) / 10000.0 * $qty;
+                    $minArea = (float) $product->min_area;
+                    $billedArea = $minArea > 0 ? ceil($actualArea / $minArea) * $minArea : $actualArea;
+                    $sheetsInfo = $product->getSheetsNeeded((float) $width, (float) $height);
                 @endphp
                 <div class="mt-2 text-xs font-mono text-secondary">
-                    Area calcolata: <span class="font-bold text-on-surface">{{ number_format($calculatedArea, 2, ',', '.') }} mq</span>
-                    @if ($product->min_area && $calculatedArea < (float) $product->min_area)
-                        <span class="text-amber-600 font-bold">(Applicato minimo fatturabile: {{ number_format((float) $product->min_area, 2, ',', '.') }} mq)</span>
+                    Area totale calcolata: <span class="font-bold text-on-surface">{{ number_format($actualArea, 2, ',', '.') }} mq</span>
+                    @if ($minArea > 0 && $billedArea > $actualArea)
+                        <span class="text-amber-600 font-bold">(Fatturati: {{ number_format($billedArea, 2, ',', '.') }} mq a scaglioni di {{ number_format($minArea, 2, ',', '.') }})</span>
                     @endif
                 </div>
+
+                {{-- Sheet split warning --}}
+                @if ($sheetsInfo['exceeds'])
+                    @php
+                        $maxW = $product->max_width ? number_format((float)$product->max_width / 100, 1, ',', '.') . ' m' : '∞';
+                        $maxH = $product->max_height ? number_format((float)$product->max_height / 100, 1, ',', '.') . ' m' : '∞';
+                    @endphp
+                    <div class="mt-3 flex items-start gap-3 rounded border border-amber-300 bg-amber-50 px-4 py-3">
+                        <span class="material-symbols-outlined text-amber-600 text-base mt-0.5 shrink-0">warning</span>
+                        <div class="text-xs font-mono text-amber-800 leading-relaxed">
+                            <span class="font-bold uppercase tracking-wide">Attenzione: Il lavoro supera le dimensioni del foglio ({{ $maxW }} × {{ $maxH }}).</span><br>
+                            Verrà diviso in <span class="font-bold">{{ $sheetsInfo['sheets'] }} {{ $sheetsInfo['sheets'] === 1 ? 'foglio' : 'fogli' }}</span>
+                            @if ($sheetsInfo['sheets_x'] > 1 && $sheetsInfo['sheets_y'] > 1)
+                                ({{ $sheetsInfo['sheets_x'] }} in larghezza × {{ $sheetsInfo['sheets_y'] }} in altezza).
+                            @elseif ($sheetsInfo['sheets_x'] > 1)
+                                ({{ $sheetsInfo['sheets_x'] }} in larghezza).
+                            @else
+                                ({{ $sheetsInfo['sheets_y'] }} in altezza).
+                            @endif
+                            Il prezzo rimane calcolato sul totale dei mq.
+                        </div>
+                    </div>
+                @endif
             @endif
         </div>
     @endif
 
     {{-- Matrix / Quantities --}}
     @if ($matchingSkus->isNotEmpty())
+        @php
+            // For area pricing: only show the single SKU that matches the selected thickness.
+            // This prevents one row per SKU (e.g. one per thickness) from appearing.
+            $displaySkus = $isAreaPricing ? $matchingSkus->take(1) : $matchingSkus;
+        @endphp
         <div class="space-y-4 pt-4 border-t border-outline-variant/10">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 {{ $matrixType ? $matrixType->name . ' e Quantità' : 'Quantità' }}
             </label>
 
+            {{-- Print Sides (Lati di Stampa) — shown here so it affects price before the summary --}}
+            @if ($hasSides)
+                <div>
+                    <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                        Lati di Stampa
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($product->printSides->sortBy('sort_order') as $side)
+                            @php $isActive = $selectedPrintSide == $side->id; @endphp
+                            <button type="button" wire:click="$set('selectedPrintSide', {{ $side->id }})"
+                                @class([
+                                    'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                    'bg-primary text-gray-50 border-primary' => $isActive,
+                                    'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                                ])
+                            >
+                                {{ $side->name }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-                @foreach ($matchingSkus as $sku)
+                @foreach ($displaySkus as $sku)
                     @php
-                        $label = 'Unica';
+                        $label = $isAreaPricing ? 'Pezzi' : 'Unica';
                         if ($matrixType) {
                             $matrixOption = $sku->options->firstWhere('variation_type_id', $matrixType->id);
                             if ($matrixOption) $label = $matrixOption->name;
@@ -190,7 +246,7 @@
                         </div>
 
                         <div>
-                            <input wire:model.live="quantities.{{ $sku->id }}" type="number" min="0"
+                            <input wire:model.live.debounce.600ms="quantities.{{ $sku->id }}" type="number" min="0"
                                 @if ($product->type === 'newwave' && $sku->quantity <= 0) disabled @endif
                                 class="w-16 h-12 border border-gray-600/20 bg-gray-50 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                         </div>
@@ -224,7 +280,7 @@
         </div>
     @endif
 
-    {{-- Printing Options --}}
+    {{-- Printing Options (Placements only — Sides moved above totals) --}}
     @if ($hasPlacements || $hasSides)
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">
 
@@ -254,8 +310,8 @@
             </div>
         @endif
 
-        {{-- Print Sides --}}
-        @if ($hasSides)
+        {{-- Print Sides — only shown here for non-area-pricing products; area products show it above totals --}}
+        @if ($hasSides && !$isAreaPricing)
             <div>
                 <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                     Lati di Stampa

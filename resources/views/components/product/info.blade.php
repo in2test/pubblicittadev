@@ -1,4 +1,4 @@
-@props(['product', 'totalQuantity' => 0, 'totalPrice' => 0.0])
+@props(['product', 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null])
 
 @php
     /** @var \App\Models\Product $product */
@@ -7,7 +7,8 @@
     
     $priceData = $product->getDisplayPriceData($totalQuantity > 0 ? $totalQuantity : 1);
     
-    $currentUnitPrice = $totalQuantity > 0 ? ($totalPrice / $totalQuantity) : $priceData['price'];
+    $baseFallback = $currentBasePrice ?? $priceData['price'];
+    $currentUnitPrice = $totalQuantity > 0 ? ($totalPrice / $totalQuantity) : $baseFallback;
     
     $onRequest = $priceData['on_request'];
     $isDiscounted = $priceData['is_discounted'] || ($currentUnitPrice < $priceData['base_price']);

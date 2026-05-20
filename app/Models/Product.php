@@ -47,6 +47,10 @@ use Throwable;
  * @property bool $override_price
  * @property bool $override_description
  * @property array $remote_images
+ * @property string $pricing_model
+ * @property float|null $min_area
+ * @property float|null $max_width Maximum printable width in cm (null = unlimited)
+ * @property float|null $max_height Maximum printable height in cm (null = unlimited)
  * @property-read Category $category
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $variationTypes
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
@@ -70,6 +74,8 @@ use Throwable;
     'remote_images',
     'pricing_model',
     'min_area',
+    'max_width',
+    'max_height',
 ])]
 class Product extends Model implements HasMedia
 {
@@ -391,62 +397,46 @@ class Product extends Model implements HasMedia
         }
 
         // Fallback: If printSideId was passed but not found, get base price of quantity
-        return $this->getPriceForQuantity($quantity, null);
+        return $this->getPriceForQuantity($quantity);
     }
 
     public function getTierPrice(int $quantity, ?int $printSideId = null): ?float
     {
-        $tier = null;
-
-        if ($this->relationLoaded('pricingTiers')) {
-            $tier = $this->pricingTiers
-                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
-                    ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
-                    $t->print_side_id === $printSideId
-                )
-                ->sortByDesc('min_quantity')
-                ->first();
-
-            // If we searched for a print_side_id and didn't find it, fallback to default (null) print_side_id
-            if (! $tier && ! is_null($printSideId)) {
+        $findTier = function (?int $sideId) use ($quantity): ?PricingTier {
+            if ($this->relationLoaded('pricingTiers')) {
+                /** @var PricingTier|null $tier */
                 $tier = $this->pricingTiers
                     ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
                         ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
-                        is_null($t->print_side_id)
+                        $t->print_side_id === $sideId
                     )
                     ->sortByDesc('min_quantity')
                     ->first();
+
+                return $tier;
             }
-        } else {
+
+            /** @var PricingTier|null $tier */
             $tier = $this->pricingTiers()
                 ->where('min_quantity', '<=', $quantity)
                 ->where(function ($query) use ($quantity) {
                     $query->where('max_quantity', '>=', $quantity)
                         ->orWhereNull('max_quantity');
                 })
-                ->where('print_side_id', '=', $printSideId, 'and')
+                ->where('print_side_id', $sideId)
                 ->orderByDesc('min_quantity')
                 ->first();
 
-            // Fallback to null print_side_id if not found
-            if (! $tier && ! is_null($printSideId)) {
-                $tier = $this->pricingTiers()
-                    ->where('min_quantity', '<=', $quantity)
-                    ->where(function ($query) use ($quantity) {
-                        $query->where('max_quantity', '>=', $quantity)
-                            ->orWhereNull('max_quantity');
-                    })
-                    ->whereNull('print_side_id')
-                    ->orderByDesc('min_quantity')
-                    ->first();
-            }
+            return $tier;
+        };
+
+        $tier = $findTier($printSideId);
+
+        if (! $tier && ! is_null($printSideId)) {
+            $tier = $findTier(null);
         }
 
-        if (! $tier instanceof PricingTier) {
-            return null;
-        }
-
-        return (float) $tier->price_per_unit;
+        return $tier instanceof PricingTier ? (float) $tier->price_per_unit : null;
     }
 
     /**
@@ -461,6 +451,37 @@ class Product extends Model implements HasMedia
         return (float) $this->printPlacements()
             ->whereIn('print_placements.id', $placementIds)
             ->sum('product_print_placement.additional_price');
+    }
+
+    /**
+     * Calculate how many physical sheets are needed for the given dimensions.
+     *
+     * Both the original orientation and the 90° rotated orientation are tried;
+     * whichever fits on fewer sheets is used. If max_width or max_height is null
+     * the axis is considered unlimited. The price is unaffected — this is purely
+     * informational for the customer.
+     *
+     * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
+     */
+    public function getSheetsNeeded(float $width, float $height): array
+    {
+        $calc = function (float $w, float $h): array {
+            $sheetsX = $this->max_width ? (int) ceil($w / (float) $this->max_width) : 1;
+            $sheetsY = $this->max_height ? (int) ceil($h / (float) $this->max_height) : 1;
+
+            return [
+                'sheets' => $sheetsX * $sheetsY,
+                'sheets_x' => $sheetsX,
+                'sheets_y' => $sheetsY,
+                'exceeds' => $sheetsX > 1 || $sheetsY > 1,
+            ];
+        };
+
+        $normal = $calc($width, $height);
+        $rotated = $calc($height, $width); // 90° rotation
+
+        // Prefer whichever orientation needs fewer sheets.
+        return $rotated['sheets'] < $normal['sheets'] ? $rotated : $normal;
     }
 
     /**
@@ -563,6 +584,6 @@ class Product extends Model implements HasMedia
             return $query;
         }
 
-        return $query->active();
+        return $query->where('is_active', true);
     }
 }

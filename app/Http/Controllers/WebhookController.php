@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
-use Stripe\StripeObject;
 use Stripe\Webhook;
 use UnexpectedValueException;
 
@@ -19,18 +19,16 @@ class WebhookController extends Controller
     /**
      * Handle the Stripe webhook event.
      */
-    public function handle(Request $request)
+    public function handle(Request $request): JsonResponse
     {
         Stripe::setApiKey(config('stripe.secret'));
         Stripe::setApiVersion(config('stripe.api_version'));
 
-        $payload = $request->getContent();
-        $sig_header = $request->header('Stripe-Signature');
-        $endpoint_secret = config('stripe.webhook_secret');
-
         try {
             $event = Webhook::constructEvent(
-                $payload, $sig_header, $endpoint_secret
+                $request->getContent(),
+                $request->header('Stripe-Signature'),
+                config('stripe.webhook_secret')
             );
         } catch (UnexpectedValueException $e) {
             Log::error('Stripe Webhook: Invalid payload', ['error' => $e->getMessage()]);
@@ -44,11 +42,10 @@ class WebhookController extends Controller
 
         Log::info('Stripe Webhook received', ['type' => $event->type]);
 
-        // Handle the event
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $this->handleCheckoutSessionCompleted($session);
-        }
+        match ($event->type) {
+            'checkout.session.completed' => $this->handleCheckoutSessionCompleted($event->data->object),
+            default => null,
+        };
 
         return response()->json(['status' => 'success']);
     }
@@ -56,8 +53,9 @@ class WebhookController extends Controller
     /**
      * Update the order status to 'paid' when the checkout session is completed.
      */
-    protected function handleCheckoutSessionCompleted(StripeObject $session): void
+    protected function handleCheckoutSessionCompleted(Session $session): void
     {
+        /** @var string|null $orderId */
         $orderId = $session->metadata->order_id ?? null;
 
         if (! $orderId) {
@@ -78,7 +76,9 @@ class WebhookController extends Controller
             return;
         }
 
-        $order->completePayment($session->payment_intent);
+        /** @var string $paymentIntent */
+        $paymentIntent = $session->payment_intent;
+        $order->completePayment($paymentIntent);
 
         Log::info('Stripe Webhook: Order marked as paid and inventory decremented', ['order_id' => $orderId, 'stripe_session' => $session->id]);
 

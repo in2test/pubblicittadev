@@ -144,6 +144,27 @@ new class extends Component {
     }
 
     #[Computed]
+    public function currentBasePrice(): float
+    {
+        $product = $this->product();
+        $matchingSkus = $product->skus;
+        
+        foreach ($product->variationTypes as $type) {
+            $selectedId = $this->selectedOptions[$type->id] ?? null;
+            if ($selectedId) {
+                $matchingSkus = $matchingSkus->filter(fn($sku) => $sku->options->contains('id', $selectedId));
+            }
+        }
+        
+        $sku = $matchingSkus->first();
+        if ($sku && $sku->override_price !== null) {
+            return (float) $sku->override_price;
+        }
+
+        return (float) $product->price;
+    }
+
+    #[Computed]
     public function category()
     {
         return $this->category->loadMissing('parent');
@@ -152,6 +173,29 @@ new class extends Component {
     #[Computed]
     public function totalQuantity(): int
     {
+        $product = $this->product();
+
+        // For area pricing, only the single active SKU's quantity counts.
+        // Any stale quantities from previously-shown SKUs (other thicknesses) must be ignored.
+        if ($product->pricing_model === 'area') {
+            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
+                foreach ($product->variationTypes as $type) {
+                    $selectedId = $this->selectedOptions[$type->id] ?? null;
+                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }) ?? $product->skus->first();
+
+            if (! $activeSku) {
+                return 0;
+            }
+
+            return (int) ($this->quantities[$activeSku->id] ?? 0);
+        }
+
         // Livewire wire:model delivers values as strings from the DOM input;
         // cast to int before summing to avoid PHP 8 "Addition is not supported on type string".
         return array_sum(array_map(intval(...), $this->quantities));
@@ -160,24 +204,60 @@ new class extends Component {
     #[Computed]
     public function totalPrice(): float
     {
-        $total = 0.0;
         $product = $this->product();
+        $qty     = $this->totalQuantity();
 
-        if ($product->pricing_model === 'area' && (empty($this->width) || empty($this->height))) {
-            return 0.0;
+        if ($product->pricing_model === 'area') {
+            if (empty($this->width) || empty($this->height) || $qty === 0) {
+                return 0.0;
+            }
+
+            $billedArea = $this->totalBilledArea();
+
+            // Price per m² at this quantity tier (may vary by print side)
+            $pricePerSqm = $product->getPriceForQuantity($qty, $this->selectedPrintSide);
+
+            // SKU override price (e.g. per-thickness price) replaces the base price per m²
+            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
+                foreach ($product->variationTypes as $type) {
+                    $selectedId = $this->selectedOptions[$type->id] ?? null;
+                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }) ?? $product->skus->first();
+
+            if ($activeSku && $activeSku->override_price !== null) {
+                $pricePerSqm = (float) $activeSku->override_price;
+            }
+
+            $total = $pricePerSqm * $billedArea;
+
+            if ($this->selectedPlacements !== []) {
+                $additionalPerUnit = (float) $product->printPlacements()
+                    ->whereIn('print_placements.id', $this->selectedPlacements)
+                    ->sum('product_print_placement.additional_price');
+
+                $total += $additionalPerUnit * $qty;
+            }
+
+            return (float) number_format($total, 2, '.', '');
         }
 
-        foreach ($this->quantities as $skuId => $qty) {
-            $qty = (int) $qty; // wire:model sends strings; cast before arithmetic
-            if ($qty > 0) {
-                // Find sku
-                $sku = $product->skus->firstWhere('id', $skuId);
-                // Base price + SKU override price if any
-                $unitPrice = $product->calculateFinalUnitPrice($qty, [], $this->selectedPrintSide, $this->width ? (float) $this->width : null, $this->height ? (float) $this->height : null);
+        // --- Fixed / quantity-tiered pricing ---
+        $total = 0.0;
+
+        foreach ($this->quantities as $skuId => $rawQty) {
+            $skuQty = (int) $rawQty;
+            if ($skuQty > 0) {
+                $sku       = $product->skus->firstWhere('id', $skuId);
+                $unitPrice = $product->calculateFinalUnitPrice($skuQty, [], $this->selectedPrintSide);
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
                 }
-                $total += $unitPrice * $qty;
+                $total += $unitPrice * $skuQty;
             }
         }
 
@@ -186,10 +266,32 @@ new class extends Component {
                 ->whereIn('print_placements.id', $this->selectedPlacements)
                 ->sum('product_print_placement.additional_price');
 
-            $total += $additionalPerUnit * $this->totalQuantity();
+            $total += $additionalPerUnit * $qty;
         }
 
         return (float) number_format($total, 2, '.', '');
+    }
+
+    /**
+     * Total area billed for the current job (all pieces combined), rounded UP
+     * to the nearest min_area increment. Used for display and price calculation.
+     */
+    #[Computed]
+    public function totalBilledArea(): float
+    {
+        $product = $this->product();
+        $qty     = $this->totalQuantity();
+
+        if (! $this->width || ! $this->height || $qty === 0) {
+            return 0.0;
+        }
+
+        $actualArea = ($this->width * $this->height) / 10000.0 * $qty;
+        $minArea    = $product->min_area ? (float) $product->min_area : 0.0;
+
+        return $minArea > 0.0
+            ? ceil($actualArea / $minArea) * $minArea
+            : $actualArea;
     }
 
     public function addToCart(CartManager $cart)
@@ -264,7 +366,7 @@ new class extends Component {
         </div>
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
-            <x-product.info :product="$this->product()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" />
+            <x-product.info :product="$this->product()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" />
 
             <!-- Quantity Discounts List -->
             @if ($product->getQuantityDiscounts()->isNotEmpty())

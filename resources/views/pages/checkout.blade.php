@@ -8,8 +8,8 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
 {
-    public ?\Illuminate\Support\Collection $shippingAddresses = null;
-    public ?\Illuminate\Support\Collection $billingAddresses = null;
+    public $shippingAddresses = [];
+    public $billingAddresses = [];
     public ?int $selectedShippingAddressId = null;
     public ?int $selectedBillingAddressId = null;
     public $notes = '';
@@ -155,7 +155,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                         <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">3</div>
                         <h2 class="text-xl font-bold uppercase tracking-tight">Note sull'ordine (Opzionale)</h2>
                     </div>
-                    <flux:textarea wire:model="notes" placeholder="Istruzioni speciali per la consegna o la stampa..." rows="3" />
+                    <flux:textarea wire:model.live="notes" placeholder="Istruzioni speciali per la consegna o la stampa..." rows="3" />
                 </section>
             </div>
 

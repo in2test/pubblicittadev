@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\PrintPlacements;
 
 use App\Filament\Resources\PrintPlacements\Pages\CreatePrintPlacement;
@@ -13,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Override;
 use UnitEnum;
 
 class PrintPlacementResource extends Resource
@@ -31,16 +34,19 @@ class PrintPlacementResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
+    #[Override]
     public static function form(Schema $schema): Schema
     {
         return PrintPlacementForm::configure($schema);
     }
 
+    #[Override]
     public static function table(Table $table): Table
     {
         return PrintPlacementsTable::configure($table);
     }
 
+    #[Override]
     public static function getRelations(): array
     {
         return [
@@ -48,6 +54,7 @@ class PrintPlacementResource extends Resource
         ];
     }
 
+    #[Override]
     public static function getPages(): array
     {
         return [

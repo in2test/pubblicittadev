@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
 use App\Mail\OrderPlacedNotification;
@@ -32,7 +34,7 @@ class CheckoutTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_redirects_to_stripe_checkout_session_creates_pending_order_and_sends_emails()
+    public function test_redirects_to_stripe_checkout_session_creates_pending_order_and_sends_emails(): void
     {
         Mail::fake();
 
@@ -91,7 +93,7 @@ class CheckoutTest extends TestCase
         Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
     }
 
-    public function test_prevents_checkout_with_empty_cart()
+    public function test_prevents_checkout_with_empty_cart(): void
     {
         $user = User::factory()->create();
 
@@ -101,7 +103,7 @@ class CheckoutTest extends TestCase
             ->assertSessionHas('error', 'Il tuo carrello è vuoto.');
     }
 
-    public function test_clears_cart_on_success_page()
+    public function test_clears_cart_on_success_page(): void
     {
         $user = User::factory()->create();
 
@@ -120,7 +122,7 @@ class CheckoutTest extends TestCase
         $this->assertEmpty($this->cartManager->getItems());
     }
 
-    public function test_renders_checkout_page_successfully()
+    public function test_renders_checkout_page_successfully(): void
     {
         $user = User::factory()->create();
         $product = Product::factory()->create(['price' => 10.00]);

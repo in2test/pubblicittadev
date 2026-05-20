@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Cart\StoreCartRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
+use App\Models\Image;
 use App\Models\PrintPlacement;
 use App\Models\PrintSide;
 use App\Models\Product;
@@ -27,9 +28,6 @@ use Illuminate\View\View;
  */
 class CartController extends Controller
 {
-    /**
-     * @param  CartManager  $cart  The service responsible for cart operations.
-     */
     public function __construct(
         private readonly CartManager $cart
     ) {}
@@ -39,175 +37,123 @@ class CartController extends Controller
      *
      * Resolves all required related data (products, images, colour options,
      * print placements, SKU sizes) in a batch to prevent N+1 queries.
-     *
-     * @return View The rendered cart view.
      */
     public function index(): View
     {
-        $rawItems = $this->cart->getItems();
+        $rawItems = collect($this->cart->getItems());
 
         // --- Batch-load all related data up front ---
+        $productIds = $rawItems->pluck('product_id')->filter()->unique();
+        $products = Product::with(['images', 'category'])->whereIn('id', $productIds)->get()->keyBy('id');
 
-        $productIds = array_unique(array_column(array_values($rawItems), 'product_id'));
-        $products = Product::with(['images', 'category'])
-            ->whereIn('id', $productIds)
-            ->get()
-            ->keyBy('id');
+        $allSkuIds = $rawItems->pluck('quantities')->filter(fn ($item) => is_array($item))->flatMap(fn ($q) => array_keys($q))->unique();
+        $skus = ProductSku::with('options')->whereIn('id', $allSkuIds)->get()->keyBy('id');
 
-        // Collect every SKU id referenced across all cart items
-        $allSkuIds = [];
-        foreach ($rawItems as $item) {
-            if (isset($item['quantities']) && is_array($item['quantities'])) {
-                $allSkuIds = array_merge($allSkuIds, array_keys($item['quantities']));
-            }
-        }
-        $skus = ProductSku::with('options')->whereIn('id', array_unique($allSkuIds))->get()->keyBy('id');
+        $allOptionIds = $rawItems->pluck('selected_options')->filter(fn ($item) => is_array($item))->flatMap(fn ($o) => array_values($o))->unique();
+        $options = VariationOption::whereIn('id', $allOptionIds)->get()->keyBy('id');
 
-        // Collect every option id referenced in selected_options
-        $allOptionIds = [];
-        foreach ($rawItems as $item) {
-            if (isset($item['selected_options']) && is_array($item['selected_options'])) {
-                $allOptionIds = array_merge($allOptionIds, array_values($item['selected_options']));
-            }
-        }
-        $options = VariationOption::whereIn('id', array_unique($allOptionIds))->get()->keyBy('id');
-        $typeIds = $options->pluck('variation_type_id')->unique()->toArray();
+        $typeIds = $options->pluck('variation_type_id')->unique();
         $types = VariationType::whereIn('id', $typeIds)->get()->keyBy('id');
 
-        // Collect every print-placement id referenced in print_placements
-        $allPlacementIds = [];
-        $allPrintSideIds = [];
-        foreach ($rawItems as $item) {
-            foreach ($item['print_placements'] ?? [] as $pid) {
-                $allPlacementIds[] = (int) (is_array($pid) ? $pid['id'] : $pid);
-            }
-            if (isset($item['print_side_id'])) {
-                $allPrintSideIds[] = (int) $item['print_side_id'];
-            }
-        }
-        $placements = PrintPlacement::whereIn('id', array_unique($allPlacementIds), 'and', false)->get()->keyBy('id');
-        $printSides = PrintSide::whereIn('id', array_unique($allPrintSideIds))->get()->keyBy('id');
+        $allPlacementIds = $rawItems->pluck('print_placements')->filter(fn ($item) => is_array($item))->flatten(1)->map(fn ($pid) => (int) (is_array($pid) ? $pid['id'] : $pid))->unique();
+        $placements = PrintPlacement::whereIn('id', $allPlacementIds)->get()->keyBy('id');
+
+        $allPrintSideIds = $rawItems->pluck('print_side_id')->filter()->unique();
+        $printSides = PrintSide::whereIn('id', $allPrintSideIds)->get()->keyBy('id');
 
         // --- Build enriched item list ---
-
         $items = [];
+        $totalSavings = 0.0;
+        $totalQty = 0;
+
         foreach ($rawItems as $jobId => $item) {
-            /** @var Product|null $product */
             $product = $products->get((int) $item['product_id']);
+            $qty = is_array($item['quantities'] ?? null) ? (int) array_sum($item['quantities']) : (int) ($item['quantity'] ?? 1);
+            $printSideId = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
 
-            $qty = isset($item['quantities']) && is_array($item['quantities'])
-                ? array_sum(array_map(intval(...), $item['quantities']))
-                : (int) ($item['quantity'] ?? 1);
+            $basePrice = 0.0;
+            $discPrice = 0.0;
 
-            $base = 0.0;
-            $disc = 0.0;
             if ($product) {
-                if ($product->pricing_model === 'area' && isset($item['width']) && isset($item['height'])) {
+                $basePrice = (float) $product->price;
+                $discPrice = $product->getPriceForQuantity($qty, $printSideId);
+
+                if ($product->pricing_model === 'area' && isset($item['width'], $item['height'])) {
                     $area = ((float) $item['width'] * (float) $item['height']) / 10000.0;
                     $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
-                    $base = (float) $product->price * $billedArea;
-                    $disc = $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null) * $billedArea;
-                } else {
-                    $base = (float) $product->price;
-                    $disc = $product->getPriceForQuantity($qty, isset($item['print_side_id']) ? (int) $item['print_side_id'] : null);
+
+                    $basePrice *= $billedArea;
+                    $discPrice *= $billedArea;
                 }
             }
 
-            // Resolve display image (colour-specific or fallback)
             $displayImage = null;
             if ($product) {
                 $selectedOptionIds = array_values($item['selected_options'] ?? []);
+
                 if ($selectedOptionIds !== []) {
-                    $colorImage = $product->images()->whereIn('variation_option_id', $selectedOptionIds, 'and', false)->first();
-                    $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
+                    /** @var Image|null $img */
+                    $img = $product->images->whereIn('variation_option_id', $selectedOptionIds)->first();
+                    $displayImage = $img?->image_url;
                 }
+
                 if (! $displayImage && isset($item['color_id'])) {
-                    $colorImage = $product->images()->where('variation_option_id', '=', $item['color_id'], 'and')->first();
-                    $displayImage = $colorImage ? (string) $colorImage->getAttribute('image_url') : null;
+                    /** @var Image|null $img */
+                    $img = $product->images->firstWhere('variation_option_id', $item['color_id']);
+                    $displayImage = $img?->image_url;
                 }
-                if (! $displayImage) {
-                    $displayImage = $product->getFirstMediaUrl('images', 'thumbnail') ?: null;
-                }
+
+                $displayImage ??= $product->getFirstMediaUrl('images', 'thumbnail') ?: null;
             }
 
-            // Resolve colour swatch from selected options
-            $colorName = null;
+            $colorName = $item['color_name'] ?? null;
             $colorHexes = [];
             foreach ($item['selected_options'] ?? [] as $optionId) {
-                /** @var VariationOption|null $opt */
                 $opt = $options->get((int) $optionId);
-                $type = $opt ? $types->get($opt->variation_type_id) : null;
-                if ($type && $type->presentation_type === 'color_swatch') {
+                if ($opt && $types->get($opt->variation_type_id)?->presentation_type === 'color_swatch') {
                     $colorName = $opt->name;
                     $colorHexes = $opt->getHexColors();
                     break;
                 }
             }
-            if (! $colorName) {
-                $colorName = $item['color_name'] ?? null;
-            }
 
-            // Resolve print side name
-            $printSideId = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
-            $printSide = $printSideId ? $printSides->get($printSideId) : null;
-            $printSideName = $printSide ? $printSide->name : null;
-
-            // Resolve print placement names
-            $placementNames = [];
-            foreach ($item['print_placements'] ?? [] as $pid) {
-                $id = (int) (is_array($pid) ? $pid['id'] : $pid);
-                $placement = $placements->get($id);
-                $placementNames[] = $placement ? $placement->name : ('Pos. #'.$id);
-            }
-
-            // Resolve size rows
             $sizeRows = [];
             foreach ($item['quantities'] ?? [] as $skuId => $sizeQty) {
-                if ((int) $sizeQty <= 0) {
-                    continue;
+                if ((int) $sizeQty > 0) {
+                    $sku = $skus->get((int) $skuId);
+                    $sizeRows[] = [
+                        'sku_id' => $skuId,
+                        'name' => $sku?->options->isNotEmpty() ? $sku->options->pluck('name')->implode(' / ') : 'Unica',
+                        'qty' => (int) $sizeQty,
+                        'job_id' => $jobId,
+                    ];
                 }
-                $sku = $skus->get((int) $skuId);
-                $sizeName = $sku && $sku->options->isNotEmpty()
-                    ? $sku->options->map(fn (VariationOption $o) => $o->name)->implode(' / ')
-                    : 'Unica';
-
-                $sizeRows[] = [
-                    'sku_id' => $skuId,
-                    'name' => $sizeName,
-                    'qty' => (int) $sizeQty,
-                    'job_id' => $jobId,
-                ];
-            }
-
-            $catSlug = 'catalogo';
-            if ($product) {
-                $catSlug = $product->category->slug;
             }
 
             $items[$jobId] = array_merge($item, [
                 'job_id' => $jobId,
                 'product' => $product,
-                'cat_slug' => $catSlug,
+                'cat_slug' => $product?->category->slug ?? 'catalogo',
                 'qty' => $qty,
-                'base_price' => $base,
-                'disc_price' => $disc,
-                'is_discounted' => $disc > 0 && $disc < $base,
+                'base_price' => $basePrice,
+                'disc_price' => $discPrice,
+                'is_discounted' => $discPrice > 0 && $discPrice < $basePrice,
                 'display_image' => $displayImage,
                 'color_name' => $colorName,
                 'color_hexes' => $colorHexes,
-                'print_side_name' => $printSideName,
-                'placement_names' => $placementNames,
+                'print_side_name' => $printSides->get($printSideId)?->name,
+                'placement_names' => collect($item['print_placements'] ?? [])
+                    ->map(function ($pid) use ($placements) {
+                        $id = (int) (is_array($pid) ? $pid['id'] : $pid);
+
+                        return $placements->get($id)->name ?? ('Pos. #'.$id);
+                    })->all(),
                 'size_rows' => $sizeRows,
             ]);
-        }
 
-        // Compute sidebar totals
-        $totalSavings = 0.0;
-        $totalQty = 0;
-        foreach ($items as $item) {
-            $totalQty += $item['qty'];
-            if ($item['product'] && $item['disc_price'] > 0) {
-                $totalSavings += max(0.0, ($item['base_price'] - $item['disc_price']) * $item['qty']);
+            $totalQty += $qty;
+            if ($product && $discPrice > 0) {
+                $totalSavings += max(0.0, ($basePrice - $discPrice) * $qty);
             }
         }
 
@@ -222,12 +168,6 @@ class CartController extends Controller
 
     /**
      * Add a product to the cart.
-     *
-     * This method validates the input, calculates the total price including
-     * quantity-based discounts and additional costs for print placements.
-     *
-     * @param  StoreCartRequest  $request  The incoming request with product details.
-     * @return RedirectResponse Redirects back to the cart page with a success message.
      */
     public function add(StoreCartRequest $request): RedirectResponse
     {
@@ -252,9 +192,6 @@ class CartController extends Controller
 
     /**
      * Update the quantity of a specific item in the cart.
-     *
-     * @param  UpdateCartRequest  $request  The request containing the item key and new quantity.
-     * @return RedirectResponse Redirects back to the current page.
      */
     public function update(UpdateCartRequest $request): RedirectResponse
     {
@@ -271,9 +208,6 @@ class CartController extends Controller
 
     /**
      * Remove a single item from the cart.
-     *
-     * @param  Request  $request  The request containing the item key.
-     * @return RedirectResponse Redirects back to the current page.
      */
     public function remove(Request $request): RedirectResponse
     {
@@ -286,9 +220,6 @@ class CartController extends Controller
 
     /**
      * Remove multiple items from the cart.
-     *
-     * @param  Request  $request  The request containing an array of item keys.
-     * @return RedirectResponse Redirects back to the current page.
      */
     public function removeMultiple(Request $request): RedirectResponse
     {
@@ -299,8 +230,6 @@ class CartController extends Controller
 
     /**
      * Completely empty the shopping cart.
-     *
-     * @return RedirectResponse Redirects back to the current page.
      */
     public function clear(): RedirectResponse
     {
@@ -311,12 +240,6 @@ class CartController extends Controller
 
     /**
      * Return a real-time price calculation for a product configuration.
-     *
-     * This is used by AJAX requests on the product page to show the total
-     * price based on quantity and selected print placements.
-     *
-     * @param  Request  $request  The request containing configuration details.
-     * @return JsonResponse A JSON response with unit price, total price, and discount status.
      */
     public function price(Request $request): JsonResponse
     {
@@ -338,18 +261,24 @@ class CartController extends Controller
 
         $unitPrice = $product->getPriceForQuantity($quantity, $printSideId);
         $billedArea = 1.0;
+
         if ($product->pricing_model === 'area' && $width > 0 && $height > 0) {
             $area = ($width * $height) / 10000.0;
             $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
-            $unitPrice = $unitPrice * $billedArea;
+            $unitPrice *= $billedArea;
         }
+
         $finalUnitPrice = $product->calculateFinalUnitPrice($quantity, $placements, $printSideId, $width, $height);
+
+        $basePrice = $product->pricing_model === 'area' && $width > 0 && $height > 0
+            ? (float) $product->price * $billedArea
+            : (float) $product->price;
 
         return response()->json([
             'unit_price' => $unitPrice,
             'total_price' => $finalUnitPrice * $quantity,
             'quantity' => $quantity,
-            'discount_applied' => $unitPrice < ($product->pricing_model === 'area' && $width > 0 && $height > 0 ? (float) $product->price * $billedArea : $product->price),
+            'discount_applied' => $unitPrice < $basePrice,
         ]);
     }
 }

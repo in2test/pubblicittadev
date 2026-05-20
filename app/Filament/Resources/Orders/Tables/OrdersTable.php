@@ -47,6 +47,7 @@ class OrdersTable
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
+                        'awaiting_file' => 'warning',
                         'processing' => 'info',
                         'ready' => 'success',
                         'shipped' => 'gray',
@@ -55,6 +56,7 @@ class OrdersTable
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'In Attesa',
+                        'awaiting_file' => 'Attendiamo File',
                         'processing' => 'In Lavorazione',
                         'ready' => 'Pronto per Spedizione',
                         'shipped' => 'Spedito',

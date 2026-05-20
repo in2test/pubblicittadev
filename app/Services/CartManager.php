@@ -106,16 +106,15 @@ class CartManager
     {
         $items = $this->getItems();
 
-        if (isset($items[$jobId])) {
-            $item['job_id'] = $jobId;
-            $item['created_at'] = $items[$jobId]['created_at'] ?? now()->toDateTimeString();
-            $items[$jobId] = $item;
-        } else {
-            // If job doesn't exist, just add it as a new job
+        if (! isset($items[$jobId])) {
             $this->add($item);
 
             return;
         }
+
+        $item['job_id'] = $jobId;
+        $item['created_at'] = $items[$jobId]['created_at'] ?? now()->toDateTimeString();
+        $items[$jobId] = $item;
 
         Session::put(self::CART_KEY, $items);
     }
@@ -191,23 +190,20 @@ class CartManager
             $qty = $this->getItemQuantity($item);
             $price = (float) ($item['price'] ?? 0);
 
-            if (! empty($item['product_id'])) {
-                $product = Product::find((int) $item['product_id']);
-                if ($product) {
-                    $price = $product->calculateFinalUnitPrice(
-                        $qty,
-                        $item['print_placements'] ?? [],
-                        isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
-                        isset($item['width']) ? (float) $item['width'] : null,
-                        isset($item['height']) ? (float) $item['height'] : null
-                    );
-                }
+            if (! empty($item['product_id']) && $product = Product::find((int) $item['product_id'])) {
+                $price = $product->calculateFinalUnitPrice(
+                    $qty,
+                    $item['print_placements'] ?? [],
+                    isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
+                    isset($item['width']) ? (float) $item['width'] : null,
+                    isset($item['height']) ? (float) $item['height'] : null
+                );
             }
 
             return $price * max(0, $qty);
         });
 
-        return (float) number_format($total, 2, '.', '');
+        return round((float) $total, 2);
     }
 
     /**

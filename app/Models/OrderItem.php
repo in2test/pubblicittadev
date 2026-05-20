@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Override;
 
 #[Fillable([
     'order_id',
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'subtotal',
     'customization_json',
     'design_file_path',
+    'work_status',
 ])]
 /**
  * @property int $id
@@ -27,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property float $subtotal
  * @property array $customization_json
  * @property-read Product $product
+ * @property-read Order $order
  */
 class OrderItem extends Model
 {
@@ -46,5 +49,38 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function getWorkStatusLabel(): string
+    {
+        return match ($this->work_status) {
+            'pending' => 'In Attesa',
+            'awaiting_file' => 'Attendiamo File',
+            'processing' => 'In Lavorazione',
+            'ready' => 'Pronto per Spedizione',
+            'shipped' => 'Spedito',
+            'completed' => 'Completato',
+            default => $this->work_status,
+        };
+    }
+
+    #[Override]
+    protected static function booted(): void
+    {
+        static::saved(function (OrderItem $item) {
+            if ($item->wasChanged('work_status')) {
+                $item->loadMissing('order');
+                /** @var Order $order */
+                $order = $item->order;
+                $order->updateWorkStatusFromItems();
+            }
+        });
+
+        static::deleted(function (OrderItem $item) {
+            $item->loadMissing('order');
+            /** @var Order $order */
+            $order = $item->order;
+            $order->updateWorkStatusFromItems();
+        });
     }
 }

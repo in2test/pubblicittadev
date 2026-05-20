@@ -55,6 +55,8 @@ class ProductForm
                             static::getOfferPriceField(),
                             static::getPricingModelField(),
                             static::getMinAreaField(),
+                            static::getMaxWidthField(),
+                            static::getMaxHeightField(),
                         ]),
                         static::getVariationTypesField(),
                         static::getSkusRepeater(),
@@ -399,6 +401,28 @@ class ProductForm
             ->default(0.1)
             ->step(0.01)
             ->placeholder('es. 0.1')
+            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
+    }
+
+    public static function getMaxWidthField(): TextInput
+    {
+        return TextInput::make('max_width')
+            ->label('Larghezza Massima Foglio (cm)')
+            ->numeric()
+            ->step(0.01)
+            ->placeholder('es. 300 per un foglio 3×2 m')
+            ->helperText('Lascia vuoto se illimitato su questo asse.')
+            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
+    }
+
+    public static function getMaxHeightField(): TextInput
+    {
+        return TextInput::make('max_height')
+            ->label('Altezza Massima Foglio (cm)')
+            ->numeric()
+            ->step(0.01)
+            ->placeholder('es. 200 per un foglio 3×2 m')
+            ->helperText('Lascia vuoto se illimitato su questo asse.')
             ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
     }
 }

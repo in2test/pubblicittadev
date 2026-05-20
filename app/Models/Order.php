@@ -95,12 +95,57 @@ class Order extends Model
     {
         return match ($this->work_status) {
             'pending' => 'In Attesa',
+            'awaiting_file' => 'Attendiamo File',
             'processing' => 'In Lavorazione',
             'ready' => 'Pronto per Spedizione',
             'shipped' => 'Spedito',
             'completed' => 'Completato',
             default => $this->work_status,
         };
+    }
+
+    /**
+     * Ricalcola e aggiorna automaticamente lo stato lavorazione globale dell'ordine
+     * in base allo stato dei singoli articoli.
+     * Lo stato dell'ordine sarà sempre uguale allo stato di livello "più basso" tra i suoi articoli,
+     * garantendo che l'ordine non risulti completato se c'è ancora un lavoro in sospeso.
+     */
+    public function updateWorkStatusFromItems(): void
+    {
+        // Se non ci sono articoli, interrompe l'esecuzione.
+        if ($this->items()->count() === 0) {
+            return;
+        }
+
+        // Assegniamo un "peso" numerico ad ogni stato per poterli confrontare.
+        // I numeri più bassi indicano stati precedenti nel flusso di lavoro.
+        $weights = [
+            'pending' => 0,
+            'awaiting_file' => 1,
+            'processing' => 2,
+            'ready' => 3,
+            'shipped' => 4,
+            'completed' => 5,
+        ];
+
+        $lowestWeight = 999;
+        $lowestStatus = 'pending';
+
+        // Troviamo lo stato con il peso più basso tra tutti gli articoli.
+        foreach ($this->items as $item) {
+            $weight = $weights[$item->work_status] ?? 0;
+            if ($weight < $lowestWeight) {
+                $lowestWeight = $weight;
+                $lowestStatus = $item->work_status;
+            }
+        }
+
+        // Aggiorna lo stato solo se è diverso da quello attuale, per evitare query inutili.
+        if ($this->work_status !== $lowestStatus) {
+            // Utilizziamo updateQuietly per evitare di lanciare l'evento "updated"
+            // che scatenerebbe l'invio di email o cicli infiniti.
+            $this->updateQuietly(['work_status' => $lowestStatus]);
+        }
     }
 
     #[Override]
@@ -113,13 +158,15 @@ class Order extends Model
                     return;
                 }
 
+                $order->loadMissing('items.product');
+
                 // Send email to customer
-                Mail::to($order->user->email)->send(new OrderStatusChangedNotification($order));
+                Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
 
                 // Send email to all administrators
-                $admins = User::where('role', '=', 'admin', 'and')->get();
+                $admins = User::where('role', 'admin')->get();
                 foreach ($admins as $admin) {
-                    Mail::to($admin->email)->send(new OrderStatusChangedNotification($order));
+                    Mail::to($admin)->send(new OrderStatusChangedNotification($order));
                 }
             }
         });
@@ -140,16 +187,25 @@ class Order extends Model
             'paid_at' => now(),
         ]);
 
+        // Aggiorna lo stato lavorazione degli articoli.
+        // Gli articoli "neutri" che erano "in attesa" (pending) passano in lavorazione (processing).
+        // Gli articoli personalizzati ("awaiting_file") rimangono tali in attesa dei file del cliente.
+        foreach ($this->items as $item) {
+            if ($item->work_status === 'pending') {
+                $item->update(['work_status' => 'processing']);
+            }
+        }
+
         $this->decrementInventory();
 
-        /** @var User $user */
-        $user = $this->user;
-        Mail::to($user->email)->send(new OrderPaidConfirmation($this));
+        $this->loadMissing('items.product');
+
+        Mail::to($this->user)->send(new OrderPaidConfirmation($this));
 
         // Notify all administrators of the new paid order
-        $admins = User::where('role', '=', 'admin', 'and')->get();
+        $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
-            Mail::to($admin->email)->send(new AdminOrderPaidNotification($this));
+            Mail::to($admin)->send(new AdminOrderPaidNotification($this));
         }
     }
 
@@ -166,19 +222,15 @@ class Order extends Model
 
             if (empty($quantities)) {
                 // Fallback for single quantity if quantities array is missing
-                $sku = ProductSku::where('product_id', $productId)->first();
-                if ($sku !== null) {
-                    $sku->decrement('quantity', (int) ($config['quantity'] ?? 1));
-                }
+                ProductSku::where('product_id', $productId)
+                    ->first()
+                    ?->decrement('quantity', (int) ($config['quantity'] ?? 1));
 
                 continue;
             }
 
             foreach ($quantities as $skuId => $qty) {
-                $sku = ProductSku::find((int) $skuId);
-                if ($sku !== null) {
-                    $sku->decrement('quantity', (int) $qty);
-                }
+                ProductSku::find((int) $skuId)?->decrement('quantity', (int) $qty);
             }
         }
     }
