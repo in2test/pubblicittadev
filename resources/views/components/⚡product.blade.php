@@ -314,6 +314,27 @@ new class extends Component {
             }
         }
 
+        // For area-pricing products only the active SKU's quantity is relevant.
+        // $this->quantities may contain stale values from previously-shown SKUs
+        // (e.g. other thickness options) that were never cleared between selections.
+        $quantitiesToStore = $this->quantities;
+        if ($product->pricing_model === 'area') {
+            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
+                foreach ($product->variationTypes as $type) {
+                    $selectedId = $this->selectedOptions[$type->id] ?? null;
+                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }) ?? $product->skus->first();
+
+            $quantitiesToStore = $activeSku
+                ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
+                : [];
+        }
+
         $itemData = [
             'product_id' => $product->id,
             'product_name' => $product->name,
@@ -324,7 +345,7 @@ new class extends Component {
             'print_side_id' => $this->selectedPrintSide,
             'price' => ($this->totalPrice() / $this->totalQuantity()),
             'quantity' => $this->totalQuantity(),
-            'quantities' => $this->quantities, 
+            'quantities' => $quantitiesToStore,
         ];
 
         if ($product->pricing_model === 'area') {

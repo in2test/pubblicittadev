@@ -4,24 +4,31 @@
     /** @var \App\Models\Product $product */
     $discounts = $product->getQuantityDiscounts();
     $hasPlacements = $product->printPlacements->isNotEmpty();
-    
     $hasSides = $product->printSides->isNotEmpty();
 
     $variationTypes = $product->variationTypes;
-    
-    $isAreaPricing = $product->pricing_model === 'area';
-    // Matrix type is the LAST variation type (where quantities are entered), unless it's area pricing
-    $matrixType = $isAreaPricing ? null : $variationTypes->last();
-    $selectorTypes = $isAreaPricing ? $variationTypes : $variationTypes->slice(0, -1);
-    
-    // Filter SKUs based on the selected options of selectorTypes.
-    // If any selector type has NO selection, return empty so the matrix stays hidden
-    // until the user has chosen a value for every selector (e.g. a color).
-    $matchingSkus = collect();
+    $isAreaPricing  = $product->pricing_model === 'area';
+    $isNewwave      = $product->type === 'newwave';
+
+    // ─── Layout strategy ────────────────────────────────────────────────────
+    // • Newwave products (clothing): last variation = matrix rows (S/M/L/XL).
+    //   The other types (Colore, Genere…) are selector buttons above.
+    // • Standard / area products: ALL variation types are selector buttons.
+    //   Only one SKU (the exact combination) is shown, with a single qty input.
+    // ────────────────────────────────────────────────────────────────────────
+    if ($isNewwave) {
+        $matrixType    = $variationTypes->last();
+        $selectorTypes = $variationTypes->slice(0, -1);
+    } else {
+        $matrixType    = null;
+        $selectorTypes = $variationTypes;   // ALL types are selectors
+    }
+
+    // Filter SKUs based on ALL selected options.
+    $matchingSkus       = collect();
     $allSelectorsChosen = true;
 
     if ($variationTypes->isNotEmpty()) {
-        // Check that every selector type has a chosen option
         foreach ($selectorTypes as $type) {
             if (empty($selectedOptions[$type->id])) {
                 $allSelectorsChosen = false;
@@ -31,16 +38,16 @@
 
         if ($allSelectorsChosen) {
             $matchingSkus = $product->skus;
+            // For standard products: filter by every selected option (exact match)
             foreach ($selectorTypes as $type) {
                 $selectedId = $selectedOptions[$type->id] ?? null;
                 if ($selectedId) {
-                    $matchingSkus = $matchingSkus->filter(function ($sku) use ($selectedId) {
-                        return $sku->options->contains('id', $selectedId);
-                    });
+                    $matchingSkus = $matchingSkus->filter(
+                        fn ($sku) => $sku->options->contains('id', $selectedId)
+                    );
                 }
             }
 
-            // Sort matching SKUs by the sort_order of the matrixOption
             if ($matrixType) {
                 $matchingSkus = $matchingSkus->sortBy(function ($sku) use ($matrixType) {
                     $option = $sku->options->firstWhere('variation_type_id', $matrixType->id);
@@ -50,7 +57,7 @@
             }
         }
     } else {
-        // Simple product with no variation selectors — always show SKUs
+        // Simple product with no variations — always show SKUs
         $matchingSkus = $product->skus;
     }
 @endphp
@@ -121,7 +128,7 @@
                 <div class="space-y-2">
                     <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (cm)</label>
                     <div class="relative">
-                        <input wire:model.live.debounce.600ms="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.1000ms="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
                     </div>
@@ -129,7 +136,7 @@
                 <div class="space-y-2">
                     <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (cm)</label>
                     <div class="relative">
-                        <input wire:model.live.debounce.600ms="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.1000ms="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
                     </div>
@@ -181,19 +188,33 @@
         </div>
     @endif
 
-    {{-- Matrix / Quantities --}}
+    {{-- Quantities --}}
     @if ($matchingSkus->isNotEmpty())
         @php
-            // For area pricing: only show the single SKU that matches the selected thickness.
-            // This prevents one row per SKU (e.g. one per thickness) from appearing.
-            $displaySkus = $isAreaPricing ? $matchingSkus->take(1) : $matchingSkus;
+            // Area pricing or standard products: show only the one matched SKU.
+            // Newwave products: show all matrix SKUs (S/M/L/XL rows).
+            $displaySkus = ($isAreaPricing || !$isNewwave) ? $matchingSkus->take(1) : $matchingSkus;
+
+            // Build a readable label for the single-SKU input
+            $singleSkuLabel = collect($selectedOptions)
+                ->map(function ($optionId) use ($product) {
+                    foreach ($product->variationTypes as $vt) {
+                        $opt = $vt->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
+                        if ($opt) {
+                            return $opt->name;
+                        }
+                    }
+                    return null;
+                })
+                ->filter()
+                ->implode(' / ');
         @endphp
         <div class="space-y-4 pt-4 border-t border-outline-variant/10">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 {{ $matrixType ? $matrixType->name . ' e Quantità' : 'Quantità' }}
             </label>
 
-            {{-- Print Sides (Lati di Stampa) — shown here so it affects price before the summary --}}
+            {{-- Print Sides — shown before the quantity grid so it affects the price --}}
             @if ($hasSides)
                 <div>
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
@@ -216,25 +237,32 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            @if (!$isNewwave && $matchingSkus->count() > 1)
+                {{-- Sanity notice: multiple SKUs matched — should not happen for standard products --}}
+                <p class="text-[10px] font-mono text-amber-600 uppercase">Attenzione: più varianti corrispondono. Seleziona un'opzione per ogni caratteristica.</p>
+            @endif
+
+            <div class="{{ $isNewwave ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4' : 'flex' }}">
                 @foreach ($displaySkus as $sku)
                     @php
-                        $label = $isAreaPricing ? 'Pezzi' : 'Unica';
-                        if ($matrixType) {
+                        if ($isNewwave && $matrixType) {
                             $matrixOption = $sku->options->firstWhere('variation_type_id', $matrixType->id);
-                            if ($matrixOption) $label = $matrixOption->name;
+                            $rowLabel = $matrixOption ? $matrixOption->name : 'Unica';
+                        } elseif ($isAreaPricing) {
+                            $rowLabel = 'Pezzi';
+                        } else {
+                            // Standard product: label is the full selected option combo
+                            $rowLabel = $singleSkuLabel ?: 'Quantità';
                         }
                     @endphp
-                    <div class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all {{ $sku->quantity <= 0 && $product->type === 'newwave' ? 'opacity-50 grayscale-[0.5]' : '' }}">
-                        <div class="flex flex-col">
-                            <span class="font-mono text-sm font-bold">{{ $label }}</span>
+                    <div class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all w-full {{ $sku->quantity <= 0 && $isNewwave ? 'opacity-50 grayscale-[0.5]' : '' }}">
+                        <div class="flex flex-col flex-1 min-w-0 pr-4">
+                            <span class="font-mono text-sm font-bold truncate">{{ $rowLabel }}</span>
                             <span class="text-[9px] text-gray-500 uppercase tracking-tighter mt-1">
-                                @if ($product->type === 'newwave')
+                                @if ($isNewwave)
                                     @if ($sku->quantity > 0)
                                         <span>Disponibili:
-                                            <span class="font-bold text-primary/70">
-                                                {{ $sku->quantity }}
-                                            </span>
+                                            <span class="font-bold text-primary/70">{{ $sku->quantity }}</span>
                                         </span>
                                     @else
                                         <span class="text-red-500 font-bold">Esaurito</span>
@@ -245,10 +273,30 @@
                             </span>
                         </div>
 
-                        <div>
-                            <input wire:model.live.debounce.600ms="quantities.{{ $sku->id }}" type="number" min="0"
-                                @if ($product->type === 'newwave' && $sku->quantity <= 0) disabled @endif
-                                class="w-16 h-12 border border-gray-600/20 bg-gray-50 px-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
+                        {{-- Quantity stepper --}}
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button"
+                                wire:click="$set('quantities.{{ $sku->id }}', [Math.max(0, (quantities['{{ $sku->id }}'] ?? 0) - 1)])"
+                                onclick="(function(btn){
+                                    var inp = btn.nextElementSibling.nextElementSibling;
+                                    var val = Math.max(0, parseInt(inp.value || 0) - 1);
+                                    inp.value = val;
+                                    inp.dispatchEvent(new Event('input'));
+                                })(this)"
+                                class="w-8 h-10 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-base transition-colors select-none"
+                            >−</button>
+                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="0"
+                                @if ($isNewwave && $sku->quantity <= 0) disabled @endif
+                                class="w-16 h-10 border border-gray-600/20 bg-gray-50 px-2 text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
+                            <button type="button"
+                                onclick="(function(btn){
+                                    var inp = btn.previousElementSibling;
+                                    var val = parseInt(inp.value || 0) + 1;
+                                    inp.value = val;
+                                    inp.dispatchEvent(new Event('input'));
+                                })(this)"
+                                class="w-8 h-10 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-base transition-colors select-none"
+                            >+</button>
                         </div>
                     </div>
                 @endforeach
@@ -280,58 +328,33 @@
         </div>
     @endif
 
-    {{-- Printing Options (Placements only — Sides moved above totals) --}}
-    @if ($hasPlacements || $hasSides)
+    {{-- Printing Options (Placements only — Sides already shown in quantity block above) --}}
+    @if ($hasPlacements)
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">
 
         {{-- Print Placements --}}
-        @if ($hasPlacements)
-            <div>
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                    Posizioni di Stampa
-                </label>
-                <div class="grid grid-cols-2 gap-3">
-                    @foreach ($product->printPlacements as $placement)
-                        <label
-                            class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container {{ in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements) ? 'border-primary bg-primary/5' : '' }}">
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" wire:model.live="selectedPlacements" value="{{ $placement->id }}"
-                                    class="h-4 w-4 text-primary">
-                                <span class="text-sm font-bold">{{ $placement->name }}</span>
-                            </div>
-                            @if (($placement->pivot->additional_price ?? 0) > 0)
-                                <span class="text-[10px] font-mono text-primary ml-7">
-                                    +€{{ number_format((float) $placement->pivot->additional_price, 2) }}
-                                </span>
-                            @endif
-                        </label>
-                    @endforeach
-                </div>
+        <div>
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                Posizioni di Stampa
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                @foreach ($product->printPlacements as $placement)
+                    <label
+                        class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container {{ in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements) ? 'border-primary bg-primary/5' : '' }}">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" wire:model.live="selectedPlacements" value="{{ $placement->id }}"
+                                class="h-4 w-4 text-primary">
+                            <span class="text-sm font-bold">{{ $placement->name }}</span>
+                        </div>
+                        @if (($placement->pivot->additional_price ?? 0) > 0)
+                            <span class="text-[10px] font-mono text-primary ml-7">
+                                +€{{ number_format((float) $placement->pivot->additional_price, 2) }}
+                            </span>
+                        @endif
+                    </label>
+                @endforeach
             </div>
-        @endif
-
-        {{-- Print Sides — only shown here for non-area-pricing products; area products show it above totals --}}
-        @if ($hasSides && !$isAreaPricing)
-            <div>
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                    Lati di Stampa
-                </label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach ($product->printSides->sortBy('sort_order') as $side)
-                        @php $isActive = $selectedPrintSide == $side->id; @endphp
-                        <button type="button" wire:click="$set('selectedPrintSide', {{ $side->id }})"
-                            @class([
-                                'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                'bg-primary text-gray-50 border-primary' => $isActive,
-                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
-                            ])
-                        >
-                            {{ $side->name }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        </div>
 
         {{-- Printable Templates --}}
         @php
