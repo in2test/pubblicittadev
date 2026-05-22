@@ -35,8 +35,15 @@ class CartController extends Controller
     /**
      * Display the cart page with all current items.
      *
-     * Resolves all required related data (products, images, colour options,
-     * print placements, SKU sizes) in a batch to prevent N+1 queries.
+     * Business Logic:
+     * This method retrieves all items from the session-based CartManager. Instead of querying
+     * the database for each item individually (which would cause N+1 performance issues),
+     * it extracts all unique product IDs, SKU IDs, option IDs, etc., from the cart items
+     * and fetches them in a single batch query.
+     *
+     * It then iterates over the raw session items to compute live pricing, discounts,
+     * and resolve display names/images. This ensures that the cart page always reflects
+     * the most up-to-date pricing and product data, even if it changed after the item was added.
      */
     public function index(): View
     {
@@ -44,7 +51,7 @@ class CartController extends Controller
 
         // --- Batch-load all related data up front ---
         $productIds = $rawItems->pluck('product_id')->filter()->unique();
-        $products = Product::with(['images', 'category'])->whereIn('id', $productIds)->get()->keyBy('id');
+        $products = Product::with(['images', 'category', 'skus.options', 'variationTypes'])->whereIn('id', $productIds)->get()->keyBy('id');
 
         $allSkuIds = $rawItems->pluck('quantities')->filter(fn ($item) => is_array($item))->flatMap(fn ($q) => array_keys($q))->unique();
         $skus = ProductSku::with('options')->whereIn('id', $allSkuIds)->get()->keyBy('id');
@@ -75,15 +82,26 @@ class CartController extends Controller
             $discPrice = 0.0;
 
             if ($product) {
-                $basePrice = (float) $product->price;
-                $discPrice = $product->getPriceForQuantity($qty, $printSideId);
+                $totalPrice = $product->calculateTotalPrice(
+                    $qty,
+                    $item['quantities'] ?? [],
+                    $item['print_placements'] ?? [],
+                    $printSideId,
+                    isset($item['width']) ? (float) $item['width'] : null,
+                    isset($item['height']) ? (float) $item['height'] : null,
+                    $item['selected_options'] ?? []
+                );
+
+                $discPrice = $qty > 0 ? $totalPrice / $qty : 0.0;
+
+                // Determine base price (before discounts or placement fees)
+                $activeSku = $product->getActiveSku($item['selected_options'] ?? []) ?? $product->skus->first();
+                $basePrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
 
                 if ($product->pricing_model === 'area' && isset($item['width'], $item['height'])) {
-                    $area = ((float) $item['width'] * (float) $item['height']) / 10000.0;
-                    $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
-
-                    $basePrice *= $billedArea;
-                    $discPrice *= $billedArea;
+                    $billedAreaTotal = $product->calculateTotalBilledArea($qty, (float) $item['width'], (float) $item['height']);
+                    $billedAreaPerUnit = $qty > 0 ? $billedAreaTotal / $qty : 0.0;
+                    $basePrice *= $billedAreaPerUnit;
                 }
             }
 
@@ -167,7 +185,19 @@ class CartController extends Controller
     }
 
     /**
-     * Add a product to the cart.
+     * Add a product configuration to the cart.
+     *
+     * Business Logic:
+     * When a user submits the "Aggiungi al carrello" form on a product page, this method
+     * decodes their configuration (selected sizes, colors, print sides, and custom dimensions).
+     * It relies on `Product::calculateTotalPrice()` to determine the exact total cost of this
+     * configuration. Finally, it delegates saving the item into the session via `CartManager::add()`.
+     *
+     * Note: Every add creates a unique Job UUID, meaning two identical additions will result
+     * in two separate items in the cart (to allow for different customer-provided files later).
+     *
+     * @param  StoreCartRequest  $request  Validated request containing the selected options.
+     * @return RedirectResponse Redirects back to the cart with a success message.
      */
     public function add(StoreCartRequest $request): RedirectResponse
     {
@@ -181,9 +211,19 @@ class CartController extends Controller
         $width = isset($validated['width']) ? (float) $validated['width'] : null;
         $height = isset($validated['height']) ? (float) $validated['height'] : null;
 
+        $totalPrice = $product->calculateTotalPrice(
+            $quantity,
+            $validated['quantities'] ?? [],
+            $printPlacements,
+            $printSideId,
+            $width,
+            $height,
+            $validated['selected_options'] ?? []
+        );
+
         $this->cart->add(array_merge($validated, [
             'print_placements' => $printPlacements,
-            'price' => $product->calculateFinalUnitPrice($quantity, $printPlacements, $printSideId, $width, $height),
+            'price' => $quantity > 0 ? $totalPrice / $quantity : 0.0,
             'quantity' => $quantity,
         ]));
 
@@ -239,7 +279,15 @@ class CartController extends Controller
     }
 
     /**
-     * Return a real-time price calculation for a product configuration.
+     * Return a real-time price calculation for a product configuration (API Endpoint).
+     *
+     * Business Logic:
+     * This method is polled asynchronously by the frontend (via JS/Livewire) whenever a user
+     * changes an option on the product page (e.g., changes quantity, types a custom area dimension,
+     * or selects a new print placement). It instantly recalculates the total price, unit price,
+     * and detects if a discount is currently active, returning the data as JSON to update the UI instantly.
+     *
+     * @return JsonResponse Returns JSON with unit_price, total_price, quantity, and discount_applied flag.
      */
     public function price(Request $request): JsonResponse
     {
@@ -260,23 +308,34 @@ class CartController extends Controller
         $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
         $unitPrice = $product->getPriceForQuantity($quantity, $printSideId);
-        $billedArea = 1.0;
 
+        $billedAreaPerUnit = 0.0;
         if ($product->pricing_model === 'area' && $width > 0 && $height > 0) {
-            $area = ($width * $height) / 10000.0;
-            $billedArea = $product->min_area ? max($area, (float) $product->min_area) : $area;
-            $unitPrice *= $billedArea;
+            $billedAreaTotal = $product->calculateTotalBilledArea($quantity, $width, $height);
+            $billedAreaPerUnit = $quantity > 0 ? $billedAreaTotal / $quantity : 0.0;
+            $unitPrice *= $billedAreaPerUnit;
         }
 
-        $finalUnitPrice = $product->calculateFinalUnitPrice($quantity, $placements, $printSideId, $width, $height);
+        $totalPrice = $product->calculateTotalPrice(
+            $quantity,
+            $validated['quantities'] ?? [],
+            $placements,
+            $printSideId,
+            $width,
+            $height,
+            $validated['selected_options'] ?? []
+        );
+
+        $activeSku = $product->getActiveSku($validated['selected_options'] ?? []) ?? $product->skus->first();
+        $baseSkuPrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
 
         $basePrice = $product->pricing_model === 'area' && $width > 0 && $height > 0
-            ? (float) $product->price * $billedArea
-            : (float) $product->price;
+            ? $baseSkuPrice * $billedAreaPerUnit
+            : $baseSkuPrice;
 
         return response()->json([
             'unit_price' => $unitPrice,
-            'total_price' => $finalUnitPrice * $quantity,
+            'total_price' => $totalPrice,
             'quantity' => $quantity,
             'discount_applied' => $unitPrice < $basePrice,
         ]);

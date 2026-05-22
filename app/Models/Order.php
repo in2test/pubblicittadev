@@ -7,7 +7,10 @@ namespace App\Models;
 use App\Mail\AdminOrderPaidNotification;
 use App\Mail\OrderPaidConfirmation;
 use App\Mail\OrderStatusChangedNotification;
+use Carbon\CarbonImmutable;
+use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +34,38 @@ use Override;
  * @property Carbon|null $paid_at
  * @property User $user
  * @property-read Collection<int, OrderItem> $items
+ * @property int|null $quote_id
+ * @property string|null $stripe_payment_intent_id
+ * @property string|null $notes
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Address|null $billingAddress
+ * @property-read int|null $items_count
+ * @property-read Quote|null $quote
+ * @property-read Address|null $shippingAddress
+ *
+ * @method static OrderFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Order newModelQuery()
+ * @method static Builder<static>|Order newQuery()
+ * @method static Builder<static>|Order query()
+ * @method static Builder<static>|Order whereBillingAddressId($value)
+ * @method static Builder<static>|Order whereCreatedAt($value)
+ * @method static Builder<static>|Order whereId($value)
+ * @method static Builder<static>|Order whereNotes($value)
+ * @method static Builder<static>|Order whereOrderNumber($value)
+ * @method static Builder<static>|Order wherePaidAt($value)
+ * @method static Builder<static>|Order wherePaymentStatus($value)
+ * @method static Builder<static>|Order whereQuoteId($value)
+ * @method static Builder<static>|Order whereShippingAddressId($value)
+ * @method static Builder<static>|Order whereStripePaymentIntentId($value)
+ * @method static Builder<static>|Order whereStripeSessionId($value)
+ * @method static Builder<static>|Order whereTotalItems($value)
+ * @method static Builder<static>|Order whereTotalPrice($value)
+ * @method static Builder<static>|Order whereUpdatedAt($value)
+ * @method static Builder<static>|Order whereUserId($value)
+ * @method static Builder<static>|Order whereWorkStatus($value)
+ *
+ * @mixin \Eloquent
  */
 #[Fillable([
     'user_id',

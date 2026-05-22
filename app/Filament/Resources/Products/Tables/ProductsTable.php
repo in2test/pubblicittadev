@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Tables;
 
-use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\HtmlString;
 
 class ProductsTable
 {
@@ -25,34 +26,57 @@ class ProductsTable
     {
         return $table
             ->columns([
-                TextColumn::make('sku')
-                    ->searchable()
-                    ->tooltip(function (Product $record): ?HtmlString {
-                        $url = $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl();
-                        if (! $url) {
-                            return null;
-                        }
+                ImageColumn::make('thumbnail')
+                    ->label('Immagine')
+                    ->state(fn (Product $record) => $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl())
+                    ->circular()
+                    ->size(50),
 
-                        return new HtmlString(
-                            "<img src='$url' style='width:150px;height:150px;object-fit:cover;border-radius:8px;' />"
-                        );
-                    }),
                 TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('slug')
-                    ->searchable(),
-                TextColumn::make('price')
-                    ->money('EUR')
-                    ->sortable(),
-                TextColumn::make('category.name')
+                    ->label('Nome Prodotto')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->weight('bold')
+                    ->description(fn (Product $record): string => $record->sku ?? 'Nessun SKU'),
+
+                TextColumn::make('category.name')
+                    ->label('Categoria')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('info'),
+
+                TextColumn::make('pricing_model')
+                    ->label('Modello Vendita')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'fixed' => 'gray',
+                        'quantity' => 'success',
+                        'area' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'fixed' => 'Fisso',
+                        'quantity' => 'Scaglioni',
+                        'area' => 'Metratura',
+                        default => ucfirst($state),
+                    }),
+
+                TextColumn::make('price')
+                    ->label('Prezzo Base')
+                    ->money('EUR')
+                    ->sortable()
+                    ->alignment('right'),
+
+                TextColumn::make('is_active')
+                    ->label('Stato')
+                    ->badge()
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Attivo' : 'Inattivo'),
+
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Ultima Modifica')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -62,8 +86,19 @@ class ProductsTable
                     ->relationship('category', 'name')
                     ->multiple()
                     ->preload(),
-            ],
-                layout: FiltersLayout::BelowContent)
+                SelectFilter::make('pricing_model')
+                    ->label('Modello Vendita')
+                    ->options([
+                        'fixed' => 'Prezzo Fisso',
+                        'quantity' => 'A Scaglioni',
+                        'area' => 'A Metratura',
+                    ]),
+                TernaryFilter::make('is_active')
+                    ->label('Stato Prodotto')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Solo Attivi')
+                    ->falseLabel('Solo Inattivi'),
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 Action::make('view')
                     ->label('Vedi')
@@ -83,6 +118,7 @@ class ProductsTable
                     ->visible(fn (Product $record): bool => (bool) $record->category_id)
                     ->openUrlInNewTab(),
                 EditAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -104,15 +140,7 @@ class ProductsTable
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
                         ->modalButton('Disattiva'),
-                    BulkAction::make('synchronize')
-                        ->label('Sincronizza')
-                        ->icon('heroicon-o-arrow-path')
-                        ->color('info')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => SyncNewWaveProductJob::dispatch($record)))
-                        ->requiresConfirmation()
-                        ->modalHeading('Sincronizza prodotti')
-                        ->modalDescription('Sei sicuro di voler sincronizzare i prodotti selezionati?')
-                        ->modalButton('Sincronizza'),
+
                     DeleteBulkAction::make(),
                 ]),
             ])

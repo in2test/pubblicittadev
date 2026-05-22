@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Models\ProductSku;
+use App\Models\VariationOption;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -127,7 +128,7 @@ class OrderForm
                                         ->required(),
                                     Placeholder::make('customization_details')
                                         ->label('Dettagli Lavorazione / Note')
-                                        ->content(function ($record) {
+                                        ->content(function ($record): string|HtmlString {
                                             if (! $record || ! $record->customization_json) {
                                                 return '-';
                                             }
@@ -153,7 +154,7 @@ class OrderForm
                                                 foreach ($json['quantities'] as $skuId => $qty) {
                                                     $sku = ProductSku::with('options.type')->find($skuId);
                                                     if ($sku && $sku->options->isNotEmpty()) {
-                                                        $optionLabels = $sku->options->map(fn ($opt) => ($opt->type ? $opt->type->name.': ' : '').$opt->name)->join(', ');
+                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
                                                         $skuLabel = $optionLabels;
                                                     } else {
                                                         $skuLabel = "Variante #{$skuId}";

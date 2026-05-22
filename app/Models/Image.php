@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Database\Factories\ImageFactory;
 use Exception;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +38,31 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Product|null $product
  * @property-read Category|null $category
  * @property-read VariationOption|null $variationOption
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ *
+ * @method static ImageFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Image newModelQuery()
+ * @method static Builder<static>|Image newQuery()
+ * @method static Builder<static>|Image query()
+ * @method static Builder<static>|Image whereCategoryId($value)
+ * @method static Builder<static>|Image whereCreatedAt($value)
+ * @method static Builder<static>|Image whereId($value)
+ * @method static Builder<static>|Image whereImageDescription($value)
+ * @method static Builder<static>|Image whereImagePath($value)
+ * @method static Builder<static>|Image whereImageUrl($value)
+ * @method static Builder<static>|Image whereLargePath($value)
+ * @method static Builder<static>|Image whereLargeUrl($value)
+ * @method static Builder<static>|Image whereMediumPath($value)
+ * @method static Builder<static>|Image whereMediumUrl($value)
+ * @method static Builder<static>|Image whereOrderBy($value)
+ * @method static Builder<static>|Image whereProductId($value)
+ * @method static Builder<static>|Image whereThumbnailPath($value)
+ * @method static Builder<static>|Image whereThumbnailUrl($value)
+ * @method static Builder<static>|Image whereUpdatedAt($value)
+ * @method static Builder<static>|Image whereVariationOptionId($value)
+ *
+ * @mixin \Eloquent
  */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'variation_option_id', 'order_by'])]
 class Image extends Model

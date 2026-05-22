@@ -27,7 +27,7 @@ new class extends Component {
     public function mount(\App\Models\Product $product, $category, $options = [], ?string $jobId = null): void
     {
         $this->product = $product;
-        $this->product->loadMissing(['variationTypes', 'skus.options.type', 'printSides', 'printPlacements']);
+        $this->product->loadMissing(['variationTypes', 'skus.options.type', 'printSides', 'printPlacements', 'pricingTiers']);
         // Eager-load each pivot's product-specific options and the linked VariationOption record
         // ($type->pivot is a ProductVariationType; we load its options.option relation to avoid N+1)
         $this->product->variationTypes->each(
@@ -147,18 +147,10 @@ new class extends Component {
     public function currentBasePrice(): float
     {
         $product = $this->product();
-        $matchingSkus = $product->skus;
+        $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
         
-        foreach ($product->variationTypes as $type) {
-            $selectedId = $this->selectedOptions[$type->id] ?? null;
-            if ($selectedId) {
-                $matchingSkus = $matchingSkus->filter(fn($sku) => $sku->options->contains('id', $selectedId));
-            }
-        }
-        
-        $sku = $matchingSkus->first();
-        if ($sku && $sku->override_price !== null) {
-            return (float) $sku->override_price;
+        if ($activeSku && $activeSku->override_price !== null) {
+            return (float) $activeSku->override_price;
         }
 
         return (float) $product->price;
@@ -178,16 +170,7 @@ new class extends Component {
         // For area pricing, only the single active SKU's quantity counts.
         // Any stale quantities from previously-shown SKUs (other thicknesses) must be ignored.
         if ($product->pricing_model === 'area') {
-            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
-                foreach ($product->variationTypes as $type) {
-                    $selectedId = $this->selectedOptions[$type->id] ?? null;
-                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }) ?? $product->skus->first();
+            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
 
             if (! $activeSku) {
                 return 0;
@@ -207,69 +190,15 @@ new class extends Component {
         $product = $this->product();
         $qty     = $this->totalQuantity();
 
-        if ($product->pricing_model === 'area') {
-            if (empty($this->width) || empty($this->height) || $qty === 0) {
-                return 0.0;
-            }
-
-            $billedArea = $this->totalBilledArea();
-
-            // Price per m² at this quantity tier (may vary by print side)
-            $pricePerSqm = $product->getPriceForQuantity($qty, $this->selectedPrintSide);
-
-            // SKU override price (e.g. per-thickness price) replaces the base price per m²
-            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
-                foreach ($product->variationTypes as $type) {
-                    $selectedId = $this->selectedOptions[$type->id] ?? null;
-                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }) ?? $product->skus->first();
-
-            if ($activeSku && $activeSku->override_price !== null) {
-                $pricePerSqm = (float) $activeSku->override_price;
-            }
-
-            $total = $pricePerSqm * $billedArea;
-
-            if ($this->selectedPlacements !== []) {
-                $additionalPerUnit = (float) $product->printPlacements()
-                    ->whereIn('print_placements.id', $this->selectedPlacements)
-                    ->sum('product_print_placement.additional_price');
-
-                $total += $additionalPerUnit * $qty;
-            }
-
-            return (float) number_format($total, 2, '.', '');
-        }
-
-        // --- Fixed / quantity-tiered pricing ---
-        $total = 0.0;
-
-        foreach ($this->quantities as $skuId => $rawQty) {
-            $skuQty = (int) $rawQty;
-            if ($skuQty > 0) {
-                $sku       = $product->skus->firstWhere('id', $skuId);
-                $unitPrice = $product->calculateFinalUnitPrice($skuQty, [], $this->selectedPrintSide);
-                if ($sku && $sku->override_price !== null) {
-                    $unitPrice = (float) $sku->override_price;
-                }
-                $total += $unitPrice * $skuQty;
-            }
-        }
-
-        if ($this->selectedPlacements !== []) {
-            $additionalPerUnit = (float) $product->printPlacements()
-                ->whereIn('print_placements.id', $this->selectedPlacements)
-                ->sum('product_print_placement.additional_price');
-
-            $total += $additionalPerUnit * $qty;
-        }
-
-        return (float) number_format($total, 2, '.', '');
+        return $product->calculateTotalPrice(
+            $qty,
+            $this->quantities,
+            $this->selectedPlacements,
+            $this->selectedPrintSide,
+            $this->width ?: null,
+            $this->height ?: null,
+            $this->selectedOptions
+        );
     }
 
     /**
@@ -286,22 +215,25 @@ new class extends Component {
             return 0.0;
         }
 
-        $actualArea = ($this->width * $this->height) / 10000.0 * $qty;
-        $minArea    = $product->min_area ? (float) $product->min_area : 0.0;
-
-        return $minArea > 0.0
-            ? ceil($actualArea / $minArea) * $minArea
-            : $actualArea;
+        return $product->calculateTotalBilledArea($qty, $this->width, $this->height);
     }
 
     public function addToCart(CartManager $cart)
     {
+        $product = $this->product();
+        
         if ($this->totalQuantity() === 0) {
             session()->flash('error', 'Seleziona almeno una quantità.');
             return;
         }
 
-        $product = $this->product();
+        if ($product->type !== 'newwave' && $product->pricingTiers->isNotEmpty()) {
+            $minQty = $product->pricingTiers->min('min_quantity');
+            if ($this->totalQuantity() < $minQty) {
+                session()->flash('error', "La quantità minima ordinabile per questo prodotto è {$minQty}.");
+                return;
+            }
+        }
 
         if ($product->pricing_model === 'area') {
             if (empty($this->width) || $this->width <= 0) {
@@ -319,16 +251,7 @@ new class extends Component {
         // (e.g. other thickness options) that were never cleared between selections.
         $quantitiesToStore = $this->quantities;
         if ($product->pricing_model === 'area') {
-            $activeSku = $product->skus->first(function ($sku) use ($product): bool {
-                foreach ($product->variationTypes as $type) {
-                    $selectedId = $this->selectedOptions[$type->id] ?? null;
-                    if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }) ?? $product->skus->first();
+            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
 
             $quantitiesToStore = $activeSku
                 ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
@@ -410,7 +333,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :$jobId :$width :$height />
+            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :quantities="$this->quantities" :$jobId :$width :$height />
 
             <x-product.trust-badges />
         </div>

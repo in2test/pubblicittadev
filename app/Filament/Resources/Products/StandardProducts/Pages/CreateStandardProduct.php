@@ -32,7 +32,7 @@ class CreateStandardProduct extends CreateRecord
     {
         return [
             Step::make('Informazioni di Base')
-                ->description('Nome, categoria, descrizione e tipo di personalizzazione')
+                ->description('Nome, categoria, descrizione e modello di prezzo')
                 ->schema([
                     ProductForm::getTypeField(),
                     Grid::make(2)->schema([
@@ -40,17 +40,20 @@ class CreateStandardProduct extends CreateRecord
                         ProductForm::getSlugField(),
                         ProductForm::getSkuField(),
                         ProductForm::getCategoryField(),
-                        ProductForm::getPersonalizationTypeField(),
+                        ProductForm::getPricingModelField(),
                     ]),
                     ProductForm::getDescriptionField(),
                 ]),
 
             Step::make('Prezzi, Varianti e Inventario')
-                ->description('Prezzi base, varianti di prodotto e scaglioni di prezzo')
+                ->description('Prezzi base, limiti area, varianti e scaglioni di prezzo')
                 ->schema([
                     Grid::make(2)->schema([
                         ProductForm::getPriceField(),
                         ProductForm::getOfferPriceField(),
+                        ProductForm::getMinAreaField(),
+                        ProductForm::getMaxWidthField(),
+                        ProductForm::getMaxHeightField(),
                     ]),
                     ProductForm::getVariationTypesField(),
                     ProductForm::getSkusRepeater(),
@@ -69,8 +72,9 @@ class CreateStandardProduct extends CreateRecord
                     Section::make('Personalizzazione Stampa')
                         ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
                         ->schema([
-                            ProductForm::getPrintPlacementsRepeater(),
+                            ProductForm::getPersonalizationTypeField(),
                             ProductForm::getPrintSidesField(),
+                            ProductForm::getPrintPlacementsRepeater(),
                         ]),
                 ]),
         ];

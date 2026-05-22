@@ -8,6 +8,8 @@ use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
 use App\Services\QuantityDiscountService;
+use Carbon\CarbonImmutable;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +23,7 @@ use Laravel\Scout\Searchable;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Throwable;
 
@@ -54,6 +57,57 @@ use Throwable;
  * @property-read Category $category
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $variationTypes
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Image> $images
+ * @property-read int|null $images_count
+ * @property-read MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PricingTier> $pricingTiers
+ * @property-read int|null $pricing_tiers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PrintPlacement> $printPlacements
+ * @property-read int|null $print_placements_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PrintSide> $printSides
+ * @property-read int|null $print_sides_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductPrintPlacement> $productPrintPlacements
+ * @property-read int|null $product_print_placements_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $productVariationTypes
+ * @property-read int|null $product_variation_types_count
+ * @property-read int|null $skus_count
+ * @property-read ProductVariationType|null $pivot
+ * @property-read int|null $variation_types_count
+ *
+ * @method static Builder<static>|Product active()
+ * @method static ProductFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Product newModelQuery()
+ * @method static Builder<static>|Product newQuery()
+ * @method static Builder<static>|Product query()
+ * @method static Builder<static>|Product visibleTo(?User $user = null)
+ * @method static Builder<static>|Product whereCategoryId($value)
+ * @method static Builder<static>|Product whereCreatedAt($value)
+ * @method static Builder<static>|Product whereDescription($value)
+ * @method static Builder<static>|Product whereId($value)
+ * @method static Builder<static>|Product whereIsActive($value)
+ * @method static Builder<static>|Product whereIsFeatured($value)
+ * @method static Builder<static>|Product whereMaxHeight($value)
+ * @method static Builder<static>|Product whereMaxWidth($value)
+ * @method static Builder<static>|Product whereMinArea($value)
+ * @method static Builder<static>|Product whereName($value)
+ * @method static Builder<static>|Product whereOfferPrice($value)
+ * @method static Builder<static>|Product whereOverrideDescription($value)
+ * @method static Builder<static>|Product whereOverridePrice($value)
+ * @method static Builder<static>|Product wherePrice($value)
+ * @method static Builder<static>|Product wherePricingModel($value)
+ * @method static Builder<static>|Product whereRemoteImages($value)
+ * @method static Builder<static>|Product whereSku($value)
+ * @method static Builder<static>|Product whereSlug($value)
+ * @method static Builder<static>|Product whereSyncProgress($value)
+ * @method static Builder<static>|Product whereSyncStatus($value)
+ * @method static Builder<static>|Product whereSyncedAt($value)
+ * @method static Builder<static>|Product whereType($value)
+ * @method static Builder<static>|Product whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
  */
 #[Fillable([
     'sku',
@@ -485,19 +539,190 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the total unit price including quantity discounts, placements, and print side.
+     * Total area billed for the given quantity and dimensions.
+     */
+    public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
+    {
+        if ($quantity === 0 || $width <= 0 || $height <= 0) {
+            return 0.0;
+        }
+
+        $actualArea = ($width * $height) / 10000.0 * $quantity;
+        $minArea = $this->min_area ? (float) $this->min_area : 0.0;
+
+        return $minArea > 0.0
+            ? ceil($actualArea / $minArea) * $minArea
+            : $actualArea;
+    }
+
+    /**
+     * Get the active SKU based on selected options.
+     */
+    public function getActiveSku(array $selectedOptions): ?ProductSku
+    {
+        $this->loadMissing(['skus.options', 'variationTypes']);
+
+        return $this->skus->first(function ($sku) use ($selectedOptions): bool {
+            foreach ($this->variationTypes as $type) {
+                $selectedId = $selectedOptions[$type->id] ?? null;
+                if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Calculate the total price for an entire job (cart item or product page selection).
+     *
+     * This is the core pricing engine of the platform. It handles all three pricing models:
+     * 1. Area-based: Calculates total billed area (respecting min_area per item) and multiplies by sqm price.
+     * 2. Quantity-tiered: Looks up the exact price bracket based on quantity and print side.
+     * 3. Fixed: Uses standard unit prices regardless of quantity.
+     *
+     * It also aggregates any additional costs from selected print placements (e.g. Front, Back)
+     * and correctly applies SKU-specific overrides if a variant has a custom price.
+     *
+     * @param  int  $totalQuantity  The total amount of items in this specific job/cart item.
+     * @param  array<int, int>  $skuQuantities  Map of SKU IDs to quantities (e.g., [12 => 5, 13 => 10]) for variant-level breakdowns.
+     * @param  array<int>  $placementIds  List of print placement IDs (Front, Back, Sleeve) that incur extra costs.
+     * @param  int|null  $printSideId  (Optional) Used to fetch different tier pricing based on the side configuration.
+     * @param  float|null  $width  The physical width in CM (required if pricing_model is 'area').
+     * @param  float|null  $height  The physical height in CM (required if pricing_model is 'area').
+     * @param  array<int>  $selectedOptions  List of VariationOption IDs used to determine the active SKU if variants apply.
+     * @return float The final, formatted total price for this specific line item/job.
+     */
+    public function calculateTotalPrice(
+        int $totalQuantity,
+        array $skuQuantities = [],
+        array $placementIds = [],
+        ?int $printSideId = null,
+        ?float $width = null,
+        ?float $height = null,
+        array $selectedOptions = []
+    ): float {
+        if ($totalQuantity === 0) {
+            return 0.0;
+        }
+
+        $this->loadMissing(['skus.options', 'variationTypes']);
+
+        if ($this->pricing_model === 'area') {
+            if (empty($width) || empty($height)) {
+                return 0.0;
+            }
+
+            $billedArea = $this->calculateTotalBilledArea($totalQuantity, $width, $height);
+            $pricePerSqm = $this->getPriceForQuantity($totalQuantity, $printSideId);
+
+            $activeSku = $this->getActiveSku($selectedOptions) ?? $this->skus->first();
+
+            if ($activeSku && $activeSku->override_price !== null) {
+                $pricePerSqm = (float) $activeSku->override_price;
+            }
+
+            $total = $pricePerSqm * $billedArea;
+
+            if ($placementIds !== []) {
+                $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
+                $total += $additionalPerUnit * $totalQuantity;
+            }
+
+            return (float) number_format($total, 2, '.', '');
+        }
+
+        // --- Fixed / quantity-tiered pricing ---
+        $total = 0.0;
+
+        foreach ($skuQuantities as $skuId => $rawQty) {
+            $skuQty = (int) $rawQty;
+            if ($skuQty > 0) {
+                $sku = $this->skus->firstWhere('id', $skuId);
+                $unitPrice = $this->calculateFinalUnitPrice($skuQty, [], $printSideId);
+
+                if ($sku && $sku->override_price !== null) {
+                    $unitPrice = (float) $sku->override_price;
+                }
+
+                $total += $unitPrice * $skuQty;
+            }
+        }
+
+        if ($skuQuantities === []) {
+            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, [], $printSideId);
+            $total += $unitPrice * $totalQuantity;
+        }
+
+        if ($placementIds !== []) {
+            $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
+            $total += $additionalPerUnit * $totalQuantity;
+        }
+
+        return (float) number_format($total, 2, '.', '');
+    }
+
+    /**
+     * Calculate the unit price for a single quantity (legacy/simplified calculation without SKUs).
      */
     public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null, ?float $width = null, ?float $height = null): float
     {
         if ($this->pricing_model === 'area' && $width !== null && $height !== null) {
-            $area = ($width * $height) / 10000.0;
-            $billedArea = $this->min_area ? max($area, (float) $this->min_area) : $area;
+            $billedArea = $this->calculateTotalBilledArea(1, $width, $height);
             $basePrice = $this->getPriceForQuantity($quantity, $printSideId) * $billedArea;
         } else {
             $basePrice = $this->getPriceForQuantity($quantity, $printSideId);
         }
 
         return $basePrice + $this->getAdditionalPriceForPlacements($placementIds);
+    }
+
+    /**
+     * Get the minimum order quantity for this product.
+     */
+    public function getMinimumOrderQuantity(): int
+    {
+        if ($this->pricing_model === 'quantity') {
+            $minTierQty = $this->pricingTiers()->min('min_quantity');
+            if ($minTierQty !== null) {
+                return (int) $minTierQty;
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * Get the lowest possible total price for a new order of this product.
+     */
+    public function getStartingPrice(): float
+    {
+        $minQty = $this->getMinimumOrderQuantity();
+
+        // For area pricing, there might be a min_area constraint.
+        // We'll calculate a 1x1 size if not specified, which will round up to min_area
+        if ($this->pricing_model === 'area') {
+            return $this->calculateTotalPrice($minQty, [], [], null, 1.0, 1.0);
+        }
+
+        return $this->calculateTotalPrice($minQty);
+    }
+
+    /**
+     * Get the lowest possible unit price for a new order.
+     * Useful for displaying "A partire da €X / mq" for area products.
+     */
+    public function getStartingUnitPrice(): float
+    {
+        if ($this->pricing_model === 'quantity' || $this->pricing_model === 'area') {
+            $minPrice = $this->pricingTiers()->min('price_per_unit');
+            if ($minPrice !== null) {
+                return (float) $minPrice;
+            }
+        }
+
+        return $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
     }
 
     /**

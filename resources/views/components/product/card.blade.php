@@ -11,6 +11,7 @@
 
     // Pricing Data
     $priceData = $product->getDisplayPriceData(1);
+    $startingPrice = $product->getStartingPrice();
 @endphp
 
 <article
@@ -48,17 +49,17 @@
                         <span class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
                             Su Richiesta
                         </span>
-                    @elseif ($priceData['is_discounted'])
-                        <span class="font-mono text-sm font-bold text-primary">
-                            €{{ number_format($priceData['price'], 2) }}
-                        </span>
-                        <span class="text-[10px] line-through text-gray-400 font-mono">
-                            €{{ number_format($priceData['base_price'], 2) }}
-                        </span>
                     @else
-                        <span class="font-mono text-sm font-bold text-primary">
-                            €{{ number_format($priceData['price'], 2) }}
-                        </span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">A partire da</span>
+                        <div class="flex items-baseline gap-1">
+                            <span class="font-mono text-sm font-bold text-primary">
+                                @if ($product->pricing_model === 'area')
+                                    €{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}<span class="text-[10px] font-bold">/mq</span>
+                                @else
+                                    €{{ number_format($startingPrice, 2, ',', '.') }}
+                                @endif
+                            </span>
+                        </div>
                     @endif
                 </div>
             </div>

@@ -1,4 +1,4 @@
-@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null, 'width' => null, 'height' => null])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null, 'width' => null, 'height' => null, 'quantities' => []])
 
 @php
     /** @var \App\Models\Product $product */
@@ -22,6 +22,11 @@
     } else {
         $matrixType    = null;
         $selectorTypes = $variationTypes;   // ALL types are selectors
+    }
+
+    $minQtyAllowed = 1;
+    if (!$isNewwave && $product->pricingTiers->isNotEmpty()) {
+        $minQtyAllowed = $product->pricingTiers->min('min_quantity');
     }
 
     // Filter SKUs based on ALL selected options.
@@ -209,9 +214,52 @@
                 ->filter()
                 ->implode(' / ');
         @endphp
-        <div class="space-y-4 pt-4 border-t border-outline-variant/10">
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                {{ $matrixType ? $matrixType->name . ' e Quantità' : 'Quantità' }}
+
+        {{-- Smart Pricing Tiers Grid --}}
+        @if ($product->pricingTiers->isNotEmpty() && !$isNewwave)
+            @php
+                $activeSku = $displaySkus->first();
+                $currentQty = $activeSku ? (int) ($quantities[$activeSku->id] ?? 0) : 0;
+            @endphp
+            @if ($activeSku && ($product->pricing_model !== 'area' || ($width > 0 && $height > 0)))
+                <div class="space-y-4 pt-4 border-t border-outline-variant/10">
+                    <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
+                        Quantità Consigliate
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        @foreach ($product->pricingTiers->sortBy('min_quantity') as $tier)
+                            @php
+                                $tierQty = (int) $tier->min_quantity;
+                                $isTierSelected = $currentQty === $tierQty;
+                                
+                                // Calculate accurate total price for this exact configuration!
+                                $tierTotalPrice = $product->calculateTotalPrice(
+                                    $tierQty,
+                                    [$activeSku->id => $tierQty],
+                                    $selectedPlacements,
+                                    $selectedPrintSide,
+                                    $width ? (float) $width : null,
+                                    $height ? (float) $height : null,
+                                    $selectedOptions
+                                );
+                                $tierUnitPrice = $tierQty > 0 ? $tierTotalPrice / $tierQty : 0;
+                            @endphp
+                            <button type="button" 
+                                    wire:click="$set('quantities.{{ $activeSku->id }}', {{ $tierQty }})"
+                                    class="flex flex-col gap-1 items-center justify-center py-3 px-2 border transition-all rounded {{ $isTierSelected ? 'border-accent-600 bg-accent-50 ring-2 ring-accent-600 ring-offset-1 shadow-md scale-[1.02]' : 'border-gray-200 bg-surface-container hover:border-primary/50' }}">
+                                <span class="font-bold text-sm {{ $isTierSelected ? 'text-accent-900' : 'text-on-surface' }}">{{ $tierQty }} pz</span>
+                                <span class="font-bold text-lg font-mono {{ $isTierSelected ? 'text-accent-700' : 'text-primary' }}">€{{ number_format($tierTotalPrice, 2, ',', '.') }}</span>
+                                <span class="text-[10px] font-mono {{ $isTierSelected ? 'text-accent-700/80' : 'text-secondary' }}">€{{ number_format($tierUnitPrice, 2, ',', '.') }} / pz</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endif
+
+        <div class="space-y-4 pt-4 {{ !$isNewwave && $product->pricingTiers->isNotEmpty() ? 'border-t-0' : 'border-t border-outline-variant/10' }}">
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4 {{ !$isNewwave && $product->pricingTiers->isNotEmpty() ? 'mt-4 border-t border-dashed border-outline-variant/20 pt-4' : '' }}">
+                {{ $matrixType ? $matrixType->name . ' e Quantità' : (!$isNewwave && $product->pricingTiers->isNotEmpty() ? 'Oppure Inserisci Quantità Personalizzata' : 'Quantità') }}
             </label>
 
             {{-- Print Sides — shown before the quantity grid so it affects the price --}}
@@ -276,16 +324,16 @@
                         {{-- Quantity stepper --}}
                         <div class="flex items-center gap-1 shrink-0">
                             <button type="button"
-                                wire:click="$set('quantities.{{ $sku->id }}', [Math.max(0, (quantities['{{ $sku->id }}'] ?? 0) - 1)])"
+                                wire:click="$set('quantities.{{ $sku->id }}', Math.max({{ $isNewwave ? 0 : $minQtyAllowed }}, (quantities['{{ $sku->id }}'] ?? 0) - 1))"
                                 onclick="(function(btn){
                                     var inp = btn.nextElementSibling.nextElementSibling;
-                                    var val = Math.max(0, parseInt(inp.value || 0) - 1);
+                                    var val = Math.max({{ $isNewwave ? 0 : $minQtyAllowed }}, parseInt(inp.value || 0) - 1);
                                     inp.value = val;
                                     inp.dispatchEvent(new Event('input'));
                                 })(this)"
                                 class="w-8 h-10 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-base transition-colors select-none"
                             >−</button>
-                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="0"
+                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="{{ $isNewwave ? 0 : $minQtyAllowed }}"
                                 @if ($isNewwave && $sku->quantity <= 0) disabled @endif
                                 class="w-16 h-10 border border-gray-600/20 bg-gray-50 px-2 text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                             <button type="button"

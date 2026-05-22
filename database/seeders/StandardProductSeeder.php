@@ -118,10 +118,11 @@ class StandardProductSeeder extends Seeder
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
                 'pricing_tiers' => [
                     [100,  249,  0.09, null],
-                    [250,  499,  0.06, null],
-                    [500,  999,  0.05, null],
-                    [1000, 2499, 0.04, null],
-                    [2500, null, 0.03, null],
+                    [250,  499,  0.081, null],
+                    [500,  999,  0.0729, null],
+                    [1000, 2499, 0.0656, null],
+                    [2500, 4999, 0.059, null],
+                    [5000, null, 0.0531, null],
                 ],
             ],
 
@@ -447,10 +448,12 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
                 'pricing_tiers' => [
-                    [50,  99,   1.10, null],
                     [100, 249,  0.95, null],
-                    [250, 499,  0.80, null],
-                    [500, null, 0.65, null],
+                    [250, 499,  0.855, null],
+                    [500, 999,  0.7695, null],
+                    [1000, 2499, 0.6925, null],
+                    [2500, 4999, 0.6233, null],
+                    [5000, null, 0.561, null],
                 ],
             ],
 
@@ -636,6 +639,7 @@ class StandardProductSeeder extends Seeder
                     'max_quantity' => $maxQty,
                     'price_per_unit' => $price,
                     'print_side_id' => $sideId,
+                    'is_custom_price' => true,
                 ]);
             }
         }

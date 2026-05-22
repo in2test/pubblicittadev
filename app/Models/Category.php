@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +34,26 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Collection<int, Product> $products
  * @property Collection<int, Category> $children
  * @property Collection<int, Media> $media
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read int|null $children_count
+ * @property-read int|null $media_count
+ * @property-read Category|null $parent
+ * @property-read int|null $products_count
+ *
+ * @method static CategoryFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Category newModelQuery()
+ * @method static Builder<static>|Category newQuery()
+ * @method static Builder<static>|Category query()
+ * @method static Builder<static>|Category whereCreatedAt($value)
+ * @method static Builder<static>|Category whereDescription($value)
+ * @method static Builder<static>|Category whereId($value)
+ * @method static Builder<static>|Category whereName($value)
+ * @method static Builder<static>|Category whereParentId($value)
+ * @method static Builder<static>|Category whereSlug($value)
+ * @method static Builder<static>|Category whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
 class Category extends Model implements HasMedia
@@ -85,10 +108,10 @@ class Category extends Model implements HasMedia
     public function ancestors(): array
     {
         $ids = [];
-        $current = $this;
-        while ($current && $current->parent) {
-            $current = $current->parent;
+        $current = $this->parent;
+        while ($current !== null) {
             $ids[] = $current->id;
+            $current = $current->parent;
         }
 
         return $ids;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +19,35 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'color_hex',
     'sort_order',
 ])]
+/**
+ * @property string $name
+ * @property VariationType|null $type
+ * @property VariationType|null $variationType
+ * @property int $id
+ * @property int $variation_type_id
+ * @property string|null $value
+ * @property string|null $color_hex
+ * @property int $sort_order
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, ProductVariationOption> $productVariationOptions
+ * @property-read int|null $product_variation_options_count
+ *
+ * @method static \Database\Factories\VariationOptionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereColorHex($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereVariationTypeId($value)
+ *
+ * @mixin \Eloquent
+ */
 class VariationOption extends Model
 {
     use HasFactory;

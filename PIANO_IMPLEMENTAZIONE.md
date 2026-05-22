@@ -2,7 +2,7 @@
 
 **Status**: 🚧 IN CORSO (Fase 2: Transizione E-commerce)
 **Scadenza MVP**: Raggiunta
-**Ultimo aggiornamento**: 15 Maggio 2026
+**Ultimo aggiornamento**: 22 Maggio 2026
 
 ---
 
@@ -26,7 +26,8 @@ Abbiamo adottato un sistema di **Varianti Prodotto** più flessibile invece di s
 ```
 📦 products
 ├── id, name, slug, sku, description, price (base), category_id, is_featured
-├── type (standard|newwave), sync_status, sync_progress, synced_at
+├── type (standard|newwave), pricing_model (fixed|quantity|area), min_area
+├── sync_status, sync_progress, synced_at
 ├── override_price, override_description, disabled_colors (JSON), remote_images (JSON)
 ├── is_active, created_at, updated_at
 
@@ -134,7 +135,9 @@ MAGGIO 2026 (Stato Attuale)
 ├─ ✅ Stripe Checkout & Webhooks
 ├─ ✅ Inventory Management (Auto-decrement on payment)
 ├─ ✅ Admin Order Management (Filament Resource)
-└─ ✅ Test Suite (145+ test Pest)
+├─ ✅ Pricing Models (Fixed, Quantity, Area-based)
+├─ ✅ Refactoring Prodotti Standard (Filament 2-Column Form, Prod. Table)
+└─ ✅ Test Suite (170+ test Pest, 100% Passing)
 
 PIANO PROSSIMI GIORNI
 ├─ 🚧 Email Notifications (Conferma ordine - Basic implemented)

@@ -55,15 +55,30 @@
 
 <div class="flex items-baseline gap-4 mb-8">
     @if(!$onRequest)
-        <div class="flex items-baseline gap-4">
-            <div class="flex items-baseline gap-2">
-                <span class="text-3xl font-black text-primary">€{{ number_format($currentUnitPrice, 2, ',', '.') }}</span>
-                @if($currentUnitPrice < $basePrice)
-                    <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format($basePrice, 2, ',', '.') }}</span>
-                @endif
+        @if($totalQuantity == 0)
+            <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-4">
+                <div class="flex items-baseline gap-2">
+                    <span class="text-lg font-bold text-gray-600">A partire da</span>
+                    @if ($product->pricing_model === 'area')
+                        <span class="text-3xl font-black text-primary">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
+                        <span class="text-xl font-bold text-primary/70">/ mq</span>
+                    @else
+                        <span class="text-3xl font-black text-primary">€{{ number_format($product->getStartingPrice(), 2, ',', '.') }}</span>
+                    @endif
+                </div>
+                <span class="text-xs font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">IVA INCLUSA</span>
             </div>
-            <span class="text-xs font-mono text-gray-800">IVA INCLUSA</span>
-        </div>
+        @else
+            <div class="flex items-baseline gap-4">
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-black text-primary">€{{ number_format($currentUnitPrice, 2, ',', '.') }}</span>
+                    @if($currentUnitPrice < $basePrice)
+                        <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format($basePrice, 2, ',', '.') }}</span>
+                    @endif
+                </div>
+                <span class="text-xs font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">IVA INCLUSA / CAD.</span>
+            </div>
+        @endif
     @else
         <span class="text-3xl font-black text-primary uppercase">Su Richiesta</span>
     @endif

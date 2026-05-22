@@ -22,6 +22,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -34,56 +36,60 @@ class ProductForm
     {
         return $schema
             ->components([
-                static::getTypeField(),
+                static::getTypeField(), // Campo nascosto
 
-                Section::make('Informazioni di Base')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            static::getNameField(),
-                            static::getSlugField(),
-                            static::getSkuField(),
-                            static::getCategoryField(),
-                            static::getPersonalizationTypeField(),
-                        ]),
-                        static::getDescriptionField(),
-                    ]),
+                Tabs::make('Tabs')
+                    ->tabs([
+                        Tab::make('Generale')
+                            ->icon('heroicon-m-information-circle')
+                            ->schema([
+                                Grid::make(['default' => 1, 'md' => 2])->schema([
+                                    Section::make('Informazioni Principali')
+                                        ->schema([
+                                            static::getNameField(),
+                                            static::getSlugField(),
+                                            static::getSkuField(),
+                                            static::getCategoryField(),
+                                            static::getDescriptionField(),
+                                        ]),
+                                    Section::make('Prezzi e Stato')
+                                        ->schema([
+                                            static::getIsActiveField(),
+                                            static::getIsFeaturedField(),
+                                            static::getPricingModelField(),
+                                            static::getPriceField(),
+                                            static::getOfferPriceField(),
+                                            static::getMinAreaField(),
+                                            static::getMaxWidthField(),
+                                            static::getMaxHeightField(),
+                                        ]),
+                                ]),
+                            ]),
 
-                Section::make('Prezzi, Varianti e Inventario')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            static::getPriceField(),
-                            static::getOfferPriceField(),
-                            static::getPricingModelField(),
-                            static::getMinAreaField(),
-                            static::getMaxWidthField(),
-                            static::getMaxHeightField(),
-                        ]),
-                        static::getVariationTypesField(),
-                        static::getSkusRepeater(),
-                        static::getPricingTiersRepeater(),
-                    ]),
+                        Tab::make('Varianti & Scaglioni')
+                            ->icon('heroicon-m-squares-2x2')
+                            ->schema([
+                                static::getVariationTypesField(),
+                                static::getSkusRepeater(),
+                                static::getPricingTiersRepeater(),
+                            ]),
 
-                Section::make('Galleria Immagini')
-                    ->schema([
-                        static::getImagesField(),
-                        static::getColorGallerySection(),
-                    ]),
+                        Tab::make('Personalizzazione Stampa')
+                            ->icon('heroicon-m-printer')
+                            ->schema([
+                                static::getPersonalizationTypeField(),
+                                static::getPrintSidesField(),
+                                static::getPrintPlacementsRepeater(),
+                            ]),
 
-                Section::make('Personalizzazione Stampa')
-                    ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
-                    ->collapsible()
-                    ->schema([
-                        static::getPrintPlacementsRepeater(),
-                        static::getPrintSidesField(),
-                    ]),
-
-                Section::make('Stato Prodotto')
-                    ->schema([
-                        Grid::make(2)->schema([
-                            static::getIsActiveField(),
-                            static::getIsFeaturedField(),
-                        ]),
-                    ]),
+                        Tab::make('Galleria Immagini')
+                            ->icon('heroicon-m-photo')
+                            ->schema([
+                                static::getImagesField(),
+                                static::getColorGallerySection(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -241,18 +247,63 @@ class ProductForm
             ->label('Prezzi a Scaglioni (Sconti per Quantità)')
             ->schema([
                 TextInput::make('min_quantity')
-                    ->label('Quantità Minima')
+                    ->label('Quantità')
                     ->numeric()
                     ->required()
-                    ->default(1),
-                TextInput::make('max_quantity')
-                    ->label('Quantità Massima (Vuoto per nessun limite)')
-                    ->numeric(),
+                    ->default(1)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                        $qty = (int) $state;
+                        $unit = (float) $get('price_per_unit');
+                        if ($qty > 0 && $unit > 0) {
+                            $set('total_price', round($qty * $unit, 2));
+                        }
+                    }),
+                Toggle::make('is_custom_price')
+                    ->label('Prezzo bloccato / Sovrascritto')
+                    ->default(false)
+                    ->live(),
+                TextInput::make('total_price')
+                    ->label('Prezzo Totale (€)')
+                    ->numeric()
+                    ->prefix('€')
+                    ->dehydrated(false)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Get $get, Set $set, $state, $component) {
+                        $qty = (int) $get('min_quantity');
+                        if ($qty > 0 && is_numeric($state)) {
+                            $unitPrice = (float) $state / $qty;
+                            $set('price_per_unit', round($unitPrice, 4));
+                            $set('is_custom_price', true);
+
+                            // Trigger cascade calculation
+                            static::cascadePricingTiers($component);
+                        }
+                    })
+                    ->afterStateHydrated(function (TextInput $component, Get $get, Set $set) {
+                        $qty = (int) $get('min_quantity');
+                        $unit = (float) $get('price_per_unit');
+                        if ($qty > 0 && $unit > 0) {
+                            $set('total_price', round($qty * $unit, 2));
+                        }
+                    }),
                 TextInput::make('price_per_unit')
                     ->label('Prezzo Unitario (€)')
                     ->numeric()
                     ->prefix('€')
-                    ->required(),
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function (Get $get, Set $set, $state, $component) {
+                        $qty = (int) $get('min_quantity');
+                        $unit = (float) $state;
+                        if ($qty > 0 && $unit > 0) {
+                            $set('total_price', round($qty * $unit, 2));
+                            $set('is_custom_price', true);
+
+                            // Trigger cascade calculation
+                            static::cascadePricingTiers($component);
+                        }
+                    }),
                 Select::make('print_side_id')
                     ->label('Lato di Stampa Associato (Opzionale per Biglietti da Visita)')
                     ->options(fn () => PrintSide::pluck('name', 'id'))
@@ -261,8 +312,90 @@ class ProductForm
                     ->preload(),
             ])
             ->columns(2)
-            ->grid(2)
+            ->grid(1)
             ->addActionLabel('Aggiungi Scaglione di Prezzo');
+    }
+
+    protected static function cascadePricingTiers($component): void
+    {
+        // $component->getContainer()->getParentComponent() gets the repeater
+        $repeater = $component->getContainer()->getParentComponent();
+        if (! $repeater instanceof Repeater) {
+            return;
+        }
+
+        // We get the full state of the repeater
+        // The path to the repeater state can be found via the component's state path
+        $statePath = $repeater->getStatePath();
+
+        // Use livewire directly since we need to modify siblings
+        $livewire = $component->getLivewire();
+        $tiers = data_get($livewire, $statePath);
+
+        if (! is_array($tiers) || count($tiers) < 2) {
+            return;
+        }
+
+        // Sort by min_quantity to calculate correctly
+        uasort($tiers, fn ($a, $b) => (int) ($a['min_quantity'] ?? 0) <=> (int) ($b['min_quantity'] ?? 0));
+
+        $keys = array_keys($tiers);
+        $lockedIndices = [];
+
+        foreach ($keys as $i => $key) {
+            if (! empty($tiers[$key]['is_custom_price']) || $i === 0) {
+                // Ensure at least the first item is considered a baseline if nothing is locked
+                $lockedIndices[] = $i;
+            }
+        }
+
+        foreach ($keys as $i => $key) {
+            if (in_array($i, $lockedIndices)) {
+                continue;
+            }
+
+            $beforeIdx = null;
+            $afterIdx = null;
+
+            foreach (array_reverse($lockedIndices) as $li) {
+                if ($li < $i) {
+                    $beforeIdx = $li;
+                    break;
+                }
+            }
+
+            foreach ($lockedIndices as $li) {
+                if ($li > $i) {
+                    $afterIdx = $li;
+                    break;
+                }
+            }
+
+            $qty = (int) ($tiers[$key]['min_quantity'] ?? 0);
+            $qtyBefore = (int) ($tiers[$keys[$beforeIdx]]['min_quantity'] ?? 0);
+            $priceBefore = (float) ($tiers[$keys[$beforeIdx]]['price_per_unit'] ?? 0);
+
+            if ($afterIdx !== null) {
+                // Interpolate
+                $qtyAfter = (int) ($tiers[$keys[$afterIdx]]['min_quantity'] ?? 0);
+                $priceAfter = (float) ($tiers[$keys[$afterIdx]]['price_per_unit'] ?? 0);
+
+                if ($qtyAfter > $qtyBefore) {
+                    $ratio = ($qty - $qtyBefore) / ($qtyAfter - $qtyBefore);
+                    $interpolatedPrice = $priceBefore + ($priceAfter - $priceBefore) * $ratio;
+                    $tiers[$key]['price_per_unit'] = round($interpolatedPrice, 4);
+                }
+            } else {
+                // Extrapolate (-10% from the preceding tier)
+                $prevPrice = (float) ($tiers[$keys[$i - 1]]['price_per_unit'] ?? 0);
+                $tiers[$key]['price_per_unit'] = round($prevPrice * 0.90, 4);
+            }
+
+            // Update total price for this tier
+            $tiers[$key]['total_price'] = round($qty * $tiers[$key]['price_per_unit'], 2);
+        }
+
+        data_set($livewire, $statePath, $tiers);
     }
 
     public static function getImagesField(): SpatieMediaLibraryFileUpload

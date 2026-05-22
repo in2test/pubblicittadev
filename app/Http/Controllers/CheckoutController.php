@@ -65,13 +65,16 @@ class CheckoutController extends Controller
                 }
 
                 $qty = $this->cartManager->getItemQuantity($item);
-                $unitPrice = $product->calculateFinalUnitPrice(
+                $totalPrice = $product->calculateTotalPrice(
                     $qty,
+                    $item['quantities'] ?? [],
                     $item['print_placements'] ?? [],
                     isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
                     isset($item['width']) ? (float) $item['width'] : null,
-                    isset($item['height']) ? (float) $item['height'] : null
+                    isset($item['height']) ? (float) $item['height'] : null,
+                    $item['selected_options'] ?? []
                 );
+                $unitPrice = $qty > 0 ? $totalPrice / $qty : 0.0;
 
                 // Controlliamo se l'articolo richiede personalizzazione (es. stampe, file di design, posizioni)
                 // Se sì, lo stato iniziale sarà 'awaiting_file', altrimenti 'pending' (articolo neutro).
@@ -82,7 +85,7 @@ class CheckoutController extends Controller
                     'product_id' => $product->id,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
-                    'subtotal' => $unitPrice * $qty,
+                    'subtotal' => $totalPrice,
                     'customization_json' => $item,
                     'work_status' => $initialWorkStatus,
                 ]);
