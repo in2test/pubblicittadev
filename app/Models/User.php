@@ -22,10 +22,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Override;
 
 /**
- * User Model
+ * Modello User (Utente)
  *
- * Represents a user of the platform. Users can be either 'admins' (who manage
- * the catalog and quotes) or 'clients' (who browse products and request quotes).
+ * Rappresenta un utente della piattaforma. Gli utenti possono avere ruolo 'admin' (che gestiscono
+ * il catalogo e gli ordini) o 'client' (che navigano i prodotti e richiedono ordini).
  *
  * @property int $id
  * @property string $name
@@ -80,17 +80,19 @@ class User extends Authenticatable implements MustVerifyEmail
     public const ROLE_ADMIN = 'admin';
 
     /**
-     * Get all the addresses associated with the user.
+     * Ottiene tutti gli indirizzi associati all'utente.
      *
-     * @return HasMany
+     * @return HasMany<Address, $this>
      */
-    public function addresses()
+    public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
     }
 
     /**
-     * Get all the orders associated with the user.
+     * Ottiene tutti gli ordini effettuati dall'utente.
+     *
+     * @return HasMany<Order, $this>
      */
     public function orders(): HasMany
     {
@@ -108,9 +110,9 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if the user has administrative privileges.
+     * Verifica se l'utente ha privilegi di amministratore.
      *
-     * @return bool True if the user is an admin.
+     * @return bool Vero se l'utente è un admin.
      */
     public function isAdmin(): bool
     {
@@ -118,9 +120,9 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if the user account is currently active.
+     * Verifica se l'account dell'utente è attualmente attivo.
      *
-     * @return bool True if the account is active.
+     * @return bool Vero se l'account è attivo.
      */
     public function isActive(): bool
     {
@@ -128,11 +130,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Determine if the user can access the Filament admin panel.
+     * Determina se l'utente può accedere al pannello di amministrazione Filament.
      *
-     * Access is granted only if the user is both an administrator and active.
+     * L'accesso è consentito solo se l'utente è sia un amministratore che attivo.
      *
-     * @return bool True if access is granted.
+     * @return bool Vero se l'accesso è consentito.
      */
     public function canAccessFilament(): bool
     {
@@ -140,9 +142,9 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Generate the user's initials for UI display (e.g., in avatars).
+     * Genera le iniziali dell'utente per la visualizzazione nella UI (es. negli avatar).
      *
-     * @return string The first letter of the first two words of the name.
+     * @return string La prima lettera delle prime due parole del nome.
      */
     public function initials(): string
     {

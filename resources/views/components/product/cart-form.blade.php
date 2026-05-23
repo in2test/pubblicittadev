@@ -2,38 +2,49 @@
 
 @php
     /** @var \App\Models\Product $product */
+
+    // --- PREPARAZIONE DATI INIZIALI ---
+    // Recupera gli sconti per quantità
     $discounts = $product->getQuantityDiscounts();
+    
+    // Verifica se il prodotto supporta posizioni di stampa o lati di stampa (fronte/retro)
     $hasPlacements = $product->printPlacements->isNotEmpty();
     $hasSides = $product->printSides->isNotEmpty();
 
+    // Tipi di variazioni configurabili (es. Colore, Taglia, Formato, Materiale)
     $variationTypes = $product->variationTypes;
+    
+    // Flag per i modelli di prezzo: 'area' (al mq) o prodotto 'newwave' (abbigliamento promozionale)
     $isAreaPricing  = $product->pricing_model === 'area';
     $isNewwave      = $product->type === 'newwave';
 
-    // ─── Layout strategy ────────────────────────────────────────────────────
-    // • Newwave products (clothing): last variation = matrix rows (S/M/L/XL).
-    //   The other types (Colore, Genere…) are selector buttons above.
-    // • Standard / area products: ALL variation types are selector buttons.
-    //   Only one SKU (the exact combination) is shown, with a single qty input.
-    // ────────────────────────────────────────────────────────────────────────
+    // ─── STRATEGIA DI LAYOUT (Configuratore) ────────────────────────────────────────────────────
+    // • Prodotti Newwave (abbigliamento): l'ultima variazione diventa la riga della matrice quantità (es. Taglie: S, M, L, XL).
+    //   Le altre variazioni (es. Colore, Modello) sono i bottoni di selezione in alto.
+    // • Prodotti Standard / ad Area: TUTTE le variazioni sono bottoni di selezione.
+    //   Viene mostrata solo una SKU (combinazione esatta selezionata) con un singolo input di quantità.
+    // ────────────────────────────────────────────────────────────────────────────────────────────
     if ($isNewwave) {
-        $matrixType    = $variationTypes->last();
-        $selectorTypes = $variationTypes->slice(0, -1);
+        $matrixType    = $variationTypes->last(); // Ultima opzione funge da riga
+        $selectorTypes = $variationTypes->slice(0, -1); // Tutte le altre fungono da bottoni/selettori
     } else {
         $matrixType    = null;
-        $selectorTypes = $variationTypes;   // ALL types are selectors
+        $selectorTypes = $variationTypes;   // Nessuna matrice, tutte le opzioni sono bottoni/selettori
     }
 
+    // --- DETERMINA LA QUANTITA' MINIMA ---
     $minQtyAllowed = 1;
     if (!$isNewwave && $product->pricingTiers->isNotEmpty()) {
         $minQtyAllowed = $product->pricingTiers->min('min_quantity');
     }
 
-    // Filter SKUs based on ALL selected options.
+    // --- FILTRAGGIO DELLE VARIANTI (SKU) ---
+    // Identifica le varianti disponibili incrociando le selezioni dell'utente
     $matchingSkus       = collect();
     $allSelectorsChosen = true;
 
     if ($variationTypes->isNotEmpty()) {
+        // Verifica che l'utente abbia compilato tutte le opzioni necessarie (i selettori)
         foreach ($selectorTypes as $type) {
             if (empty($selectedOptions[$type->id])) {
                 $allSelectorsChosen = false;
@@ -43,7 +54,7 @@
 
         if ($allSelectorsChosen) {
             $matchingSkus = $product->skus;
-            // For standard products: filter by every selected option (exact match)
+            // Filtro incrementale per le opzioni selezionate dall'utente (es. trova la SKU con Colore: Rosso, Taglio: Uomo)
             foreach ($selectorTypes as $type) {
                 $selectedId = $selectedOptions[$type->id] ?? null;
                 if ($selectedId) {
@@ -53,21 +64,24 @@
                 }
             }
 
+            // Ordinamento per presentare le taglie nella matrice nell'ordine corretto
             if ($matrixType) {
                 $matchingSkus = $matchingSkus->sortBy(function ($sku) use ($matrixType) {
                     $option = $sku->options->firstWhere('variation_type_id', $matrixType->id);
-
                     return $option ? $option->sort_order : 0;
                 });
             }
         }
     } else {
-        // Simple product with no variations — always show SKUs
+        // Prodotti semplici senza varianti -> la singola SKU corrisponde all'articolo stesso
         $matchingSkus = $product->skus;
     }
 
+    // --- FORMATI PERSONALIZZATI ---
+    // Gestione dell'input per larghezza/altezza quando viene selezionato "Formato personalizzato"
     $isCustomFormatSelected = false;
     $selectedFormatName = '';
+    
     if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
         foreach ($selectorTypes as $type) {
             $selectedId = $selectedOptions[$type->id] ?? null;
@@ -75,6 +89,7 @@
                 $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $selectedId);
                 if ($opt) {
                     $selectedFormatName = $opt->name;
+                    // Attivazione euristica se il nome contiene parole chiave come 'personalizzat' o 'custom'
                     if (stripos($opt->name, 'personalizzat') !== false || stripos($opt->name, 'custom') !== false) {
                         $isCustomFormatSelected = true;
                     }
@@ -84,6 +99,7 @@
     }
 @endphp
 
+{{-- ================= MESSAGGI DI SISTEMA (Flash session) ================= --}}
 @if (session('success'))
     <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
         {{ session('success') }}
@@ -95,11 +111,12 @@
     </div>
 @endif
 
+{{-- ================= INIZIO FORM DEL CONFIGURATORE ================= --}}
 <form action="#" wire:submit.prevent="addToCart" class="space-y-8">
     <input type="hidden" name="product_id" value="{{ $product->id }}">
     <input type="hidden" name="quantity" value="{{ $totalQuantity }}">
 
-    {{-- Variation Selectors --}}
+    {{-- SEZIONE: Selettori delle Varianti (Es. Colore, Modello, Materiale) --}}
     @foreach ($selectorTypes as $type)
         <div class="space-y-4">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
@@ -113,12 +130,13 @@
                     @php $isActive = ($selectedOptions[$type->id] ?? null) == $option->id; @endphp
 
                     @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
+                        {{-- Rendering come campione di colore (swatch) o immagine --}}
                         @php
                             $hexColors = $option->getHexColors();
-                            // Build the CSS background: diagonal split for 2 colours, solid for 1
+                            // Gradiente a 135deg per bicolori, colore solido altrimenti
                             $swatchStyle = count($hexColors) >= 2
                                 ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
-                                : 'background-color: ' . $hexColors[0];
+                                : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
                         @endphp
                         <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                             @class([
@@ -130,6 +148,7 @@
                             title="{{ $option->name }}"
                         ></button>
                     @else
+                        {{-- Rendering come classico pulsante testuale --}}
                         <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                             @class([
                                 'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
@@ -145,13 +164,14 @@
         </div>
     @endforeach
 
-    {{-- Custom Dimensions for Area-based or Quantity-based Pricing --}}
+    {{-- SEZIONE: Dimensioni Personalizzate (per calcolo del prezzo Area/MQ) --}}
     @if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustomFormatSelected))
         <div class="space-y-4 pt-4 border-t border-outline-variant/10">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 Dimensioni Personalizzate (in mm)
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Input Larghezza --}}
                 <div class="space-y-2">
                     <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (mm)</label>
                     <div class="relative">
@@ -163,6 +183,7 @@
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
                 </div>
+                {{-- Input Altezza --}}
                 <div class="space-y-2">
                     <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (mm)</label>
                     <div class="relative">
@@ -175,6 +196,8 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Info e Avvisi Calcolo Area --}}
             @if ($product->min_area > 0)
                 <p class="text-[10px] font-mono text-secondary uppercase">
                     Nota: Area minima fatturabile di {{ $product->min_area }} mq per articolo.
@@ -195,7 +218,7 @@
                     @endif
                 </div>
 
-                {{-- Sheet split warning --}}
+                {{-- Avviso Divisione Formato (se l'area supera la dimensione massima del pannello/foglio) --}}
                 @if ($sheetsInfo['exceeds'])
                     @php
                         $maxW = $product->max_width ? number_format((float)$product->max_width / 100, 1, ',', '.') . ' m' : '∞';
@@ -221,21 +244,19 @@
         </div>
     @endif
 
-    {{-- Quantities --}}
+    {{-- SEZIONE: Selettore Quantità / Matrice --}}
     @if ($matchingSkus->isNotEmpty())
         @php
-            // Area pricing or standard products: show only the one matched SKU.
-            // Newwave products: show all matrix SKUs (S/M/L/XL rows).
+            // Per prodotti Area o Standard mostriamo un solo input di quantità.
+            // Per prodotti Newwave (Abbigliamento) mostriamo più input in base alle taglie.
             $displaySkus = ($isAreaPricing || !$isNewwave) ? $matchingSkus->take(1) : $matchingSkus;
 
-            // Build a readable label for the single-SKU input
+            // Costruzione label leggibile per la singola SKU (Es. "Colore: Rosso / Modello: Standard")
             $singleSkuLabel = collect($selectedOptions)
                 ->map(function ($optionId) use ($product) {
                     foreach ($product->variationTypes as $vt) {
                         $opt = $vt->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
-                        if ($opt) {
-                            return $opt->name;
-                        }
+                        if ($opt) return $opt->name;
                     }
                     return null;
                 })
@@ -243,16 +264,16 @@
                 ->implode(' / ');
         @endphp
 
-        {{-- Smart Pricing Tiers Grid --}}
+        {{-- Sotto-sezione: Smart Pricing Tiers (Scaglioni di quantità per acquisti rapidi) --}}
         @if ($product->pricingTiers->isNotEmpty() && !$isNewwave)
             @php
                 $activeSku = $displaySkus->first();
                 $currentQty = $activeSku ? (int) ($quantities[$activeSku->id] ?? 0) : 0;
                 
-                // Determine step and quantity logic based on custom sizes
+                // Determina la logica di avanzamento per formati personalizzati (multipli di pezzi per foglio)
                 $qtyStep = 1;
                 if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
-                    $qtyStep = $this->itemsPerSheet;
+                    $qtyStep = $this->itemsPerSheet ?? 1;
                 }
             @endphp
             @if ($activeSku && ($product->pricing_model !== 'area' || ($width > 0 && $height > 0)))
@@ -269,13 +290,12 @@
                                 $tierQty = (int) $tier->min_quantity;
                                 if ($qtyStep > 1) {
                                     $tierQty = (int) round($tierQty / $qtyStep) * $qtyStep;
-                                    if ($tierQty < $qtyStep) {
-                                        $tierQty = $qtyStep;
-                                    }
+                                    if ($tierQty < $qtyStep) $tierQty = $qtyStep;
                                 }
                                 $isTierSelected = $currentQty === $tierQty;
                                 
-                                // Calculate accurate total price for this exact configuration!
+                                // Calcola il prezzo totale effettivo per questa configurazione,
+                                // includendo lati di stampa, posizioni e variazioni correnti.
                                 $tierTotalPrice = $product->calculateTotalPrice(
                                     $tierQty,
                                     [$activeSku->id => $tierQty],
@@ -305,7 +325,7 @@
                 {{ $matrixType ? $matrixType->name . ' e Quantità' : (!$isNewwave && $product->pricingTiers->isNotEmpty() ? 'Oppure Inserisci Quantità Personalizzata' : 'Quantità') }}
             </label>
 
-            {{-- Print Sides — shown before the quantity grid so it affects the price --}}
+            {{-- Lati di Stampa --}}
             @if ($hasSides)
                 <div>
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
@@ -328,11 +348,12 @@
                 </div>
             @endif
 
+            {{-- Controllo sanità per SKU non risolte, non dovrebbe accadere per i prodotti standard ben configurati --}}
             @if (!$isNewwave && $matchingSkus->count() > 1)
-                {{-- Sanity notice: multiple SKUs matched — should not happen for standard products --}}
                 <p class="text-[10px] font-mono text-amber-600 uppercase">Attenzione: più varianti corrispondono. Seleziona un'opzione per ogni caratteristica.</p>
             @endif
 
+            {{-- Input Quantità (Singolo per standard, Multiplo per matrice taglie) --}}
             <div class="{{ $isNewwave ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4' : 'flex' }}">
                 @foreach ($displaySkus as $sku)
                     @php
@@ -342,7 +363,6 @@
                         } elseif ($isAreaPricing) {
                             $rowLabel = 'Pezzi';
                         } else {
-                            // Standard product: label is the full selected option combo
                             $rowLabel = $singleSkuLabel ?: 'Quantità';
                         }
                     @endphp
@@ -364,7 +384,7 @@
                             </span>
                         </div>
 
-                        {{-- Quantity stepper --}}
+                        {{-- Controlli / e Input della Quantità --}}
                         <div class="flex items-center gap-1 shrink-0">
                             @php
                                 $minQtyAllowedWithStep = $minQtyAllowed;
@@ -404,6 +424,7 @@
                 @endforeach
             </div>
 
+            {{-- Resoconto del Totale --}}
             @if($this->totalQuantity > 0)
                 <div class="mt-4 p-4 bg-accent-100 rounded border border-accent-200/50 flex flex-col gap-2">
                     <div class="flex justify-between items-center">
@@ -421,20 +442,20 @@
             @endif
         </div>
     @elseif ($selectorTypes->isNotEmpty() && !$allSelectorsChosen)
-        {{-- Prompt shown when color (or another selector) hasn't been chosen yet --}}
+        {{-- Prompt di selezione se le opzioni fondamentali non sono state scelte --}}
         <div class="pt-4 border-t border-outline-variant/10">
             <p class="text-xs font-mono uppercase tracking-widest text-secondary/60 flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">palette</span>
-                Seleziona {{ $selectorTypes->map(fn($t) => $t->name)->implode(' e ') }} per vedere le taglie disponibili
+                Seleziona {{ $selectorTypes->map(fn($t) => $t->name)->implode(' e ') }} per vedere le opzioni disponibili
             </p>
         </div>
     @endif
 
-    {{-- Printing Options (Placements only — Sides already shown in quantity block above) --}}
+    {{-- SEZIONE: Opzioni di Stampa (Posizioni e Templates) --}}
     @if ($hasPlacements)
     <div class="space-y-4 pt-4 border-t border-outline-variant/10">
 
-        {{-- Print Placements --}}
+        {{-- Scelta della posizione della stampa (Es. Petto, Schiena) --}}
         <div>
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 Posizioni di Stampa
@@ -448,6 +469,7 @@
                                 class="h-4 w-4 text-primary">
                             <span class="text-sm font-bold">{{ $placement->name }}</span>
                         </div>
+                        {{-- Mostra il sovrapprezzo della posizione di stampa se presente --}}
                         @if (($placement->pivot->additional_price ?? 0) > 0)
                             <span class="text-[10px] font-mono text-primary ml-7">
                                 +€{{ number_format((float) $placement->pivot->additional_price, 2) }}
@@ -458,7 +480,7 @@
             </div>
         </div>
 
-        {{-- Printable Templates --}}
+        {{-- Templates Scaricabili associati alla stampa --}}
         @php
             $templates = collect();
             if ($selectedPrintSide) {
@@ -506,7 +528,7 @@
     </div>
     @endif
 
-    {{-- File Upload --}}
+    {{-- SEZIONE: Upload File Grafica --}}
     <div>
         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
             Carica il tuo design
@@ -518,7 +540,7 @@
         @enderror
     </div>
 
-    {{-- Notes --}}
+    {{-- SEZIONE: Note del Cliente --}}
     <div>
         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
             Note aggiuntive
@@ -530,7 +552,7 @@
         @enderror
     </div>
 
-    {{-- Actions --}}
+    {{-- AZIONI FINALI (Acquista/Modifica) --}}
     <div class="flex flex-col gap-3 mt-6">
         <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 uppercase tracking-widest font-bold" :disabled="$totalQuantity < 1">
             {{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }} 

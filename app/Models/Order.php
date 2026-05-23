@@ -90,26 +90,49 @@ class Order extends Model
         'total_price' => 'decimal:2',
     ];
 
+    /**
+     * Ottiene l'utente che ha effettuato questo ordine.
+     *
+     * @return BelongsTo<User, static>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Ottiene tutti gli articoli (righe) associati a questo ordine.
+     *
+     * @return HasMany<OrderItem, static>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * Ottiene l'indirizzo di spedizione utilizzato per questo ordine.
+     *
+     * @return BelongsTo<Address, static>
+     */
     public function shippingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'shipping_address_id');
     }
 
+    /**
+     * Ottiene l'indirizzo di fatturazione utilizzato per questo ordine.
+     *
+     * @return BelongsTo<Address, static>
+     */
     public function billingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'billing_address_id');
     }
 
+    /**
+     * Restituisce un'etichetta descrittiva e tradotta per lo stato del pagamento.
+     */
     public function getPaymentStatusLabel(): string
     {
         return match ($this->payment_status) {
@@ -120,6 +143,9 @@ class Order extends Model
         };
     }
 
+    /**
+     * Restituisce un'etichetta descrittiva e tradotta per lo stato di lavorazione.
+     */
     public function getWorkStatusLabel(): string
     {
         return match ($this->work_status) {
@@ -202,7 +228,11 @@ class Order extends Model
     }
 
     /**
-     * Complete the payment process for this order.
+     * Completa il processo di pagamento per questo ordine.
+     * Segna l'ordine come pagato, avanza lo stato di lavorazione degli articoli,
+     * scala l'inventario ed invia le notifiche email.
+     *
+     * @param  string  $paymentIntentId  ID del Payment Intent di Stripe
      */
     public function completePayment(string $paymentIntentId): void
     {
@@ -231,7 +261,7 @@ class Order extends Model
 
         Mail::to($this->user)->send(new OrderPaidConfirmation($this));
 
-        // Notify all administrators of the new paid order
+        // Notifica tutti gli amministratori del nuovo ordine pagato
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             Mail::to($admin)->send(new AdminOrderPaidNotification($this));
@@ -239,7 +269,8 @@ class Order extends Model
     }
 
     /**
-     * Decrement the inventory for all items in the order.
+     * Decrementa le giacenze di magazzino per tutti gli articoli presenti nell'ordine.
+     * Questo metodo considera sia le quantità singole che gli array di quantità.
      */
     protected function decrementInventory(): void
     {
@@ -250,7 +281,7 @@ class Order extends Model
             $quantities = $config['quantities'] ?? [];
 
             if (empty($quantities)) {
-                // Fallback for single quantity if quantities array is missing
+                // Fallback nel caso di singola quantità (senza array quantities)
                 ProductSku::where('product_id', $productId)
                     ->first()
                     ?->decrement('quantity', (int) ($config['quantity'] ?? 1));

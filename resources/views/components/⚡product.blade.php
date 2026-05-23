@@ -1,56 +1,67 @@
 <?php
 
-use Livewire\Component;
+use Livewire\Volt\Component;
 use App\Services\CartManager;
 use App\Models\Product;
 use App\Models\Category;
 use Livewire\Attributes\Computed;
-use Illuminate\Database\Eloquent\Collection;
 
 new class extends Component {
     public Product $product;
     public Category $category;
     
-    // Key: variation_type_id, Value: variation_option_id
+    // Contiene le opzioni selezionate dall'utente (Key: variation_type_id, Value: variation_option_id)
     public array $selectedOptions = [];
+    
+    // Identificativo univoco dell'articolo nel carrello (se in fase di modifica)
     public ?string $jobId = null;
-    public $images = [];
+    
+    // Immagini attualmente mostrate nella galleria
+    public array $images = [];
 
-    // Key: product_sku_id, Value: quantity
+    // Quantità selezionate (Key: product_sku_id, Value: quantity)
     public array $quantities = [];
+    
+    // Posizionamenti di stampa selezionati
     public array $selectedPlacements = [];
+    
+    // Lato di stampa selezionato (se applicabile)
     public ?int $selectedPrintSide = null;
     
+    // Dimensioni personalizzate (per prodotti venduti ad area)
     public ?float $width = null;
     public ?float $height = null;
 
-    public function mount(\App\Models\Product $product, $category, $options = [], ?string $jobId = null): void
+    /**
+     * Inizializza il componente al caricamento della pagina.
+     * Carica le relazioni necessarie e, se è presente un $jobId,
+     * recupera i dati salvati nel carrello per precompilare i campi.
+     */
+    public function mount(Product $product, $category, array $options = [], ?string $jobId = null): void
     {
         $this->product = $product;
-        $this->product->loadMissing(['variationTypes', 'skus.options.type', 'printSides', 'printPlacements', 'pricingTiers']);
-        // Eager-load each pivot's product-specific options and the linked VariationOption record
-        // ($type->pivot is a ProductVariationType; we load its options.option relation to avoid N+1)
-        $this->product->variationTypes->each(
-            fn($type) => $type->pivot->loadMissing('options.option')
-        );
-        $this->category = $product?->category ?? $category;
         
-        if (is_array($options)) {
-            $this->selectedOptions = $options;
-        }
-        
+        // Eager-loading delle relazioni necessarie per calcolare i prezzi e mostrare le varianti
+        $this->product->loadMissing([
+            'variationTypes.options.option', // Evita query N+1 caricando le opzioni direttamente
+            'skus.options.type', 
+            'printSides', 
+            'printPlacements', 
+            'pricingTiers'
+        ]);
+
+        $this->category = $product->category ?? $category;
+        $this->selectedOptions = $options;
         $this->jobId = $jobId;
 
-        // Pre-fill quantities if we are editing a specific item from the cart
+        // Se stiamo modificando un prodotto già nel carrello ($jobId valorizzato),
+        // recuperiamo i dati dal CartManager e popoliamo lo stato del componente.
         if ($this->jobId) {
-            $cart = app(\App\Services\CartManager::class);
-            $items = $cart->getItems();
-            $item = $items[$this->jobId] ?? null;
+            $cart = app(CartManager::class);
+            $item = $cart->getItems()[$this->jobId] ?? null;
 
             if ($item) {
-                if (isset($item['selected_options']) && is_array($item['selected_options'])) {
-                    $this->selectedOptions = $item['selected_options'];
-                }
+                $this->selectedOptions = $item['selected_options'] ?? $this->selectedOptions;
                 
                 if (isset($item['quantities']) && is_array($item['quantities'])) {
                     $this->quantities = $item['quantities'];
@@ -58,21 +69,25 @@ new class extends Component {
                     $this->quantities[$item['sku_id']] = (int) $item['quantity'];
                 }
 
-                $placements = $item['print_placements'] ?? [];
-                $this->selectedPlacements = collect($placements)->map(fn($p) => is_array($p) && isset($p['id']) ? (string) $p['id'] : (string) $p)->toArray();
-                $this->selectedPrintSide = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
-                $this->width = isset($item['width']) ? (float) $item['width'] : null;
-                $this->height = isset($item['height']) ? (float) $item['height'] : null;
+                $this->selectedPlacements = collect($item['print_placements'] ?? [])
+                    ->map(fn($p) => is_array($p) && isset($p['id']) ? (string) $p['id'] : (string) $p)
+                    ->toArray();
+                    
+                $this->selectedPrintSide = $item['print_side_id'] ?? null;
+                $this->width = $item['width'] ?? null;
+                $this->height = $item['height'] ?? null;
             }
-        } else {
-            if ($this->product->printSides->isNotEmpty()) {
-                $this->selectedPrintSide = $this->product->printSides->sortBy('sort_order')->first()->id;
-            }
+        } elseif ($this->product->printSides->isNotEmpty()) {
+            // Seleziona il primo lato di stampa disponibile di default
+            $this->selectedPrintSide = $this->product->printSides->sortBy('sort_order')->first()->id;
         }
 
-        // Auto-select lowest price option for each variation type if not provided for non-newwave products
+        // Seleziona automaticamente le opzioni più economiche (se non già selezionate)
+        // per prodotti standard (escludendo i prodotti di tipo 'newwave')
         if ($this->product->type !== 'newwave') {
-            $lowestPriceSku = $this->product->skus->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide))->first();
+            $lowestPriceSku = $this->product->skus
+                ->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide))
+                ->first();
 
             foreach ($this->product->variationTypes as $type) {
                 if (!isset($this->selectedOptions[$type->id])) {
@@ -83,17 +98,22 @@ new class extends Component {
                             continue;
                         }
                     }
-                    $productOptions = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter();
-                    if ($productOptions->isNotEmpty()) {
-                        $this->selectedOptions[$type->id] = $productOptions->first()->id;
+                    
+                    $firstOption = $type->pivot->options->map->option->filter()->first();
+                    if ($firstOption) {
+                        $this->selectedOptions[$type->id] = $firstOption->id;
                     }
                 }
             }
         }
 
+        // Aggiorna le immagini della galleria in base alle opzioni selezionate
         $this->updateImages();
     }
 
+    /**
+     * Aggiorna la galleria immagini quando l'utente cambia variante (es. colore).
+     */
     public function updateImages(): void
     {
         $allImages = collect($this->product->getAllImages());
@@ -107,11 +127,9 @@ new class extends Component {
                    (isset($img->variation_option_ids) && in_array($visualOptionId, $img->variation_option_ids))
             );
             
-            if ($colorImages->isEmpty()) {
-                $this->images = $allImages->filter(fn($img) => empty($img->variation_option_id) && empty($img->variation_option_ids))->values()->toArray();
-            } else {
-                $this->images = $colorImages->values()->toArray();
-            }
+            $this->images = $colorImages->isEmpty() 
+                ? $allImages->filter(fn($img) => empty($img->variation_option_id) && empty($img->variation_option_ids))->values()->toArray()
+                : $colorImages->values()->toArray();
         } else {
             $genericImages = $allImages->filter(fn($img) => empty($img->variation_option_id) && empty($img->variation_option_ids));
             
@@ -124,6 +142,9 @@ new class extends Component {
         }
     }
 
+    /**
+     * Chiamato quando l'utente seleziona una diversa opzione di prodotto nel frontend.
+     */
     public function setOption(int $typeId, int $optionId): void
     {
         if (isset($this->selectedOptions[$typeId]) && $this->selectedOptions[$typeId] === $optionId) {
@@ -132,25 +153,22 @@ new class extends Component {
             $this->selectedOptions[$typeId] = $optionId;
         }
         
-        // If this type has images, update gallery
+        // Se la variante cambia e influenza le immagini, aggiorniamo la galleria
         $type = $this->product->variationTypes->firstWhere('id', $typeId);
         if ($type && $type->pivot->has_images) {
             $this->updateImages();
         }
 
-        // Filter out quantities for SKUs that don't match the new selection
+        // Resettiamo le quantità perché il cambio di opzione potrebbe 
+        // corrispondere ad un nuovo SKU, invalidando la quantità precedente
         $this->quantities = []; 
     }
 
     #[Computed]
-    public function product(): \App\Models\Product
+    public function product(): Product
     {
-        $this->product->loadMissing(['variationTypes', 'skus.options.type']);
-        // Ensure pivot options are loaded for filtering
-        $this->product->variationTypes->each(
-            fn($type) => $type->pivot->loadMissing('options.option')
-        );
-
+        // Ricarichiamo le relazioni in caso il componente venga deidratato
+        $this->product->loadMissing(['variationTypes.options.option', 'skus.options.type']);
         return $this->product;
     }
 
@@ -168,7 +186,7 @@ new class extends Component {
     }
 
     #[Computed]
-    public function category()
+    public function category(): Category
     {
         return $this->category->loadMissing('parent');
     }
@@ -182,30 +200,19 @@ new class extends Component {
             return array_sum(array_map(intval(...), $this->quantities));
         }
 
-        // For standard products (area or quantity/unit pricing), only the active SKU matters.
-        // Stale quantities from previously-shown SKUs must be ignored.
-        $activeSku = null;
-        if ($product->variationTypes->isNotEmpty()) {
-            $activeSku = $product->getActiveSku($this->selectedOptions);
-        } else {
-            $activeSku = $product->skus->first();
-        }
+        // Per i prodotti standard, la quantità è legata unicamente allo SKU attualmente attivo
+        $activeSku = $product->variationTypes->isNotEmpty() 
+            ? $product->getActiveSku($this->selectedOptions) 
+            : $product->skus->first();
 
-        if (! $activeSku) {
-            return 0;
-        }
-
-        return (int) ($this->quantities[$activeSku->id] ?? 0);
+        return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : 0;
     }
 
     #[Computed]
     public function totalPrice(): float
     {
-        $product = $this->product();
-        $qty     = $this->totalQuantity();
-
-        return $product->calculateTotalPrice(
-            $qty,
+        return $this->product()->calculateTotalPrice(
+            $this->totalQuantity(),
             $this->quantities,
             $this->selectedPlacements,
             $this->selectedPrintSide,
@@ -216,20 +223,18 @@ new class extends Component {
     }
 
     /**
-     * Total area billed for the current job (all pieces combined), rounded UP
-     * to the nearest min_area increment. Used for display and price calculation.
+     * Area totale calcolata (usata per il display e per prodotti venduti ad area).
      */
     #[Computed]
     public function totalBilledArea(): float
     {
-        $product = $this->product();
-        $qty     = $this->totalQuantity();
+        $qty = $this->totalQuantity();
 
         if (! $this->width || ! $this->height || $qty === 0) {
             return 0.0;
         }
 
-        return $product->calculateTotalBilledArea($qty, $this->width, $this->height);
+        return $this->product()->calculateTotalBilledArea($qty, $this->width, $this->height);
     }
 
     #[Computed]
@@ -242,13 +247,14 @@ new class extends Component {
 
         $w = $this->width;
         $h = $this->height;
-
         $isCustom = false;
+
+        // Controlla se una delle opzioni selezionate è personalizzata
         foreach ($this->selectedOptions as $typeId => $optionId) {
             $type = $product->variationTypes->firstWhere('id', $typeId);
             if ($type) {
-                $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
-                if ($opt && (stripos((string) $opt->name, 'personalizzat') !== false || stripos((string) $opt->name, 'custom') !== false)) {
+                $opt = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                if ($opt && preg_match('/(personalizzat|custom)/i', (string) $opt->name)) {
                     $isCustom = true;
                     break;
                 }
@@ -256,17 +262,16 @@ new class extends Component {
         }
 
         if ($isCustom) {
-            // For custom sizes, if user hasn't typed width/height, fallback to minimums
             $w = $w ?: (float) ($product->min_custom_width ?: 10);
             $h = $h ?: (float) ($product->min_custom_height ?: 10);
         } else {
-            // For standard sizes, try to parse from string
+            // Cerca di parsare la dimensione es: "50x70 cm"
             $parsedW = 0;
             $parsedH = 0;
             foreach ($this->selectedOptions as $typeId => $optionId) {
                 $type = $product->variationTypes->firstWhere('id', $typeId);
                 if ($type) {
-                    $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
+                    $opt = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
                     if ($opt && preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', (string) $opt->name, $matches)) {
                         $parsedW = (float) str_replace(',', '.', $matches[1]);
                         $parsedH = (float) str_replace(',', '.', $matches[2]);
@@ -283,22 +288,23 @@ new class extends Component {
                 $w = $parsedW;
                 $h = $parsedH;
             } else {
-                // If we cannot parse the size, we can't calculate items per sheet. Default to 1.
                 return 1;
             }
         }
 
-        if ($w > 0 && $h > 0) {
-            return max(1, $product->calculateItemsPerSheet($w, $h));
-        }
-
-        return 1;
+        return ($w > 0 && $h > 0) ? max(1, $product->calculateItemsPerSheet($w, $h)) : 1;
     }
 
+    /**
+     * Interazione con il Carrello (CartManager).
+     * Prepara i dati della variante corrente, verifica le regole di business
+     * e affida l'oggetto strutturato al servizio del carrello.
+     */
     public function addToCart(CartManager $cart)
     {
         $product = $this->product();
         
+        // 1. Validazione Quantità Minime
         if ($this->totalQuantity() === 0) {
             session()->flash('error', 'Seleziona almeno una quantità.');
             return;
@@ -312,6 +318,7 @@ new class extends Component {
             }
         }
 
+        // 2. Validazione Dimensioni (per prodotti calcolati ad area)
         if ($product->pricing_model === 'area') {
             if (empty($this->width) || $this->width <= 0) {
                 session()->flash('error', 'Inserisci una larghezza valida.');
@@ -323,35 +330,37 @@ new class extends Component {
             }
         }
 
-        // For area-pricing products only the active SKU's quantity is relevant.
-        // $this->quantities may contain stale values from previously-shown SKUs
-        // (e.g. other thickness options) that were never cleared between selections.
+        // Pulisce le quantità in modo da salvare solo quelle dello SKU attualmente attivo
+        // (Rimuove valori stantii di varianti selezionate in precedenza ma poi scartate)
         $quantitiesToStore = $this->quantities;
-        if ($product->pricing_model === 'area') {
-            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
+        if ($product->pricing_model === 'area' || $product->type !== 'newwave') {
+            $activeSku = $product->variationTypes->isNotEmpty() 
+                ? $product->getActiveSku($this->selectedOptions) 
+                : $product->skus->first();
 
-            $quantitiesToStore = $activeSku
-                ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
-                : [];
-        } else if ($product->type !== 'newwave') {
-            $activeSku = null;
-            if ($product->variationTypes->isNotEmpty()) {
-                $activeSku = $product->getActiveSku($this->selectedOptions);
-            } else {
-                $activeSku = $product->skus->first();
-            }
-
-            $quantitiesToStore = $activeSku
-                ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
-                : [];
+            $quantitiesToStore = $activeSku ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0] : [];
         }
 
+        // Genera il riepilogo leggibile delle opzioni scelte
+        $optionsSummary = [];
+        foreach ($this->selectedOptions as $typeId => $optionId) {
+            $type = $product->variationTypes->firstWhere('id', $typeId);
+            if ($type) {
+                $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                if ($option) {
+                    $optionsSummary[$type->name] = $option->name;
+                }
+            }
+        }
+
+        // 3. Strutturazione del Payload per il Carrello
         $itemData = [
             'product_id' => $product->id,
             'product_name' => $product->name,
             'product_slug' => $product->slug,
             'image_url' => $product->getFirstImageUrl('thumbnail'),
             'selected_options' => $this->selectedOptions,
+            'options_summary' => $optionsSummary, // Riepilogo testuale utile al checkout
             'print_placements' => $this->selectedPlacements,
             'print_side_id' => $this->selectedPrintSide,
             'price' => ($this->totalPrice() / $this->totalQuantity()),
@@ -364,23 +373,13 @@ new class extends Component {
             $itemData['height'] = (float) $this->height;
         }
 
-        // We can store a summary of options 
-        $optionsSummary = [];
-        foreach ($this->selectedOptions as $typeId => $optionId) {
-            $type = $product->variationTypes->firstWhere('id', $typeId);
-            if ($type) {
-                $option = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
-                if ($option) {
-                    $optionsSummary[$type->name] = $option->name;
-                }
-            }
-        }
-        $itemData['options_summary'] = $optionsSummary;
-
+        // 4. Inserimento o Sostituzione nel Carrello
         if ($this->jobId) {
+            // Se eravamo in modifica, sostituiamo l'articolo pre-esistente
             $cart->replace($this->jobId, $itemData);
             session()->flash('success', 'Lavorazione aggiornata nel carrello!');
         } else {
+            // Altrimenti, aggiungiamo come nuovo item
             $cart->add($itemData);
             session()->flash('success', 'Prodotto aggiunto al carrello!');
         }
@@ -408,6 +407,10 @@ new class extends Component {
         $this->enforceQuantityStep();
     }
 
+    /**
+     * Forza lo step di quantità basato su itemsPerSheet.
+     * Serve ad arrotondare le quantità se si stampano su fogli interi.
+     */
     private function enforceQuantityStep(): void
     {
         $product = $this->product();

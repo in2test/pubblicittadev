@@ -444,62 +444,67 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the price for a specific quantity, optionally including a print side option.
+     * Calcola il prezzo per una determinata quantità, includendo opzionalmente il lato di stampa.
+     * Se è presente un prezzo in offerta (offer_price) e non è specificato un lato di stampa, 
+     * viene restituito l'offerta.
      */
     public function getPriceForQuantity(int $quantity = 1, ?int $printSideId = null): float
     {
+        // Se c'è un'offerta attiva e non stiamo filtrando per lato di stampa, usa l'offerta.
         if ($this->offer_price > 0 && is_null($printSideId)) {
             return (float) $this->offer_price;
         }
 
-        // Priority 1: Product-specific pricing tiers
+        // Priorità 1: Cerca un prezzo a scaglioni (tier) specifico per questo prodotto
         if ($tierPrice = $this->getTierPrice($quantity, $printSideId)) {
             return $tierPrice;
         }
 
-        // Priority 2: Category-based quantity discounts (only if no printSideId is selected)
+        // Priorità 2: Sconti per quantità basati sulla categoria (solo se non è selezionato il lato di stampa)
         if (is_null($printSideId)) {
             $service = app(QuantityDiscountService::class);
 
             return max(0.0, $service->calculatePrice($this, $quantity));
         }
 
-        // Fallback: If printSideId was passed but not found, get base price of quantity
+        // Fallback: Se era stato richiesto un lato di stampa ma non è stato trovato alcun prezzo, 
+        // calcola il prezzo base per la quantità ignorando il lato.
         return $this->getPriceForQuantity($quantity);
     }
 
+    /**
+     * Recupera il prezzo a scaglioni (Tier Pricing) in base alla quantità e al lato di stampa.
+     */
     public function getTierPrice(int $quantity, ?int $printSideId = null): ?float
     {
         $findTier = function (?int $sideId) use ($quantity): ?PricingTier {
             if ($this->relationLoaded('pricingTiers')) {
                 /** @var PricingTier|null $tier */
-                $tier = $this->pricingTiers
+                return $this->pricingTiers
                     ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
                         ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
                         $t->print_side_id === $sideId
                     )
                     ->sortByDesc('min_quantity')
                     ->first();
-
-                return $tier;
             }
 
             /** @var PricingTier|null $tier */
-            $tier = $this->pricingTiers()
+            return $this->pricingTiers()
                 ->where('min_quantity', '<=', $quantity)
-                ->where(function ($query) use ($quantity) {
+                ->where(function (Builder $query) use ($quantity) {
                     $query->where('max_quantity', '>=', $quantity)
                         ->orWhereNull('max_quantity');
                 })
                 ->where('print_side_id', $sideId)
                 ->orderByDesc('min_quantity')
                 ->first();
-
-            return $tier;
         };
 
+        // Cerca prima il tier specifico per il lato di stampa richiesto
         $tier = $findTier($printSideId);
 
+        // Se non viene trovato (ma avevamo richiesto un lato specifico), cerca un tier generico
         if (! $tier && ! is_null($printSideId)) {
             $tier = $findTier(null);
         }
@@ -508,7 +513,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the total additional price for a list of print placement IDs.
+     * Ottiene il prezzo aggiuntivo totale per una lista di posizionamenti di stampa (es. Fronte, Retro).
+     * Somma il costo di tutti i posizionamenti selezionati per il prodotto.
      */
     public function getAdditionalPriceForPlacements(array $placementIds): float
     {
@@ -522,12 +528,12 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate how many physical sheets are needed for the given dimensions.
+     * Calcola quanti fogli fisici sono necessari per le dimensioni fornite.
      *
-     * Both the original orientation and the 90° rotated orientation are tried;
-     * whichever fits on fewer sheets is used. If max_width or max_height is null
-     * the axis is considered unlimited. The price is unaffected — this is purely
-     * informational for the customer.
+     * Viene provato sia l'orientamento originale che quello ruotato di 90°;
+     * si utilizza l'orientamento che richiede il minor numero di fogli. 
+     * Se max_width o max_height è null, l'asse corrispondente è considerato illimitato. 
+     * Il prezzo non è influenzato da questo calcolo: è puramente informativo per il cliente.
      *
      * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
      */
@@ -546,15 +552,15 @@ class Product extends Model implements HasMedia
         };
 
         $normal = $calc($width, $height);
-        $rotated = $calc($height, $width); // 90° rotation
+        $rotated = $calc($height, $width); // Rotazione di 90°
 
-        // Prefer whichever orientation needs fewer sheets.
+        // Preferisce l'orientamento che richiede meno fogli in totale.
         return $rotated['sheets'] < $normal['sheets'] ? $rotated : $normal;
     }
 
     /**
-     * Calculate how many pieces of a given size fit onto a single printing sheet.
-     * Uses the product's configured sheet_width and sheet_height.
+     * Calcola quanti pezzi di una determinata dimensione possono essere stampati su un singolo foglio.
+     * Utilizza la larghezza (sheet_width) e l'altezza (sheet_height) del foglio configurate per il prodotto.
      */
     public function calculateItemsPerSheet(float $itemWidth, float $itemHeight): int
     {
@@ -564,21 +570,23 @@ class Product extends Model implements HasMedia
 
         $w = (float) $this->sheet_width;
         $h = (float) $this->sheet_height;
-        $gap = 6.0;
+        $gap = 6.0; // Margine/spaziatura tra gli elementi da stampare
 
+        // Elementi che entrano in orientamento normale
         $fitNormal = floor(($w + $gap) / ($itemWidth + $gap)) * floor(($h + $gap) / ($itemHeight + $gap));
+        // Elementi che entrano ruotandoli di 90 gradi
         $fitRotated = floor(($w + $gap) / ($itemHeight + $gap)) * floor(($h + $gap) / ($itemWidth + $gap));
 
         return (int) max($fitNormal, $fitRotated);
     }
 
     /**
-     * Total area billed for the given quantity and dimensions.
+     * Calcola l'area totale fatturata (in metri quadrati) per la quantità e le dimensioni fornite.
      *
-     * @param  int  $quantity  The number of items
-     * @param  float  $width  The physical width of the item in CENTIMETERS (cm)
-     * @param  float  $height  The physical height of the item in CENTIMETERS (cm)
-     * @return float The total calculated area in square meters (sqm), rounded up to the minimum area if applicable.
+     * @param  int  $quantity  Numero di articoli
+     * @param  float  $width  Larghezza fisica dell'articolo in CENTIMETRI (cm)
+     * @param  float  $height  Altezza fisica dell'articolo in CENTIMETRI (cm)
+     * @return float L'area totale calcolata in metri quadrati (mq), arrotondata all'area minima del prodotto (se applicabile).
      */
     public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
     {
@@ -586,11 +594,12 @@ class Product extends Model implements HasMedia
             return 0.0;
         }
 
-        // Inputs are in CM. (width * height) gives sq cm.
-        // To get sq meters, divide by 10,000.
+        // Gli input sono in CM. (width * height) fornisce i centimetri quadrati.
+        // Per ottenere i metri quadrati, dividiamo per 10.000.
         $actualArea = ($width * $height) / 10000.0 * $quantity;
         $minArea = $this->min_area ? (float) $this->min_area : 0.0;
 
+        // Se c'è un'area minima, arrotonda l'area effettiva al multiplo superiore dell'area minima (ceiling).
         return $minArea > 0.0
             ? ceil($actualArea / $minArea) * $minArea
             : $actualArea;
@@ -616,24 +625,24 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the total price for an entire job (cart item or product page selection).
+     * Calcola il prezzo totale per un intero lavoro (elemento del carrello o configurazione prodotto).
      *
-     * This is the core pricing engine of the platform. It handles all three pricing models:
-     * 1. Area-based: Calculates total billed area (respecting min_area per item) and multiplies by sqm price.
-     * 2. Quantity-tiered: Looks up the exact price bracket based on quantity and print side.
-     * 3. Fixed: Uses standard unit prices regardless of quantity.
+     * Questo è il motore di calcolo principale della piattaforma. Gestisce tutti e 3 i modelli di prezzo:
+     * 1. A superficie (area): Calcola l'area totale fatturata (rispettando l'area minima per pezzo) e moltiplica per il prezzo al mq.
+     * 2. A quantità (quantity): Cerca la fascia di prezzo esatta basata sulla quantità e sul lato di stampa selezionato.
+     * 3. Fisso: Usa un prezzo unitario standard indipendentemente dalla quantità.
      *
-     * It also aggregates any additional costs from selected print placements (e.g. Front, Back)
-     * and correctly applies SKU-specific overrides if a variant has a custom price.
+     * Aggrega anche eventuali costi aggiuntivi derivanti dai posizionamenti di stampa selezionati (es. Fronte, Retro)
+     * e applica correttamente le sovrascritture di prezzo specifiche della variante (SKU), se presenti.
      *
-     * @param  int  $totalQuantity  The total amount of items in this specific job/cart item.
-     * @param  array<int, int>  $skuQuantities  Map of SKU IDs to quantities (e.g., [12 => 5, 13 => 10]) for variant-level breakdowns.
-     * @param  array<int>  $placementIds  List of print placement IDs (Front, Back, Sleeve) that incur extra costs.
-     * @param  int|null  $printSideId  (Optional) Used to fetch different tier pricing based on the side configuration.
-     * @param  float|null  $width  The physical width in CENTIMETERS (required if pricing_model is 'area').
-     * @param  float|null  $height  The physical height in CENTIMETERS (required if pricing_model is 'area').
-     * @param  array<int>  $selectedOptions  List of VariationOption IDs used to determine the active SKU if variants apply.
-     * @return float The final, formatted total price for this specific line item/job.
+     * @param  int  $totalQuantity  Quantità totale di articoli per questa lavorazione.
+     * @param  array<int, int>  $skuQuantities  Mappa ID SKU -> quantità (es. [12 => 5, 13 => 10]) per il dettaglio delle varianti.
+     * @param  array<int>  $placementIds  Elenco di ID posizionamenti di stampa che comportano costi extra.
+     * @param  int|null  $printSideId  (Opzionale) Usato per ottenere prezzi a scaglioni diversi in base al lato di stampa.
+     * @param  float|null  $width  Larghezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
+     * @param  float|null  $height  Altezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
+     * @param  array<int>  $selectedOptions  ID delle opzioni di variazione usate per determinare la SKU attiva.
+     * @return float Il prezzo totale finale, formattato e pronto.
      */
     public function calculateTotalPrice(
         int $totalQuantity,
@@ -650,6 +659,7 @@ class Product extends Model implements HasMedia
 
         $this->loadMissing(['skus.options', 'variationTypes']);
 
+        // --- Modello di prezzo basato sull'area (es. striscioni, adesivi grandi formati) ---
         if ($this->pricing_model === 'area') {
             if (empty($width) || empty($height)) {
                 return 0.0;
@@ -660,12 +670,14 @@ class Product extends Model implements HasMedia
 
             $activeSku = $this->getActiveSku($selectedOptions) ?? $this->skus->first();
 
+            // Se la SKU attiva ha un prezzo personalizzato (override), usalo come prezzo al mq
             if ($activeSku && $activeSku->override_price !== null) {
                 $pricePerSqm = (float) $activeSku->override_price;
             }
 
             $total = $pricePerSqm * $billedArea;
 
+            // Aggiungi il costo dei posizionamenti di stampa aggiuntivi
             if ($placementIds !== []) {
                 $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
                 $total += $additionalPerUnit * $totalQuantity;
@@ -674,15 +686,17 @@ class Product extends Model implements HasMedia
             return (float) number_format($total, 2, '.', '');
         }
 
-        // --- Fixed / quantity-tiered pricing ---
+        // --- Modello di prezzo Fisso o a Quantità (scaglioni) ---
         $total = 0.0;
 
+        // Se sono state specificate le quantità per ogni singola SKU (varianti)
         foreach ($skuQuantities as $skuId => $rawQty) {
             $skuQty = (int) $rawQty;
             if ($skuQty > 0) {
                 $sku = $this->skus->firstWhere('id', $skuId);
                 $unitPrice = $this->calculateFinalUnitPrice($skuQty, [], $printSideId);
 
+                // Applica il prezzo di override della SKU se presente
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
                 }
@@ -691,11 +705,13 @@ class Product extends Model implements HasMedia
             }
         }
 
+        // Se non abbiamo un dettaglio per SKU, calcola la quantità totale sul prodotto base
         if ($skuQuantities === []) {
             $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, [], $printSideId);
             $total += $unitPrice * $totalQuantity;
         }
 
+        // Aggiungi i costi dei posizionamenti di stampa aggiuntivi per l'intera quantità
         if ($placementIds !== []) {
             $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
             $total += $additionalPerUnit * $totalQuantity;
@@ -705,22 +721,25 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calculate the unit price for a single quantity (legacy/simplified calculation without SKUs).
+     * Calcola il prezzo unitario per una singola quantità (usato per stime e modelli a quantità/fissi).
      */
     public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null, ?float $width = null, ?float $height = null): float
     {
         if ($this->pricing_model === 'area' && $width !== null && $height !== null) {
+            // Per il modello area, calcoliamo l'area fatturata per 1 singolo pezzo e la moltiplichiamo per il prezzo al mq
             $billedArea = $this->calculateTotalBilledArea(1, $width, $height);
             $basePrice = $this->getPriceForQuantity($quantity, $printSideId) * $billedArea;
         } else {
+            // Per i modelli a quantità e fissi, otteniamo semplicemente il prezzo unitario della fascia corrispondente
             $basePrice = $this->getPriceForQuantity($quantity, $printSideId);
         }
 
+        // Somma eventuali sovrapprezzi per posizionamenti extra
         return $basePrice + $this->getAdditionalPriceForPlacements($placementIds);
     }
 
     /**
-     * Get the minimum order quantity for this product.
+     * Restituisce la quantità minima ordinabile (MOQ) per questo prodotto.
      */
     public function getMinimumOrderQuantity(): int
     {
@@ -735,7 +754,7 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the lowest possible total price for a new order of this product.
+     * Restituisce il prezzo totale minimo possibile per un nuovo ordine di questo prodotto.
      */
     public function getStartingPrice(): float
     {
@@ -743,31 +762,33 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the absolute minimum price a customer can pay for an order.
+     * Calcola il prezzo minimo assoluto che un cliente può pagare per un ordine.
+     * Considera i limiti di area minima, i formati personalizzati e le quantità minime (MOQ).
      */
     public function getAbsoluteMinimumPrice(): float
     {
         $minQty = $this->getMinimumOrderQuantity();
 
-        // For area pricing, there might be a min_area constraint.
+        // Per il calcolo ad area, potrebbe esserci un vincolo di area minima (min_area).
         if ($this->pricing_model === 'area') {
             $billedArea = $this->calculateTotalBilledArea($minQty, 1.0, 1.0);
 
             return $this->getPriceForQuantity($minQty) * $billedArea;
         }
 
-        // For quantity pricing, check if it allows custom size, which affects step.
+        // Per i prezzi a quantità, controlliamo se il prodotto supporta formati personalizzati,
+        // che potrebbero influenzare l'ottimizzazione sul foglio di stampa.
         if ($this->pricing_model === 'quantity' && $this->allows_custom_size) {
             $formatType = $this->variationTypes->firstWhere('name', 'Formato');
 
             $minPriceFound = null;
 
             if ($formatType) {
-                // Find options for this product
+                // Recupera le opzioni di formato per questo prodotto
                 /** @var ProductVariationType|null $pvt */
                 $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
                 if ($pvt) {
-                    $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
+                    $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
                         $query->where('product_variation_type_id', $pvt->id);
                     })->get();
 
@@ -776,6 +797,7 @@ class Product extends Model implements HasMedia
                         $h = null;
                         $name = strtolower((string) $format->name);
 
+                        // Determina le dimensioni in base al nome dell'opzione (es. "Personalizzato" o "10x15")
                         if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
                             $w = $this->min_custom_width ?? 10.0;
                             $h = $this->min_custom_height ?? 10.0;
@@ -783,14 +805,16 @@ class Product extends Model implements HasMedia
                             $w = (float) str_replace(',', '.', $matches[1]);
                             $h = (float) str_replace(',', '.', $matches[2]);
                             if (str_contains(strtolower($name), 'cm')) {
-                                $w *= 10;
+                                $w *= 10; // Converti in mm internamente
                                 $h *= 10;
                             }
                         }
 
+                        // Ottimizza il prezzo in base a quanti pezzi entrano nel foglio
                         if ($w && $h) {
                             $itemsPerSheet = $this->calculateItemsPerSheet($w, $h);
                             if ($itemsPerSheet > 0) {
+                                // Arrotonda la quantità al multiplo dei pezzi per foglio
                                 $qty = (int) round($minQty / $itemsPerSheet) * $itemsPerSheet;
                                 if ($qty < $itemsPerSheet) {
                                     $qty = $itemsPerSheet;
@@ -815,8 +839,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the lowest possible unit price for a new order.
-     * Useful for displaying "A partire da €X / mq" for area products.
+     * Ottiene il prezzo unitario più basso possibile per un nuovo ordine.
+     * Utile per visualizzare "A partire da €X / pezzo" o "A partire da €X / mq" nei cataloghi.
      */
     public function getStartingUnitPrice(): float
     {
@@ -829,12 +853,12 @@ class Product extends Model implements HasMedia
             }
         }
 
-        // Check if SKUs override this base price
+        // Controlla se ci sono SKU (varianti) che sovrascrivono questo prezzo base
         $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
 
         if ($skuPrices->isNotEmpty()) {
-            // The starting price is the lowest among SKUs that override it,
-            // AND potentially the baseFallback if any SKU DOES NOT override it.
+            // Il prezzo di partenza è il minimo tra le SKU con override,
+            // E potenzialmente il baseFallback se qualche SKU NON ha un override.
             $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
             if ($hasSkuWithoutOverride) {
                 return min($baseFallback, $skuPrices->min());
