@@ -43,12 +43,14 @@ new class extends Component {
         
         // Eager-loading delle relazioni necessarie per calcolare i prezzi e mostrare le varianti
         $this->product->loadMissing([
-            'variationTypes.options.option', // Evita query N+1 caricando le opzioni direttamente
+            'variationTypes',
             'skus.options.type', 
             'printSides', 
             'printPlacements', 
             'pricingTiers'
         ]);
+
+        $this->product->variationTypes->each(fn($type) => $type->pivot->loadMissing('options.option'));
 
         $this->category = $product->category ?? $category;
         $this->selectedOptions = $options;
@@ -168,7 +170,8 @@ new class extends Component {
     public function product(): Product
     {
         // Ricarichiamo le relazioni in caso il componente venga deidratato
-        $this->product->loadMissing(['variationTypes.options.option', 'skus.options.type']);
+        $this->product->loadMissing(['variationTypes', 'skus.options.type']);
+        $this->product->variationTypes->each(fn($type) => $type->pivot->loadMissing('options.option'));
         return $this->product;
     }
 
