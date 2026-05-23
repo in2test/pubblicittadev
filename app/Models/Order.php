@@ -93,7 +93,7 @@ class Order extends Model
     /**
      * Ottiene l'utente che ha effettuato questo ordine.
      *
-     * @return BelongsTo<User, static>
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
@@ -103,7 +103,7 @@ class Order extends Model
     /**
      * Ottiene tutti gli articoli (righe) associati a questo ordine.
      *
-     * @return HasMany<OrderItem, static>
+     * @return HasMany<OrderItem, $this>
      */
     public function items(): HasMany
     {
@@ -113,7 +113,7 @@ class Order extends Model
     /**
      * Ottiene l'indirizzo di spedizione utilizzato per questo ordine.
      *
-     * @return BelongsTo<Address, static>
+     * @return BelongsTo<Address, $this>
      */
     public function shippingAddress(): BelongsTo
     {
@@ -123,7 +123,7 @@ class Order extends Model
     /**
      * Ottiene l'indirizzo di fatturazione utilizzato per questo ordine.
      *
-     * @return BelongsTo<Address, static>
+     * @return BelongsTo<Address, $this>
      */
     public function billingAddress(): BelongsTo
     {

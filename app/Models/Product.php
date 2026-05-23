@@ -445,7 +445,7 @@ class Product extends Model implements HasMedia
 
     /**
      * Calcola il prezzo per una determinata quantità, includendo opzionalmente il lato di stampa.
-     * Se è presente un prezzo in offerta (offer_price) e non è specificato un lato di stampa, 
+     * Se è presente un prezzo in offerta (offer_price) e non è specificato un lato di stampa,
      * viene restituito l'offerta.
      */
     public function getPriceForQuantity(int $quantity = 1, ?int $printSideId = null): float
@@ -467,7 +467,7 @@ class Product extends Model implements HasMedia
             return max(0.0, $service->calculatePrice($this, $quantity));
         }
 
-        // Fallback: Se era stato richiesto un lato di stampa ma non è stato trovato alcun prezzo, 
+        // Fallback: Se era stato richiesto un lato di stampa ma non è stato trovato alcun prezzo,
         // calcola il prezzo base per la quantità ignorando il lato.
         return $this->getPriceForQuantity($quantity);
     }
@@ -479,7 +479,6 @@ class Product extends Model implements HasMedia
     {
         $findTier = function (?int $sideId) use ($quantity): ?PricingTier {
             if ($this->relationLoaded('pricingTiers')) {
-                /** @var PricingTier|null $tier */
                 return $this->pricingTiers
                     ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
                         ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
@@ -490,7 +489,7 @@ class Product extends Model implements HasMedia
             }
 
             /** @var PricingTier|null $tier */
-            return $this->pricingTiers()
+            $tier = $this->pricingTiers()
                 ->where('min_quantity', '<=', $quantity)
                 ->where(function (Builder $query) use ($quantity) {
                     $query->where('max_quantity', '>=', $quantity)
@@ -499,6 +498,8 @@ class Product extends Model implements HasMedia
                 ->where('print_side_id', $sideId)
                 ->orderByDesc('min_quantity')
                 ->first();
+
+            return $tier;
         };
 
         // Cerca prima il tier specifico per il lato di stampa richiesto
@@ -531,8 +532,8 @@ class Product extends Model implements HasMedia
      * Calcola quanti fogli fisici sono necessari per le dimensioni fornite.
      *
      * Viene provato sia l'orientamento originale che quello ruotato di 90°;
-     * si utilizza l'orientamento che richiede il minor numero di fogli. 
-     * Se max_width o max_height è null, l'asse corrispondente è considerato illimitato. 
+     * si utilizza l'orientamento che richiede il minor numero di fogli.
+     * Se max_width o max_height è null, l'asse corrispondente è considerato illimitato.
      * Il prezzo non è influenzato da questo calcolo: è puramente informativo per il cliente.
      *
      * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
