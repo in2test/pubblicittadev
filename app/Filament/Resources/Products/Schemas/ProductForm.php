@@ -63,6 +63,46 @@ class ProductForm
                                             static::getMaxWidthField(),
                                             static::getMaxHeightField(),
                                         ]),
+                                    Section::make('Ottimizzazione Resa (Fogli e Misure)')
+                                        ->visible(fn (Get $get): bool => $get('pricing_model') === 'quantity')
+                                        ->schema([
+                                            Grid::make(2)->schema([
+                                                TextInput::make('sheet_width')
+                                                    ->label('Larghezza Foglio di Stampa (mm)')
+                                                    ->numeric()
+                                                    ->step(0.01)
+                                                    ->placeholder('es. 32'),
+                                                TextInput::make('sheet_height')
+                                                    ->label('Altezza Foglio di Stampa (mm)')
+                                                    ->numeric()
+                                                    ->step(0.01)
+                                                    ->placeholder('es. 45'),
+                                            ]),
+                                            Toggle::make('allows_custom_size')
+                                                ->label('Accetta misure non standard (Formato Personalizzato)')
+                                                ->live()
+                                                ->default(false),
+                                            Grid::make(2)
+                                                ->visible(fn (Get $get): bool => $get('allows_custom_size') === true)
+                                                ->schema([
+                                                    TextInput::make('min_custom_width')
+                                                        ->label('Base Minima (cm)')
+                                                        ->numeric()
+                                                        ->step(0.01),
+                                                    TextInput::make('max_custom_width')
+                                                        ->label('Base Massima (cm)')
+                                                        ->numeric()
+                                                        ->step(0.01),
+                                                    TextInput::make('min_custom_height')
+                                                        ->label('Altezza Minima (cm)')
+                                                        ->numeric()
+                                                        ->step(0.01),
+                                                    TextInput::make('max_custom_height')
+                                                        ->label('Altezza Massima (cm)')
+                                                        ->numeric()
+                                                        ->step(0.01),
+                                                ]),
+                                        ]),
                                 ]),
                             ]),
 
@@ -540,7 +580,7 @@ class ProductForm
     public static function getMaxWidthField(): TextInput
     {
         return TextInput::make('max_width')
-            ->label('Larghezza Massima Foglio (cm)')
+            ->label('Larghezza Massima Foglio (mm)')
             ->numeric()
             ->step(0.01)
             ->placeholder('es. 300 per un foglio 3×2 m')
@@ -551,7 +591,7 @@ class ProductForm
     public static function getMaxHeightField(): TextInput
     {
         return TextInput::make('max_height')
-            ->label('Altezza Massima Foglio (cm)')
+            ->label('Altezza Massima Foglio (mm)')
             ->numeric()
             ->step(0.01)
             ->placeholder('es. 200 per un foglio 3×2 m')

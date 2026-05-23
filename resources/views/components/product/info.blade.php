@@ -60,7 +60,7 @@
                 <div class="flex items-baseline gap-2">
                     @if ($product->pricing_model === 'area')
                         <span class="text-3xl font-black text-primary">€{{ number_format($currentBasePrice ?? $product->getStartingUnitPrice(), 2, ',', '.') }}</span>
-                        <span class="text-xl font-bold text-primary/70">/ mq</span>
+                        <span class="text-xl font-bold text-primary/70"> / mq</span>
                     @else
                         <span class="text-lg font-bold text-gray-600">A partire da</span>
                         <span class="text-3xl font-black text-primary">€{{ number_format($product->getStartingPrice(), 2, ',', '.') }}</span>

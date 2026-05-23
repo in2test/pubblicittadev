@@ -53,14 +53,26 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-BDV',
                 'description' => 'Biglietti da visita stampati su cartoncino premium. Disponibili in 350g e 400g con varie finiture di plastificazione. Angoli vivi o arrotondati, formato standard 8,5×5,5 cm. Stampa offset ad alta definizione per colori brillanti e testo nitido. Indispensabili per presentare la tua attività con stile.',
                 'price' => 0.08,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
+                'sheet_width' => 320.0,
+                'sheet_height' => 450.0,
+                'allows_custom_size' => true,
+                'min_custom_width' => 30.0,
+                'max_custom_width' => 100.0,
+                'min_custom_height' => 30.0,
+                'max_custom_height' => 100.0,
                 'category_id' => $piccolo->id,
                 'is_featured' => true,
                 'image_url' => 'https://images.unsplash.com/photo-1589149013831-c40ab39478f7?auto=format&fit=crop&w=600&q=80',
                 'variations' => [
+                    'Formato' => [
+                        '85x55 mm' => '85x55',
+                        '50x50 mm' => '50x50',
+                        'Formato personalizzato' => 'custom',
+                    ],
                     'Grammatura' => [
                         '350g Patinata' => '350g',
                         '400g Patinata' => '400g',
@@ -79,11 +91,23 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali', 'Fronte e retro differenti'],
                 'pricing_tiers' => [
-                    [50,   99,   0.15, null],
-                    [100,  249,  0.10, null],
-                    [250,  499,  0.07, null],
-                    [500,  999,  0.05, null],
-                    [1000, null, 0.04, null],
+                    [50,   99,   0.15, 'Stampa sul fronte'],
+                    [100,  249,  0.10, 'Stampa sul fronte'],
+                    [250,  499,  0.07, 'Stampa sul fronte'],
+                    [500,  999,  0.05, 'Stampa sul fronte'],
+                    [1000, null, 0.04, 'Stampa sul fronte'],
+
+                    [50,   99,   0.18, 'Fronte e retro uguali'],
+                    [100,  249,  0.12, 'Fronte e retro uguali'],
+                    [250,  499,  0.08, 'Fronte e retro uguali'],
+                    [500,  999,  0.06, 'Fronte e retro uguali'],
+                    [1000, null, 0.05, 'Fronte e retro uguali'],
+
+                    [50,   99,   0.20, 'Fronte e retro differenti'],
+                    [100,  249,  0.14, 'Fronte e retro differenti'],
+                    [250,  499,  0.10, 'Fronte e retro differenti'],
+                    [500,  999,  0.08, 'Fronte e retro differenti'],
+                    [1000, null, 0.06, 'Fronte e retro differenti'],
                 ],
             ],
 
@@ -93,7 +117,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-FLY',
                 'description' => 'Volantini e flyer promozionali su carta patinata o riciclata. Disponibili nei formati A6, A5 e A4 con grammature da 115g a 200g. Ideali per la distribuzione sul territorio, eventi e campagne pubblicitarie. Stampa a 4 colori fronte/retro con resa cromatica eccellente.',
                 'price' => 0.05,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -117,12 +141,19 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
                 'pricing_tiers' => [
-                    [100,  249,  0.09, null],
-                    [250,  499,  0.081, null],
-                    [500,  999,  0.0729, null],
-                    [1000, 2499, 0.0656, null],
-                    [2500, 4999, 0.059, null],
-                    [5000, null, 0.0531, null],
+                    [100,  249,  0.09, 'Stampa sul fronte'],
+                    [250,  499,  0.081, 'Stampa sul fronte'],
+                    [500,  999,  0.0729, 'Stampa sul fronte'],
+                    [1000, 2499, 0.0656, 'Stampa sul fronte'],
+                    [2500, 4999, 0.059, 'Stampa sul fronte'],
+                    [5000, null, 0.0531, 'Stampa sul fronte'],
+
+                    [100,  249,  0.11, 'Fronte e retro uguali'],
+                    [250,  499,  0.10, 'Fronte e retro uguali'],
+                    [500,  999,  0.09, 'Fronte e retro uguali'],
+                    [1000, 2499, 0.08, 'Fronte e retro uguali'],
+                    [2500, 4999, 0.07, 'Fronte e retro uguali'],
+                    [5000, null, 0.06, 'Fronte e retro uguali'],
                 ],
             ],
 
@@ -132,7 +163,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-PIE',
                 'description' => 'Pieghevoli personalizzati in vari formati di piega: bifold, trifold (a fisarmonica o a portafoglio) e gate-fold. Stampati su carta patinata da 135g o 170g con finiture opaca o lucida. Perfetti per brochure aziendali, menu da ristorante, programmi di eventi e presentazioni di prodotti.',
                 'price' => 0.12,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -155,10 +186,15 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Fronte e retro uguali', 'Fronte e retro differenti'],
                 'pricing_tiers' => [
-                    [100,  249,  0.18, null],
-                    [250,  499,  0.13, null],
-                    [500,  999,  0.10, null],
-                    [1000, null, 0.08, null],
+                    [100,  249,  0.18, 'Fronte e retro uguali'],
+                    [250,  499,  0.13, 'Fronte e retro uguali'],
+                    [500,  999,  0.10, 'Fronte e retro uguali'],
+                    [1000, null, 0.08, 'Fronte e retro uguali'],
+
+                    [100,  249,  0.22, 'Fronte e retro differenti'],
+                    [250,  499,  0.16, 'Fronte e retro differenti'],
+                    [500,  999,  0.13, 'Fronte e retro differenti'],
+                    [1000, null, 0.10, 'Fronte e retro differenti'],
                 ],
             ],
 
@@ -168,7 +204,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-LOC',
                 'description' => 'Locandine e poster su carta patinata lucida o opaca ad alta grammatura. Formati da A3 fino al 70×100 cm. Stampa ad altissima definizione per immagini fotografiche. Ideali per la comunicazione indoor di eventi, promozioni, concerti e mostre. Resa cromatica premium con colori saturi e nitidi.',
                 'price' => 0.35,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -193,10 +229,10 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte'],
                 'pricing_tiers' => [
-                    [10,  24,  0.70, null],
-                    [25,  49,  0.50, null],
-                    [50,  99,  0.38, null],
-                    [100, null, 0.30, null],
+                    [10,  24,  0.70, 'Stampa sul fronte'],
+                    [25,  49,  0.50, 'Stampa sul fronte'],
+                    [50,  99,  0.38, 'Stampa sul fronte'],
+                    [100, null, 0.30, 'Stampa sul fronte'],
                 ],
             ],
 
@@ -212,7 +248,7 @@ class StandardProductSeeder extends Seeder
                 'price' => 13.50,
                 'pricing_model' => 'area',
                 'min_area' => 1.0,
-                'max_width' => 300.0,
+                'max_width' => 3000.0,
                 'max_height' => null,
                 'category_id' => $grande->id,
                 'is_featured' => true,
@@ -229,7 +265,9 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 13.50, 'Stampa sul fronte'],
+                ],
             ],
 
             [
@@ -240,8 +278,8 @@ class StandardProductSeeder extends Seeder
                 'price' => 18.00,
                 'pricing_model' => 'area',
                 'min_area' => 0.5,
-                'max_width' => 200.0,
-                'max_height' => 300.0,
+                'max_width' => 2000.0,
+                'max_height' => 3000.0,
                 'category_id' => $grande->id,
                 'is_featured' => true,
                 'image_url' => 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=600&q=80',
@@ -253,7 +291,10 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 18.00, 'Stampa sul fronte'],
+                    [1, null, 26.00, 'Fronte e retro uguali'],
+                ],
             ],
 
             [
@@ -264,8 +305,8 @@ class StandardProductSeeder extends Seeder
                 'price' => 28.00,
                 'pricing_model' => 'area',
                 'min_area' => 0.5,
-                'max_width' => 150.0,
-                'max_height' => 300.0,
+                'max_width' => 1500.0,
+                'max_height' => 3000.0,
                 'category_id' => $grande->id,
                 'is_featured' => false,
                 'image_url' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80',
@@ -276,7 +317,9 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 28.00, 'Stampa sul fronte'],
+                ],
             ],
 
             [
@@ -287,7 +330,7 @@ class StandardProductSeeder extends Seeder
                 'price' => 11.00,
                 'pricing_model' => 'area',
                 'min_area' => 0.2,
-                'max_width' => 150.0,
+                'max_width' => 1500.0,
                 'max_height' => null,
                 'category_id' => $grande->id,
                 'is_featured' => false,
@@ -304,7 +347,9 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 11.00, 'Stampa sul fronte'],
+                ],
             ],
 
             [
@@ -315,8 +360,8 @@ class StandardProductSeeder extends Seeder
                 'price' => 22.00,
                 'pricing_model' => 'area',
                 'min_area' => 0.04,
-                'max_width' => 100.0,
-                'max_height' => 150.0,
+                'max_width' => 1000.0,
+                'max_height' => 1500.0,
                 'category_id' => $grande->id,
                 'is_featured' => false,
                 'image_url' => 'https://images.unsplash.com/photo-1578301978018-3005759f48f7?auto=format&fit=crop&w=600&q=80',
@@ -327,7 +372,13 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 22.00, 'Stampa sul fronte'],
+                ],
+                'sku_overrides' => [
+                    '2cm' => 22.00,
+                    '4cm' => 30.00,
+                ],
             ],
 
             // ─────────────────────────────────────────────
@@ -340,7 +391,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-RUP',
                 'description' => 'Espositore roll-up avvolgibile con struttura in alluminio anodizzato e telo stampato in alta definizione su PET da 190g. Disponibile nei formati 85×200 cm e 100×200 cm. Include sacca da trasporto. Perfetto per fiere, convegni, showroom e punti vendita. Montaggio in pochi secondi senza attrezzi.',
                 'price' => 49.00,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -360,9 +411,9 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte'],
                 'pricing_tiers' => [
-                    [2,  4,  45.00, null],
-                    [5,  9,  42.00, null],
-                    [10, null, 39.00, null],
+                    [2,  4,  45.00, 'Stampa sul fronte'],
+                    [5,  9,  42.00, 'Stampa sul fronte'],
+                    [10, null, 39.00, 'Stampa sul fronte'],
                 ],
             ],
 
@@ -372,7 +423,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-DSP',
                 'description' => 'Porta locandine da tavolo in PVC rigido trasparente a forma di L. Disponibile nei formati A6, A5 e A4. Incluso insert in carta stampata fronte o fronte/retro. Ideale per ristoranti, hotel, reception aziendali, farmacie e negozi. Allestimento rapido, aspetto professionale.',
                 'price' => 3.50,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -388,9 +439,13 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro differenti'],
                 'pricing_tiers' => [
-                    [10, 24,  3.00, null],
-                    [25, 49,  2.60, null],
-                    [50, null, 2.20, null],
+                    [10, 24,  3.00, 'Stampa sul fronte'],
+                    [25, 49,  2.60, 'Stampa sul fronte'],
+                    [50, null, 2.20, 'Stampa sul fronte'],
+
+                    [10, 24,  3.50, 'Fronte e retro differenti'],
+                    [25, 49,  3.00, 'Fronte e retro differenti'],
+                    [50, null, 2.60, 'Fronte e retro differenti'],
                 ],
             ],
 
@@ -402,8 +457,8 @@ class StandardProductSeeder extends Seeder
                 'price' => 25.00,
                 'pricing_model' => 'area',
                 'min_area' => 0.5,
-                'max_width' => 100.0,
-                'max_height' => 200.0,
+                'max_width' => 1000.0,
+                'max_height' => 2000.0,
                 'category_id' => $espositori->id,
                 'is_featured' => false,
                 'image_url' => 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80',
@@ -414,7 +469,10 @@ class StandardProductSeeder extends Seeder
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
-                'pricing_tiers' => [],
+                'pricing_tiers' => [
+                    [1, null, 25.00, 'Stampa sul fronte'],
+                    [1, null, 35.00, 'Fronte e retro uguali'],
+                ],
             ],
 
             // ─────────────────────────────────────────────
@@ -427,7 +485,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-SAC',
                 'description' => 'Sacchetti shopper in carta Kraft naturale con manici in cotone twill. Disponibili in vari formati con grammatura da 90g a 120g. Stampa serigrafica o digitale in 1-4 colori su uno o entrambi i lati. Ideali per negozi, boutique, mercati e confezionamento regalo. Soluzione eco-friendly e personalizzabile.',
                 'price' => 1.20,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -448,12 +506,19 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali'],
                 'pricing_tiers' => [
-                    [100, 249,  0.95, null],
-                    [250, 499,  0.855, null],
-                    [500, 999,  0.7695, null],
-                    [1000, 2499, 0.6925, null],
-                    [2500, 4999, 0.6233, null],
-                    [5000, null, 0.561, null],
+                    [100, 249,  0.95, 'Stampa sul fronte'],
+                    [250, 499,  0.855, 'Stampa sul fronte'],
+                    [500, 999,  0.7695, 'Stampa sul fronte'],
+                    [1000, 2499, 0.6925, 'Stampa sul fronte'],
+                    [2500, 4999, 0.6233, 'Stampa sul fronte'],
+                    [5000, null, 0.561, 'Stampa sul fronte'],
+
+                    [100, 249,  1.10, 'Fronte e retro uguali'],
+                    [250, 499,  0.95, 'Fronte e retro uguali'],
+                    [500, 999,  0.86, 'Fronte e retro uguali'],
+                    [1000, 2499, 0.77, 'Fronte e retro uguali'],
+                    [2500, 4999, 0.69, 'Fronte e retro uguali'],
+                    [5000, null, 0.62, 'Fronte e retro uguali'],
                 ],
             ],
 
@@ -463,7 +528,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-BRA',
                 'description' => 'Braccialetti in Tyvek monouso per il controllo degli accessi a eventi, concerti, festival, parchi e fiere. Resistenti all\'acqua e alla lacerazione. Stampa a 4 colori su fondo bianco. Chiusura con clip adesiva antimanomissione. Numero sequenziale disponibile su richiesta.',
                 'price' => 0.18,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -484,10 +549,10 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte'],
                 'pricing_tiers' => [
-                    [100,  249,  0.16, null],
-                    [250,  499,  0.13, null],
-                    [500,  999,  0.10, null],
-                    [1000, null, 0.07, null],
+                    [100,  249,  0.16, 'Stampa sul fronte'],
+                    [250,  499,  0.13, 'Stampa sul fronte'],
+                    [500,  999,  0.10, 'Stampa sul fronte'],
+                    [1000, null, 0.07, 'Stampa sul fronte'],
                 ],
             ],
 
@@ -497,7 +562,7 @@ class StandardProductSeeder extends Seeder
                 'sku' => 'STD-TAZ',
                 'description' => 'Tazze in ceramica bianca da 300ml con stampa sublimatica ad alta definizione. Resistenti alla lavastoviglie. Il colore viene direttamente integrato nella ceramica, risultando permanente e brillante. Ideali come gadget aziendali, regali personalizzati e premi per eventi.',
                 'price' => 8.50,
-                'pricing_model' => 'unit',
+                'pricing_model' => 'quantity',
                 'min_area' => null,
                 'max_width' => null,
                 'max_height' => null,
@@ -519,10 +584,10 @@ class StandardProductSeeder extends Seeder
                 ],
                 'print_sides' => ['Stampa sul fronte'],
                 'pricing_tiers' => [
-                    [10,  24,  7.50, null],
-                    [25,  49,  6.80, null],
-                    [50,  99,  6.00, null],
-                    [100, null, 5.20, null],
+                    [10,  24,  7.50, 'Stampa sul fronte'],
+                    [25,  49,  6.80, 'Stampa sul fronte'],
+                    [50,  99,  6.00, 'Stampa sul fronte'],
+                    [100, null, 5.20, 'Stampa sul fronte'],
                 ],
             ],
         ];
@@ -543,6 +608,13 @@ class StandardProductSeeder extends Seeder
                     'min_area' => $pData['min_area'],
                     'max_width' => $pData['max_width'] ?? null,
                     'max_height' => $pData['max_height'] ?? null,
+                    'sheet_width' => $pData['sheet_width'] ?? null,
+                    'sheet_height' => $pData['sheet_height'] ?? null,
+                    'allows_custom_size' => $pData['allows_custom_size'] ?? false,
+                    'min_custom_width' => $pData['min_custom_width'] ?? null,
+                    'max_custom_width' => $pData['max_custom_width'] ?? null,
+                    'min_custom_height' => $pData['min_custom_height'] ?? null,
+                    'max_custom_height' => $pData['max_custom_height'] ?? null,
                     'category_id' => $pData['category_id'],
                     'type' => Product::TYPE_STANDARD,
                     'is_active' => true,
@@ -601,11 +673,21 @@ class StandardProductSeeder extends Seeder
             $skuIndex = 1;
 
             foreach ($combinations as $combo) {
+                $overridePrice = null;
+                if (isset($pData['sku_overrides'])) {
+                    foreach ($combo as $option) {
+                        if (array_key_exists($option->value, $pData['sku_overrides'])) {
+                            $overridePrice = $pData['sku_overrides'][$option->value];
+                        }
+                    }
+                }
+
                 $productSku = ProductSku::create([
                     'product_id' => $product->id,
                     'sku' => $pData['sku'].'-'.str_pad((string) $skuIndex++, 3, '0', STR_PAD_LEFT),
                     'quantity' => 9999,
                     'is_available' => true,
+                    'override_price' => $overridePrice,
                 ]);
 
                 foreach ($combo as $option) {

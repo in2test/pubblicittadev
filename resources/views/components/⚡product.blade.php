@@ -184,21 +184,24 @@ new class extends Component {
     {
         $product = $this->product();
 
-        // For area pricing, only the single active SKU's quantity counts.
-        // Any stale quantities from previously-shown SKUs (other thicknesses) must be ignored.
-        if ($product->pricing_model === 'area') {
-            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
-
-            if (! $activeSku) {
-                return 0;
-            }
-
-            return (int) ($this->quantities[$activeSku->id] ?? 0);
+        if ($product->type === 'newwave') {
+            return array_sum(array_map(intval(...), $this->quantities));
         }
 
-        // Livewire wire:model delivers values as strings from the DOM input;
-        // cast to int before summing to avoid PHP 8 "Addition is not supported on type string".
-        return array_sum(array_map(intval(...), $this->quantities));
+        // For standard products (area or quantity/unit pricing), only the active SKU matters.
+        // Stale quantities from previously-shown SKUs must be ignored.
+        $activeSku = null;
+        if ($product->variationTypes->isNotEmpty()) {
+            $activeSku = $product->getActiveSku($this->selectedOptions);
+        } else {
+            $activeSku = $product->skus->first();
+        }
+
+        if (! $activeSku) {
+            return 0;
+        }
+
+        return (int) ($this->quantities[$activeSku->id] ?? 0);
     }
 
     #[Computed]
@@ -235,6 +238,72 @@ new class extends Component {
         return $product->calculateTotalBilledArea($qty, $this->width, $this->height);
     }
 
+    #[Computed]
+    public function itemsPerSheet(): int
+    {
+        $product = $this->product();
+        if ($product->pricing_model !== 'quantity' || !$product->allows_custom_size) {
+            return 1;
+        }
+
+        $w = $this->width;
+        $h = $this->height;
+
+        $isCustom = false;
+        foreach ($this->selectedOptions as $typeId => $optionId) {
+            $type = $product->variationTypes->firstWhere('id', $typeId);
+            if ($type) {
+                $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
+                if ($opt && (stripos($opt->name, 'personalizzat') !== false || stripos($opt->name, 'custom') !== false)) {
+                    $isCustom = true;
+                    break;
+                }
+            }
+        }
+
+        if ($isCustom) {
+            // For custom sizes, if user hasn't typed width/height, fallback to minimums
+            $w = $w ?: (float) ($product->min_custom_width ?: 10);
+            $h = $h ?: (float) ($product->min_custom_height ?: 10);
+        } else {
+            // For standard sizes, try to parse from string
+            $parsedW = 0;
+            $parsedH = 0;
+            foreach ($this->selectedOptions as $typeId => $optionId) {
+                $type = $product->variationTypes->firstWhere('id', $typeId);
+                if ($type) {
+                    $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
+                    if ($opt) {
+                        if (preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', $opt->name, $matches)) {
+                            $parsedW = (float) str_replace(',', '.', $matches[1]);
+                            $parsedH = (float) str_replace(',', '.', $matches[2]);
+                            
+                            if (str_contains(strtolower($opt->name), 'cm')) {
+                                $parsedW *= 10;
+                                $parsedH *= 10;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if ($parsedW > 0 && $parsedH > 0) {
+                $w = $parsedW;
+                $h = $parsedH;
+            } else {
+                // If we cannot parse the size, we can't calculate items per sheet. Default to 1.
+                return 1;
+            }
+        }
+
+        if ($w > 0 && $h > 0) {
+            return max(1, $product->calculateItemsPerSheet((float)$w, (float)$h));
+        }
+
+        return 1;
+    }
+
     public function addToCart(CartManager $cart)
     {
         $product = $this->product();
@@ -269,6 +338,17 @@ new class extends Component {
         $quantitiesToStore = $this->quantities;
         if ($product->pricing_model === 'area') {
             $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
+
+            $quantitiesToStore = $activeSku
+                ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
+                : [];
+        } else if ($product->type !== 'newwave') {
+            $activeSku = null;
+            if ($product->variationTypes->isNotEmpty()) {
+                $activeSku = $product->getActiveSku($this->selectedOptions);
+            } else {
+                $activeSku = $product->skus->first();
+            }
 
             $quantitiesToStore = $activeSku
                 ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0]
@@ -315,6 +395,46 @@ new class extends Component {
         }
 
         return redirect()->route('cart');
+    }
+
+    public function updatedQuantities($value, $key)
+    {
+        $this->enforceQuantityStep();
+    }
+
+    public function updatedWidth()
+    {
+        $this->enforceQuantityStep();
+    }
+
+    public function updatedHeight()
+    {
+        $this->enforceQuantityStep();
+    }
+
+    public function updatedSelectedOptions()
+    {
+        $this->enforceQuantityStep();
+    }
+
+    private function enforceQuantityStep()
+    {
+        $product = $this->product();
+        if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
+            $step = $this->itemsPerSheet;
+            if ($step > 1) {
+                foreach ($this->quantities as $key => $value) {
+                    $val = (int) $value;
+                    if ($val > 0 && $val % $step !== 0) {
+                        $newVal = round($val / $step) * $step;
+                        if ($newVal < $step) {
+                            $newVal = $step;
+                        }
+                        $this->quantities[$key] = $newVal;
+                    }
+                }
+            }
+        }
     }
 };
 ?>

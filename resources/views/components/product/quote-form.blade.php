@@ -65,6 +65,23 @@
         // Simple product with no variations — always show SKUs
         $matchingSkus = $product->skus;
     }
+
+    $isCustomFormatSelected = false;
+    $selectedFormatName = '';
+    if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
+        foreach ($selectorTypes as $type) {
+            $selectedId = $selectedOptions[$type->id] ?? null;
+            if ($selectedId) {
+                $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $selectedId);
+                if ($opt) {
+                    $selectedFormatName = $opt->name;
+                    if (stripos($opt->name, 'personalizzat') !== false || stripos($opt->name, 'custom') !== false) {
+                        $isCustomFormatSelected = true;
+                    }
+                }
+            }
+        }
+    }
 @endphp
 
 @if (session('quoteSuccess'))
@@ -123,27 +140,33 @@
         </div>
     @endforeach
 
-    {{-- Custom Dimensions for Area-based Pricing --}}
-    @if ($product->pricing_model === 'area')
+    {{-- Custom Dimensions for Area-based or Quantity-based Pricing --}}
+    @if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustomFormatSelected))
         <div class="space-y-4 pt-4 border-t border-outline-variant/10">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                Dimensioni Personalizzate (in cm)
+                Dimensioni Personalizzate (in mm)
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2">
-                    <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (cm)</label>
+                    <label for="width" class="block text-xs font-bold text-on-surface uppercase">Larghezza (mm)</label>
                     <div class="relative">
-                        <input wire:model.live.debounce.1000ms="width" type="number" id="width" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.1000ms="width" type="number" id="width" 
+                            min="{{ $product->pricing_model === 'quantity' && $product->min_custom_width ? (float) $product->min_custom_width : 10 }}" 
+                            max="{{ $product->pricing_model === 'quantity' && $product->max_custom_width ? (float) $product->max_custom_width : '' }}" 
+                            step="1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (cm)</label>
+                    <label for="height" class="block text-xs font-bold text-on-surface uppercase">Altezza (mm)</label>
                     <div class="relative">
-                        <input wire:model.live.debounce.1000ms="height" type="number" id="height" min="1" step="0.1" placeholder="es. 100"
+                        <input wire:model.live.debounce.1000ms="height" type="number" id="height" 
+                            min="{{ $product->pricing_model === 'quantity' && $product->min_custom_height ? (float) $product->min_custom_height : 10 }}" 
+                            max="{{ $product->pricing_model === 'quantity' && $product->max_custom_height ? (float) $product->max_custom_height : '' }}" 
+                            step="1" placeholder="es. 100"
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">cm</span>
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
                 </div>
             </div>
@@ -155,7 +178,7 @@
             @if ($width > 0 && $height > 0)
                 @php
                     $qty = $this->totalQuantity() ?: 1;
-                    $actualArea = ($width * $height) / 10000.0 * $qty;
+                    $actualArea = (((float)$width * (float)$height) / 1000000.0) * $qty;
                     $minArea = (float) $product->min_area;
                     $billedArea = $minArea > 0 ? ceil($actualArea / $minArea) * $minArea : $actualArea;
                     $sheetsInfo = $product->getSheetsNeeded((float) $width, (float) $height);
@@ -220,16 +243,31 @@
             @php
                 $activeSku = $displaySkus->first();
                 $currentQty = $activeSku ? (int) ($quantities[$activeSku->id] ?? 0) : 0;
+                
+                // Determine step and quantity logic based on custom sizes
+                $qtyStep = 1;
+                if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
+                    $qtyStep = $this->itemsPerSheet;
+                }
             @endphp
             @if ($activeSku && ($product->pricing_model !== 'area' || ($width > 0 && $height > 0)))
                 <div class="space-y-4 pt-4 border-t border-outline-variant/10">
                     <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                        Quantità Consigliate
+                        Quantità Consigliate {{ $qtyStep > 1 ? '(Multipli di ' . $qtyStep . ' pezzi per foglio)' : '' }}
                     </label>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        @foreach ($product->pricingTiers->sortBy('min_quantity') as $tier)
+                        @php
+                            $uniqueTiers = $product->pricingTiers->unique('min_quantity')->sortBy('min_quantity');
+                        @endphp
+                        @foreach ($uniqueTiers as $tier)
                             @php
                                 $tierQty = (int) $tier->min_quantity;
+                                if ($qtyStep > 1) {
+                                    $tierQty = (int) round($tierQty / $qtyStep) * $qtyStep;
+                                    if ($tierQty < $qtyStep) {
+                                        $tierQty = $qtyStep;
+                                    }
+                                }
                                 $isTierSelected = $currentQty === $tierQty;
                                 
                                 // Calculate accurate total price for this exact configuration!
@@ -323,23 +361,34 @@
 
                         {{-- Quantity stepper --}}
                         <div class="flex items-center gap-1 shrink-0">
+                            @php
+                                $minQtyAllowedWithStep = $minQtyAllowed;
+                                if (isset($qtyStep) && $qtyStep > 1) {
+                                    $minQtyAllowedWithStep = (int) round($minQtyAllowed / $qtyStep) * $qtyStep;
+                                    if ($minQtyAllowedWithStep < $qtyStep) {
+                                        $minQtyAllowedWithStep = $qtyStep;
+                                    }
+                                }
+                            @endphp
                             <button type="button"
-                                wire:click="$set('quantities.{{ $sku->id }}', Math.max({{ $isNewwave ? 0 : $minQtyAllowed }}, (quantities['{{ $sku->id }}'] ?? 0) - 1))"
                                 onclick="(function(btn){
-                                    var inp = btn.nextElementSibling.nextElementSibling;
-                                    var val = Math.max({{ $isNewwave ? 0 : $minQtyAllowed }}, parseInt(inp.value || 0) - 1);
+                                    var inp = btn.nextElementSibling;
+                                    var current = parseInt(inp.value || 0);
+                                    var val = Math.max({{ $isNewwave ? 0 : $minQtyAllowedWithStep }}, current - {{ isset($qtyStep) ? $qtyStep : 1 }});
                                     inp.value = val;
                                     inp.dispatchEvent(new Event('input'));
                                 })(this)"
                                 class="w-8 h-10 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-base transition-colors select-none"
                             >−</button>
-                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="{{ $isNewwave ? 0 : $minQtyAllowed }}"
+                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="{{ $isNewwave ? 0 : $minQtyAllowedWithStep }}" step="{{ isset($qtyStep) ? $qtyStep : 1 }}"
                                 @if ($isNewwave && $sku->quantity <= 0) disabled @endif
                                 class="w-16 h-10 border border-gray-600/20 bg-gray-50 px-2 text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                             <button type="button"
                                 onclick="(function(btn){
                                     var inp = btn.previousElementSibling;
-                                    var val = parseInt(inp.value || 0) + 1;
+                                    var current = parseInt(inp.value || 0);
+                                    var minAllowed = {{ $isNewwave ? 0 : $minQtyAllowedWithStep }};
+                                    var val = current < minAllowed ? minAllowed : current + {{ isset($qtyStep) ? $qtyStep : 1 }};
                                     inp.value = val;
                                     inp.dispatchEvent(new Event('input'));
                                 })(this)"

@@ -130,6 +130,13 @@ use Throwable;
     'min_area',
     'max_width',
     'max_height',
+    'sheet_width',
+    'sheet_height',
+    'allows_custom_size',
+    'min_custom_width',
+    'max_custom_width',
+    'min_custom_height',
+    'max_custom_height',
 ])]
 class Product extends Model implements HasMedia
 {
@@ -154,6 +161,13 @@ class Product extends Model implements HasMedia
         'override_description' => 'boolean',
         'remote_images' => 'array',
         'min_area' => 'float',
+        'sheet_width' => 'float',
+        'sheet_height' => 'float',
+        'allows_custom_size' => 'boolean',
+        'min_custom_width' => 'float',
+        'max_custom_width' => 'float',
+        'min_custom_height' => 'float',
+        'max_custom_height' => 'float',
     ];
 
     /**
@@ -539,6 +553,26 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Calculate how many pieces of a given size fit onto a single printing sheet.
+     * Uses the product's configured sheet_width and sheet_height.
+     */
+    public function calculateItemsPerSheet(float $itemWidth, float $itemHeight): int
+    {
+        if (! $this->sheet_width || ! $this->sheet_height || $itemWidth <= 0 || $itemHeight <= 0) {
+            return 1;
+        }
+
+        $w = (float) $this->sheet_width;
+        $h = (float) $this->sheet_height;
+        $gap = 6.0;
+
+        $fitNormal = floor(($w + $gap) / ($itemWidth + $gap)) * floor(($h + $gap) / ($itemHeight + $gap));
+        $fitRotated = floor(($w + $gap) / ($itemHeight + $gap)) * floor(($h + $gap) / ($itemWidth + $gap));
+
+        return (int) max($fitNormal, $fitRotated);
+    }
+
+    /**
      * Total area billed for the given quantity and dimensions.
      */
     public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
@@ -547,7 +581,7 @@ class Product extends Model implements HasMedia
             return 0.0;
         }
 
-        $actualArea = ($width * $height) / 10000.0 * $quantity;
+        $actualArea = ($width * $height) / 1000000.0 * $quantity;
         $minArea = $this->min_area ? (float) $this->min_area : 0.0;
 
         return $minArea > 0.0
@@ -698,17 +732,78 @@ class Product extends Model implements HasMedia
      */
     public function getStartingPrice(): float
     {
+        return $this->getAbsoluteMinimumPrice();
+    }
+
+    /**
+     * Get the absolute minimum price a customer can pay for an order.
+     */
+    public function getAbsoluteMinimumPrice(): float
+    {
         $minQty = $this->getMinimumOrderQuantity();
 
         // For area pricing, there might be a min_area constraint.
-        // We'll calculate a 1x1 size if not specified, which will round up to min_area
         if ($this->pricing_model === 'area') {
             $billedArea = $this->calculateTotalBilledArea($minQty, 1.0, 1.0);
 
-            return $this->getStartingUnitPrice() * $billedArea;
+            return $this->getPriceForQuantity($minQty) * $billedArea;
         }
 
-        return $this->getStartingUnitPrice() * $minQty;
+        // For quantity pricing, check if it allows custom size, which affects step.
+        if ($this->pricing_model === 'quantity' && $this->allows_custom_size) {
+            $formatType = $this->variationTypes->firstWhere('name', 'Formato');
+
+            $minPriceFound = null;
+
+            if ($formatType) {
+                // Find options for this product
+                $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+                if ($pvt) {
+                    $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
+                        $query->where('product_variation_type_id', $pvt->id);
+                    })->get();
+
+                    foreach ($options as $format) {
+                        $w = null;
+                        $h = null;
+                        $name = strtolower($format->name);
+
+                        if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
+                            $w = $this->min_custom_width ?? 10.0;
+                            $h = $this->min_custom_height ?? 10.0;
+                        } elseif (preg_match('/(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)/i', $name, $matches)) {
+                            $w = (float) str_replace(',', '.', $matches[1]);
+                            $h = (float) str_replace(',', '.', $matches[2]);
+                            if (str_contains(strtolower($name), 'cm')) {
+                                $w *= 10;
+                                $h *= 10;
+                            }
+                        }
+
+                        if ($w && $h) {
+                            $itemsPerSheet = $this->calculateItemsPerSheet($w, $h);
+                            if ($itemsPerSheet > 0) {
+                                $qty = (int) round($minQty / $itemsPerSheet) * $itemsPerSheet;
+                                if ($qty < $itemsPerSheet) {
+                                    $qty = $itemsPerSheet;
+                                }
+
+                                $price = $this->calculateFinalUnitPrice($qty) * $qty;
+                                if ($minPriceFound === null || $price < $minPriceFound) {
+                                    $minPriceFound = $price;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($minPriceFound !== null) {
+                return $minPriceFound;
+            }
+        }
+
+        return $this->getPriceForQuantity($minQty) * $minQty;
     }
 
     /**

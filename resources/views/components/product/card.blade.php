@@ -54,7 +54,7 @@
                         <div class="flex items-baseline gap-1">
                             <span class="font-mono text-sm font-bold text-primary">
                                 @if ($product->pricing_model === 'area')
-                                    €{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}<span class="text-[10px] font-bold">/mq</span>
+                                    €{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}<span class="text-[10px] font-bold"> / mq</span>
                                 @else
                                     €{{ number_format($startingPrice, 2, ',', '.') }}
                                 @endif

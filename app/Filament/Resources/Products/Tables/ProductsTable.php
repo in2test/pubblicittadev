@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
@@ -140,6 +141,18 @@ class ProductsTable
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
                         ->modalButton('Disattiva'),
+                    BulkAction::make('assignCategory')
+                        ->label('Assegna Categoria')
+                        ->icon('heroicon-o-tag')
+                        ->color('info')
+                        ->form([
+                            ProductForm::getCategoryField(),
+                        ])
+                        ->action(fn (Collection $records, array $data) => $records->each(fn (Product $record) => $record->update(['category_id' => $data['category_id']])))
+                        ->deselectRecordsAfterCompletion()
+                        ->modalHeading('Assegna categoria')
+                        ->modalDescription('Seleziona la categoria da assegnare ai prodotti selezionati.')
+                        ->modalSubmitActionLabel('Assegna Categoria'),
 
                     DeleteBulkAction::make(),
                 ]),
