@@ -41,16 +41,6 @@ new class extends Component {
         
         $this->jobId = $jobId;
 
-        // Auto-select first available option for each variation type if not provided for non-newwave products
-        if ($this->product->type !== 'newwave') {
-            foreach ($this->product->variationTypes as $type) {
-                $productOptions = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter();
-                if (!isset($this->selectedOptions[$type->id]) && $productOptions->isNotEmpty()) {
-                    $this->selectedOptions[$type->id] = $productOptions->first()->id;
-                }
-            }
-        }
-
         // Pre-fill quantities if we are editing a specific item from the cart
         if ($this->jobId) {
             $cart = app(\App\Services\CartManager::class);
@@ -77,6 +67,31 @@ new class extends Component {
         } else {
             if ($this->product->printSides->isNotEmpty()) {
                 $this->selectedPrintSide = $this->product->printSides->sortBy('sort_order')->first()->id;
+            }
+        }
+
+        // Auto-select lowest price option for each variation type if not provided for non-newwave products
+        if ($this->product->type !== 'newwave') {
+            $lowestPriceSku = $this->product->skus->sortBy(function($sku) {
+                return $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide);
+            })->first();
+
+            foreach ($this->product->variationTypes as $type) {
+                if (!isset($this->selectedOptions[$type->id])) {
+                    if ($lowestPriceSku) {
+                        $optionForType = $lowestPriceSku->options->first(function($opt) use ($type) {
+                            return $type->pivot->options->contains('variation_option_id', $opt->id); 
+                        });
+                        if ($optionForType) {
+                            $this->selectedOptions[$type->id] = $optionForType->id;
+                            continue;
+                        }
+                    }
+                    $productOptions = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter();
+                    if ($productOptions->isNotEmpty()) {
+                        $this->selectedOptions[$type->id] = $productOptions->first()->id;
+                    }
+                }
             }
         }
 
@@ -149,11 +164,13 @@ new class extends Component {
         $product = $this->product();
         $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
         
+        $base = $product->getPriceForQuantity(1, $this->selectedPrintSide);
+        
         if ($activeSku && $activeSku->override_price !== null) {
-            return (float) $activeSku->override_price;
+            $base = (float) $activeSku->override_price;
         }
 
-        return (float) $product->price;
+        return $base;
     }
 
     #[Computed]

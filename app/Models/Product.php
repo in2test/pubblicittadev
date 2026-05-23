@@ -703,10 +703,12 @@ class Product extends Model implements HasMedia
         // For area pricing, there might be a min_area constraint.
         // We'll calculate a 1x1 size if not specified, which will round up to min_area
         if ($this->pricing_model === 'area') {
-            return $this->calculateTotalPrice($minQty, [], [], null, 1.0, 1.0);
+            $billedArea = $this->calculateTotalBilledArea($minQty, 1.0, 1.0);
+
+            return $this->getStartingUnitPrice() * $billedArea;
         }
 
-        return $this->calculateTotalPrice($minQty);
+        return $this->getStartingUnitPrice() * $minQty;
     }
 
     /**
@@ -715,14 +717,30 @@ class Product extends Model implements HasMedia
      */
     public function getStartingUnitPrice(): float
     {
+        $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
+
         if ($this->pricing_model === 'quantity' || $this->pricing_model === 'area') {
-            $minPrice = $this->pricingTiers()->min('price_per_unit');
-            if ($minPrice !== null) {
-                return (float) $minPrice;
+            $minTierPrice = $this->pricingTiers()->min('price_per_unit');
+            if ($minTierPrice !== null) {
+                $baseFallback = (float) $minTierPrice;
             }
         }
 
-        return $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
+        // Check if SKUs override this base price
+        $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
+
+        if ($skuPrices->isNotEmpty()) {
+            // The starting price is the lowest among SKUs that override it,
+            // AND potentially the baseFallback if any SKU DOES NOT override it.
+            $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
+            if ($hasSkuWithoutOverride) {
+                return min($baseFallback, $skuPrices->min());
+            }
+
+            return $skuPrices->min();
+        }
+
+        return $baseFallback;
     }
 
     /**
