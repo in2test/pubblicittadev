@@ -574,6 +574,11 @@ class Product extends Model implements HasMedia
 
     /**
      * Total area billed for the given quantity and dimensions.
+     *
+     * @param  int  $quantity  The number of items
+     * @param  float  $width  The physical width of the item in CENTIMETERS (cm)
+     * @param  float  $height  The physical height of the item in CENTIMETERS (cm)
+     * @return float The total calculated area in square meters (sqm), rounded up to the minimum area if applicable.
      */
     public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
     {
@@ -581,7 +586,9 @@ class Product extends Model implements HasMedia
             return 0.0;
         }
 
-        $actualArea = ($width * $height) / 1000000.0 * $quantity;
+        // Inputs are in CM. (width * height) gives sq cm.
+        // To get sq meters, divide by 10,000.
+        $actualArea = ($width * $height) / 10000.0 * $quantity;
         $minArea = $this->min_area ? (float) $this->min_area : 0.0;
 
         return $minArea > 0.0
@@ -623,8 +630,8 @@ class Product extends Model implements HasMedia
      * @param  array<int, int>  $skuQuantities  Map of SKU IDs to quantities (e.g., [12 => 5, 13 => 10]) for variant-level breakdowns.
      * @param  array<int>  $placementIds  List of print placement IDs (Front, Back, Sleeve) that incur extra costs.
      * @param  int|null  $printSideId  (Optional) Used to fetch different tier pricing based on the side configuration.
-     * @param  float|null  $width  The physical width in CM (required if pricing_model is 'area').
-     * @param  float|null  $height  The physical height in CM (required if pricing_model is 'area').
+     * @param  float|null  $width  The physical width in CENTIMETERS (required if pricing_model is 'area').
+     * @param  float|null  $height  The physical height in CENTIMETERS (required if pricing_model is 'area').
      * @param  array<int>  $selectedOptions  List of VariationOption IDs used to determine the active SKU if variants apply.
      * @return float The final, formatted total price for this specific line item/job.
      */
@@ -757,6 +764,7 @@ class Product extends Model implements HasMedia
 
             if ($formatType) {
                 // Find options for this product
+                /** @var ProductVariationType|null $pvt */
                 $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
                 if ($pvt) {
                     $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
@@ -766,7 +774,7 @@ class Product extends Model implements HasMedia
                     foreach ($options as $format) {
                         $w = null;
                         $h = null;
-                        $name = strtolower($format->name);
+                        $name = strtolower((string) $format->name);
 
                         if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
                             $w = $this->min_custom_width ?? 10.0;

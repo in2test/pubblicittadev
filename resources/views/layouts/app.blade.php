@@ -24,12 +24,7 @@
                         <span>I Miei Ordini</span>
                     </a>
 
-                    <a href="{{ route('dashboard.quotes') }}" 
-                       class="flex items-center gap-3 px-4 py-3 text-xs font-black uppercase tracking-wider border-2 transition-colors {{ request()->routeIs('dashboard.quotes*') ? 'bg-secondary border-secondary text-gray-50' : 'bg-transparent border-transparent text-gray-900 hover:bg-gray-100 hover:text-gray-950' }}"
-                       wire:navigate>
-                        <span class="material-symbols-outlined text-lg">request_quote</span>
-                        <span>I Miei Preventivi</span>
-                    </a>
+
 
                     <a href="{{ route('dashboard.addresses') }}" 
                        class="flex items-center gap-3 px-4 py-3 text-xs font-black uppercase tracking-wider border-2 transition-colors {{ request()->routeIs('dashboard.addresses*') ? 'bg-secondary border-secondary text-gray-50' : 'bg-transparent border-transparent text-gray-900 hover:bg-gray-100 hover:text-gray-950' }}"

@@ -14,6 +14,20 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('type')->default('standard');
+
+            $table->string('pricing_model')->default('fixed');
+            $table->decimal('min_area', 8, 4)->nullable();
+            $table->decimal('max_width', 8, 2)->nullable();
+            $table->decimal('max_height', 8, 2)->nullable();
+
+            $table->decimal('sheet_width', 8, 2)->nullable();
+            $table->decimal('sheet_height', 8, 2)->nullable();
+            $table->boolean('allows_custom_size')->default(false);
+            $table->decimal('min_custom_width', 8, 2)->nullable();
+            $table->decimal('max_custom_width', 8, 2)->nullable();
+            $table->decimal('min_custom_height', 8, 2)->nullable();
+            $table->decimal('max_custom_height', 8, 2)->nullable();
+
             $table->string('sync_status')->default('pending');
             $table->json('remote_images')->nullable();
             $table->unsignedTinyInteger('sync_progress')->default(0);

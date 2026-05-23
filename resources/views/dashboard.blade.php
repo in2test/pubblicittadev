@@ -20,19 +20,7 @@
                 </div>
             </a>
 
-            {{-- Quotes Card --}}
-            <a href="{{ route('dashboard.quotes') }}" 
-               class="group relative overflow-hidden border-2 border-gray-950 p-6 bg-gray-50 hover:bg-gray-100 transition-colors shadow-md shadow-gray-950/5">
-                <div class="flex items-center gap-4">
-                    <div class="border-2 border-gray-950 bg-secondary text-gray-50 p-3 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-2xl font-bold">request_quote</span>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-gray-950">I Miei Preventivi</h3>
-                        <p class="text-xs text-gray-500 mt-1 font-medium">Visualizza le tue richieste di preventivo.</p>
-                    </div>
-                </div>
-            </a>
+
 
             {{-- Addresses Card --}}
             <a href="{{ route('dashboard.addresses') }}" 

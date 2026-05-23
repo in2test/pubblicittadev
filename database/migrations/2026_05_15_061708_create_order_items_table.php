@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2);
             $table->json('customization_json')->nullable();
             $table->string('design_file_path')->nullable();
+            $table->string('work_status')->default('pending');
             $table->timestamps();
         });
     }

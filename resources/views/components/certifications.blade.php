@@ -5,7 +5,7 @@
                 oppure devi ancora partire da zero?</h2>
             <p class="text-sm text-secondary font-mono">In entrambi i casi, possiamo aiutarti a capire cosa serve,
                 verificare il materiale e guidarti verso la soluzione più adatta. Sfoglia il catalogo o scrivici su
-                WhatsApp per un preventivo rapido e chiaro.</p>
+                WhatsApp per maggiori informazioni.</p>
         </div>
         <div class="xl:w-2/3 flex flex-wrap justify-between gap-8 w-full">
             <div class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px]">

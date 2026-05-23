@@ -30,8 +30,22 @@ use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 
+/**
+ * ProductForm
+ *
+ * Provides the central Filament form schema for managing products.
+ * This class abstracts the form definition so it can be reused across different
+ * product resource types (like Standard Products vs Variable Products).
+ */
 class ProductForm
 {
+    /**
+     * Main configuration method that returns the complete form schema.
+     * The form is divided into several Tabs: Generale, Varianti & Scaglioni,
+     * Personalizzazione Stampa, and Galleria Immagini.
+     *
+     * @param  Schema  $schema  The base Filament schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -279,6 +293,11 @@ class ProductForm
             ->grid(2);
     }
 
+    /**
+     * Configures the repeater for Quantity-based discount tiers (Prezzi a Scaglioni).
+     * Includes complex calculation logic via the cascadePricingTiers method to automate
+     * unit and total price calculations as quantities change.
+     */
     public static function getPricingTiersRepeater(): Repeater
     {
         return Repeater::make('pricingTiers')
@@ -356,6 +375,13 @@ class ProductForm
             ->addActionLabel('Aggiungi Scaglione di Prezzo');
     }
 
+    /**
+     * Calculates the cascading logic for tier prices when a user inputs a total or unit price.
+     * This method automatically interpolates or extrapolates missing tier prices based on
+     * the defined or locked prices in other tiers.
+     *
+     * @param  mixed  $component  The Filament component triggering the cascade.
+     */
     protected static function cascadePricingTiers($component): void
     {
         // $component->getContainer()->getParentComponent() gets the repeater

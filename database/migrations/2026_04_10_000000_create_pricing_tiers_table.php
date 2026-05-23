@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quote_items', function (Blueprint $table) {
+        Schema::create('pricing_tiers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quote_id')->constrained('quotes')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 10, 2)->default(0);
-            $table->decimal('subtotal', 10, 2)->default(0);
-            $table->json('customization_json')->nullable();
-            $table->string('design_file_path')->nullable();
+            $table->foreignId('print_side_id')->nullable()->constrained('print_sides')->nullOnDelete();
+            $table->boolean('is_custom_price')->default(false);
+            $table->unsignedInteger('min_quantity');
+            $table->unsignedInteger('max_quantity')->nullable();
+            $table->decimal('price_per_unit', 10, 2);
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('quote_items');
+        Schema::dropIfExists('pricing_tiers');
     }
 };

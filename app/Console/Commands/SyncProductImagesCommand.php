@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\SyncProductImagesJob;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Synchronize product images (phase 1: non-color images)')]
+#[Signature('sync:product-images')]
 class SyncProductImagesCommand extends Command
 {
-    protected $signature = 'sync:product-images';
-
-    protected $description = 'Synchronize product images (phase 1: non-color images)';
-
     public function handle(): int
     {
         SyncProductImagesJob::dispatch();

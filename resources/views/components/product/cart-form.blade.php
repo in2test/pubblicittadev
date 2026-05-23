@@ -84,9 +84,14 @@
     }
 @endphp
 
-@if (session('quoteSuccess'))
+@if (session('success'))
     <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-        {{ session('quoteSuccess') }}
+        {{ session('success') }}
+    </div>
+@endif
+@if (session('error'))
+    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+        {{ session('error') }}
     </div>
 @endif
 
@@ -532,7 +537,7 @@
             ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
         </flux:button>
 
-        <flux:button href="mailto:info@example.com?subject=Richiesta%20preventivo%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
+        <flux:button href="mailto:info@example.com?subject=Richiesta%20informazioni%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
             Contattaci via email
         </flux:button>
     </div>

@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('quote_id')->nullable()->constrained()->onDelete('set null');
             $table->string('order_number')->unique();
-            $table->string('status')->default('pending'); // pending, paid, failed, cancelled, completed
+            $table->string('payment_status')->default('pending'); // pending, paid, failed, cancelled, completed
+            $table->string('work_status')->default('pending');
             $table->decimal('total_price', 10, 2);
             $table->unsignedInteger('total_items');
             $table->foreignId('shipping_address_id')->nullable()->constrained('addresses')->onDelete('set null');

@@ -11,7 +11,7 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('dashboard.quotes') }}" class="bg-primary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-primary-container transition-colors">
+            <a href="{{ route('dashboard.orders') }}" class="bg-primary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-primary-container transition-colors">
                 I tuoi ordini
             </a>
             <a href="{{ route('catalog') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">

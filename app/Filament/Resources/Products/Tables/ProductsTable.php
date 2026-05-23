@@ -21,12 +21,27 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 
+/**
+ * ProductsTable
+ *
+ * This class defines the Filament table configuration used to display and manage products
+ * (specifically, it is used by both StandardProducts and potentially other product types).
+ * It configures columns, filters, row actions, and bulk actions.
+ */
 class ProductsTable
 {
+    /**
+     * Configures the Filament Table instance.
+     *
+     * @param  Table  $table  The base table instance to configure.
+     * @return Table The fully configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
+                // Displays the primary image/thumbnail of the product.
+                // It falls back from a custom getter to Spatie MediaLibrary.
                 ImageColumn::make('thumbnail')
                     ->label('Immagine')
                     ->state(fn (Product $record) => $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl())
@@ -82,6 +97,7 @@ class ProductsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                // Filter products by one or more categories
                 SelectFilter::make('category_id')
                     ->label('Categoria')
                     ->relationship('category', 'name')
@@ -101,6 +117,7 @@ class ProductsTable
                     ->falseLabel('Solo Inattivi'),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
+                // Action to view the product in the frontend catalog
                 Action::make('view')
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
@@ -123,6 +140,7 @@ class ProductsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    // Bulk activate selected products
                     BulkAction::make('activate')
                         ->label('Attiva')
                         ->icon('heroicon-o-check-circle')
@@ -141,6 +159,8 @@ class ProductsTable
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
                         ->modalButton('Disattiva'),
+
+                    // Bulk assign a specific category to selected products
                     BulkAction::make('assignCategory')
                         ->label('Assegna Categoria')
                         ->icon('heroicon-o-tag')

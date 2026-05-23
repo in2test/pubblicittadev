@@ -6,24 +6,14 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Synchronize product variation quantities and availability from NWG Gateway API')]
+#[Signature('app:sync-product-quantities {--product= : Optional product SKU to sync}')]
 class SyncProductQuantities extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'app:sync-product-quantities {--product= : Optional product SKU to sync}';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Synchronize product variation quantities and availability from NWG Gateway API';
-
     /**
      * Execute the console command.
      */

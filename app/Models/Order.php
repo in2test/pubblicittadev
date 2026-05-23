@@ -34,14 +34,14 @@ use Override;
  * @property Carbon|null $paid_at
  * @property User $user
  * @property-read Collection<int, OrderItem> $items
- * @property int|null $quote_id
+
  * @property string|null $stripe_payment_intent_id
  * @property string|null $notes
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Address|null $billingAddress
  * @property-read int|null $items_count
- * @property-read Quote|null $quote
+
  * @property-read Address|null $shippingAddress
  *
  * @method static OrderFactory factory($count = null, $state = [])
@@ -55,7 +55,6 @@ use Override;
  * @method static Builder<static>|Order whereOrderNumber($value)
  * @method static Builder<static>|Order wherePaidAt($value)
  * @method static Builder<static>|Order wherePaymentStatus($value)
- * @method static Builder<static>|Order whereQuoteId($value)
  * @method static Builder<static>|Order whereShippingAddressId($value)
  * @method static Builder<static>|Order whereStripePaymentIntentId($value)
  * @method static Builder<static>|Order whereStripeSessionId($value)
@@ -69,7 +68,7 @@ use Override;
  */
 #[Fillable([
     'user_id',
-    'quote_id',
+
     'order_number',
     'payment_status',
     'work_status',
@@ -94,11 +93,6 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function quote(): BelongsTo
-    {
-        return $this->belongsTo(Quote::class);
     }
 
     public function items(): HasMany

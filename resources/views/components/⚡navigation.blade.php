@@ -357,7 +357,7 @@ new class extends Component {
                                                             $priceData = $product->getDisplayPriceData();
                                                         @endphp
                                                         @if ($priceData['on_request'])
-                                                            <span class="text-[9px] uppercase tracking-wider text-accent-600 font-bold bg-accent-50 px-1 rounded border border-accent-100">Richiedi Preventivo</span>
+                                                            <span class="text-[9px] uppercase tracking-wider text-accent-600 font-bold bg-accent-50 px-1 rounded border border-accent-100">Su Richiesta</span>
                                                         @else
                                                             @if ($priceData['is_discounted'])
                                                                 <span class="text-[10px] font-bold text-gray-900 font-mono">€{{ number_format($priceData['price'], 2) }}</span>
@@ -392,7 +392,7 @@ new class extends Component {
 
             <!-- Bottom Info -->
             <div class="pt-6 border-t border-gray-100 font-mono text-[10px] tracking-wider text-gray-400 uppercase leading-relaxed">
-                Hai bisogno di aiuto? <a href="{{ route('contact') }}" @click="searchOpen = false" class="text-accent-500 hover:underline">Contattaci</a> per richiedere un preventivo personalizzato per il tuo brand.
+                Hai bisogno di aiuto? <a href="{{ route('contact') }}" @click="searchOpen = false" class="text-accent-500 hover:underline">Contattaci</a> per maggiori informazioni sui nostri prodotti.
             </div>
         </div>
     </div>

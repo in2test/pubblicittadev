@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('zip');
             $table->string('country')->default('IT');
             $table->string('phone')->nullable();
+            $table->string('vat_number')->nullable();
+            $table->string('fiscal_code')->nullable();
+            $table->string('sdi_code')->nullable();
+            $table->string('pec_email')->nullable();
             $table->boolean('is_default')->default(false);
             $table->timestamps();
         });

@@ -15,13 +15,6 @@ class DashboardController extends Controller
         return view('dashboard');
     }
 
-    public function quotes(Request $request): View
-    {
-        $quotes = $request->user()->quotes()->with('items.product')->latest()->paginate(10);
-
-        return view('dashboard.quotes', ['quotes' => $quotes]);
-    }
-
     public function addresses(Request $request): View
     {
         $addresses = $request->user()->addresses()->latest()->get();

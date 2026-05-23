@@ -46,8 +46,7 @@ use Override;
  * @property-read int|null $notifications_count
  * @property-read Collection<int, Order> $orders
  * @property-read int|null $orders_count
- * @property-read Collection<int, Quote> $quotes
- * @property-read int|null $quotes_count
+
  *
  * @method static UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|User newModelQuery()
@@ -79,16 +78,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public const ROLE_CLIENT = 'client';
 
     public const ROLE_ADMIN = 'admin';
-
-    /**
-     * Get all the quotes associated with the user.
-     *
-     * @return HasMany
-     */
-    public function quotes()
-    {
-        return $this->hasMany(Quote::class);
-    }
 
     /**
      * Get all the addresses associated with the user.

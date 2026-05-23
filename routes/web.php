@@ -9,7 +9,6 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Http\RedirectResponse;
@@ -36,7 +35,6 @@ Route::get('/', [HomePageController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/quotes', [DashboardController::class, 'quotes'])->name('dashboard.quotes');
     Route::get('/dashboard/addresses', [DashboardController::class, 'addresses'])->name('dashboard.addresses');
     Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get('/dashboard/orders/{order}', [DashboardController::class, 'showOrder'])->name('dashboard.orders.show');
@@ -72,4 +70,3 @@ Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/catalogo/{category:slug}', [CategoryController::class, 'show'])->name('category');
 Route::get('/catalogo/{category:slug}/{product:slug}', [ProductController::class, 'show'])->name('product');
-Route::post('/quote', [QuoteController::class, 'store'])->name('quote.store');

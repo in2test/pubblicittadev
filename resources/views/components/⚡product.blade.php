@@ -72,16 +72,12 @@ new class extends Component {
 
         // Auto-select lowest price option for each variation type if not provided for non-newwave products
         if ($this->product->type !== 'newwave') {
-            $lowestPriceSku = $this->product->skus->sortBy(function($sku) {
-                return $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide);
-            })->first();
+            $lowestPriceSku = $this->product->skus->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide))->first();
 
             foreach ($this->product->variationTypes as $type) {
                 if (!isset($this->selectedOptions[$type->id])) {
                     if ($lowestPriceSku) {
-                        $optionForType = $lowestPriceSku->options->first(function($opt) use ($type) {
-                            return $type->pivot->options->contains('variation_option_id', $opt->id); 
-                        });
+                        $optionForType = $lowestPriceSku->options->first(fn($opt) => $type->pivot->options->contains('variation_option_id', $opt->id));
                         if ($optionForType) {
                             $this->selectedOptions[$type->id] = $optionForType->id;
                             continue;
@@ -164,13 +160,11 @@ new class extends Component {
         $product = $this->product();
         $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
         
-        $base = $product->getPriceForQuantity(1, $this->selectedPrintSide);
-        
         if ($activeSku && $activeSku->override_price !== null) {
-            $base = (float) $activeSku->override_price;
+            return (float) $activeSku->override_price;
         }
 
-        return $base;
+        return $product->getPriceForQuantity(1, $this->selectedPrintSide);
     }
 
     #[Computed]
@@ -254,7 +248,7 @@ new class extends Component {
             $type = $product->variationTypes->firstWhere('id', $typeId);
             if ($type) {
                 $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
-                if ($opt && (stripos($opt->name, 'personalizzat') !== false || stripos($opt->name, 'custom') !== false)) {
+                if ($opt && (stripos((string) $opt->name, 'personalizzat') !== false || stripos((string) $opt->name, 'custom') !== false)) {
                     $isCustom = true;
                     break;
                 }
@@ -273,17 +267,14 @@ new class extends Component {
                 $type = $product->variationTypes->firstWhere('id', $typeId);
                 if ($type) {
                     $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $optionId);
-                    if ($opt) {
-                        if (preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', $opt->name, $matches)) {
-                            $parsedW = (float) str_replace(',', '.', $matches[1]);
-                            $parsedH = (float) str_replace(',', '.', $matches[2]);
-                            
-                            if (str_contains(strtolower($opt->name), 'cm')) {
-                                $parsedW *= 10;
-                                $parsedH *= 10;
-                            }
-                            break;
+                    if ($opt && preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', (string) $opt->name, $matches)) {
+                        $parsedW = (float) str_replace(',', '.', $matches[1]);
+                        $parsedH = (float) str_replace(',', '.', $matches[2]);
+                        if (str_contains(strtolower((string) $opt->name), 'cm')) {
+                            $parsedW *= 10;
+                            $parsedH *= 10;
                         }
+                        break;
                     }
                 }
             }
@@ -298,7 +289,7 @@ new class extends Component {
         }
 
         if ($w > 0 && $h > 0) {
-            return max(1, $product->calculateItemsPerSheet((float)$w, (float)$h));
+            return max(1, $product->calculateItemsPerSheet($w, $h));
         }
 
         return 1;
@@ -397,27 +388,27 @@ new class extends Component {
         return redirect()->route('cart');
     }
 
-    public function updatedQuantities($value, $key)
+    public function updatedQuantities($value, $key): void
     {
         $this->enforceQuantityStep();
     }
 
-    public function updatedWidth()
+    public function updatedWidth(): void
     {
         $this->enforceQuantityStep();
     }
 
-    public function updatedHeight()
+    public function updatedHeight(): void
     {
         $this->enforceQuantityStep();
     }
 
-    public function updatedSelectedOptions()
+    public function updatedSelectedOptions(): void
     {
         $this->enforceQuantityStep();
     }
 
-    private function enforceQuantityStep()
+    private function enforceQuantityStep(): void
     {
         $product = $this->product();
         if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
@@ -470,7 +461,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.quote-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :quantities="$this->quantities" :$jobId :$width :$height />
+            <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :quantities="$this->quantities" :$jobId :$width :$height />
 
             <x-product.trust-badges />
         </div>

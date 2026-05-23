@@ -305,11 +305,7 @@
                         Procedi al Pagamento
                         <span class="material-symbols-outlined text-base">payments</span>
                     </a>
-                    <a href="{{ route('quote.store') }}"
-                        class="w-full bg-white text-primary border-2 border-primary py-4 font-black uppercase tracking-tighter text-base hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
-                        Richiedi Preventivo
-                        <span class="material-symbols-outlined text-base">request_quote</span>
-                    </a>
+
                     <p class="text-[10px] text-center text-secondary font-mono leading-relaxed pt-1">
                         Inviando la richiesta accetti i termini e le condizioni di vendita.
                     </p>
