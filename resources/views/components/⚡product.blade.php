@@ -1,6 +1,6 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Services\CartManager;
 use App\Models\Product;
 use App\Models\Category;
