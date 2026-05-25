@@ -8,7 +8,6 @@ use App\Enums\ProductClass;
 use App\Models\Category;
 use App\Models\Image;
 use App\Models\PricingTier;
-use App\Models\PrintSide;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\ProductVariationOption;
@@ -27,7 +26,6 @@ class StandardProductSeeder extends Seeder
     {
         // 1. Ensure categories exist
         $this->call(CategorySeeder::class);
-        $this->call(PrintSideSeeder::class);
 
         $piccolo = Category::where('slug', 'piccolo_formato')->firstOrFail();
         $grande = Category::where('slug', 'grande_formato')->firstOrFail();
@@ -653,6 +651,17 @@ class StandardProductSeeder extends Seeder
         foreach ($products as $pData) {
             $this->command->info("Seeding product: {$pData['name']}");
 
+            // Convert print_sides to a regular variation "Grafica"
+            if (! empty($pData['print_sides'])) {
+                $pData['variations'] ??= [];
+                $pData['variations']['Grafica'] = [
+                    'is_modifier' => false,
+                    'options' => collect($pData['print_sides'])->mapWithKeys(function ($side) {
+                        return [$side => strtolower(str_replace([' ', '/'], '_', $side))];
+                    })->all(),
+                ];
+            }
+
             // Create / update product
             $product = Product::updateOrCreate(
                 ['slug' => $pData['slug']],
@@ -699,7 +708,7 @@ class StandardProductSeeder extends Seeder
 
                 $productVarType = ProductVariationType::firstOrCreate(
                     ['product_id' => $product->id, 'variation_type_id' => $varType->id],
-                    ['has_images' => false, 'affects_price' => $isModifier, 'is_modifier' => $isModifier, 'sort_order' => $sortIdx]
+                    ['has_images' => false, 'is_modifier' => $isModifier, 'sort_order' => $sortIdx]
                 );
                 $sortIdx++;
 
@@ -714,17 +723,29 @@ class StandardProductSeeder extends Seeder
                     $modType = is_array($optValue) ? ($optValue['modifier_type'] ?? 'flat') : 'flat';
                     $priceMod = is_array($optValue) ? ($optValue['price_modifier'] ?? 0.0) : 0.0;
 
-                    $option = VariationOption::firstOrCreate(
+                    $option = VariationOption::updateOrCreate(
                         ['variation_type_id' => $varType->id, 'value' => $valueStr],
-                        ['name' => $optName, 'sort_order' => $optSortIdx]
+                        [
+                            'name' => $optName,
+                            'sort_order' => $optSortIdx,
+                            'default_modifier_type' => $isModifier ? $modType : 'flat',
+                            'default_price_modifier' => $isModifier ? $priceMod : 0.00,
+                        ]
                     );
 
-                    ProductVariationOption::firstOrCreate([
+                    $overridePriceModifier = null;
+                    if ($isModifier) {
+                        if ($product->slug === 'striscioni-banner-pvc' && $valueStr === 'occhielli-50') {
+                            $overridePriceModifier = 5.00; // override to 5.00 flat
+                        }
+                    }
+
+                    ProductVariationOption::updateOrCreate([
                         'product_variation_type_id' => $productVarType->id,
                         'variation_option_id' => $option->id,
                     ], [
                         'modifier_type' => $modType,
-                        'price_modifier' => $priceMod,
+                        'price_modifier' => $overridePriceModifier,
                     ]);
 
                     if (! $isModifier) {
@@ -770,31 +791,35 @@ class StandardProductSeeder extends Seeder
                 }
             }
 
-            // Print sides
-            $product->printSides()->detach();
-            foreach ($pData['print_sides'] as $sideName) {
-                $side = PrintSide::where('name', $sideName)->first();
-                if ($side) {
-                    $product->printSides()->attach($side->id);
-                }
-            }
-
             // Pricing tiers
             PricingTier::where('product_id', $product->id)->delete();
             foreach ($pData['pricing_tiers'] as [$minQty, $maxQty, $price, $sideName]) {
-                $sideId = null;
+                $skuIds = [null]; // default fallback
                 if ($sideName) {
-                    $sideId = PrintSide::where('name', $sideName)->value('id');
+                    // Find the VariationOption for this side name under variation type 'Grafica'
+                    $option = VariationOption::where('name', $sideName)
+                        ->whereHas('type', function ($q) {
+                            $q->where('name', 'Grafica');
+                        })->first();
+                    if ($option) {
+                        // Find all skus for this product that have this option
+                        $skuIds = ProductSku::where('product_id', $product->id)
+                            ->whereHas('options', function ($q) use ($option) {
+                                $q->where('variation_options.id', $option->id);
+                            })->pluck('id')->all();
+                    }
                 }
 
-                PricingTier::create([
-                    'product_id' => $product->id,
-                    'min_quantity' => $minQty,
-                    'max_quantity' => $maxQty,
-                    'price_per_unit' => $price,
-                    'print_side_id' => $sideId,
-                    'is_custom_price' => true,
-                ]);
+                foreach ($skuIds as $skuId) {
+                    PricingTier::create([
+                        'product_id' => $product->id,
+                        'product_sku_id' => $skuId,
+                        'min_quantity' => $minQty,
+                        'max_quantity' => $maxQty,
+                        'price_per_unit' => $price,
+                        'is_custom_price' => true,
+                    ]);
+                }
             }
         }
 

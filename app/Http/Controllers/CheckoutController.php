@@ -68,8 +68,6 @@ class CheckoutController extends Controller
                 $totalPrice = $product->calculateTotalPrice(
                     $qty,
                     $item['quantities'] ?? [],
-                    $item['print_placements'] ?? [],
-                    isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
                     isset($item['width']) ? (float) $item['width'] : null,
                     isset($item['height']) ? (float) $item['height'] : null,
                     $item['selected_options'] ?? []
@@ -78,7 +76,20 @@ class CheckoutController extends Controller
 
                 // Controlliamo se l'articolo richiede personalizzazione (es. stampe, file di design, posizioni)
                 // Se sì, lo stato iniziale sarà 'awaiting_file', altrimenti 'pending' (articolo neutro).
-                $hasPersonalization = ! empty($item['print_placements']) || ! empty($item['print_side_id']) || ! empty($item['design_file_path']);
+                $hasModifierOption = false;
+                if (!empty($item['selected_options'])) {
+                    $modifierTypeIds = $product->variationTypes()
+                        ->wherePivot('is_modifier', true)
+                        ->pluck('variation_types.id')
+                        ->toArray();
+                    foreach ($item['selected_options'] as $typeId => $optIds) {
+                        if (in_array((int)$typeId, $modifierTypeIds)) {
+                            $hasModifierOption = true;
+                            break;
+                        }
+                    }
+                }
+                $hasPersonalization = $hasModifierOption || ! empty($item['design_file_path']);
                 $initialWorkStatus = $hasPersonalization ? 'awaiting_file' : 'pending';
 
                 $order->items()->create([

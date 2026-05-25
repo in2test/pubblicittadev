@@ -7,7 +7,6 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Enums\SyncStatus;
 use App\Models\Category;
 use App\Models\Image;
-use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Models\VariationOption;
 use App\Services\ProductAvailabilityService;
@@ -187,36 +186,6 @@ class NewWaveProductForm
                             ]),
                     ]),
 
-                Section::make('Personalizzazione Stampa')
-                    ->columnSpanFull()
-                    ->schema([
-                        Repeater::make('productPrintPlacements')
-                            ->label('Posizioni di Stampa')
-                            ->relationship('productPrintPlacements')
-                            ->defaultItems(0)
-                            ->addActionLabel('Aggiungi Posizione')
-                            ->schema([
-                                Select::make('print_placement_id')
-                                    ->label('Posizione')
-                                    ->options(PrintPlacement::pluck('name', 'id'))
-                                    ->required()
-                                    ->live()
-                                    ->afterStateUpdated(function (Set $set, $state) {
-                                        if ($state) {
-                                            $placement = PrintPlacement::find($state, ['default_price']);
-                                            if ($placement) {
-                                                $set('additional_price', $placement->default_price);
-                                            }
-                                        }
-                                    }),
-                                TextInput::make('additional_price')
-                                    ->label('Sovrapprezzo')
-                                    ->numeric()
-                                    ->prefix('+ €'),
-                            ])
-                            ->columns(2)
-                            ->grid(3),
-                    ]),
             ]);
 
         $galleryTab = Tab::make('Galleria & Colori')

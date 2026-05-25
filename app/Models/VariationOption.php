@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ModifierType;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'value',
     'color_hex',
     'sort_order',
+    'default_modifier_type',
+    'default_price_modifier',
 ])]
 /**
  * @property string $name
@@ -28,6 +31,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $value
  * @property string|null $color_hex
  * @property int $sort_order
+ * @property ModifierType $default_modifier_type
+ * @property numeric $default_price_modifier
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, ProductVariationOption> $productVariationOptions
@@ -51,6 +56,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class VariationOption extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'default_modifier_type' => ModifierType::class,
+        'default_price_modifier' => 'decimal:2',
+    ];
 
     public function type(): BelongsTo
     {

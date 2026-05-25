@@ -29,8 +29,6 @@ class ProductController extends Controller
             'pricingTiers',
             'variationTypes.options',
             'skus.options.type',
-            'printPlacements',
-            'printSides',
             'media',
         ]);
 

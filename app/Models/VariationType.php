@@ -43,10 +43,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'name',
     'presentation_type',
+    'allow_multiple',
 ])]
 class VariationType extends Model
 {
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'allow_multiple' => 'boolean',
+        ];
+    }
 
     public function options(): HasMany
     {
@@ -57,7 +65,7 @@ class VariationType extends Model
     {
         return $this->belongsToMany(Product::class, 'product_variation_types')
             ->using(ProductVariationType::class)
-            ->withPivot('id', 'has_images', 'affects_price', 'sort_order')
+            ->withPivot('id', 'has_images', 'sort_order')
             ->orderByPivot('sort_order');
     }
 

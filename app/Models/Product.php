@@ -68,12 +68,6 @@ use Throwable;
  * @property-read int|null $media_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PrintPlacement> $printPlacements
- * @property-read int|null $print_placements_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PrintSide> $printSides
- * @property-read int|null $print_sides_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductPrintPlacement> $productPrintPlacements
- * @property-read int|null $product_print_placements_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
  * @property-read int|null $skus_count
@@ -187,7 +181,7 @@ class Product extends Model implements HasMedia
     {
         return $this->belongsToMany(VariationType::class, 'product_variation_types')
             ->using(ProductVariationType::class)
-            ->withPivot('id', 'has_images', 'affects_price', 'is_modifier', 'sort_order')
+            ->withPivot('id', 'has_images', 'is_modifier', 'sort_order')
             ->orderByPivot('sort_order');
     }
 
@@ -196,23 +190,7 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductSku::class);
     }
 
-    public function printPlacements(): BelongsToMany
-    {
-        return $this->belongsToMany(PrintPlacement::class, 'product_print_placement')
-            ->withPivot('additional_price')
-            ->withTimestamps();
-    }
 
-    public function productPrintPlacements(): HasMany
-    {
-        return $this->hasMany(ProductPrintPlacement::class);
-    }
-
-    public function printSides(): BelongsToMany
-    {
-        return $this->belongsToMany(PrintSide::class, 'product_print_side')
-            ->withTimestamps();
-    }
 
     public function images(): HasMany
     {
@@ -227,6 +205,22 @@ class Product extends Model implements HasMedia
     public function productVariationTypes(): HasMany
     {
         return $this->hasMany(ProductVariationType::class);
+    }
+
+    /**
+     * Base variations only (is_modifier = false) — used by the admin form repeater.
+     */
+    public function baseVariationTypes(): HasMany
+    {
+        return $this->hasMany(ProductVariationType::class)->where('is_modifier', false);
+    }
+
+    /**
+     * Modifier variations only (is_modifier = true) — used by the admin form repeater.
+     */
+    public function modifierVariationTypes(): HasMany
+    {
+        return $this->hasMany(ProductVariationType::class)->where('is_modifier', true);
     }
 
     #[Override]
@@ -454,45 +448,37 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola il prezzo per una determinata quantità, includendo opzionalmente il lato di stampa.
-     * Se è presente un prezzo in offerta (offer_price) e non è specificato un lato di stampa,
-     * viene restituito l'offerta.
+     * Calcola il prezzo per una determinata quantità, includendo opzionalmente la SKU.
+     * Se è presente un prezzo in offerta (offer_price), viene restituito l'offerta.
      */
-    public function getPriceForQuantity(int $quantity = 1, ?int $printSideId = null, ?ProductSku $sku = null): float
+    public function getPriceForQuantity(int $quantity = 1, ?ProductSku $sku = null): float
     {
-        // Se c'è un'offerta attiva e non stiamo filtrando per lato di stampa, usa l'offerta.
-        if ($this->offer_price > 0 && is_null($printSideId)) {
+        // Se c'è un'offerta attiva, usa l'offerta.
+        if ($this->offer_price > 0) {
             return (float) $this->offer_price;
         }
 
         // Priorità 1: Cerca un prezzo a scaglioni (tier) specifico per questo prodotto e/o SKU
-        if ($tierPrice = $this->getTierPrice($quantity, $printSideId, $sku)) {
+        if ($tierPrice = $this->getTierPrice($quantity, $sku)) {
             return $tierPrice;
         }
 
-        // Priorità 2: Sconti per quantità basati sulla categoria (solo se non è selezionato il lato di stampa)
-        if (is_null($printSideId)) {
-            $service = app(QuantityDiscountService::class);
+        // Priorità 2: Sconti per quantità basati sulla categoria
+        $service = app(QuantityDiscountService::class);
 
-            return max(0.0, $service->calculatePrice($this, $quantity));
-        }
-
-        // Fallback: Se era stato richiesto un lato di stampa ma non è stato trovato alcun prezzo,
-        // calcola il prezzo base per la quantità ignorando il lato.
-        return $this->getPriceForQuantity($quantity, null, $sku);
+        return max(0.0, $service->calculatePrice($this, $quantity));
     }
 
     /**
-     * Recupera il prezzo a scaglioni (Tier Pricing) in base alla quantità, lato di stampa e SKU opzionale.
+     * Recupera il prezzo a scaglioni (Tier Pricing) in base alla quantità e SKU opzionale.
      */
-    public function getTierPrice(int $quantity, ?int $printSideId = null, ?ProductSku $sku = null): ?float
+    public function getTierPrice(int $quantity, ?ProductSku $sku = null): ?float
     {
-        $findTier = function (?int $sideId, ?int $skuId) use ($quantity): ?PricingTier {
+        $findTier = function (?int $skuId) use ($quantity): ?PricingTier {
             if ($this->relationLoaded('pricingTiers')) {
                 return $this->pricingTiers
                     ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
                         ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
-                        $t->print_side_id === $sideId &&
                         $t->product_sku_id === $skuId
                     )
                     ->sortByDesc('min_quantity')
@@ -506,7 +492,6 @@ class Product extends Model implements HasMedia
                     $query->where('max_quantity', '>=', $quantity)
                         ->orWhereNull('max_quantity');
                 })
-                ->where('print_side_id', $sideId)
                 ->where('product_sku_id', $skuId)
                 ->orderByDesc('min_quantity')
                 ->first();
@@ -516,43 +501,21 @@ class Product extends Model implements HasMedia
 
         $skuId = $sku?->id;
 
-        // Cerca prima il tier specifico per lato di stampa e SKU
+        // Cerca prima il tier specifico per SKU
         if ($skuId) {
-            $tier = $findTier($printSideId, $skuId);
-            // Fallback: lato null, SKU specifico
-            if (! $tier && ! is_null($printSideId)) {
-                $tier = $findTier(null, $skuId);
-            }
+            $tier = $findTier($skuId);
             if ($tier instanceof PricingTier) {
                 return (float) $tier->price_per_unit;
             }
         }
 
-        // Fallback: lato specifico, SKU null (tier globale prodotto)
-        $tier = $findTier($printSideId, null);
-
-        // Fallback: lato null, SKU null
-        if (! $tier && ! is_null($printSideId)) {
-            $tier = $findTier(null, null);
-        }
+        // Fallback: SKU null (tier globale prodotto)
+        $tier = $findTier(null);
 
         return $tier instanceof PricingTier ? (float) $tier->price_per_unit : null;
     }
 
-    /**
-     * Ottiene il prezzo aggiuntivo totale per una lista di posizionamenti di stampa (es. Fronte, Retro).
-     * Somma il costo di tutti i posizionamenti selezionati per il prodotto.
-     */
-    public function getAdditionalPriceForPlacements(array $placementIds): float
-    {
-        if ($placementIds === []) {
-            return 0.0;
-        }
 
-        return (float) $this->printPlacements()
-            ->whereIn('print_placements.id', $placementIds)
-            ->sum('product_print_placement.additional_price');
-    }
 
     /**
      * Calcola quanti fogli fisici sono necessari per le dimensioni fornite.
@@ -669,7 +632,6 @@ class Product extends Model implements HasMedia
      * @param  int  $totalQuantity  Quantità totale di articoli per questa lavorazione.
      * @param  array<int, int>  $skuQuantities  Mappa ID SKU -> quantità (es. [12 => 5, 13 => 10]) per il dettaglio delle varianti.
      * @param  array<int>  $placementIds  Elenco di ID posizionamenti di stampa che comportano costi extra.
-     * @param  int|null  $printSideId  (Opzionale) Usato per ottenere prezzi a scaglioni diversi in base al lato di stampa.
      * @param  float|null  $width  Larghezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
      * @param  float|null  $height  Altezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
      * @param  array<int>  $selectedOptions  ID delle opzioni di variazione usate per determinare la SKU attiva.
@@ -678,8 +640,6 @@ class Product extends Model implements HasMedia
     public function calculateTotalPrice(
         int $totalQuantity,
         array $skuQuantities = [],
-        array $placementIds = [],
-        ?int $printSideId = null,
         ?float $width = null,
         ?float $height = null,
         array $selectedOptions = []
@@ -697,7 +657,7 @@ class Product extends Model implements HasMedia
             }
 
             $billedArea = $this->calculateTotalBilledArea($totalQuantity, $width, $height);
-            $pricePerSqm = $this->getPriceForQuantity($totalQuantity, $printSideId);
+            $pricePerSqm = $this->getPriceForQuantity($totalQuantity);
 
             $activeSku = $this->getActiveSku($selectedOptions) ?? $this->skus->first();
 
@@ -707,12 +667,6 @@ class Product extends Model implements HasMedia
             }
 
             $total = $pricePerSqm * $billedArea;
-
-            // Aggiungi il costo dei posizionamenti di stampa aggiuntivi
-            if ($placementIds !== []) {
-                $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
-                $total += $additionalPerUnit * $totalQuantity;
-            }
 
             $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
 
@@ -727,7 +681,7 @@ class Product extends Model implements HasMedia
             $skuQty = (int) $rawQty;
             if ($skuQty > 0) {
                 $sku = $this->skus->firstWhere('id', $skuId);
-                $unitPrice = $this->calculateFinalUnitPrice($skuQty, [], $printSideId, null, null, $sku);
+                $unitPrice = $this->calculateFinalUnitPrice($skuQty, null, null, $sku);
 
                 // Applica il prezzo di override della SKU se presente
                 if ($sku && $sku->override_price !== null) {
@@ -740,14 +694,8 @@ class Product extends Model implements HasMedia
 
         // Se non abbiamo un dettaglio per SKU, calcola la quantità totale sul prodotto base
         if ($skuQuantities === []) {
-            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, [], $printSideId);
+            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, null, null);
             $total += $unitPrice * $totalQuantity;
-        }
-
-        // Aggiungi i costi dei posizionamenti di stampa aggiuntivi per l'intera quantità
-        if ($placementIds !== []) {
-            $additionalPerUnit = $this->getAdditionalPriceForPlacements($placementIds);
-            $total += $additionalPerUnit * $totalQuantity;
         }
 
         $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
@@ -756,7 +704,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Applica l'importo aggiuntivo derivante dai modificatori (es. plastificazione, angoli)
+     * Applies the surcharge from price modifiers (percentage or flat per-unit).
+     * Uses a two-level fallback: product-level override → global default on VariationOption.
      */
     protected function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
     {
@@ -774,27 +723,38 @@ class Product extends Model implements HasMedia
                 continue;
             }
 
-            $selectedOptionId = $selectedOptions[$type->id] ?? null;
-            if ($selectedOptionId) {
+            $selectedOptionIds = $selectedOptions[$type->id] ?? [];
+            if (! is_array($selectedOptionIds)) {
+                $selectedOptionIds = [$selectedOptionIds];
+            }
+            $selectedOptionIds = array_filter($selectedOptionIds);
+
+            foreach ($selectedOptionIds as $selectedOptionId) {
                 $productVariationOption = ProductVariationOption::where('product_variation_type_id', $type->pivot->id)
                     ->where('variation_option_id', $selectedOptionId)
+                    ->with('option')
                     ->first();
 
-                if ($productVariationOption && $productVariationOption->price_modifier > 0) {
-                    if ($productVariationOption->modifier_type === 'percentage') {
-                        $percentageModifiers += (float) $productVariationOption->price_modifier;
-                    } else {
-                        // Flat modifier è inteso come costo aggiuntivo per pezzo
-                        $flatModifiers += (float) $productVariationOption->price_modifier;
+                if ($productVariationOption) {
+                    $modifier = $productVariationOption->getEffectivePriceModifier();
+                    $modifierType = $productVariationOption->getEffectiveModifierType();
+
+                    if ($modifier > 0) {
+                        if ($modifierType->value === 'percentage') {
+                            $percentageModifiers += $modifier;
+                        } else {
+                            // Flat modifier is a per-unit surcharge
+                            $flatModifiers += $modifier;
+                        }
                     }
                 }
             }
         }
 
-        // Applica prima i flat modifiers (per unità)
+        // Apply flat modifiers first (per unit)
         $total += $flatModifiers * $totalQuantity;
 
-        // Poi applica la percentuale sul totale aggiornato
+        // Then apply percentage on the updated total
         if ($percentageModifiers > 0) {
             $total += $total * ($percentageModifiers / 100.0);
         }
@@ -805,19 +765,18 @@ class Product extends Model implements HasMedia
     /**
      * Calcola il prezzo unitario per una singola quantità (usato per stime e modelli a quantità/fissi).
      */
-    public function calculateFinalUnitPrice(int $quantity, array $placementIds = [], ?int $printSideId = null, ?float $width = null, ?float $height = null, ?ProductSku $sku = null): float
+    public function calculateFinalUnitPrice(int $quantity, ?float $width = null, ?float $height = null, ?ProductSku $sku = null): float
     {
         if ($this->product_class === ProductClass::AreaBased && $width !== null && $height !== null) {
             // Per il modello area, calcoliamo l'area fatturata per 1 singolo pezzo e la moltiplichiamo per il prezzo al mq
             $billedArea = $this->calculateTotalBilledArea(1, $width, $height);
-            $basePrice = $this->getPriceForQuantity($quantity, $printSideId, $sku) * $billedArea;
+            $basePrice = $this->getPriceForQuantity($quantity, $sku) * $billedArea;
         } else {
             // Per i modelli a quantità e fissi, otteniamo semplicemente il prezzo unitario della fascia corrispondente
-            $basePrice = $this->getPriceForQuantity($quantity, $printSideId, $sku);
+            $basePrice = $this->getPriceForQuantity($quantity, $sku);
         }
 
-        // Somma eventuali sovrapprezzi per posizionamenti extra
-        return $basePrice + $this->getAdditionalPriceForPlacements($placementIds);
+        return $basePrice;
     }
 
     /**

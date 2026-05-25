@@ -8,7 +8,6 @@ use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
-use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
@@ -63,12 +62,6 @@ class ListNewWaveProducts extends ListRecords
                             'parent_id' => $data['parent_id'] ?? null,
                             'is_active' => true,
                         ])->id),
-
-                    Select::make('print_placement_ids')
-                        ->label('Posizioni di Stampa')
-                        ->multiple()
-                        ->options(PrintPlacement::pluck('name', 'id'))
-                        ->helperText('Seleziona le posizioni di stampa comuni per tutti i prodotti importati.'),
                 ])
                 ->action(function (array $data) {
                     $skus = array_filter(
@@ -85,7 +78,6 @@ class ListNewWaveProducts extends ListRecords
 
                     $imported = 0;
                     $errors = [];
-                    $printPlacementIds = $data['print_placement_ids'] ?? [];
 
                     foreach ($results['valid'] as $sku => $info) {
                         if (Product::where('sku', $sku)->exists()) {
@@ -103,18 +95,6 @@ class ListNewWaveProducts extends ListRecords
                                 'sync_status' => SyncStatus::Pending,
                                 'is_active' => false,
                             ]);
-
-                            if (! empty($printPlacementIds)) {
-                                foreach ($printPlacementIds as $placementId) {
-                                    $placement = PrintPlacement::find($placementId);
-                                    if ($placement) {
-                                        $product->productPrintPlacements()->create([
-                                            'print_placement_id' => $placementId,
-                                            'additional_price' => $placement->default_price ?? 0,
-                                        ]);
-                                    }
-                                }
-                            }
 
                             SyncNewWaveProductJob::dispatch($product->id);
                             $imported++;

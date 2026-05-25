@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Enums\ProductClass;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
-use App\Models\PrintSide;
 use App\Models\Product;
 use App\Services\CartManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -75,31 +74,6 @@ class CartTest extends TestCase
     public function test_add_item_with_print_placements(): void
     {
         $this->markTestSkipped('Requires print_placements pivot table setup');
-    }
-
-    public function test_add_item_with_print_side(): void
-    {
-        $product = Product::factory()->create(['price' => 50]);
-        $printSide = PrintSide::create([
-            'product_id' => $product->id,
-            'name' => 'Fronte e Retro',
-            'sort_order' => 1,
-        ]);
-
-        $response = $this->post(route('cart.add'), [
-            'product_id' => $product->id,
-            'product_name' => $product->name,
-            'product_slug' => $product->slug,
-            'quantity' => 1,
-            'print_side_id' => $printSide->id,
-        ]);
-
-        $response->assertRedirect(route('cart'));
-
-        $cart = new CartManager;
-        $items = $cart->getItems();
-        $item = reset($items);
-        $this->assertEquals($printSide->id, $item['print_side_id']);
     }
 
     public function test_add_item_with_color_and_size(): void

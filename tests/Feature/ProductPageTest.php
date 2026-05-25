@@ -10,7 +10,9 @@ use App\Models\ProductSku;
 use App\Models\User;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use Database\Seeders\StandardProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProductPageTest extends TestCase
@@ -155,5 +157,36 @@ class ProductPageTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('product');
+    }
+
+    public function test_livewire_product_price(): void
+    {
+        $this->seed(StandardProductSeeder::class);
+        $product = Product::where('slug', 'volantini-flyer')->firstOrFail();
+        $category = $product->category;
+
+        $optA5 = VariationOption::where('name', 'A5 (14,8×21 cm)')->firstOrFail();
+        $opt115g = VariationOption::where('name', '115g Patinata Lucida')->firstOrFail();
+        $optGrafica = VariationOption::where('name', 'Fronte e retro uguali')->firstOrFail();
+
+        // Find active SKU
+        $activeSku = $product->getActiveSku([
+            $optA5->variation_type_id => $optA5->id,
+            $opt115g->variation_type_id => $opt115g->id,
+            $optGrafica->variation_type_id => $optGrafica->id,
+        ]);
+
+        // Mount the Livewire component!
+        Livewire::test('⚡product', [
+            'product' => $product,
+            'category' => $category,
+            'options' => [
+                $optA5->variation_type_id => $optA5->id,
+                $opt115g->variation_type_id => $opt115g->id,
+                $optGrafica->variation_type_id => $optGrafica->id,
+            ],
+        ])
+            ->set('quantities', [$activeSku->id => 100])
+            ->assertSet('totalPrice', 11.00);
     }
 }

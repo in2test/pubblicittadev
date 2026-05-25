@@ -194,8 +194,6 @@ class CartManager
                 $totalPrice = $product->calculateTotalPrice(
                     $qty,
                     $item['quantities'] ?? [],
-                    $item['print_placements'] ?? [],
-                    isset($item['print_side_id']) ? (int) $item['print_side_id'] : null,
                     isset($item['width']) ? (float) $item['width'] : null,
                     isset($item['height']) ? (float) $item['height'] : null,
                     $item['selected_options'] ?? []

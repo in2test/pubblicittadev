@@ -11,8 +11,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
-            PrintPlacementSeeder::class,
-            PrintSideSeeder::class,
             CategorySeeder::class,
             VariationOptionSeeder::class,
             NewWaveProductSeeder::class,

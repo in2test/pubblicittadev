@@ -70,5 +70,34 @@ class VariationOptionSeeder extends Seeder
                 ]);
             }
         }
+
+        // 4. Seed Print Placements as standard multi-select VariationType
+        $printPlacementType = VariationType::firstOrCreate(
+            ['name' => 'Posizioni di Stampa'],
+            [
+                'presentation_type' => 'select',
+                'allow_multiple' => true,
+            ]
+        );
+
+        $placements = [
+            ['name' => 'Fronte', 'value' => 'fronte', 'price' => 3.00, 'order' => 1],
+            ['name' => 'Retro', 'value' => 'retro', 'price' => 3.00, 'order' => 2],
+            ['name' => 'Manica Sinistra', 'value' => 'manica_sinistra', 'price' => 2.00, 'order' => 3],
+            ['name' => 'Manica Destra', 'value' => 'manica_destra', 'price' => 2.00, 'order' => 4],
+            ['name' => 'Lato Cuore', 'value' => 'lato_cuore', 'price' => 1.80, 'order' => 5],
+        ];
+
+        foreach ($placements as $p) {
+            VariationOption::updateOrCreate([
+                'variation_type_id' => $printPlacementType->id,
+                'value' => $p['value'],
+            ], [
+                'name' => $p['name'],
+                'default_price_modifier' => $p['price'],
+                'default_modifier_type' => \App\Enums\ModifierType::Flat,
+                'sort_order' => $p['order'],
+            ]);
+        }
     }
 }

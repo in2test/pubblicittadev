@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\ItemProducts\RelationManagers;
 
-use App\Models\PrintSide;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -61,14 +59,8 @@ class SkusRelationManager extends RelationManager
                             ->numeric()
                             ->required()
                             ->prefix('€'),
-                        Select::make('print_side_id')
-                            ->label('Lato di Stampa (Opzionale)')
-                            ->options(fn () => PrintSide::pluck('name', 'id'))
-                            ->nullable()
-                            ->searchable()
-                            ->preload(),
                     ])
-                    ->columns(3)
+                    ->columns(2)
                     ->columnSpanFull()
                     ->addActionLabel('Aggiungi Scaglione di Prezzo'),
             ]);

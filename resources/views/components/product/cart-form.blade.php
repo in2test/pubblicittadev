@@ -1,4 +1,4 @@
-@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'selectedPlacements' => [], 'jobId' => null, 'selectedPrintSide' => null, 'width' => null, 'height' => null, 'quantities' => []])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'jobId' => null, 'width' => null, 'height' => null, 'quantities' => []])
 
 @php
     /** @var \App\Models\Product $product */
@@ -7,9 +7,7 @@
     // Recupera gli sconti per quantità
     $discounts = $product->getQuantityDiscounts();
     
-    // Verifica se il prodotto supporta posizioni di stampa o lati di stampa (fronte/retro)
-    $hasPlacements = $product->printPlacements->isNotEmpty();
-    $hasSides = $product->printSides->isNotEmpty();
+
 
     // Tipi di variazioni configurabili (es. Colore, Taglia, Formato, Materiale)
     $variationTypes = $product->variationTypes;
@@ -122,45 +120,86 @@
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 {{ $type->name }}
             </label>
-            <div class="flex flex-wrap gap-2">
-                @php
-                    $productOptions = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->sortBy('sort_order');
-                @endphp
-                @foreach ($productOptions as $option)
-                    @php $isActive = ($selectedOptions[$type->id] ?? null) == $option->id; @endphp
-
-                    @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
-                        {{-- Rendering come campione di colore (swatch) o immagine --}}
+            @php
+                $productOptions = $type->pivot->options->sortBy('sort_order');
+            @endphp
+            @if ($type->allow_multiple)
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @foreach ($productOptions as $pvo)
                         @php
-                            $hexColors = $option->getHexColors();
-                            // Gradiente a 135deg per bicolori, colore solido altrimenti
-                            $swatchStyle = count($hexColors) >= 2
-                                ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
-                                : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
+                            $option = $pvo->option;
+                            if (!$option) continue;
+                            $isActive = false;
+                            if (isset($selectedOptions[$type->id])) {
+                                $isActive = is_array($selectedOptions[$type->id]) 
+                                    ? in_array($option->id, $selectedOptions[$type->id])
+                                    : $selectedOptions[$type->id] == $option->id;
+                            }
+                            $modifier = $pvo->getEffectivePriceModifier();
+                            $modifierType = $pvo->getEffectiveModifierType();
                         @endphp
-                        <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
-                            @class([
-                                'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
-                                'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
-                                'border-gray-300' => !$isActive
-                            ])
-                            @style([$swatchStyle])
-                            title="{{ $option->name }}"
-                        ></button>
-                    @else
-                        {{-- Rendering come classico pulsante testuale --}}
-                        <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
-                            @class([
-                                'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                'bg-primary text-gray-50 border-primary' => $isActive,
-                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
-                            ])
-                        >
-                            {{ $option->name }}
-                        </button>
-                    @endif
-                @endforeach
-            </div>
+                        <label
+                            wire:key="option-checkbox-{{ $option->id }}"
+                            class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container {{ $isActive ? 'border-primary bg-primary/5' : '' }}">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" 
+                                    wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                    @if($isActive) checked @endif
+                                    class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary">
+                                <span class="text-sm font-bold">{{ $option->name }}</span>
+                            </div>
+                            @if ($modifier > 0)
+                                <span class="text-[10px] font-mono text-primary ml-7">
+                                    +{{ $modifierType->value === 'percentage' ? '' : '€' }}{{ number_format($modifier, 2, ',', '.') }}{{ $modifierType->value === 'percentage' ? '%' : '' }}
+                                </span>
+                            @endif
+                        </label>
+                    @endforeach
+                </div>
+            @else
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($productOptions as $pvo)
+                        @php
+                            $option = $pvo->option;
+                            if (!$option) continue;
+                            $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
+                        @endphp
+
+                        @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
+                            {{-- Rendering come campione di colore (swatch) o immagine --}}
+                            @php
+                                $hexColors = $option->getHexColors();
+                                // Gradiente a 135deg per bicolori, colore solido altrimenti
+                                $swatchStyle = count($hexColors) >= 2
+                                    ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
+                                    : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
+                            @endphp
+                            <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                wire:key="option-swatch-{{ $option->id }}"
+                                @class([
+                                    'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
+                                    'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                    'border-gray-300' => !$isActive
+                                ])
+                                @style([$swatchStyle])
+                                title="{{ $option->name }}"
+                            ></button>
+                        @else
+                            {{-- Rendering come classico pulsante testuale --}}
+                            <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                wire:key="option-btn-{{ $option->id }}"
+                                @class([
+                                    'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                    'bg-primary text-gray-50 border-primary' => $isActive,
+                                    'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                                ])
+                            >
+                                {{ $option->name }}
+                            </button>
+                        @endif
+                    @endforeach
+                </div>
+            @endif
         </div>
     @endforeach
 
@@ -295,12 +334,11 @@
                                 $isTierSelected = $currentQty === $tierQty;
                                 
                                 // Calcola il prezzo totale effettivo per questa configurazione,
-                                // includendo lati di stampa, posizioni e variazioni correnti.
+                                // includendo posizioni e variazioni correnti.
                                 $tierTotalPrice = $product->calculateTotalPrice(
                                     $tierQty,
                                     [$activeSku->id => $tierQty],
                                     $selectedPlacements,
-                                    $selectedPrintSide,
                                     $width ? (float) $width : null,
                                     $height ? (float) $height : null,
                                     $selectedOptions
@@ -308,6 +346,7 @@
                                 $tierUnitPrice = $tierQty > 0 ? $tierTotalPrice / $tierQty : 0;
                             @endphp
                             <button type="button" 
+                                    wire:key="tier-btn-{{ $tier->id }}-{{ $tierQty }}"
                                     wire:click="$set('quantities.{{ $activeSku->id }}', {{ $tierQty }})"
                                     class="flex flex-col gap-1 items-center justify-center py-3 px-2 border transition-all rounded {{ $isTierSelected ? 'border-accent-600 bg-accent-50 ring-2 ring-accent-600 ring-offset-1 shadow-md scale-[1.02]' : 'border-gray-200 bg-surface-container hover:border-primary/50' }}">
                                 <span class="font-bold text-sm {{ $isTierSelected ? 'text-accent-900' : 'text-on-surface' }}">{{ $tierQty }} pz</span>
@@ -325,28 +364,7 @@
                 {{ $matrixType ? $matrixType->name . ' e Quantità' : (!$isNewwave && $product->pricingTiers->isNotEmpty() ? 'Oppure Inserisci Quantità Personalizzata' : 'Quantità') }}
             </label>
 
-            {{-- Lati di Stampa --}}
-            @if ($hasSides)
-                <div>
-                    <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                        Lati di Stampa
-                    </label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ($product->printSides->sortBy('sort_order') as $side)
-                            @php $isActive = $selectedPrintSide == $side->id; @endphp
-                            <button type="button" wire:click="$set('selectedPrintSide', {{ $side->id }})"
-                                @class([
-                                    'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                    'bg-primary text-gray-50 border-primary' => $isActive,
-                                    'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
-                                ])
-                            >
-                                {{ $side->name }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+
 
             {{-- Controllo sanità per SKU non risolte, non dovrebbe accadere per i prodotti standard ben configurati --}}
             @if (!$isNewwave && $matchingSkus->count() > 1)
@@ -366,7 +384,7 @@
                             $rowLabel = $singleSkuLabel ?: 'Quantità';
                         }
                     @endphp
-                    <div class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all w-full {{ $sku->quantity <= 0 && $isNewwave ? 'opacity-50 grayscale-[0.5]' : '' }}">
+                    <div wire:key="sku-qty-container-{{ $sku->id }}" class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all w-full {{ $sku->quantity <= 0 && $isNewwave ? 'opacity-50 grayscale-[0.5]' : '' }}">
                         <div class="flex flex-col flex-1 min-w-0 pr-4">
                             <span class="font-mono text-sm font-bold truncate">{{ $rowLabel }}</span>
                             <span class="text-[9px] text-gray-500 uppercase tracking-tighter mt-1">
@@ -451,82 +469,7 @@
         </div>
     @endif
 
-    {{-- SEZIONE: Opzioni di Stampa (Posizioni e Templates) --}}
-    @if ($hasPlacements)
-    <div class="space-y-4 pt-4 border-t border-outline-variant/10">
 
-        {{-- Scelta della posizione della stampa (Es. Petto, Schiena) --}}
-        <div>
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                Posizioni di Stampa
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-                @foreach ($product->printPlacements as $placement)
-                    <label
-                        class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 cursor-pointer transition-all hover:bg-surface-container {{ in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements) ? 'border-primary bg-primary/5' : '' }}">
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" wire:model.live="selectedPlacements" value="{{ $placement->id }}"
-                                class="h-4 w-4 text-primary">
-                            <span class="text-sm font-bold">{{ $placement->name }}</span>
-                        </div>
-                        {{-- Mostra il sovrapprezzo della posizione di stampa se presente --}}
-                        @if (($placement->pivot->additional_price ?? 0) > 0)
-                            <span class="text-[10px] font-mono text-primary ml-7">
-                                +€{{ number_format((float) $placement->pivot->additional_price, 2) }}
-                            </span>
-                        @endif
-                    </label>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Templates Scaricabili associati alla stampa --}}
-        @php
-            $templates = collect();
-            if ($selectedPrintSide) {
-                $side = $product->printSides->firstWhere('id', $selectedPrintSide);
-                if ($side && $side->template_path) {
-                    $templates->push([
-                        'name' => "Template: {$side->name}",
-                        'path' => $side->template_path,
-                    ]);
-                }
-            }
-            if (!empty($selectedPlacements)) {
-                foreach ($product->printPlacements as $placement) {
-                    if (in_array((string)$placement->id, $selectedPlacements) || in_array($placement->id, $selectedPlacements)) {
-                        if ($placement->template_path) {
-                            $templates->push([
-                                'name' => "Template: {$placement->name}",
-                                'path' => $placement->template_path,
-                            ]);
-                        }
-                    }
-                }
-            }
-        @endphp
-
-        @if ($templates->isNotEmpty())
-            <div class="p-4 border border-primary/20 bg-primary/5 rounded space-y-3">
-                <h4 class="text-[10px] font-mono uppercase tracking-widest text-primary font-bold">
-                    Template di Stampa Disponibili
-                </h4>
-                <p class="text-xs text-gray-600">
-                    Scarica i template per inserire la tua grafica e rispedirceli pronti per la stampa.
-                </p>
-                <div class="flex flex-col gap-2">
-                    @foreach ($templates as $tpl)
-                        <a href="{{ Storage::url($tpl['path']) }}" download target="_blank"
-                           class="flex items-center gap-2 text-xs font-mono text-primary hover:underline">
-                            <span class="material-symbols-outlined text-sm">download</span>
-                            {{ $tpl['name'] }}
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        @endif
-    </div>
-    @endif
 
     {{-- SEZIONE: Upload File Grafica --}}
     <div>

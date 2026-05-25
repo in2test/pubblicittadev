@@ -6,8 +6,8 @@ namespace Tests\Unit;
 
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
-use App\Models\PrintSide;
 use App\Models\Product;
+use App\Models\ProductSku;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -170,45 +170,52 @@ class ProductDiscountTest extends TestCase
         $this->assertEquals(40.00, $product->getPriceForQuantity(100));
     }
 
-    public function test_applies_pricing_tier_with_specific_print_side(): void
+    public function test_applies_pricing_tier_with_specific_sku(): void
     {
         $product = Product::factory()->create(['price' => 50]);
-        $printSideA = PrintSide::create(['name' => 'Side A', 'slug' => 'side-a']);
-        $printSideB = PrintSide::create(['name' => 'Side B', 'slug' => 'side-b']);
+        $skuA = ProductSku::create([
+            'product_id' => $product->id,
+            'sku' => 'TEST-SKU-A',
+            'quantity' => 10,
+            'is_available' => true,
+        ]);
+        $skuB = ProductSku::create([
+            'product_id' => $product->id,
+            'sku' => 'TEST-SKU-B',
+            'quantity' => 10,
+            'is_available' => true,
+        ]);
 
-        // Default pricing tiers (no print side)
+        // Default pricing tiers (no SKU)
         $product->pricingTiers()->create([
             'min_quantity' => 10,
             'max_quantity' => null,
             'price_per_unit' => 45.00,
         ]);
 
-        // Pricing tiers for Side A
+        // Pricing tiers for SKU A
         $product->pricingTiers()->create([
             'min_quantity' => 10,
             'max_quantity' => null,
             'price_per_unit' => 48.00,
-            'print_side_id' => $printSideA->id,
+            'product_sku_id' => $skuA->id,
         ]);
 
-        // Pricing tiers for Side B
+        // Pricing tiers for SKU B
         $product->pricingTiers()->create([
             'min_quantity' => 10,
             'max_quantity' => null,
             'price_per_unit' => 52.00,
-            'print_side_id' => $printSideB->id,
+            'product_sku_id' => $skuB->id,
         ]);
 
-        // Standard lookup without print side
+        // Standard lookup without SKU
         $this->assertEquals(45.00, $product->getPriceForQuantity(10));
 
-        // Side A lookup
-        $this->assertEquals(48.00, $product->getPriceForQuantity(10, $printSideA->id));
+        // SKU A lookup
+        $this->assertEquals(48.00, $product->getPriceForQuantity(10, $skuA));
 
-        // Side B lookup
-        $this->assertEquals(52.00, $product->getPriceForQuantity(10, $printSideB->id));
-
-        // Side C (non-existent in tiers) fallback to default
-        $this->assertEquals(45.00, $product->getPriceForQuantity(10, 99999));
+        // SKU B lookup
+        $this->assertEquals(52.00, $product->getPriceForQuantity(10, $skuB));
     }
 }

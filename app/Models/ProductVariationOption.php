@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ModifierType;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -12,11 +13,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * Represents the per-product configuration of a single modifier option.
+ *
+ * `price_modifier` is nullable — null means "use the global default
+ * from the linked VariationOption". This enables a two-level fallback:
+ * global default → product-level override.
+ *
  * @property int $id
  * @property int $product_variation_type_id
  * @property int $variation_option_id
- * @property string $modifier_type
- * @property numeric $price_modifier
+ * @property ModifierType $modifier_type
+ * @property numeric|null $price_modifier Null = inherit global default
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read VariationOption $option
@@ -45,6 +52,11 @@ class ProductVariationOption extends Model
 {
     public $incrementing = true;
 
+    protected $casts = [
+        'modifier_type' => ModifierType::class,
+        'price_modifier' => 'decimal:2',
+    ];
+
     public function option(): BelongsTo
     {
         return $this->belongsTo(VariationOption::class, 'variation_option_id');
@@ -53,5 +65,34 @@ class ProductVariationOption extends Model
     public function productVariationType(): BelongsTo
     {
         return $this->belongsTo(ProductVariationType::class, 'product_variation_type_id');
+    }
+
+    /**
+     * Returns the effective price modifier value, falling back to the
+     * global default on the linked VariationOption when this record has no override.
+     */
+    public function getEffectivePriceModifier(): float
+    {
+        if ($this->price_modifier !== null) {
+            return (float) $this->price_modifier;
+        }
+
+        $this->loadMissing('option');
+
+        return (float) ($this->option->default_price_modifier ?? 0.0);
+    }
+
+    /**
+     * Returns the effective modifier type, falling back to the global default.
+     */
+    public function getEffectiveModifierType(): ModifierType
+    {
+        if ($this->price_modifier !== null) {
+            return $this->modifier_type ?? ModifierType::Flat;
+        }
+
+        $this->loadMissing('option');
+
+        return $this->option->default_modifier_type ?? ModifierType::Flat;
     }
 }

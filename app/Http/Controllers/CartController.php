@@ -9,7 +9,6 @@ use App\Http\Requests\Cart\StoreCartRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Models\Image;
 use App\Models\PrintPlacement;
-use App\Models\PrintSide;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
@@ -57,17 +56,11 @@ class CartController extends Controller
         $allSkuIds = $rawItems->pluck('quantities')->filter(fn ($item) => is_array($item))->flatMap(fn ($q) => array_keys($q))->unique();
         $skus = ProductSku::with('options')->whereIn('id', $allSkuIds)->get()->keyBy('id');
 
-        $allOptionIds = $rawItems->pluck('selected_options')->filter(fn ($item) => is_array($item))->flatMap(fn ($o) => array_values($o))->unique();
+        $allOptionIds = $rawItems->pluck('selected_options')->filter(fn ($item) => is_array($item))->flatMap(fn ($o) => is_array($o) ? \Illuminate\Support\Arr::flatten($o) : [$o])->unique();
         $options = VariationOption::whereIn('id', $allOptionIds)->get()->keyBy('id');
 
         $typeIds = $options->pluck('variation_type_id')->unique();
         $types = VariationType::whereIn('id', $typeIds)->get()->keyBy('id');
-
-        $allPlacementIds = $rawItems->pluck('print_placements')->filter(fn ($item) => is_array($item))->flatten(1)->map(fn ($pid) => (int) (is_array($pid) ? $pid['id'] : $pid))->unique();
-        $placements = PrintPlacement::whereIn('id', $allPlacementIds)->get()->keyBy('id');
-
-        $allPrintSideIds = $rawItems->pluck('print_side_id')->filter()->unique();
-        $printSides = PrintSide::whereIn('id', $allPrintSideIds)->get()->keyBy('id');
 
         // --- Build enriched item list ---
         $items = [];
@@ -77,7 +70,6 @@ class CartController extends Controller
         foreach ($rawItems as $jobId => $item) {
             $product = $products->get((int) $item['product_id']);
             $qty = is_array($item['quantities'] ?? null) ? (int) array_sum($item['quantities']) : (int) ($item['quantity'] ?? 1);
-            $printSideId = isset($item['print_side_id']) ? (int) $item['print_side_id'] : null;
 
             $basePrice = 0.0;
             $discPrice = 0.0;
@@ -86,8 +78,6 @@ class CartController extends Controller
                 $totalPrice = $product->calculateTotalPrice(
                     $qty,
                     $item['quantities'] ?? [],
-                    $item['print_placements'] ?? [],
-                    $printSideId,
                     isset($item['width']) ? (float) $item['width'] : null,
                     isset($item['height']) ? (float) $item['height'] : null,
                     $item['selected_options'] ?? []
@@ -106,9 +96,13 @@ class CartController extends Controller
                 }
             }
 
+            // Determine active/main image for this configuration
             $displayImage = null;
             if ($product) {
-                $selectedOptionIds = array_values($item['selected_options'] ?? []);
+                $selectedOptionIds = [];
+                if (isset($item['selected_options']) && is_array($item['selected_options'])) {
+                    $selectedOptionIds = \Illuminate\Support\Arr::flatten($item['selected_options']);
+                }
 
                 if ($selectedOptionIds !== []) {
                     /** @var Image|null $img */
@@ -127,12 +121,14 @@ class CartController extends Controller
 
             $colorName = $item['color_name'] ?? null;
             $colorHexes = [];
-            foreach ($item['selected_options'] ?? [] as $optionId) {
-                $opt = $options->get((int) $optionId);
-                if ($opt && $types->get($opt->variation_type_id)?->presentation_type === 'color_swatch') {
-                    $colorName = $opt->name;
-                    $colorHexes = $opt->getHexColors();
-                    break;
+            if (isset($item['selected_options']) && is_array($item['selected_options'])) {
+                foreach (\Illuminate\Support\Arr::flatten($item['selected_options']) as $optionId) {
+                    $opt = $options->get((int) $optionId);
+                    if ($opt && $types->get($opt->variation_type_id)?->presentation_type === 'color_swatch') {
+                        $colorName = $opt->name;
+                        $colorHexes = $opt->getHexColors();
+                        break;
+                    }
                 }
             }
 
@@ -160,12 +156,13 @@ class CartController extends Controller
                 'display_image' => $displayImage,
                 'color_name' => $colorName,
                 'color_hexes' => $colorHexes,
-                'print_side_name' => $printSides->get($printSideId)?->name,
-                'placement_names' => collect($item['print_placements'] ?? [])
-                    ->map(function ($pid) use ($placements) {
-                        $id = (int) (is_array($pid) ? $pid['id'] : $pid);
-
-                        return $placements->get($id)->name ?? ('Pos. #'.$id);
+                'placement_names' => collect($item['selected_options'] ?? [])
+                    ->flatMap(function ($optionIds, $typeId) use ($options, $types) {
+                        $type = $types->get((int) $typeId);
+                        if ($type && $type->allow_multiple) {
+                            return collect((array) $optionIds)->map(fn($oid) => $options->get((int) $oid)?->name)->filter();
+                        }
+                        return [];
                     })->all(),
                 'size_rows' => $sizeRows,
             ]);
@@ -203,11 +200,9 @@ class CartController extends Controller
     public function add(StoreCartRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $printPlacements = json_decode((string) ($validated['print_placements'] ?? '[]'), true) ?? [];
 
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];
-        $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
         $width = isset($validated['width']) ? (float) $validated['width'] : null;
         $height = isset($validated['height']) ? (float) $validated['height'] : null;
@@ -215,15 +210,13 @@ class CartController extends Controller
         $totalPrice = $product->calculateTotalPrice(
             $quantity,
             $validated['quantities'] ?? [],
-            $printPlacements,
-            $printSideId,
             $width,
             $height,
-            $validated['selected_options'] ?? []
+            $request->input('selected_options') ?? []
         );
 
         $this->cart->add(array_merge($validated, [
-            'print_placements' => $printPlacements,
+            'selected_options' => $request->input('selected_options') ?? [],
             'price' => $quantity > 0 ? $totalPrice / $quantity : 0.0,
             'quantity' => $quantity,
         ]));
@@ -232,45 +225,48 @@ class CartController extends Controller
     }
 
     /**
-     * Update the quantity of a specific item in the cart.
-     */
-    public function update(UpdateCartRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $this->cart->updateItemQuantity(
-            $validated['key'],
-            (int) ($validated['quantity'] ?? 0),
-            ($validated['update_type'] ?? null) === 'size' ? (int) ($validated['size_id'] ?? 0) : null
-        );
-
-        return back()->with('success', 'Carrello aggiornato!');
-    }
-
-    /**
-     * Remove a single item from the cart.
+     * Remove the specified item from the cart.
+     *
+     * @param  Request  $request  Request containing the Job UUID to remove.
+     * @return RedirectResponse Redirects back to the cart.
      */
     public function remove(Request $request): RedirectResponse
     {
-        $request->validate(['key' => 'required|string']);
+        $request->validate([
+            'key' => 'required|string',
+        ]);
 
         $this->cart->remove($request->input('key'));
 
-        return back()->with('success', 'Prodotto rimosso dal carrello!');
+        return back()->with('success', 'Lavorazione rimossa dal carrello!');
     }
 
     /**
-     * Remove multiple items from the cart.
+     * Update the quantity of a specific item in the cart.
+     * Supports both global quantity update and size-specific updates.
      */
-    public function removeMultiple(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $this->cart->removeMultiple($request->input('keys', []));
+        $request->validate([
+            'key' => 'required|string',
+            'quantity' => 'required|integer|min:0',
+            'update_type' => 'nullable|string',
+            'size_id' => 'nullable|integer',
+        ]);
 
-        return back()->with('success', 'Prodotti rimossi dal carrello!');
+        $jobId = $request->input('key');
+        $quantity = (int) $request->input('quantity');
+        $skuId = $request->input('size_id') ? (int) $request->input('size_id') : null;
+
+        $this->cart->updateItemQuantity($jobId, $quantity, $skuId);
+
+        return back()->with('success', 'Quantità aggiornata!');
     }
 
     /**
-     * Completely empty the shopping cart.
+     * Clear all items from the cart.
+     *
+     * @return RedirectResponse Redirects back.
      */
     public function clear(): RedirectResponse
     {
@@ -295,20 +291,18 @@ class CartController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'print_placements' => 'nullable|string',
             'width' => 'nullable|numeric|min:0.1',
             'height' => 'nullable|numeric|min:0.1',
-            'print_side_id' => 'nullable|integer|exists:print_sides,id',
+            'selected_options' => 'nullable|array',
+            'quantities' => 'nullable|array',
         ]);
 
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];
-        $placements = json_decode((string) ($validated['print_placements'] ?? '[]'), true) ?? [];
         $width = isset($validated['width']) ? (float) $validated['width'] : null;
         $height = isset($validated['height']) ? (float) $validated['height'] : null;
-        $printSideId = isset($validated['print_side_id']) ? (int) $validated['print_side_id'] : null;
 
-        $unitPrice = $product->getPriceForQuantity($quantity, $printSideId);
+        $unitPrice = $product->getPriceForQuantity($quantity);
 
         $billedAreaPerUnit = 0.0;
         if ($product->product_class === ProductClass::AreaBased && $width > 0 && $height > 0) {
@@ -320,8 +314,6 @@ class CartController extends Controller
         $totalPrice = $product->calculateTotalPrice(
             $quantity,
             $validated['quantities'] ?? [],
-            $placements,
-            $printSideId,
             $width,
             $height,
             $validated['selected_options'] ?? []

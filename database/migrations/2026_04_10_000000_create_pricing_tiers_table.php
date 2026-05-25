@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pricing_tiers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('print_side_id')->nullable()->constrained('print_sides')->nullOnDelete();
+            $table->foreignId('product_sku_id')->nullable()->constrained('product_skus')->cascadeOnDelete();
             $table->boolean('is_custom_price')->default(false);
             $table->unsignedInteger('min_quantity');
             $table->unsignedInteger('max_quantity')->nullable();

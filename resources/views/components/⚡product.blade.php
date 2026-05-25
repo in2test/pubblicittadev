@@ -22,11 +22,9 @@ new class extends Component {
     // Quantità selezionate (Key: product_sku_id, Value: quantity)
     public array $quantities = [];
     
-    // Posizionamenti di stampa selezionati
-    public array $selectedPlacements = [];
+
     
-    // Lato di stampa selezionato (se applicabile)
-    public ?int $selectedPrintSide = null;
+
     
     // Dimensioni personalizzate (per prodotti venduti ad area)
     public ?float $width = null;
@@ -45,8 +43,6 @@ new class extends Component {
         $this->product->loadMissing([
             'variationTypes',
             'skus.options.type', 
-            'printSides', 
-            'printPlacements', 
             'pricingTiers'
         ]);
 
@@ -70,25 +66,17 @@ new class extends Component {
                 } elseif (isset($item['sku_id']) && isset($item['quantity'])) {
                     $this->quantities[$item['sku_id']] = (int) $item['quantity'];
                 }
-
-                $this->selectedPlacements = collect($item['print_placements'] ?? [])
-                    ->map(fn($p) => is_array($p) && isset($p['id']) ? (string) $p['id'] : (string) $p)
-                    ->toArray();
                     
-                $this->selectedPrintSide = $item['print_side_id'] ?? null;
                 $this->width = $item['width'] ?? null;
                 $this->height = $item['height'] ?? null;
             }
-        } elseif ($this->product->printSides->isNotEmpty()) {
-            // Seleziona il primo lato di stampa disponibile di default
-            $this->selectedPrintSide = $this->product->printSides->sortBy('sort_order')->first()->id;
         }
 
         // Seleziona automaticamente le opzioni più economiche (se non già selezionate)
         // per prodotti standard (escludendo i prodotti di tipo 'newwave')
         if ($this->product->type !== 'newwave') {
             $lowestPriceSku = $this->product->skus
-                ->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1, $this->selectedPrintSide))
+                ->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1))
                 ->first();
 
             foreach ($this->product->variationTypes as $type) {
@@ -149,14 +137,33 @@ new class extends Component {
      */
     public function setOption(int $typeId, int $optionId): void
     {
-        if (isset($this->selectedOptions[$typeId]) && $this->selectedOptions[$typeId] === $optionId) {
-            unset($this->selectedOptions[$typeId]);
+        $type = $this->product()->variationTypes->firstWhere('id', $typeId);
+        $allowMultiple = $type && $type->allow_multiple;
+
+        if ($allowMultiple) {
+            $current = $this->selectedOptions[$typeId] ?? [];
+            if (!is_array($current)) {
+                $current = $current ? [$current] : [];
+            }
+            if (in_array($optionId, $current)) {
+                $current = array_values(array_diff($current, [$optionId]));
+            } else {
+                $current[] = $optionId;
+            }
+            if (empty($current)) {
+                unset($this->selectedOptions[$typeId]);
+            } else {
+                $this->selectedOptions[$typeId] = $current;
+            }
         } else {
-            $this->selectedOptions[$typeId] = $optionId;
+            if (isset($this->selectedOptions[$typeId]) && $this->selectedOptions[$typeId] === $optionId) {
+                unset($this->selectedOptions[$typeId]);
+            } else {
+                $this->selectedOptions[$typeId] = $optionId;
+            }
         }
         
         // Se la variante cambia e influenza le immagini, aggiorniamo la galleria
-        $type = $this->product->variationTypes->firstWhere('id', $typeId);
         if ($type && $type->pivot->has_images) {
             $this->updateImages();
         }
@@ -185,7 +192,7 @@ new class extends Component {
             return (float) $activeSku->override_price;
         }
 
-        return $product->getPriceForQuantity(1, $this->selectedPrintSide);
+        return $product->getPriceForQuantity(1);
     }
 
     #[Computed]
@@ -217,8 +224,6 @@ new class extends Component {
         return $this->product()->calculateTotalPrice(
             $this->totalQuantity(),
             $this->quantities,
-            $this->selectedPlacements,
-            $this->selectedPrintSide,
             $this->width ?: null,
             $this->height ?: null,
             $this->selectedOptions
@@ -349,9 +354,22 @@ new class extends Component {
         foreach ($this->selectedOptions as $typeId => $optionId) {
             $type = $product->variationTypes->firstWhere('id', $typeId);
             if ($type) {
-                $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
-                if ($option) {
-                    $optionsSummary[$type->name] = $option->name;
+                if ($type->allow_multiple && is_array($optionId)) {
+                    $names = [];
+                    foreach ($optionId as $optId) {
+                        $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optId);
+                        if ($option) {
+                            $names[] = $option->name;
+                        }
+                    }
+                    if (!empty($names)) {
+                        $optionsSummary[$type->name] = implode(', ', $names);
+                    }
+                } else {
+                    $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                    if ($option) {
+                        $optionsSummary[$type->name] = $option->name;
+                    }
                 }
             }
         }
@@ -364,8 +382,6 @@ new class extends Component {
             'image_url' => $product->getFirstImageUrl('thumbnail'),
             'selected_options' => $this->selectedOptions,
             'options_summary' => $optionsSummary, // Riepilogo testuale utile al checkout
-            'print_placements' => $this->selectedPlacements,
-            'print_side_id' => $this->selectedPrintSide,
             'price' => ($this->totalPrice() / $this->totalQuantity()),
             'quantity' => $this->totalQuantity(),
             'quantities' => $quantitiesToStore,
@@ -467,7 +483,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :selectedPlacements="$this->selectedPlacements" :selectedPrintSide="$selectedPrintSide" :quantities="$this->quantities" :$jobId :$width :$height />
+            <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :quantities="$this->quantities" :$jobId :$width :$height />
 
             <x-product.trust-badges />
         </div>

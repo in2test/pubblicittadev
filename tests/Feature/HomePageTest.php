@@ -93,7 +93,6 @@ class HomePageTest extends TestCase
         // Attach color type to product (has_images = true)
         $product->variationTypes()->attach($colorType->id, [
             'has_images' => true,
-            'affects_price' => true,
             'sort_order' => 1,
         ]);
 

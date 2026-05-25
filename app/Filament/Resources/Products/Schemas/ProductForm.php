@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Enums\ModifierType;
 use App\Enums\ProductClass;
 use App\Models\Category;
-use App\Models\PrintPlacement;
-use App\Models\PrintSide;
 use App\Models\Product;
+use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use App\Support\SlugGenerator;
@@ -36,23 +36,24 @@ use Illuminate\Support\HtmlString;
  * ProductForm
  *
  * Provides the central Filament form schema for managing products.
- * This class abstracts the form definition so it can be reused across different
- * product resource types (like Standard Products vs Variable Products).
+ * Variations are split into two clearly-labelled sections:
+ *
+ * - "Varianti Base" (is_modifier=false): determine SKU / price tier.
+ *   Each option group can have its own images via ProductVariationType media.
+ * - "Modificatori di Prezzo" (is_modifier=true): add a flat or percentage
+ *   surcharge on top of the base price. Inherits a global default from
+ *   VariationOption; per-product overrides can be set inline.
  */
 class ProductForm
 {
     /**
      * Main configuration method that returns the complete form schema.
-     * The form is divided into several Tabs: Generale, Varianti & Scaglioni,
-     * Personalizzazione Stampa, and Galleria Immagini.
-     *
-     * @param  Schema  $schema  The base Filament schema.
      */
     public static function configure(Schema $schema, ?ProductClass $productClass = null): Schema
     {
         return $schema
             ->components([
-                static::getTypeField(), // Campo nascosto
+                static::getTypeField(),
 
                 Tabs::make('Tabs')
                     ->tabs([
@@ -122,23 +123,14 @@ class ProductForm
                                 ]),
                             ]),
 
-                        Tab::make('Varianti & Scaglioni')
+                        Tab::make('Varianti')
                             ->icon('heroicon-m-squares-2x2')
                             ->visible(fn () => $productClass !== ProductClass::AreaBased)
                             ->schema([
-                                static::getVariationTypesRepeater(),
-                                static::getSkusRepeater()
-                                    ->visible(fn () => $productClass !== ProductClass::ItemBased),
+                                static::getBaseVariationsRepeater(),
+                                static::getModifiersRepeater(),
                                 static::getPricingTiersRepeater()
                                     ->visible(fn () => $productClass !== ProductClass::ItemBased),
-                            ]),
-
-                        Tab::make('Personalizzazione Stampa')
-                            ->icon('heroicon-m-printer')
-                            ->schema([
-                                static::getPersonalizationTypeField(),
-                                static::getPrintSidesField(),
-                                static::getPrintPlacementsRepeater(),
                             ]),
 
                         Tab::make('Galleria Immagini')
@@ -226,18 +218,6 @@ class ProductForm
             ->columnSpanFull();
     }
 
-    public static function getPersonalizationTypeField(): Select
-    {
-        return Select::make('personalization_type')
-            ->label('Tipo di Personalizzazione')
-            ->options([
-                'global' => 'Posizioni di Stampa Standard (es. T-shirt: Fronte, Retro, Manica con sovrapprezzo)',
-                'custom' => 'Prezzi a Scaglioni basati sui Lati di Stampa (es. Biglietti da visita)',
-            ])
-            ->default('global')
-            ->dehydrated(false)
-            ->live();
-    }
 
     public static function getPriceField(): TextInput
     {
@@ -256,29 +236,100 @@ class ProductForm
             ->prefix('€');
     }
 
-    public static function getVariationTypesRepeater(): Repeater
+    /**
+     * BASE VARIATIONS repeater (is_modifier = false).
+     *
+     * These define the price structure of the product (e.g. Thickness → 5mm, 10mm).
+     * Each variation group can carry its own gallery images via the ProductVariationType
+     * Spatie Media collection "option_images".
+     */
+    public static function getBaseVariationsRepeater(): Repeater
     {
-        return Repeater::make('productVariationTypes')
-            ->relationship('productVariationTypes')
-            ->label('Varianti Base e Modificatori (Add-ons)')
+        return Repeater::make('baseVariationTypes')
+            ->relationship('baseVariationTypes')
+            ->label('Varianti Base')
+            ->helperText('Queste varianti definiscono la struttura di prezzo del prodotto (es. Spessore: 5mm, 10mm; Modello roll-up). Ogni opzione può avere le proprie foto.')
             ->defaultItems(0)
             ->schema([
+                Hidden::make('is_modifier')->default(false),
                 Select::make('variation_type_id')
-                    ->label('Tipo (es. Formato, Finitura)')
+                    ->label('Tipo di variante (es. Spessore, Modello)')
                     ->relationship('type', 'name')
                     ->required()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
-                Toggle::make('is_modifier')
-                    ->label('Usa come Modificatore')
-                    ->helperText('Se attivo, non moltiplica gli SKU, ma aggiunge un sovrapprezzo (es. +10% Plastificazione).')
-                    ->live(),
                 Toggle::make('has_images')
-                    ->label('Variante Visiva (Colore)')
-                    ->helperText('Attiva se cambia l\'immagine (es. Colore T-shirt).'),
+                    ->label('Variante Visiva (cambia le immagini del prodotto)')
+                    ->helperText('Attiva se ogni opzione ha un aspetto visivo diverso (es. colore, materiale).'),
+                TextInput::make('sort_order')
+                    ->label('Ordinamento')
+                    ->numeric()
+                    ->default(0)
+                    ->columnSpan(1),
+                Section::make('Immagini per Opzione')
+                    ->description('Carica immagini specifiche per ogni opzione di questa variante (es. foto per Forex 5mm, foto diverse per Forex 10mm).')
+                    ->collapsible()
+                    ->collapsed()
+                    ->columnSpanFull()
+                    ->schema([
+                        Repeater::make('optionImages')
+                            ->relationship('options')
+                            ->label('Galleria per Opzione')
+                            ->defaultItems(0)
+                            ->schema([
+                                Select::make('variation_option_id')
+                                    ->label('Opzione')
+                                    ->options(function (Get $get) {
+                                        $variationTypeId = $get('../../variation_type_id');
+                                        if (! $variationTypeId) {
+                                            return [];
+                                        }
+
+                                        return VariationOption::where('variation_type_id', $variationTypeId)->pluck('name', 'id');
+                                    })
+                                    ->required()
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                            ])
+                            ->addActionLabel('Aggiungi Opzione')
+                            ->reorderable(false),
+                    ]),
+            ])
+            ->collapsible()
+            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null)
+            ->addActionLabel('Aggiungi Variante Base');
+    }
+
+    /**
+     * MODIFIERS repeater (is_modifier = true).
+     *
+     * These add a flat (€/pezzo) or percentage surcharge on the base price.
+     * Each option inherits its modifier from the global VariationOption default;
+     * the admin can override the value per-product by entering a custom amount.
+     * Leaving the field blank (null) resets to the global default.
+     */
+    public static function getModifiersRepeater(): Repeater
+    {
+        return Repeater::make('modifierVariationTypes')
+            ->relationship('modifierVariationTypes')
+            ->label('Modificatori di Prezzo')
+            ->helperText('Questi aggiungono un sovrapprezzo al totale (es. Stampa Fronte+Retro +25%, Plastificazione +10%). Il valore di default è globale; qui puoi sovrascriverlo per questo prodotto.')
+            ->defaultItems(0)
+            ->schema([
+                Hidden::make('is_modifier')->default(true),
+                Select::make('variation_type_id')
+                    ->label('Tipo di modificatore (es. Lati di Stampa, Finitura)')
+                    ->relationship('type', 'name')
+                    ->required()
+                    ->live()
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                TextInput::make('sort_order')
+                    ->label('Ordinamento')
+                    ->numeric()
+                    ->default(0),
                 Repeater::make('options')
                     ->relationship('options')
-                    ->label('Prezzi Modificatori')
-                    ->visible(fn (Get $get) => $get('is_modifier') === true)
+                    ->label('Opzioni e Sovrapprezzi')
+                    ->defaultItems(0)
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('variation_option_id')
                             ->label('Opzione')
@@ -290,64 +341,53 @@ class ProductForm
 
                                 return VariationOption::where('variation_type_id', $variationTypeId)->pluck('name', 'id');
                             })
-                            ->required(),
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, $state) {
+                                if ($state) {
+                                    $option = VariationOption::find($state);
+                                    if ($option) {
+                                        // Pre-fill with global default (user can override)
+                                        $set('modifier_type', $option->default_modifier_type?->value ?? 'flat');
+                                        $set('price_modifier', $option->default_price_modifier > 0 ? (float) $option->default_price_modifier : null);
+                                    }
+                                }
+                            })
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                         Select::make('modifier_type')
                             ->label('Tipo di ricarico')
-                            ->options([
-                                'flat' => 'Fisso (€ a pezzo)',
-                                'percentage' => 'Percentuale (%)',
-                            ])
-                            ->default('flat')
+                            ->options(ModifierType::class)
+                            ->default(ModifierType::Flat->value)
                             ->required(),
                         TextInput::make('price_modifier')
-                            ->label('Valore (€ o %)')
+                            ->label('Valore (null = usa default globale)')
+                            ->helperText(function (Get $get) {
+                                $optionId = $get('variation_option_id');
+                                if (! $optionId) {
+                                    return null;
+                                }
+
+                                $option = VariationOption::find($optionId);
+                                if (! $option || $option->default_price_modifier <= 0) {
+                                    return 'Nessun default globale impostato.';
+                                }
+
+                                return "Default globale: {$option->default_price_modifier} ({$option->default_modifier_type->getLabel()})";
+                            })
                             ->numeric()
-                            ->default(0)
-                            ->required(),
+                            ->placeholder('Lascia vuoto per usare il default globale')
+                            ->nullable(),
                     ])
-                    ->columns(3),
+                    ->columns(3)
+                    ->addActionLabel('Aggiungi Opzione'),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null);
-    }
-
-    public static function getSkusRepeater(): Repeater
-    {
-        return Repeater::make('skus')
-            ->relationship('skus')
-            ->defaultItems(0)
-            ->label('Varianti e Inventario (SKU)')
-            ->schema([
-                TextInput::make('sku')
-                    ->label('Codice SKU Variante')
-                    ->required(),
-                TextInput::make('quantity')
-                    ->label('Quantità in Magazzino')
-                    ->numeric()
-                    ->required()
-                    ->default(100),
-                Toggle::make('is_available')
-                    ->label('Disponibile')
-                    ->default(true),
-                TextInput::make('override_price')
-                    ->label('Prezzo Specifico per Variante (€)')
-                    ->numeric()
-                    ->prefix('€'),
-                Select::make('options')
-                    ->label('Opzioni Varianti')
-                    ->relationship('options', 'name')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
-            ])
-            ->columns(2)
-            ->grid(2);
+            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null)
+            ->addActionLabel('Aggiungi Modificatore');
     }
 
     /**
      * Configures the repeater for Quantity-based discount tiers (Prezzi a Scaglioni).
-     * Includes complex calculation logic via the cascadePricingTiers method to automate
-     * unit and total price calculations as quantities change.
      */
     public static function getPricingTiersRepeater(): Repeater
     {
@@ -386,7 +426,6 @@ class ProductForm
                             $set('price_per_unit', round($unitPrice, 4));
                             $set('is_custom_price', true);
 
-                            // Trigger cascade calculation
                             static::cascadePricingTiers($component);
                         }
                     })
@@ -410,16 +449,9 @@ class ProductForm
                             $set('total_price', round($qty * $unit, 2));
                             $set('is_custom_price', true);
 
-                            // Trigger cascade calculation
                             static::cascadePricingTiers($component);
                         }
                     }),
-                Select::make('print_side_id')
-                    ->label('Lato di Stampa Associato (Opzionale per Biglietti da Visita)')
-                    ->options(fn () => PrintSide::pluck('name', 'id'))
-                    ->nullable()
-                    ->searchable()
-                    ->preload(),
             ])
             ->columns(2)
             ->grid(1)
@@ -428,24 +460,17 @@ class ProductForm
 
     /**
      * Calculates the cascading logic for tier prices when a user inputs a total or unit price.
-     * This method automatically interpolates or extrapolates missing tier prices based on
-     * the defined or locked prices in other tiers.
      *
      * @param  mixed  $component  The Filament component triggering the cascade.
      */
     protected static function cascadePricingTiers($component): void
     {
-        // $component->getContainer()->getParentComponent() gets the repeater
         $repeater = $component->getContainer()->getParentComponent();
         if (! $repeater instanceof Repeater) {
             return;
         }
 
-        // We get the full state of the repeater
-        // The path to the repeater state can be found via the component's state path
         $statePath = $repeater->getStatePath();
-
-        // Use livewire directly since we need to modify siblings
         $livewire = $component->getLivewire();
         $tiers = data_get($livewire, $statePath);
 
@@ -453,7 +478,6 @@ class ProductForm
             return;
         }
 
-        // Sort by min_quantity to calculate correctly
         uasort($tiers, fn ($a, $b) => (int) ($a['min_quantity'] ?? 0) <=> (int) ($b['min_quantity'] ?? 0));
 
         $keys = array_keys($tiers);
@@ -461,7 +485,6 @@ class ProductForm
 
         foreach ($keys as $i => $key) {
             if (! empty($tiers[$key]['is_custom_price']) || $i === 0) {
-                // Ensure at least the first item is considered a baseline if nothing is locked
                 $lockedIndices[] = $i;
             }
         }
@@ -493,7 +516,6 @@ class ProductForm
             $priceBefore = (float) ($tiers[$keys[$beforeIdx]]['price_per_unit'] ?? 0);
 
             if ($afterIdx !== null) {
-                // Interpolate
                 $qtyAfter = (int) ($tiers[$keys[$afterIdx]]['min_quantity'] ?? 0);
                 $priceAfter = (float) ($tiers[$keys[$afterIdx]]['price_per_unit'] ?? 0);
 
@@ -503,12 +525,10 @@ class ProductForm
                     $tiers[$key]['price_per_unit'] = round($interpolatedPrice, 4);
                 }
             } else {
-                // Extrapolate (-10% from the preceding tier)
                 $prevPrice = (float) ($tiers[$keys[$i - 1]]['price_per_unit'] ?? 0);
                 $tiers[$key]['price_per_unit'] = round($prevPrice * 0.90, 4);
             }
 
-            // Update total price for this tier
             $tiers[$key]['total_price'] = round($qty * $tiers[$key]['price_per_unit'], 2);
         }
 
@@ -569,49 +589,6 @@ class ProductForm
             ->columnSpanFull();
     }
 
-    public static function getPrintPlacementsRepeater(): Repeater
-    {
-        return Repeater::make('printPlacements')
-            ->relationship('printPlacements')
-            ->defaultItems(0)
-            ->label('Posizioni di Stampa')
-            ->schema([
-                Select::make('print_placement_id')
-                    ->label('Posizione')
-                    ->options(PrintPlacement::pluck('name', 'id'))
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function (Set $set, $state) {
-                        if ($state) {
-                            $placement = PrintPlacement::where('id', '=', $state, 'and')->first();
-                            if ($placement) {
-                                $set('additional_price', $placement->default_price);
-                            }
-                        }
-                    })
-                    ->distinct()
-                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
-                TextInput::make('additional_price')
-                    ->label('Sovrapprezzo (€)')
-                    ->numeric()
-                    ->prefix('+ €')
-                    ->default(0)
-                    ->required(),
-            ])
-            ->columns(2)
-            ->grid(2)
-            ->addActionLabel('Aggiungi Posizione');
-    }
-
-    public static function getPrintSidesField(): Select
-    {
-        return Select::make('printSides')
-            ->relationship('printSides', 'name')
-            ->label('Lati di Stampa Disponibili')
-            ->multiple()
-            ->preload()
-            ->searchable();
-    }
 
     public static function getIsActiveField(): Toggle
     {
@@ -631,8 +608,6 @@ class ProductForm
 
     public static function getPricingModelField(): Hidden
     {
-        // Pricing model is now derived from product_class, so we can hide this or remove it entirely.
-        // For backwards compatibility, we default to 'fixed' but it's no longer the primary source of truth.
         return Hidden::make('pricing_model')
             ->default('fixed');
     }

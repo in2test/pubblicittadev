@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // 'Color', 'Size', etc.
             $table->string('presentation_type')->default('select'); // 'color_swatch', 'select', 'radio'
+            $table->boolean('allow_multiple')->default(false);
             $table->timestamps();
         });
 
@@ -26,6 +27,8 @@ return new class extends Migration
             $table->string('name'); // 'Red', 'XL'
             $table->string('value')->nullable(); // '#FF0000', 'xl', '5mm' (meta value)
             $table->string('color_hex')->nullable(); // '#800000'
+            $table->string('default_modifier_type')->default('flat');
+            $table->decimal('default_price_modifier', 10, 2)->default(0.00);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
@@ -36,19 +39,20 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('variation_type_id')->constrained()->cascadeOnDelete();
             $table->boolean('has_images')->default(false);
-            $table->boolean('affects_price')->default(false);
+            $table->boolean('is_modifier')->default(false);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
 
             $table->unique(['product_id', 'variation_type_id']);
         });
 
-        // 4. Product Variation Options (Specific choices for the product, and individual modifiers)
+        // 4. Product Variation Options (Specific price overrides per product option)
         Schema::create('product_variation_options', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_variation_type_id')->constrained('product_variation_types')->cascadeOnDelete();
             $table->foreignId('variation_option_id')->constrained()->cascadeOnDelete();
-            $table->decimal('price_modifier', 10, 2)->default(0.00);
+            $table->string('modifier_type')->default('flat');
+            $table->decimal('price_modifier', 10, 2)->nullable()->default(null);
             $table->timestamps();
 
             $table->unique(['product_variation_type_id', 'variation_option_id'], 'pvo_unique');

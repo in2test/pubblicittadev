@@ -22,6 +22,8 @@ class VariationOptionFactory extends Factory
             'variation_type_id' => VariationType::factory(),
             'name' => $this->faker->word(),
             'value' => null,
+            'default_modifier_type' => 'flat',
+            'default_price_modifier' => 0.00,
             'sort_order' => 0,
         ];
     }

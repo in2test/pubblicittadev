@@ -46,7 +46,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'product_id',
     'product_sku_id',
-    'print_side_id',
     'min_quantity',
     'max_quantity',
     'price_per_unit',
@@ -63,11 +62,6 @@ class PricingTier extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function printSide(): BelongsTo
-    {
-        return $this->belongsTo(PrintSide::class);
     }
 
     public function productSku(): BelongsTo

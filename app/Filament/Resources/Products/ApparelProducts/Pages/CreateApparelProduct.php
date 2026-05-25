@@ -57,8 +57,8 @@ class CreateApparelProduct extends CreateRecord
                         ProductForm::getMaxWidthField(),
                         ProductForm::getMaxHeightField(),
                     ]),
-                    ProductForm::getVariationTypesRepeater(),
-                    ProductForm::getSkusRepeater(),
+                    ProductForm::getBaseVariationsRepeater(),
+                    ProductForm::getModifiersRepeater(),
                     ProductForm::getPricingTiersRepeater(),
                 ]),
 
@@ -71,13 +71,6 @@ class CreateApparelProduct extends CreateRecord
                         ProductForm::getIsActiveField(),
                         ProductForm::getIsFeaturedField(),
                     ]),
-                    Section::make('Personalizzazione Stampa')
-                        ->description('Definisci le posizioni e i lati di stampa disponibili per questo prodotto.')
-                        ->schema([
-                            ProductForm::getPersonalizationTypeField(),
-                            ProductForm::getPrintSidesField(),
-                            ProductForm::getPrintPlacementsRepeater(),
-                        ]),
                 ]),
         ];
     }
