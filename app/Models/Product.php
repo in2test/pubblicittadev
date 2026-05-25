@@ -549,8 +549,12 @@ class Product extends Model implements HasMedia
     public function getSheetsNeeded(float $width, float $height): array
     {
         $calc = function (float $w, float $h): array {
-            $sheetsX = $this->max_width ? (int) ceil($w / (float) $this->max_width) : 1;
-            $sheetsY = $this->max_height ? (int) ceil($h / (float) $this->max_height) : 1;
+            // $w and $h are in cm, sheet_width/height are in mm. Convert mm to cm by dividing by 10.
+            $sheetW = $this->sheet_width ? ($this->sheet_width / 10) : null;
+            $sheetH = $this->sheet_height ? ($this->sheet_height / 10) : null;
+
+            $sheetsX = $sheetW ? (int) ceil($w / $sheetW) : 1;
+            $sheetsY = $sheetH ? (int) ceil($h / $sheetH) : 1;
 
             return [
                 'sheets' => $sheetsX * $sheetsY,

@@ -266,8 +266,8 @@
                 {{-- Avviso Divisione Formato (se l'area supera la dimensione massima del pannello/foglio) --}}
                 @if ($sheetsInfo['exceeds'])
                     @php
-                        $maxW = $product->max_width ? number_format((float)$product->max_width / 100, 1, ',', '.') . ' m' : '∞';
-                        $maxH = $product->max_height ? number_format((float)$product->max_height / 100, 1, ',', '.') . ' m' : '∞';
+                        $maxW = $product->sheet_width ? number_format((float)$product->sheet_width / 1000, 1, ',', '.') . ' m' : '∞';
+                        $maxH = $product->sheet_height ? number_format((float)$product->sheet_height / 1000, 1, ',', '.') . ' m' : '∞';
                     @endphp
                     <div class="mt-3 flex items-start gap-3 rounded border border-amber-300 bg-amber-50 px-4 py-3">
                         <span class="material-symbols-outlined text-amber-600 text-base mt-0.5 shrink-0">warning</span>

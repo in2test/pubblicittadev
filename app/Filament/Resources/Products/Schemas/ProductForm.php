@@ -77,23 +77,13 @@ class ProductForm
                                             static::getPriceField(),
                                             static::getOfferPriceField(),
                                             static::getMinAreaField(),
-                                            static::getMaxWidthField(),
-                                            static::getMaxHeightField(),
                                         ]),
                                     Section::make('Ottimizzazione Resa (Fogli e Misure)')
-                                        ->visible(fn () => $productClass === ProductClass::ItemBased || ! $productClass instanceof ProductClass)
+                                        ->visible(fn () => $productClass !== ProductClass::Apparel)
                                         ->schema([
                                             Grid::make(2)->schema([
-                                                TextInput::make('sheet_width')
-                                                    ->label('Larghezza Foglio di Stampa (mm)')
-                                                    ->numeric()
-                                                    ->step(0.01)
-                                                    ->placeholder('es. 32'),
-                                                TextInput::make('sheet_height')
-                                                    ->label('Altezza Foglio di Stampa (mm)')
-                                                    ->numeric()
-                                                    ->step(0.01)
-                                                    ->placeholder('es. 45'),
+                                                static::getSheetWidthField(),
+                                                static::getSheetHeightField(),
                                             ]),
                                             Toggle::make('allows_custom_size')
                                                 ->label('Accetta misure non standard (Formato Personalizzato)')
@@ -620,23 +610,21 @@ class ProductForm
             ->placeholder('es. 0.1');
     }
 
-    public static function getMaxWidthField(): TextInput
+    public static function getSheetWidthField(): TextInput
     {
-        return TextInput::make('max_width')
-            ->label('Larghezza Massima Foglio (mm)')
+        return TextInput::make('sheet_width')
+            ->label('Larghezza Foglio di Stampa (mm)')
             ->numeric()
             ->step(0.01)
-            ->placeholder('es. 300 per un foglio 3×2 m')
-            ->helperText('Lascia vuoto se illimitato su questo asse.');
+            ->placeholder('es. 320');
     }
 
-    public static function getMaxHeightField(): TextInput
+    public static function getSheetHeightField(): TextInput
     {
-        return TextInput::make('max_height')
-            ->label('Altezza Massima Foglio (mm)')
+        return TextInput::make('sheet_height')
+            ->label('Altezza Foglio di Stampa (mm)')
             ->numeric()
             ->step(0.01)
-            ->placeholder('es. 200 per un foglio 3×2 m')
-            ->helperText('Lascia vuoto se illimitato su questo asse.');
+            ->placeholder('es. 450');
     }
 }

@@ -52,9 +52,6 @@ class CreateApparelProduct extends CreateRecord
                     Grid::make(2)->schema([
                         ProductForm::getPriceField(),
                         ProductForm::getOfferPriceField(),
-                        ProductForm::getMinAreaField(),
-                        ProductForm::getMaxWidthField(),
-                        ProductForm::getMaxHeightField(),
                     ]),
                     ProductForm::getBaseVariationsRepeater(),
                     ProductForm::getModifiersRepeater(),
