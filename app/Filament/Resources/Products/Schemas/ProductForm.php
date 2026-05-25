@@ -218,12 +218,10 @@ class ProductForm
             ->columnSpanFull();
     }
 
-
     public static function getPriceField(): TextInput
     {
         return TextInput::make('price')
             ->label('Prezzo Base (€)')
-            ->required()
             ->numeric()
             ->prefix('€');
     }
@@ -294,7 +292,7 @@ class ProductForm
                     ]),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null)
+            ->itemLabel(fn (array $state): ?string => ($type = VariationType::find($state['variation_type_id'] ?? null)) ? $type->name : null)
             ->addActionLabel('Aggiungi Variante Base');
     }
 
@@ -348,6 +346,7 @@ class ProductForm
                                     $option = VariationOption::find($state);
                                     if ($option) {
                                         // Pre-fill with global default (user can override)
+                                        // @phpstan-ignore-next-line
                                         $set('modifier_type', $option->default_modifier_type?->value ?? 'flat');
                                         $set('price_modifier', $option->default_price_modifier > 0 ? (float) $option->default_price_modifier : null);
                                     }
@@ -361,7 +360,7 @@ class ProductForm
                             ->required(),
                         TextInput::make('price_modifier')
                             ->label('Valore (null = usa default globale)')
-                            ->helperText(function (Get $get) {
+                            ->helperText(function (Get $get): ?string {
                                 $optionId = $get('variation_option_id');
                                 if (! $optionId) {
                                     return null;
@@ -382,7 +381,7 @@ class ProductForm
                     ->addActionLabel('Aggiungi Opzione'),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null)
+            ->itemLabel(fn (array $state): ?string => ($type = VariationType::find($state['variation_type_id'] ?? null)) ? $type->name : null)
             ->addActionLabel('Aggiungi Modificatore');
     }
 
@@ -588,7 +587,6 @@ class ProductForm
             ])
             ->columnSpanFull();
     }
-
 
     public static function getIsActiveField(): Toggle
     {

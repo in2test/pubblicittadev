@@ -6,9 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProductClass;
 use App\Http\Requests\Cart\StoreCartRequest;
-use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Models\Image;
-use App\Models\PrintPlacement;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
@@ -17,6 +15,7 @@ use App\Services\CartManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\View\View;
 
 /**
@@ -56,7 +55,7 @@ class CartController extends Controller
         $allSkuIds = $rawItems->pluck('quantities')->filter(fn ($item) => is_array($item))->flatMap(fn ($q) => array_keys($q))->unique();
         $skus = ProductSku::with('options')->whereIn('id', $allSkuIds)->get()->keyBy('id');
 
-        $allOptionIds = $rawItems->pluck('selected_options')->filter(fn ($item) => is_array($item))->flatMap(fn ($o) => is_array($o) ? \Illuminate\Support\Arr::flatten($o) : [$o])->unique();
+        $allOptionIds = $rawItems->pluck('selected_options')->filter(fn ($item) => is_array($item))->flatMap(fn ($o) => Arr::flatten($o))->unique();
         $options = VariationOption::whereIn('id', $allOptionIds)->get()->keyBy('id');
 
         $typeIds = $options->pluck('variation_type_id')->unique();
@@ -101,7 +100,7 @@ class CartController extends Controller
             if ($product) {
                 $selectedOptionIds = [];
                 if (isset($item['selected_options']) && is_array($item['selected_options'])) {
-                    $selectedOptionIds = \Illuminate\Support\Arr::flatten($item['selected_options']);
+                    $selectedOptionIds = Arr::flatten($item['selected_options']);
                 }
 
                 if ($selectedOptionIds !== []) {
@@ -122,7 +121,7 @@ class CartController extends Controller
             $colorName = $item['color_name'] ?? null;
             $colorHexes = [];
             if (isset($item['selected_options']) && is_array($item['selected_options'])) {
-                foreach (\Illuminate\Support\Arr::flatten($item['selected_options']) as $optionId) {
+                foreach (Arr::flatten($item['selected_options']) as $optionId) {
                     $opt = $options->get((int) $optionId);
                     if ($opt && $types->get($opt->variation_type_id)?->presentation_type === 'color_swatch') {
                         $colorName = $opt->name;
@@ -160,8 +159,9 @@ class CartController extends Controller
                     ->flatMap(function ($optionIds, $typeId) use ($options, $types) {
                         $type = $types->get((int) $typeId);
                         if ($type && $type->allow_multiple) {
-                            return collect((array) $optionIds)->map(fn($oid) => $options->get((int) $oid)?->name)->filter();
+                            return collect((array) $optionIds)->map(fn ($oid) => $options->get((int) $oid)?->name)->filter();
                         }
+
                         return [];
                     })->all(),
                 'size_rows' => $sizeRows,
@@ -239,6 +239,21 @@ class CartController extends Controller
         $this->cart->remove($request->input('key'));
 
         return back()->with('success', 'Lavorazione rimossa dal carrello!');
+    }
+
+    /**
+     * Remove multiple items from the cart.
+     */
+    public function removeMultiple(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'keys' => 'required|array',
+            'keys.*' => 'required|string',
+        ]);
+
+        $this->cart->removeMultiple($request->input('keys'));
+
+        return back()->with('success', 'Lavorazioni rimosse dal carrello!');
     }
 
     /**

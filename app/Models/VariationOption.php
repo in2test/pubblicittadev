@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $value
  * @property string|null $color_hex
  * @property int $sort_order
- * @property ModifierType $default_modifier_type
+ * @property ModifierType|null $default_modifier_type
  * @property numeric $default_price_modifier
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at

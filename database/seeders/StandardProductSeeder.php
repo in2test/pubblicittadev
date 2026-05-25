@@ -65,7 +65,7 @@ class StandardProductSeeder extends Seeder
                 'max_custom_height' => 100.0,
                 'category_id' => $piccolo->id,
                 'is_featured' => true,
-                'image_url' => 'https://images.unsplash.com/photo-1589149013831-c40ab39478f7?auto=format&fit=crop&w=600&q=80',
+                'image_url' => 'https://images.unsplash.com/photo-1599590984817-0c15f31b1fa5?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=format&fit=crop&w=600&q=80',
                 'variations' => [
                     'Formato' => [
                         'options' => [
@@ -87,36 +87,34 @@ class StandardProductSeeder extends Seeder
                             'Plastificazione Opaca' => ['value' => 'opaca', 'modifier_type' => 'percentage', 'price_modifier' => 10.00],
                             'Plastificazione Lucida' => ['value' => 'lucida', 'modifier_type' => 'percentage', 'price_modifier' => 10.00],
                             'Soft Touch' => ['value' => 'soft-touch', 'modifier_type' => 'percentage', 'price_modifier' => 20.00],
-                            'Effetto Lino' => ['value' => 'lino', 'modifier_type' => 'percentage', 'price_modifier' => 15.00],
                         ],
                     ],
-                    'Angoli' => [
+
+                    'Posizione di Stampa' => [
                         'is_modifier' => true,
                         'options' => [
-                            'Angoli vivi' => ['value' => 'vivi', 'modifier_type' => 'flat', 'price_modifier' => 0.00],
-                            'Angoli arrotondati' => ['value' => 'arrotondati', 'modifier_type' => 'flat', 'price_modifier' => 0.02],
+                            'Stampa sul fronte' => ['value' => 'fronte', 'modifier_type' => 'flat', 'price_modifier' => 0.00],
+                            'Fronte e retro uguali' => ['value' => 'fronte-retro-uguali', 'modifier_type' => 'percentage', 'price_modifier' => 50.00],
+                            'Fronte e retro differenti' => ['value' => 'fronte-retro-differenti', 'modifier_type' => 'percentage', 'price_modifier' => 50.00],
                         ],
                     ],
                 ],
                 'print_sides' => ['Stampa sul fronte', 'Fronte e retro uguali', 'Fronte e retro differenti'],
                 'pricing_tiers' => [
-                    [50,   99,   0.15, 'Stampa sul fronte'],
-                    [100,  249,  0.10, 'Stampa sul fronte'],
-                    [250,  499,  0.07, 'Stampa sul fronte'],
-                    [500,  999,  0.05, 'Stampa sul fronte'],
-                    [1000, null, 0.04, 'Stampa sul fronte'],
+                    [100,  249,  0.15, 'Stampa sul fronte'],
+                    [250,  499,  0.12, 'Stampa sul fronte'],
+                    [500,  999,  0.10, 'Stampa sul fronte'],
+                    [1000, null, 0.08, 'Stampa sul fronte'],
 
-                    [50,   99,   0.18, 'Fronte e retro uguali'],
-                    [100,  249,  0.12, 'Fronte e retro uguali'],
-                    [250,  499,  0.08, 'Fronte e retro uguali'],
-                    [500,  999,  0.06, 'Fronte e retro uguali'],
-                    [1000, null, 0.05, 'Fronte e retro uguali'],
+                    [100,  249,  0.22, 'Fronte e retro uguali'],
+                    [250,  499,  0.18, 'Fronte e retro uguali'],
+                    [500,  999,  0.15, 'Fronte e retro uguali'],
+                    [1000, null, 0.12, 'Fronte e retro uguali'],
 
-                    [50,   99,   0.20, 'Fronte e retro differenti'],
-                    [100,  249,  0.14, 'Fronte e retro differenti'],
-                    [250,  499,  0.10, 'Fronte e retro differenti'],
-                    [500,  999,  0.08, 'Fronte e retro differenti'],
-                    [1000, null, 0.06, 'Fronte e retro differenti'],
+                    [100,  249,  0.25, 'Fronte e retro differenti'],
+                    [250,  499,  0.20, 'Fronte e retro differenti'],
+                    [500,  999,  0.17, 'Fronte e retro differenti'],
+                    [1000, null, 0.14, 'Fronte e retro differenti'],
                 ],
             ],
 
@@ -671,6 +669,11 @@ class StandardProductSeeder extends Seeder
                     'description' => $pData['description'],
                     'price' => $pData['price'],
                     'product_class' => $pData['product_class'],
+                    'pricing_model' => match ($pData['product_class']) {
+                        ProductClass::AreaBased => 'area',
+                        ProductClass::ItemBased => (! empty($pData['pricing_tiers']) || ($pData['allows_custom_size'] ?? false)) ? 'quantity' : 'fixed',
+                        default => 'fixed',
+                    },
                     'min_area' => $pData['min_area'],
                     'max_width' => $pData['max_width'] ?? null,
                     'max_height' => $pData['max_height'] ?? null,
@@ -793,7 +796,7 @@ class StandardProductSeeder extends Seeder
 
             // Pricing tiers
             PricingTier::where('product_id', $product->id)->delete();
-            foreach ($pData['pricing_tiers'] as [$minQty, $maxQty, $price, $sideName]) {
+            foreach (($pData['pricing_tiers'] ?? []) as [$minQty, $maxQty, $price, $sideName]) {
                 $skuIds = [null]; // default fallback
                 if ($sideName) {
                     // Find the VariationOption for this side name under variation type 'Grafica'

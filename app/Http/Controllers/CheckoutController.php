@@ -77,13 +77,13 @@ class CheckoutController extends Controller
                 // Controlliamo se l'articolo richiede personalizzazione (es. stampe, file di design, posizioni)
                 // Se sì, lo stato iniziale sarà 'awaiting_file', altrimenti 'pending' (articolo neutro).
                 $hasModifierOption = false;
-                if (!empty($item['selected_options'])) {
+                if (! empty($item['selected_options'])) {
                     $modifierTypeIds = $product->variationTypes()
                         ->wherePivot('is_modifier', true)
                         ->pluck('variation_types.id')
                         ->toArray();
                     foreach ($item['selected_options'] as $typeId => $optIds) {
-                        if (in_array((int)$typeId, $modifierTypeIds)) {
+                        if (in_array((int) $typeId, $modifierTypeIds)) {
                             $hasModifierOption = true;
                             break;
                         }

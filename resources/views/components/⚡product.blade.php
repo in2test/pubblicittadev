@@ -150,7 +150,7 @@ new class extends Component {
             } else {
                 $current[] = $optionId;
             }
-            if (empty($current)) {
+            if ($current === []) {
                 unset($this->selectedOptions[$typeId]);
             } else {
                 $this->selectedOptions[$typeId] = $current;
@@ -362,7 +362,7 @@ new class extends Component {
                             $names[] = $option->name;
                         }
                     }
-                    if (!empty($names)) {
+                    if ($names !== []) {
                         $optionsSummary[$type->name] = implode(', ', $names);
                     }
                 } else {

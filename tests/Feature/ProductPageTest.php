@@ -167,7 +167,11 @@ class ProductPageTest extends TestCase
 
         $optA5 = VariationOption::where('name', 'A5 (14,8×21 cm)')->firstOrFail();
         $opt115g = VariationOption::where('name', '115g Patinata Lucida')->firstOrFail();
-        $optGrafica = VariationOption::where('name', 'Fronte e retro uguali')->firstOrFail();
+
+        $typeGrafica = VariationType::where('name', 'Grafica')->firstOrFail();
+        $optGrafica = VariationOption::where('name', 'Fronte e retro uguali')
+            ->where('variation_type_id', $typeGrafica->id)
+            ->firstOrFail();
 
         // Find active SKU
         $activeSku = $product->getActiveSku([

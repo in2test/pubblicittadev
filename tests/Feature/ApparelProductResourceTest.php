@@ -53,6 +53,23 @@ it('can create apparel product without images', function () {
     expect($product->media()->count())->toBe(0);
 });
 
+it('can create apparel product without base price', function () {
+    $category = Category::factory()->create();
+
+    Livewire::test(CreateApparelProduct::class)
+        ->fillForm([
+            'name' => 'Apparel Product No Price Test',
+            'slug' => 'apparel-product-no-price-test',
+            'category_id' => $category->id,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $product = Product::where('slug', 'apparel-product-no-price-test')->first();
+    expect($product)->not->toBeNull();
+    expect($product->price)->toBeNull();
+});
+
 /**
  * Test: Render Edit Page
  * Ensures that the edit page for an apparel product loads successfully (Status 200).

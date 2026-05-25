@@ -23,5 +23,8 @@ yarn-error.log
 /.zed
 /.claude
 *.log
-.gemini/  
- 
+.gemini/
+_ide_helper.php
+_ide_helper_models.php
+.phpstorm.meta.php
+laravel

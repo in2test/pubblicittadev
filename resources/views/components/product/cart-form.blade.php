@@ -44,6 +44,9 @@
     if ($variationTypes->isNotEmpty()) {
         // Verifica che l'utente abbia compilato tutte le opzioni necessarie (i selettori)
         foreach ($selectorTypes as $type) {
+            if ($type->pivot?->is_modifier) {
+                continue;
+            }
             if (empty($selectedOptions[$type->id])) {
                 $allSelectorsChosen = false;
                 break;
@@ -54,6 +57,9 @@
             $matchingSkus = $product->skus;
             // Filtro incrementale per le opzioni selezionate dall'utente (es. trova la SKU con Colore: Rosso, Taglio: Uomo)
             foreach ($selectorTypes as $type) {
+                if ($type->pivot?->is_modifier) {
+                    continue;
+                }
                 $selectedId = $selectedOptions[$type->id] ?? null;
                 if ($selectedId) {
                     $matchingSkus = $matchingSkus->filter(
@@ -338,7 +344,6 @@
                                 $tierTotalPrice = $product->calculateTotalPrice(
                                     $tierQty,
                                     [$activeSku->id => $tierQty],
-                                    $selectedPlacements,
                                     $width ? (float) $width : null,
                                     $height ? (float) $height : null,
                                     $selectedOptions

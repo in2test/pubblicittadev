@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Override;
 
 /**
  * @property int $id
@@ -49,6 +50,7 @@ class VariationType extends Model
 {
     use HasFactory;
 
+    #[Override]
     protected function casts(): array
     {
         return [

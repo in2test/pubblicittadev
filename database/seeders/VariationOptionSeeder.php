@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\ModifierType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use Illuminate\Database\Seeder;
@@ -95,7 +96,7 @@ class VariationOptionSeeder extends Seeder
             ], [
                 'name' => $p['name'],
                 'default_price_modifier' => $p['price'],
-                'default_modifier_type' => \App\Enums\ModifierType::Flat,
+                'default_modifier_type' => ModifierType::Flat,
                 'sort_order' => $p['order'],
             ]);
         }

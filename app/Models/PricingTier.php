@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_custom_price
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read PrintSide|null $printSide
  * @property-read ProductSku|null $productSku
  * @property-read Product $product
  *
@@ -36,10 +35,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|PricingTier whereMinQuantity($value)
  * @method static Builder<static>|PricingTier wherePricePerUnit($value)
  * @method static Builder<static>|PricingTier wherePrintSideId($value)
- *
- * @property Builder<static>|PricingTier whereProductId($value)
- * @property Builder<static>|PricingTier whereProductSkuId($value)
- * @property Builder<static>|PricingTier whereUpdatedAt($value)
+ * @method static Builder<static>|PricingTier whereProductId($value)
+ * @method static Builder<static>|PricingTier whereProductSkuId($value)
+ * @method static Builder<static>|PricingTier whereUpdatedAt($value)
  *
  * @mixin \Eloquent
  */

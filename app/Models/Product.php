@@ -58,7 +58,7 @@ use Throwable;
  * @property float|null $max_width Maximum printable width in cm (null = unlimited)
  * @property float|null $max_height Maximum printable height in cm (null = unlimited)
  * @property-read Category $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $variationTypes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, VariationType> $variationTypes
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -189,8 +189,6 @@ class Product extends Model implements HasMedia
     {
         return $this->hasMany(ProductSku::class);
     }
-
-
 
     public function images(): HasMany
     {
@@ -511,11 +509,32 @@ class Product extends Model implements HasMedia
 
         // Fallback: SKU null (tier globale prodotto)
         $tier = $findTier(null);
+        if ($tier instanceof PricingTier) {
+            return (float) $tier->price_per_unit;
+        }
 
-        return $tier instanceof PricingTier ? (float) $tier->price_per_unit : null;
+        // Se non c'è un tier globale, ma ci sono tier specifici per SKU per questa quantità,
+        // restituiamo il prezzo unitario minimo tra tutti i tier specifici della SKU.
+        if ($this->relationLoaded('pricingTiers')) {
+            $minPrice = $this->pricingTiers
+                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
+                    ($t->max_quantity >= $quantity || is_null($t->max_quantity))
+                )
+                ->min('price_per_unit');
+
+            return $minPrice !== null ? (float) $minPrice : null;
+        }
+
+        $minPrice = $this->pricingTiers()
+            ->where('min_quantity', '<=', $quantity)
+            ->where(function (Builder $query) use ($quantity) {
+                $query->where('max_quantity', '>=', $quantity)
+                    ->orWhereNull('max_quantity');
+            })
+            ->min('price_per_unit');
+
+        return $minPrice !== null ? (float) $minPrice : null;
     }
-
-
 
     /**
      * Calcola quanti fogli fisici sono necessari per le dimensioni fornite.
@@ -631,7 +650,6 @@ class Product extends Model implements HasMedia
      *
      * @param  int  $totalQuantity  Quantità totale di articoli per questa lavorazione.
      * @param  array<int, int>  $skuQuantities  Mappa ID SKU -> quantità (es. [12 => 5, 13 => 10]) per il dettaglio delle varianti.
-     * @param  array<int>  $placementIds  Elenco di ID posizionamenti di stampa che comportano costi extra.
      * @param  float|null  $width  Larghezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
      * @param  float|null  $height  Altezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
      * @param  array<int>  $selectedOptions  ID delle opzioni di variazione usate per determinare la SKU attiva.
@@ -694,7 +712,7 @@ class Product extends Model implements HasMedia
 
         // Se non abbiamo un dettaglio per SKU, calcola la quantità totale sul prodotto base
         if ($skuQuantities === []) {
-            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, null, null);
+            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity);
             $total += $unitPrice * $totalQuantity;
         }
 
@@ -770,13 +788,12 @@ class Product extends Model implements HasMedia
         if ($this->product_class === ProductClass::AreaBased && $width !== null && $height !== null) {
             // Per il modello area, calcoliamo l'area fatturata per 1 singolo pezzo e la moltiplichiamo per il prezzo al mq
             $billedArea = $this->calculateTotalBilledArea(1, $width, $height);
-            $basePrice = $this->getPriceForQuantity($quantity, $sku) * $billedArea;
-        } else {
-            // Per i modelli a quantità e fissi, otteniamo semplicemente il prezzo unitario della fascia corrispondente
-            $basePrice = $this->getPriceForQuantity($quantity, $sku);
+
+            return $this->getPriceForQuantity($quantity, $sku) * $billedArea;
         }
 
-        return $basePrice;
+        // Per i modelli a quantità e fissi, otteniamo semplicemente il prezzo unitario della fascia corrispondente
+        return $this->getPriceForQuantity($quantity, $sku);
     }
 
     /**
