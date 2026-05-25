@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('type')->default('standard');
+            $table->string('product_class')->nullable();
 
             $table->string('pricing_model')->default('fixed');
             $table->decimal('min_area', 8, 4)->nullable();

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\Products\StandardProducts\Pages\CreateStandardProduct;
-use App\Filament\Resources\Products\StandardProducts\Pages\EditStandardProduct;
-use App\Filament\Resources\Products\StandardProducts\Pages\ListStandardProducts;
+use App\Enums\ProductClass;
+use App\Filament\Resources\Products\ApparelProducts\Pages\CreateApparelProduct;
+use App\Filament\Resources\Products\ApparelProducts\Pages\EditApparelProduct;
+use App\Filament\Resources\Products\ApparelProducts\Pages\ListApparelProducts;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -26,18 +27,18 @@ beforeEach(function () {
 });
 
 /**
- * Test: Create Standard Product Without Images
- * Validates that we can successfully create a new standard product via the Filament form.
+ * Test: Create Apparel Product Without Images
+ * Validates that we can successfully create a new apparel product via the Filament form.
  */
-it('can create standard product without images', function () {
+it('can create apparel product without images', function () {
     // Create a parent category first since it's required for the product
     $category = Category::factory()->create();
 
-    // Simulate the Livewire component for creating a standard product
-    Livewire::test(CreateStandardProduct::class)
+    // Simulate the Livewire component for creating an apparel product
+    Livewire::test(CreateApparelProduct::class)
         ->fillForm([
-            'name' => 'Standard Product Test', // Product name
-            'slug' => 'standard-product-test', // URL slug
+            'name' => 'Apparel Product Test', // Product name
+            'slug' => 'apparel-product-test', // URL slug
             'price' => 10.00, // Base price
             'category_id' => $category->id, // Associated category
         ])
@@ -45,7 +46,7 @@ it('can create standard product without images', function () {
         ->assertHasNoFormErrors(); // Ensure validation passes
 
     // Check if the product was actually saved in the database
-    $product = Product::where('slug', 'standard-product-test')->first();
+    $product = Product::where('slug', 'apparel-product-test')->first();
     expect($product)->not->toBeNull();
 
     // Verify that NO media record was created since no images were uploaded
@@ -54,29 +55,29 @@ it('can create standard product without images', function () {
 
 /**
  * Test: Render Edit Page
- * Ensures that the edit page for a standard product loads successfully (Status 200).
+ * Ensures that the edit page for an apparel product loads successfully (Status 200).
  */
-it('can render edit page for standard product without images', function () {
-    // Generate a dummy standard product using the factory
+it('can render edit page for apparel product without images', function () {
+    // Generate a dummy apparel product using the factory
     $product = Product::factory()->create([
-        'type' => 'standard',
+        'product_class' => ProductClass::Apparel,
     ]);
 
     // Test the edit component rendering
-    Livewire::test(EditStandardProduct::class, [
+    Livewire::test(EditApparelProduct::class, [
         'record' => $product->getRouteKey(),
     ])
         ->assertStatus(200); // 200 OK means the page loaded without exceptions
 });
 
 /**
- * Test: Edit Standard Product Media Properties
+ * Test: Edit Apparel Product Media Properties
  * This is a critical test to ensure that updating custom properties on a media item
  * does not break the `manipulations` array by double-serializing it.
  */
-it('can edit standard product with existing image and update custom properties without breaking manipulations', function () {
+it('can edit apparel product with existing image and update custom properties without breaking manipulations', function () {
     $product = Product::factory()->create([
-        'type' => 'standard',
+        'product_class' => ProductClass::Apparel,
     ]);
 
     // Create a media record manually to bypass GD image processing requirements in tests
@@ -108,7 +109,7 @@ it('can edit standard product with existing image and update custom properties w
     $stateKey = 'record-'.$media->id;
 
     // Render the edit page and update the form using the relationship record key
-    Livewire::test(EditStandardProduct::class, [
+    Livewire::test(EditApparelProduct::class, [
         'record' => $product->getRouteKey(),
     ])
         ->fillForm([
@@ -142,30 +143,30 @@ it('can edit standard product with existing image and update custom properties w
 });
 
 /**
- * Test: List Standard Products
+ * Test: List Apparel Products
  * Ensures that the list page renders and displays the created products.
  */
-it('can list standard products', function () {
-    // Create multiple standard products
+it('can list apparel products', function () {
+    // Create multiple apparel products
     $products = Product::factory()->count(3)->create([
-        'type' => 'standard',
+        'product_class' => ProductClass::Apparel,
     ]);
 
-    Livewire::test(ListStandardProducts::class)
+    Livewire::test(ListApparelProducts::class)
         ->assertCanSeeTableRecords($products)
         ->assertStatus(200);
 });
 
 /**
- * Test: Delete Standard Product
- * Ensures that an admin can delete a standard product from the list page.
+ * Test: Delete Apparel Product
+ * Ensures that an admin can delete an apparel product from the list page.
  */
-it('can delete standard product', function () {
+it('can delete apparel product', function () {
     $product = Product::factory()->create([
-        'type' => 'standard',
+        'product_class' => ProductClass::Apparel,
     ]);
 
-    Livewire::test(ListStandardProducts::class)
+    Livewire::test(ListApparelProducts::class)
         ->assertTableActionVisible('delete', $product)
         ->callTableAction('delete', $product)
         ->assertHasNoTableActionErrors();

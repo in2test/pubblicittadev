@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\Products\StandardProducts\Pages;
+namespace App\Filament\Resources\Products\ItemProducts\Pages;
 
-use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
+use App\Filament\Resources\Products\ItemProducts\ItemProductResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Override;
 
-class EditStandardProduct extends EditRecord
+class EditItemProduct extends EditRecord
 {
-    protected static string $resource = StandardProductResource::class;
+    protected static string $resource = ItemProductResource::class;
 
     #[Override]
     protected function getHeaderActions(): array

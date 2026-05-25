@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\ProductClass;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\PrintSide;
@@ -303,7 +304,7 @@ class CartTest extends TestCase
     {
         $product = Product::factory()->create([
             'price' => 10.0, // €10 per sqm
-            'pricing_model' => 'area',
+            'product_class' => ProductClass::AreaBased,
             'min_area' => 0.5,
         ]);
 

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $product_id
+ * @property int|null $product_sku_id
  * @property int|null $print_side_id
  * @property int $min_quantity
  * @property int|null $max_quantity
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read PrintSide|null $printSide
+ * @property-read ProductSku|null $productSku
  * @property-read Product $product
  *
  * @method static Builder<static>|PricingTier newModelQuery()
@@ -34,13 +36,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|PricingTier whereMinQuantity($value)
  * @method static Builder<static>|PricingTier wherePricePerUnit($value)
  * @method static Builder<static>|PricingTier wherePrintSideId($value)
- * @method static Builder<static>|PricingTier whereProductId($value)
- * @method static Builder<static>|PricingTier whereUpdatedAt($value)
+ *
+ * @property Builder<static>|PricingTier whereProductId($value)
+ * @property Builder<static>|PricingTier whereProductSkuId($value)
+ * @property Builder<static>|PricingTier whereUpdatedAt($value)
  *
  * @mixin \Eloquent
  */
 #[Fillable([
     'product_id',
+    'product_sku_id',
     'print_side_id',
     'min_quantity',
     'max_quantity',
@@ -63,5 +68,10 @@ class PricingTier extends Model
     public function printSide(): BelongsTo
     {
         return $this->belongsTo(PrintSide::class);
+    }
+
+    public function productSku(): BelongsTo
+    {
+        return $this->belongsTo(ProductSku::class);
     }
 }

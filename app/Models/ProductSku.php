@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, VariationOption> $options
  * @property-read int|null $options_count
+ * @property-read Collection<int, PricingTier> $pricingTiers
+ * @property-read int|null $pricing_tiers_count
  *
  * @method static ProductSkuFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductSku newModelQuery()
@@ -58,5 +61,10 @@ class ProductSku extends Model
     public function options(): BelongsToMany
     {
         return $this->belongsToMany(VariationOption::class, 'product_sku_options', 'product_sku_id', 'variation_option_id');
+    }
+
+    public function pricingTiers(): HasMany
+    {
+        return $this->hasMany(PricingTier::class);
     }
 }

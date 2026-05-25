@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ProductClass;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -10,7 +11,7 @@ uses(TestCase::class, RefreshDatabase::class);
 
 test('it calculates area correctly for minimum area', function () {
     $product = Product::factory()->create([
-        'pricing_model' => 'area',
+        'product_class' => ProductClass::AreaBased,
         'price' => 10.00,
         'min_area' => 1.5,
     ]);
@@ -22,7 +23,7 @@ test('it calculates area correctly for minimum area', function () {
 
 test('it calculates area correctly above minimum area', function () {
     $product = Product::factory()->create([
-        'pricing_model' => 'area',
+        'product_class' => ProductClass::AreaBased,
         'price' => 10.00,
         'min_area' => 1.0,
     ]);
@@ -34,7 +35,7 @@ test('it calculates area correctly above minimum area', function () {
 
 test('it gets correct starting unit price for fixed pricing model', function () {
     $product = Product::factory()->create([
-        'pricing_model' => 'fixed',
+        'product_class' => ProductClass::ItemBased,
         'price' => 50.00,
         'offer_price' => null,
     ]);
@@ -47,7 +48,7 @@ test('it gets correct starting unit price for fixed pricing model', function () 
 
 test('it gets correct starting unit price for quantity pricing model', function () {
     $product = Product::factory()->create([
-        'pricing_model' => 'quantity',
+        'product_class' => ProductClass::Apparel,
         'price' => 50.00,
     ]);
 
@@ -67,7 +68,7 @@ test('it gets correct starting unit price for quantity pricing model', function 
 
 test('it gets correct starting unit price for area pricing model', function () {
     $product = Product::factory()->create([
-        'pricing_model' => 'area',
+        'product_class' => ProductClass::AreaBased,
         'price' => 50.00,
     ]);
 
@@ -87,25 +88,25 @@ test('it gets correct starting unit price for area pricing model', function () {
 test('it gets minimum order quantity based on pricing model', function () {
     // Fixed pricing model
     $fixedProduct = Product::factory()->create([
-        'pricing_model' => 'fixed',
+        'product_class' => ProductClass::ItemBased,
     ]);
     expect($fixedProduct->getMinimumOrderQuantity())->toBe(1);
 
     // Area pricing model
     $areaProduct = Product::factory()->create([
-        'pricing_model' => 'area',
+        'product_class' => ProductClass::AreaBased,
     ]);
     expect($areaProduct->getMinimumOrderQuantity())->toBe(1);
 
     // Quantity pricing model without tiers
     $quantityProductNoTiers = Product::factory()->create([
-        'pricing_model' => 'quantity',
+        'product_class' => ProductClass::Apparel,
     ]);
     expect($quantityProductNoTiers->getMinimumOrderQuantity())->toBe(1);
 
     // Quantity pricing model with tiers
     $quantityProductWithTiers = Product::factory()->create([
-        'pricing_model' => 'quantity',
+        'product_class' => ProductClass::Apparel,
     ]);
     $quantityProductWithTiers->pricingTiers()->create([
         'min_quantity' => 15,

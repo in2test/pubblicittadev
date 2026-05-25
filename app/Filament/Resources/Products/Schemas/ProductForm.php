@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Enums\ProductClass;
 use App\Models\Category;
 use App\Models\PrintPlacement;
 use App\Models\PrintSide;
 use App\Models\Product;
 use App\Models\VariationOption;
+use App\Models\VariationType;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
@@ -46,7 +48,7 @@ class ProductForm
      *
      * @param  Schema  $schema  The base Filament schema.
      */
-    public static function configure(Schema $schema): Schema
+    public static function configure(Schema $schema, ?ProductClass $productClass = null): Schema
     {
         return $schema
             ->components([
@@ -78,7 +80,7 @@ class ProductForm
                                             static::getMaxHeightField(),
                                         ]),
                                     Section::make('Ottimizzazione Resa (Fogli e Misure)')
-                                        ->visible(fn (Get $get): bool => $get('pricing_model') === 'quantity')
+                                        ->visible(fn () => $productClass === ProductClass::ItemBased || ! $productClass instanceof ProductClass)
                                         ->schema([
                                             Grid::make(2)->schema([
                                                 TextInput::make('sheet_width')
@@ -122,10 +124,13 @@ class ProductForm
 
                         Tab::make('Varianti & Scaglioni')
                             ->icon('heroicon-m-squares-2x2')
+                            ->visible(fn () => $productClass !== ProductClass::AreaBased)
                             ->schema([
-                                static::getVariationTypesField(),
-                                static::getSkusRepeater(),
-                                static::getPricingTiersRepeater(),
+                                static::getVariationTypesRepeater(),
+                                static::getSkusRepeater()
+                                    ->visible(fn () => $productClass !== ProductClass::ItemBased),
+                                static::getPricingTiersRepeater()
+                                    ->visible(fn () => $productClass !== ProductClass::ItemBased),
                             ]),
 
                         Tab::make('Personalizzazione Stampa')
@@ -251,13 +256,59 @@ class ProductForm
             ->prefix('€');
     }
 
-    public static function getVariationTypesField(): Select
+    public static function getVariationTypesRepeater(): Repeater
     {
-        return Select::make('variationTypes')
-            ->label('Tipi di Varianti Disponibili')
-            ->relationship('variationTypes', 'name')
-            ->multiple()
-            ->preload();
+        return Repeater::make('productVariationTypes')
+            ->relationship('productVariationTypes')
+            ->label('Varianti Base e Modificatori (Add-ons)')
+            ->defaultItems(0)
+            ->schema([
+                Select::make('variation_type_id')
+                    ->label('Tipo (es. Formato, Finitura)')
+                    ->relationship('type', 'name')
+                    ->required()
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                Toggle::make('is_modifier')
+                    ->label('Usa come Modificatore')
+                    ->helperText('Se attivo, non moltiplica gli SKU, ma aggiunge un sovrapprezzo (es. +10% Plastificazione).')
+                    ->live(),
+                Toggle::make('has_images')
+                    ->label('Variante Visiva (Colore)')
+                    ->helperText('Attiva se cambia l\'immagine (es. Colore T-shirt).'),
+                Repeater::make('options')
+                    ->relationship('options')
+                    ->label('Prezzi Modificatori')
+                    ->visible(fn (Get $get) => $get('is_modifier') === true)
+                    ->schema([
+                        Select::make('variation_option_id')
+                            ->label('Opzione')
+                            ->options(function (Get $get) {
+                                $variationTypeId = $get('../../variation_type_id');
+                                if (! $variationTypeId) {
+                                    return [];
+                                }
+
+                                return VariationOption::where('variation_type_id', $variationTypeId)->pluck('name', 'id');
+                            })
+                            ->required(),
+                        Select::make('modifier_type')
+                            ->label('Tipo di ricarico')
+                            ->options([
+                                'flat' => 'Fisso (€ a pezzo)',
+                                'percentage' => 'Percentuale (%)',
+                            ])
+                            ->default('flat')
+                            ->required(),
+                        TextInput::make('price_modifier')
+                            ->label('Valore (€ o %)')
+                            ->numeric()
+                            ->default(0)
+                            ->required(),
+                    ])
+                    ->columns(3),
+            ])
+            ->collapsible()
+            ->itemLabel(fn (array $state): ?string => VariationType::find($state['variation_type_id'] ?? null)?->name ?? null);
     }
 
     public static function getSkusRepeater(): Repeater
@@ -578,18 +629,12 @@ class ProductForm
             ->required();
     }
 
-    public static function getPricingModelField(): Select
+    public static function getPricingModelField(): Hidden
     {
-        return Select::make('pricing_model')
-            ->label('Modello di Prezzo')
-            ->options([
-                'fixed' => 'Fisso (Prezzo base del catalogo)',
-                'quantity' => 'A Scaglioni (Sconti per quantità)',
-                'area' => 'A Metratura / Area (Prezzo per mq)',
-            ])
-            ->default('fixed')
-            ->live()
-            ->required();
+        // Pricing model is now derived from product_class, so we can hide this or remove it entirely.
+        // For backwards compatibility, we default to 'fixed' but it's no longer the primary source of truth.
+        return Hidden::make('pricing_model')
+            ->default('fixed');
     }
 
     public static function getMinAreaField(): TextInput
@@ -599,8 +644,7 @@ class ProductForm
             ->numeric()
             ->default(0.1)
             ->step(0.01)
-            ->placeholder('es. 0.1')
-            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
+            ->placeholder('es. 0.1');
     }
 
     public static function getMaxWidthField(): TextInput
@@ -610,8 +654,7 @@ class ProductForm
             ->numeric()
             ->step(0.01)
             ->placeholder('es. 300 per un foglio 3×2 m')
-            ->helperText('Lascia vuoto se illimitato su questo asse.')
-            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
+            ->helperText('Lascia vuoto se illimitato su questo asse.');
     }
 
     public static function getMaxHeightField(): TextInput
@@ -621,7 +664,6 @@ class ProductForm
             ->numeric()
             ->step(0.01)
             ->placeholder('es. 200 per un foglio 3×2 m')
-            ->helperText('Lascia vuoto se illimitato su questo asse.')
-            ->visible(fn (Get $get): bool => $get('pricing_model') === 'area');
+            ->helperText('Lascia vuoto se illimitato su questo asse.');
     }
 }

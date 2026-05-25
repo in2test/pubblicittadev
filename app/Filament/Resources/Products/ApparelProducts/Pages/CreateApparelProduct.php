@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\Products\StandardProducts\Pages;
+namespace App\Filament\Resources\Products\ApparelProducts\Pages;
 
+use App\Enums\ProductClass;
+use App\Filament\Resources\Products\ApparelProducts\ApparelProductResource;
 use App\Filament\Resources\Products\Schemas\ProductForm;
-use App\Filament\Resources\Products\StandardProducts\StandardProductResource;
 use App\Models\Product;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
@@ -14,16 +15,17 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard\Step;
 use Override;
 
-class CreateStandardProduct extends CreateRecord
+class CreateApparelProduct extends CreateRecord
 {
     use HasWizard;
 
-    protected static string $resource = StandardProductResource::class;
+    protected static string $resource = ApparelProductResource::class;
 
     #[Override]
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['type'] = Product::TYPE_STANDARD;
+        $data['product_class'] = ProductClass::Apparel;
 
         return $data;
     }
@@ -55,7 +57,7 @@ class CreateStandardProduct extends CreateRecord
                         ProductForm::getMaxWidthField(),
                         ProductForm::getMaxHeightField(),
                     ]),
-                    ProductForm::getVariationTypesField(),
+                    ProductForm::getVariationTypesRepeater(),
                     ProductForm::getSkusRepeater(),
                     ProductForm::getPricingTiersRepeater(),
                 ]),

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property int $variation_type_id
  * @property bool $has_images
  * @property bool $affects_price
+ * @property bool $is_modifier
  * @property int $sort_order
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -45,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
     'variation_type_id',
     'has_images',
     'affects_price',
+    'is_modifier',
     'sort_order',
 ])]
 #[Table(name: 'product_variation_types', key: 'id')]
@@ -55,6 +57,7 @@ class ProductVariationType extends Pivot
     protected $casts = [
         'has_images' => 'boolean',
         'affects_price' => 'boolean',
+        'is_modifier' => 'boolean',
     ];
 
     public function type(): BelongsTo

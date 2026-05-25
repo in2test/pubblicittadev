@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $product_variation_type_id
  * @property int $variation_option_id
+ * @property string $modifier_type
  * @property numeric $price_modifier
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -36,6 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'product_variation_type_id',
     'variation_option_id',
+    'modifier_type',
     'price_modifier',
 ])]
 #[Table(name: 'product_variation_options')]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProductClass;
 use App\Http\Requests\Cart\StoreCartRequest;
 use App\Http\Requests\Cart\UpdateCartRequest;
 use App\Models\Image;
@@ -98,7 +99,7 @@ class CartController extends Controller
                 $activeSku = $product->getActiveSku($item['selected_options'] ?? []) ?? $product->skus->first();
                 $basePrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
 
-                if ($product->pricing_model === 'area' && isset($item['width'], $item['height'])) {
+                if ($product->product_class === ProductClass::AreaBased && isset($item['width'], $item['height'])) {
                     $billedAreaTotal = $product->calculateTotalBilledArea($qty, (float) $item['width'], (float) $item['height']);
                     $billedAreaPerUnit = $qty > 0 ? $billedAreaTotal / $qty : 0.0;
                     $basePrice *= $billedAreaPerUnit;
@@ -310,7 +311,7 @@ class CartController extends Controller
         $unitPrice = $product->getPriceForQuantity($quantity, $printSideId);
 
         $billedAreaPerUnit = 0.0;
-        if ($product->pricing_model === 'area' && $width > 0 && $height > 0) {
+        if ($product->product_class === ProductClass::AreaBased && $width > 0 && $height > 0) {
             $billedAreaTotal = $product->calculateTotalBilledArea($quantity, $width, $height);
             $billedAreaPerUnit = $quantity > 0 ? $billedAreaTotal / $quantity : 0.0;
             $unitPrice *= $billedAreaPerUnit;
@@ -329,7 +330,7 @@ class CartController extends Controller
         $activeSku = $product->getActiveSku($validated['selected_options'] ?? []) ?? $product->skus->first();
         $baseSkuPrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
 
-        $basePrice = $product->pricing_model === 'area' && $width > 0 && $height > 0
+        $basePrice = $product->product_class === ProductClass::AreaBased && $width > 0 && $height > 0
             ? $baseSkuPrice * $billedAreaPerUnit
             : $baseSkuPrice;
 

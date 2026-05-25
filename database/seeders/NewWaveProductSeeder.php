@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\ProductClass;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
@@ -106,6 +107,7 @@ EOD;
                             'sku' => $sku,
                             'slug' => SlugGenerator::unique(Product::class, $info['name']),
                             'type' => Product::TYPE_NEWWAVE,
+                            'product_class' => ProductClass::Apparel,
                             'price' => $info['price'] ?? 0,
                             'description' => $info['description'] ?? '',
                             'category_id' => $category->id,
@@ -121,6 +123,7 @@ EOD;
                     $product->update([
                         'category_id' => $category->id,
                         'type' => Product::TYPE_NEWWAVE,
+                        'product_class' => ProductClass::Apparel,
                     ]);
                     $this->command->info("Updated product $sku category to {$category->name}");
                 }
