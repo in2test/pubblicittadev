@@ -81,6 +81,7 @@ class ProductResource extends Resource
                                     static::getIsFeaturedField(),
                                 ]),
                                 static::getDescriptionField(),
+                                static::getSheetSettingsSection(),
                             ]),
 
                         Tab::make('2. Galleria e Varianti')
@@ -596,5 +597,49 @@ class ProductResource extends Resource
                         ->reorderable(false),
                 ]),
         ];
+    }
+
+    public static function getSheetSettingsSection(): Section
+    {
+        return Section::make('Ottimizzazione Resa (Fogli e Misure)')
+            ->visible(fn (Get $get): bool => $get('product_class') !== ProductClass::Apparel->value)
+            ->schema([
+                Grid::make(2)->schema([
+                    TextInput::make('sheet_width')
+                        ->label('Larghezza Foglio di Stampa (mm)')
+                        ->numeric()
+                        ->step(0.01)
+                        ->placeholder('es. 320'),
+                    TextInput::make('sheet_height')
+                        ->label('Altezza Foglio di Stampa (mm)')
+                        ->numeric()
+                        ->step(0.01)
+                        ->placeholder('es. 450'),
+                ]),
+                Toggle::make('allows_custom_size')
+                    ->label('Accetta misure non standard (Formato Personalizzato)')
+                    ->live()
+                    ->default(false),
+                Grid::make(2)
+                    ->visible(fn (Get $get): bool => $get('allows_custom_size') === true)
+                    ->schema([
+                        TextInput::make('min_custom_width')
+                            ->label('Base Minima (cm)')
+                            ->numeric()
+                            ->step(0.01),
+                        TextInput::make('max_custom_width')
+                            ->label('Base Massima (cm)')
+                            ->numeric()
+                            ->step(0.01),
+                        TextInput::make('min_custom_height')
+                            ->label('Altezza Minima (cm)')
+                            ->numeric()
+                            ->step(0.01),
+                        TextInput::make('max_custom_height')
+                            ->label('Altezza Massima (cm)')
+                            ->numeric()
+                            ->step(0.01),
+                    ]),
+            ]);
     }
 }

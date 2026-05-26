@@ -57,6 +57,7 @@ class CreateProduct extends CreateRecord
                         ProductResource::getIsFeaturedField(),
                     ]),
                     ProductResource::getDescriptionField(),
+                    ProductResource::getSheetSettingsSection(),
                 ]),
 
             Step::make('2. Galleria e Varianti')
