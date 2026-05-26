@@ -549,24 +549,9 @@ class ProductResource extends Resource
                         $finalSku = $baseSku ? "{$baseSku}-".Str::upper($suffix) : Str::upper($suffix);
                         $set('sku', $finalSku);
                     }),
-                Repeater::make('pricingTiers')
-                    ->relationship('pricingTiers')
+                Schemas\ProductForm::getPricingTiersRepeater()
                     ->label('Sconti per Quantità (Scaglioni)')
-                    ->schema([
-                        TextInput::make('min_quantity')
-                            ->label('Quantità Minima')
-                            ->numeric()
-                            ->required()
-                            ->default(1),
-                        TextInput::make('price_per_unit')
-                            ->label('Prezzo Unitario (€)')
-                            ->numeric()
-                            ->required()
-                            ->prefix('€'),
-                    ])
-                    ->columns(2)
-                    ->columnSpanFull()
-                    ->addActionLabel('Aggiungi Scaglione'),
+                    ->columnSpanFull(),
             ])
             ->columns(2)
             ->columnSpanFull()

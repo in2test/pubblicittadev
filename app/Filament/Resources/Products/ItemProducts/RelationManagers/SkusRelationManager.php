@@ -9,7 +9,6 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -45,24 +44,9 @@ class SkusRelationManager extends RelationManager
                     ->numeric()
                     ->prefix('€'),
 
-                Repeater::make('pricingTiers')
-                    ->relationship('pricingTiers')
+                ProductForm::getPricingTiersRepeater()
                     ->label('Prezzi a Scaglioni per questa Variante')
-                    ->schema([
-                        TextInput::make('min_quantity')
-                            ->label('Quantità Minima')
-                            ->numeric()
-                            ->required()
-                            ->default(1),
-                        TextInput::make('price_per_unit')
-                            ->label('Prezzo Unitario (€)')
-                            ->numeric()
-                            ->required()
-                            ->prefix('€'),
-                    ])
-                    ->columns(2)
-                    ->columnSpanFull()
-                    ->addActionLabel('Aggiungi Scaglione di Prezzo'),
+                    ->columnSpanFull(),
             ]);
     }
 
