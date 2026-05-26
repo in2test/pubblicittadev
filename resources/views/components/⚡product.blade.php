@@ -163,6 +163,16 @@ new class extends Component {
             }
         }
         
+        // Se si seleziona il formato personalizzato, inizializziamo le dimensioni se vuote
+        if ($optionId === 999999) {
+            if (empty($this->width)) {
+                $this->width = (float) ($this->product()->min_custom_width ?: 10);
+            }
+            if (empty($this->height)) {
+                $this->height = (float) ($this->product()->min_custom_height ?: 10);
+            }
+        }
+
         // Se la variante cambia e influenza le immagini, aggiorniamo la galleria
         if ($type && $type->pivot->has_images) {
             $this->updateImages();
@@ -186,13 +196,42 @@ new class extends Component {
     public function currentBasePrice(): float
     {
         $product = $this->product();
-        $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
-        
-        if ($activeSku && $activeSku->override_price !== null) {
-            return (float) $activeSku->override_price;
+
+        $isCustomFormat = false;
+        foreach ($this->selectedOptions as $optionId) {
+            if ($optionId == 999999) {
+                $isCustomFormat = true;
+                break;
+            }
         }
 
-        return $product->getPriceForQuantity(1);
+        $activeSku = null;
+        if ($isCustomFormat && $this->width && $this->height) {
+            $nearestFormatId = $product->getNearestFormatOptionId($this->width, $this->height);
+            if ($nearestFormatId) {
+                $targetOptions = $this->selectedOptions;
+                $formatType = $product->variationTypes->firstWhere('name', 'Formato');
+                if ($formatType && isset($targetOptions[$formatType->id])) {
+                    $targetOptions[$formatType->id] = $nearestFormatId;
+                }
+                $activeSku = $product->getActiveSku($targetOptions);
+            }
+        }
+
+        if (!$activeSku instanceof \App\Models\ProductSku) {
+            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
+        }
+
+        $price = $product->getPriceForQuantity(1, $activeSku);
+        if ($activeSku && $activeSku->override_price !== null) {
+            $price = (float) $activeSku->override_price;
+        }
+
+        if ($isCustomFormat) {
+            $price *= 1.20;
+        }
+
+        return $price;
     }
 
     #[Computed]
@@ -259,6 +298,10 @@ new class extends Component {
 
         // Controlla se una delle opzioni selezionate è personalizzata
         foreach ($this->selectedOptions as $typeId => $optionId) {
+            if ($optionId == 999999) {
+                $isCustom = true;
+                break;
+            }
             $type = $product->variationTypes->firstWhere('id', $typeId);
             if ($type) {
                 $opt = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
@@ -326,14 +369,37 @@ new class extends Component {
             }
         }
 
-        // 2. Validazione Dimensioni (per prodotti calcolati ad area)
-        if ($product->pricing_model === 'area') {
+        // Determina se è selezionato un formato personalizzato
+        $isCustom = false;
+        foreach ($this->selectedOptions as $typeId => $optionId) {
+            if ($optionId == 999999) {
+                $isCustom = true;
+                break;
+            }
+            $type = $product->variationTypes->firstWhere('id', $typeId);
+            if ($type) {
+                $opt = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                if ($opt && preg_match('/(personalizzat|custom)/i', (string) $opt->name)) {
+                    $isCustom = true;
+                    break;
+                }
+            }
+        }
+
+        // 2. Validazione Dimensioni (per prodotti calcolati ad area o formati personalizzati)
+        if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustom)) {
             if (empty($this->width) || $this->width <= 0) {
                 session()->flash('error', 'Inserisci una larghezza valida.');
                 return;
             }
             if (empty($this->height) || $this->height <= 0) {
                 session()->flash('error', 'Inserisci un\'altezza valida.');
+                return;
+            }
+
+            $this->validateDimensions();
+            if ($this->getErrorBag()->hasAny(['width', 'height'])) {
+                session()->flash('error', $this->getErrorBag()->first());
                 return;
             }
         }
@@ -366,9 +432,13 @@ new class extends Component {
                         $optionsSummary[$type->name] = implode(', ', $names);
                     }
                 } else {
-                    $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
-                    if ($option) {
-                        $optionsSummary[$type->name] = $option->name;
+                    if ($optionId == 999999) {
+                        $optionsSummary[$type->name] = 'Formato Personalizzato';
+                    } else {
+                        $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                        if ($option) {
+                            $optionsSummary[$type->name] = $option->name;
+                        }
                     }
                 }
             }
@@ -387,7 +457,7 @@ new class extends Component {
             'quantities' => $quantitiesToStore,
         ];
 
-        if ($product->pricing_model === 'area') {
+        if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustom)) {
             $itemData['width'] = (float) $this->width;
             $itemData['height'] = (float) $this->height;
         }
@@ -406,6 +476,105 @@ new class extends Component {
         return redirect()->route('cart');
     }
 
+    public function validateDimensions(): void
+    {
+        $this->resetErrorBag(['width', 'height']);
+        
+        $product = $this->product();
+        $isCustom = false;
+        foreach ($this->selectedOptions as $typeId => $optionId) {
+            if ($optionId == 999999) {
+                $isCustom = true;
+                break;
+            }
+            $type = $product->variationTypes->firstWhere('id', $typeId);
+            if ($type) {
+                $opt = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                if ($opt && preg_match('/(personalizzat|custom)/i', (string) $opt->name)) {
+                    $isCustom = true;
+                    break;
+                }
+            }
+        }
+
+        if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustom)) {
+            if ($this->width !== null) {
+                if ($product->min_custom_width && $this->width < $product->min_custom_width) {
+                    $this->addError('width', "La larghezza minima è {$product->min_custom_width} mm.");
+                }
+                if ($product->max_custom_width && $this->width > $product->max_custom_width) {
+                    $this->addError('width', "La larghezza massima è {$product->max_custom_width} mm.");
+                }
+            }
+            if ($this->height !== null) {
+                if ($product->min_custom_height && $this->height < $product->min_custom_height) {
+                    $this->addError('height', "L'altezza minima è {$product->min_custom_height} mm.");
+                }
+                if ($product->max_custom_height && $this->height > $product->max_custom_height) {
+                    $this->addError('height', "L'altezza massima è {$product->max_custom_height} mm.");
+                }
+            }
+        }
+    }
+
+    private function checkForStandardFormatMatch(): void
+    {
+        if (empty($this->width) || empty($this->height)) {
+            return;
+        }
+
+        $product = $this->product();
+        $formatType = $product->variationTypes->firstWhere('name', 'Formato');
+        if (! $formatType) {
+            return;
+        }
+
+        /** @var ProductVariationType|null $pvt */
+        $pvt = $product->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+        if (! $pvt) {
+            return;
+        }
+
+        $options = \App\Models\VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
+            $query->where('product_variation_type_id', $pvt->id);
+        })->get();
+
+        $customMin = min($this->width, $this->height);
+        $customMax = max($this->width, $this->height);
+
+        foreach ($options as $opt) {
+            if ($opt->id == 999999) {
+                continue;
+            }
+            $name = strtolower((string) $opt->name);
+            if (str_contains($name, 'personalizzato')) {
+                continue;
+            }
+            if (str_contains($name, 'custom')) {
+                continue;
+            }
+
+            if (preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', $name, $matches)) {
+                $parsedW = (float) str_replace(',', '.', $matches[1]);
+                $parsedH = (float) str_replace(',', '.', $matches[2]);
+                if (str_contains(strtolower($name), 'cm')) {
+                    $parsedW *= 10;
+                    $parsedH *= 10;
+                }
+
+                $optMin = min($parsedW, $parsedH);
+                $optMax = max($parsedW, $parsedH);
+
+                if (abs($customMin - $optMin) < 0.1 && abs($customMax - $optMax) < 0.1) {
+                    $this->selectedOptions[$formatType->id] = $opt->id;
+                    $this->width = null;
+                    $this->height = null;
+                    break;
+                }
+            }
+        }
+    }
+
     public function updatedQuantities($value, $key): void
     {
         $this->enforceQuantityStep();
@@ -413,16 +582,21 @@ new class extends Component {
 
     public function updatedWidth(): void
     {
+        $this->checkForStandardFormatMatch();
+        $this->validateDimensions();
         $this->enforceQuantityStep();
     }
 
     public function updatedHeight(): void
     {
+        $this->checkForStandardFormatMatch();
+        $this->validateDimensions();
         $this->enforceQuantityStep();
     }
 
     public function updatedSelectedOptions(): void
     {
+        $this->validateDimensions();
         $this->enforceQuantityStep();
     }
 
@@ -439,7 +613,7 @@ new class extends Component {
                 foreach ($this->quantities as $key => $value) {
                     $val = (int) $value;
                     if ($val > 0 && $val % $step !== 0) {
-                        $newVal = round($val / $step) * $step;
+                        $newVal = ceil($val / $step) * $step;
                         if ($newVal < $step) {
                             $newVal = $step;
                         }

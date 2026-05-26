@@ -93,19 +93,19 @@ class ProductForm
                                                 ->visible(fn (Get $get): bool => $get('allows_custom_size') === true)
                                                 ->schema([
                                                     TextInput::make('min_custom_width')
-                                                        ->label('Base Minima (cm)')
+                                                        ->label('Base Minima (mm)')
                                                         ->numeric()
                                                         ->step(0.01),
                                                     TextInput::make('max_custom_width')
-                                                        ->label('Base Massima (cm)')
+                                                        ->label('Base Massima (mm)')
                                                         ->numeric()
                                                         ->step(0.01),
                                                     TextInput::make('min_custom_height')
-                                                        ->label('Altezza Minima (cm)')
+                                                        ->label('Altezza Minima (mm)')
                                                         ->numeric()
                                                         ->step(0.01),
                                                     TextInput::make('max_custom_height')
-                                                        ->label('Altezza Massima (cm)')
+                                                        ->label('Altezza Massima (mm)')
                                                         ->numeric()
                                                         ->step(0.01),
                                                 ]),

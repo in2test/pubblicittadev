@@ -62,9 +62,31 @@
                 }
                 $selectedId = $selectedOptions[$type->id] ?? null;
                 if ($selectedId) {
-                    $matchingSkus = $matchingSkus->filter(
-                        fn ($sku) => $sku->options->contains('id', $selectedId)
-                    );
+                    if ($selectedId == 999999) {
+                        $realCustomOption = $type->pivot->options->first(function ($pvo) {
+                            $optName = strtolower((string) ($pvo->option?->name ?? ''));
+                            return str_contains($optName, 'personalizzato') || str_contains($optName, 'custom');
+                        });
+                        if ($realCustomOption) {
+                            $selectedId = $realCustomOption->variation_option_id;
+                        } else {
+                            $nearestFormatId = $product->getNearestFormatOptionId($width, $height);
+                            if (!$nearestFormatId) {
+                                $firstPvo = $type->pivot->options->sortBy('sort_order')->first();
+                                if ($firstPvo) {
+                                    $nearestFormatId = $firstPvo->variation_option_id;
+                                }
+                            }
+                            if ($nearestFormatId) {
+                                $selectedId = $nearestFormatId;
+                            }
+                        }
+                    }
+                    if ($selectedId != 999999) {
+                        $matchingSkus = $matchingSkus->filter(
+                            fn ($sku) => $sku->options->contains('id', $selectedId)
+                        );
+                    }
                 }
             }
 
@@ -89,7 +111,10 @@
     if ($product->pricing_model === 'quantity' && $product->allows_custom_size) {
         foreach ($selectorTypes as $type) {
             $selectedId = $selectedOptions[$type->id] ?? null;
-            if ($selectedId) {
+            if ($selectedId == 999999) {
+                $isCustomFormatSelected = true;
+                $selectedFormatName = 'Formato Personalizzato';
+            } elseif ($selectedId) {
                 $opt = $type->pivot->options->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $selectedId);
                 if ($opt) {
                     $selectedFormatName = $opt->name;
@@ -122,13 +147,33 @@
 
     {{-- SEZIONE: Selettori delle Varianti (Es. Colore, Modello, Materiale) --}}
     @foreach ($selectorTypes as $type)
+        @php
+            $isFormatType = $type->presentation_type === 'dimensions' || stripos($type->name, 'format') !== false || stripos($type->name, 'dimension') !== false || stripos($type->name, 'misure') !== false;
+
+            $productOptions = $type->pivot->options->sortBy('sort_order');
+
+            if ($product->allows_custom_size && $isFormatType) {
+                // Create a virtual ProductVariationOption wrapper
+                $virtualPvo = new \App\Models\ProductVariationOption();
+                $virtualPvo->id = 999999;
+                $virtualPvo->product_variation_type_id = $type->pivot->id;
+                $virtualPvo->variation_option_id = 999999;
+                $virtualPvo->sort_order = 99999;
+
+                $optModel = new \App\Models\VariationOption();
+                $optModel->id = 999999;
+                $optModel->variation_type_id = $type->id;
+                $optModel->name = 'Formato Personalizzato';
+                $optModel->value = 'custom';
+
+                $virtualPvo->setRelation('option', $optModel);
+                $productOptions = $productOptions->concat([$virtualPvo]);
+            }
+        @endphp
         <div class="space-y-4">
             <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
                 {{ $type->name }}
             </label>
-            @php
-                $productOptions = $type->pivot->options->sortBy('sort_order');
-            @endphp
             @if ($type->allow_multiple)
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     @foreach ($productOptions as $pvo)
@@ -227,6 +272,14 @@
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
+                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-[15px]">
+                        @if($product->min_custom_width || $product->max_custom_width)
+                            <span class="text-secondary/70">Limiti: {{ (int) $product->min_custom_width }} - {{ (int) $product->max_custom_width }} mm</span>
+                        @else
+                            <span></span>
+                        @endif
+                        @error('width') <span class="text-red-600 font-bold normal-case">{{ $message }}</span> @enderror
+                    </div>
                 </div>
                 {{-- Input Altezza --}}
                 <div class="space-y-2">
@@ -239,51 +292,61 @@
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
+                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-[15px]">
+                        @if($product->min_custom_height || $product->max_custom_height)
+                            <span class="text-secondary/70">Limiti: {{ (int) $product->min_custom_height }} - {{ (int) $product->max_custom_height }} mm</span>
+                        @else
+                            <span></span>
+                        @endif
+                        @error('height') <span class="text-red-600 font-bold normal-case">{{ $message }}</span> @enderror
+                    </div>
                 </div>
             </div>
 
             {{-- Info e Avvisi Calcolo Area --}}
-            @if ($product->min_area > 0)
-                <p class="text-[10px] font-mono text-secondary uppercase">
-                    Nota: Area minima fatturabile di {{ $product->min_area }} mq per articolo.
-                </p>
-            @endif
-            @if ($width > 0 && $height > 0)
-                @php
-                    $qty = $this->totalQuantity() ?: 1;
-                    $actualArea = (((float)$width * (float)$height) / 1000000.0) * $qty;
-                    $minArea = (float) $product->min_area;
-                    $billedArea = $minArea > 0 ? ceil($actualArea / $minArea) * $minArea : $actualArea;
-                    $sheetsInfo = $product->getSheetsNeeded((float) $width, (float) $height);
-                @endphp
-                <div class="mt-2 text-xs font-mono text-secondary">
-                    Area totale calcolata: <span class="font-bold text-on-surface">{{ number_format($actualArea, 2, ',', '.') }} mq</span>
-                    @if ($minArea > 0 && $billedArea > $actualArea)
-                        <span class="text-amber-600 font-bold">(Fatturati: {{ number_format($billedArea, 2, ',', '.') }} mq a scaglioni di {{ number_format($minArea, 2, ',', '.') }})</span>
-                    @endif
-                </div>
-
-                {{-- Avviso Divisione Formato (se l'area supera la dimensione massima del pannello/foglio) --}}
-                @if ($sheetsInfo['exceeds'])
+            @if ($isAreaPricing)
+                @if ($product->min_area > 0)
+                    <p class="text-[10px] font-mono text-secondary uppercase">
+                        Nota: Area minima fatturabile di {{ $product->min_area }} mq per articolo.
+                    </p>
+                @endif
+                @if ($width > 0 && $height > 0)
                     @php
-                        $maxW = $product->sheet_width ? number_format((float)$product->sheet_width / 1000, 1, ',', '.') . ' m' : '∞';
-                        $maxH = $product->sheet_height ? number_format((float)$product->sheet_height / 1000, 1, ',', '.') . ' m' : '∞';
+                        $qty = $this->totalQuantity() ?: 1;
+                        $actualArea = (((float)$width * (float)$height) / 1000000.0) * $qty;
+                        $minArea = (float) $product->min_area;
+                        $billedArea = $minArea > 0 ? ceil($actualArea / $minArea) * $minArea : $actualArea;
+                        $sheetsInfo = $product->getSheetsNeeded((float) $width, (float) $height);
                     @endphp
-                    <div class="mt-3 flex items-start gap-3 rounded border border-amber-300 bg-amber-50 px-4 py-3">
-                        <span class="material-symbols-outlined text-amber-600 text-base mt-0.5 shrink-0">warning</span>
-                        <div class="text-xs font-mono text-amber-800 leading-relaxed">
-                            <span class="font-bold uppercase tracking-wide">Attenzione: Il lavoro supera le dimensioni del foglio ({{ $maxW }} × {{ $maxH }}).</span><br>
-                            Verrà diviso in <span class="font-bold">{{ $sheetsInfo['sheets'] }} {{ $sheetsInfo['sheets'] === 1 ? 'foglio' : 'fogli' }}</span>
-                            @if ($sheetsInfo['sheets_x'] > 1 && $sheetsInfo['sheets_y'] > 1)
-                                ({{ $sheetsInfo['sheets_x'] }} in larghezza × {{ $sheetsInfo['sheets_y'] }} in altezza).
-                            @elseif ($sheetsInfo['sheets_x'] > 1)
-                                ({{ $sheetsInfo['sheets_x'] }} in larghezza).
-                            @else
-                                ({{ $sheetsInfo['sheets_y'] }} in altezza).
-                            @endif
-                            Il prezzo rimane calcolato sul totale dei mq.
-                        </div>
+                    <div class="mt-2 text-xs font-mono text-secondary">
+                        Area totale calcolata: <span class="font-bold text-on-surface">{{ number_format($actualArea, 2, ',', '.') }} mq</span>
+                        @if ($minArea > 0 && $billedArea > $actualArea)
+                            <span class="text-amber-600 font-bold">(Fatturati: {{ number_format($billedArea, 2, ',', '.') }} mq a scaglioni di {{ number_format($minArea, 2, ',', '.') }})</span>
+                        @endif
                     </div>
+
+                    {{-- Avviso Divisione Formato (se l'area supera la dimensione massima del pannello/foglio) --}}
+                    @if ($sheetsInfo['exceeds'])
+                        @php
+                            $maxW = $product->sheet_width ? number_format((float)$product->sheet_width, 0, ',', '.') . ' mm' : '∞';
+                            $maxH = $product->sheet_height ? number_format((float)$product->sheet_height, 0, ',', '.') . ' mm' : '∞';
+                        @endphp
+                        <div class="mt-3 flex items-start gap-3 rounded border border-amber-300 bg-amber-50 px-4 py-3">
+                            <span class="material-symbols-outlined text-amber-600 text-base mt-0.5 shrink-0">warning</span>
+                            <div class="text-xs font-mono text-amber-800 leading-relaxed">
+                                <span class="font-bold uppercase tracking-wide">Attenzione: Il lavoro supera le dimensioni del foglio ({{ $maxW }} × {{ $maxH }}).</span><br>
+                                Verrà diviso in <span class="font-bold">{{ $sheetsInfo['sheets'] }} {{ $sheetsInfo['sheets'] === 1 ? 'foglio' : 'fogli' }}</span>
+                                @if ($sheetsInfo['sheets_x'] > 1 && $sheetsInfo['sheets_y'] > 1)
+                                    ({{ $sheetsInfo['sheets_x'] }} in larghezza × {{ $sheetsInfo['sheets_y'] }} in altezza).
+                                @elseif ($sheetsInfo['sheets_x'] > 1)
+                                    ({{ $sheetsInfo['sheets_x'] }} in larghezza).
+                                @else
+                                    ({{ $sheetsInfo['sheets_y'] }} in altezza).
+                                @endif
+                                Il prezzo rimane calcolato sul totale dei mq.
+                            </div>
+                        </div>
+                    @endif
                 @endif
             @endif
         </div>
@@ -334,7 +397,7 @@
                             @php
                                 $tierQty = (int) $tier->min_quantity;
                                 if ($qtyStep > 1) {
-                                    $tierQty = (int) round($tierQty / $qtyStep) * $qtyStep;
+                                    $tierQty = (int) ceil($tierQty / $qtyStep) * $qtyStep;
                                     if ($tierQty < $qtyStep) $tierQty = $qtyStep;
                                 }
                                 $isTierSelected = $currentQty === $tierQty;
@@ -455,6 +518,7 @@
                         <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
                     </div>
 
+                    {{--
                     @if ($product->sheet_width > 0 && $product->sheet_height > 0 && $itemsPerSheet > 0)
                         <div class="flex justify-between items-center pt-2 border-t border-primary/20">
                             <span class="text-xs font-mono uppercase tracking-widest text-primary">Resa Foglio di Stampa</span>
@@ -468,6 +532,7 @@
                             <span class="text-sm font-bold text-primary font-mono">{{ $sheetsNeeded }} {{ $sheetsNeeded == 1 ? 'foglio' : 'fogli' }}</span>
                         </div>
                     @endif
+                    --}}
                     
                     @if($this->totalPrice > 0)
                         <div class="flex justify-between items-center pt-2 border-t border-primary/20">

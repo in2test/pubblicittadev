@@ -282,15 +282,15 @@ class CartTest extends TestCase
             'min_area' => 0.5,
         ]);
 
-        // 1. Standard calculation: 200cm x 150cm = 3 sqm. Quantity = 2.
+        // 1. Standard calculation: 2000mm x 1500mm = 3 sqm. Quantity = 2.
         // Total unit price should be: 3 sqm * €10 = €30 per unit.
         $this->post(route('cart.add'), [
             'product_id' => $product->id,
             'product_name' => $product->name,
             'product_slug' => $product->slug,
             'quantity' => 2,
-            'width' => 200,
-            'height' => 150,
+            'width' => 2000,
+            'height' => 1500,
         ]);
 
         $cart = new CartManager;
@@ -298,12 +298,12 @@ class CartTest extends TestCase
         $item = reset($items);
 
         $this->assertEquals(30.0, $item['price']);
-        $this->assertEquals(200.0, $item['width']);
-        $this->assertEquals(150.0, $item['height']);
+        $this->assertEquals(2000.0, $item['width']);
+        $this->assertEquals(1500.0, $item['height']);
 
         // Check index view returns correct calculations for area pricing
         $response = $this->get(route('cart'));
         $response->assertOk();
-        $response->assertSee('Dimensioni: 200 × 150 cm');
+        $response->assertSee('Dimensioni: 2000 × 1500 mm');
     }
 }

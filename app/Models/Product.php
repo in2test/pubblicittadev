@@ -471,25 +471,38 @@ class Product extends Model implements HasMedia
     {
         $findTier = function (?int $skuId) use ($quantity): ?PricingTier {
             if ($this->relationLoaded('pricingTiers')) {
-                return $this->pricingTiers
+                $tiers = $this->pricingTiers
+                    ->filter(fn (PricingTier $t) => $t->product_sku_id === $skuId);
+
+                $match = $tiers
                     ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
-                        ($t->max_quantity >= $quantity || is_null($t->max_quantity)) &&
-                        $t->product_sku_id === $skuId
+                        ($t->max_quantity >= $quantity || is_null($t->max_quantity))
                     )
                     ->sortByDesc('min_quantity')
                     ->first();
+
+                if (! $match && ($this->price <= 0 || $this->allows_custom_size)) {
+                    return $tiers->sortBy('min_quantity')->first();
+                }
+
+                return $match;
             }
 
             /** @var PricingTier|null $tier */
-            $tier = $this->pricingTiers()
+            $query = $this->pricingTiers()->where('product_sku_id', $skuId);
+
+            $tier = (clone $query)
                 ->where('min_quantity', '<=', $quantity)
                 ->where(function (Builder $query) use ($quantity) {
                     $query->where('max_quantity', '>=', $quantity)
                         ->orWhereNull('max_quantity');
                 })
-                ->where('product_sku_id', $skuId)
                 ->orderByDesc('min_quantity')
                 ->first();
+
+            if (! $tier && ($this->price <= 0 || $this->allows_custom_size)) {
+                return $query->orderBy('min_quantity')->first();
+            }
 
             return $tier;
         };
@@ -513,22 +526,40 @@ class Product extends Model implements HasMedia
         // Se non c'è un tier globale, ma ci sono tier specifici per SKU per questa quantità,
         // restituiamo il prezzo unitario minimo tra tutti i tier specifici della SKU.
         if ($this->relationLoaded('pricingTiers')) {
-            $minPrice = $this->pricingTiers
+            $matchedTiers = $this->pricingTiers
                 ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
                     ($t->max_quantity >= $quantity || is_null($t->max_quantity))
-                )
-                ->min('price_per_unit');
+                );
+
+            if ($matchedTiers->isEmpty()) {
+                if ($this->price <= 0 || $this->allows_custom_size) {
+                    $minPrice = $this->pricingTiers->sortBy('min_quantity')->first()?->price_per_unit;
+                } else {
+                    $minPrice = null;
+                }
+            } else {
+                $minPrice = $matchedTiers->min('price_per_unit');
+            }
 
             return $minPrice !== null ? (float) $minPrice : null;
         }
 
-        $minPrice = $this->pricingTiers()
+        $matchedTiersQuery = $this->pricingTiers()
             ->where('min_quantity', '<=', $quantity)
             ->where(function (Builder $query) use ($quantity) {
                 $query->where('max_quantity', '>=', $quantity)
                     ->orWhereNull('max_quantity');
-            })
-            ->min('price_per_unit');
+            });
+
+        if ((clone $matchedTiersQuery)->count() === 0) {
+            if ($this->price <= 0 || $this->allows_custom_size) {
+                $minPrice = $this->pricingTiers()->orderBy('min_quantity')->first()?->price_per_unit;
+            } else {
+                $minPrice = null;
+            }
+        } else {
+            $minPrice = $matchedTiersQuery->min('price_per_unit');
+        }
 
         return $minPrice !== null ? (float) $minPrice : null;
     }
@@ -546,9 +577,9 @@ class Product extends Model implements HasMedia
     public function getSheetsNeeded(float $width, float $height): array
     {
         $calc = function (float $w, float $h): array {
-            // $w and $h are in cm, sheet_width/height are in mm. Convert mm to cm by dividing by 10.
-            $sheetW = $this->sheet_width ? ($this->sheet_width / 10) : null;
-            $sheetH = $this->sheet_height ? ($this->sheet_height / 10) : null;
+            // Both item size ($w, $h) and sheet size (sheet_width, sheet_height) are in mm.
+            $sheetW = $this->sheet_width ?: null;
+            $sheetH = $this->sheet_height ?: null;
 
             $sheetsX = $sheetW ? (int) ceil($w / $sheetW) : 1;
             $sheetsY = $sheetH ? (int) ceil($h / $sheetH) : 1;
@@ -594,8 +625,8 @@ class Product extends Model implements HasMedia
      * Calcola l'area totale fatturata (in metri quadrati) per la quantità e le dimensioni fornite.
      *
      * @param  int  $quantity  Numero di articoli
-     * @param  float  $width  Larghezza fisica dell'articolo in CENTIMETRI (cm)
-     * @param  float  $height  Altezza fisica dell'articolo in CENTIMETRI (cm)
+     * @param  float  $width  Larghezza fisica dell'articolo in MILLIMETRI (mm)
+     * @param  float  $height  Altezza fisica dell'articolo in MILLIMETRI (mm)
      * @return float L'area totale calcolata in metri quadrati (mq), arrotondata all'area minima del prodotto (se applicabile).
      */
     public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
@@ -604,9 +635,9 @@ class Product extends Model implements HasMedia
             return 0.0;
         }
 
-        // Gli input sono in CM. (width * height) fornisce i centimetri quadrati.
-        // Per ottenere i metri quadrati, dividiamo per 10.000.
-        $actualArea = ($width * $height) / 10000.0 * $quantity;
+        // Gli input sono in MM. (width * height) fornisce i millimetri quadrati.
+        // Per ottenere i metri quadrati, dividiamo per 1.000.000.
+        $actualArea = ($width * $height) / 1000000.0 * $quantity;
         $minArea = $this->min_area ? (float) $this->min_area : 0.0;
 
         // Se c'è un'area minima, arrotonda l'area effettiva al multiplo superiore dell'area minima (ceiling).
@@ -629,7 +660,7 @@ class Product extends Model implements HasMedia
                 }
 
                 $selectedId = $selectedOptions[$type->id] ?? null;
-                if ($selectedId && ! $sku->options->contains('id', $selectedId)) {
+                if ($selectedId && $selectedId != 999999 && ! $sku->options->contains('id', $selectedId)) {
                     return false;
                 }
             }
@@ -695,16 +726,49 @@ class Product extends Model implements HasMedia
         // --- Modello di prezzo Fisso o a Quantità (scaglioni) ---
         $total = 0.0;
 
+        // Determina se è stato scelto il formato personalizzato
+        $isCustomFormat = false;
+        if ($this->allows_custom_size && $width && $height) {
+            foreach ($selectedOptions as $optionId) {
+                if ($optionId == 999999) {
+                    $isCustomFormat = true;
+                    break;
+                }
+            }
+        }
+
+        $nearestSku = null;
+        if ($isCustomFormat) {
+            $nearestFormatId = $this->getNearestFormatOptionId($width, $height);
+            if ($nearestFormatId) {
+                $targetOptions = $selectedOptions;
+                $formatType = $this->variationTypes->firstWhere('name', 'Formato');
+                if ($formatType && isset($targetOptions[$formatType->id])) {
+                    $targetOptions[$formatType->id] = $nearestFormatId;
+                }
+                $nearestSku = $this->getActiveSku($targetOptions);
+            }
+        }
+
         // Se sono state specificate le quantità per ogni singola SKU (varianti)
         foreach ($skuQuantities as $skuId => $rawQty) {
             $skuQty = (int) $rawQty;
             if ($skuQty > 0) {
                 $sku = $this->skus->firstWhere('id', $skuId);
+
+                if ($isCustomFormat && $nearestSku) {
+                    $sku = $nearestSku;
+                }
+
                 $unitPrice = $this->calculateFinalUnitPrice($skuQty, null, null, $sku);
 
                 // Applica il prezzo di override della SKU se presente
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
+                }
+
+                if ($isCustomFormat) {
+                    $unitPrice *= 1.20;
                 }
 
                 $total += $unitPrice * $skuQty;
@@ -713,13 +777,88 @@ class Product extends Model implements HasMedia
 
         // Se non abbiamo un dettaglio per SKU, calcola la quantità totale sul prodotto base
         if ($skuQuantities === []) {
-            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity);
+            $sku = null;
+            if ($isCustomFormat && $nearestSku) {
+                $sku = $nearestSku;
+            }
+
+            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, null, null, $sku);
+
+            if ($sku && $sku->override_price !== null) {
+                $unitPrice = (float) $sku->override_price;
+            }
+
+            if ($isCustomFormat) {
+                $unitPrice *= 1.20;
+            }
+
             $total += $unitPrice * $totalQuantity;
         }
 
         $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
 
         return (float) number_format($total, 2, '.', '');
+    }
+
+    /**
+     * Trova l'opzione di formato esistente più vicina alle dimensioni personalizzate fornite.
+     */
+    public function getNearestFormatOptionId(float $width, float $height): ?int
+    {
+        $formatType = $this->variationTypes->firstWhere('name', 'Formato');
+        if (! $formatType) {
+            return null;
+        }
+
+        /** @var ProductVariationType|null $pvt */
+        $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+        if (! $pvt) {
+            return null;
+        }
+
+        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
+            $query->where('product_variation_type_id', $pvt->id);
+        })->get();
+
+        $nearestOptionId = null;
+        $minDistance = null;
+
+        $customMin = min($width, $height);
+        $customMax = max($width, $height);
+
+        foreach ($options as $opt) {
+            if ($opt->id == 999999) {
+                continue;
+            }
+            $name = strtolower((string) $opt->name);
+            if (str_contains($name, 'personalizzato')) {
+                continue;
+            }
+            if (str_contains($name, 'custom')) {
+                continue;
+            }
+
+            if (preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', $name, $matches)) {
+                $parsedW = (float) str_replace(',', '.', $matches[1]);
+                $parsedH = (float) str_replace(',', '.', $matches[2]);
+                if (str_contains(strtolower($name), 'cm')) {
+                    $parsedW *= 10;
+                    $parsedH *= 10;
+                }
+
+                $optMin = min($parsedW, $parsedH);
+                $optMax = max($parsedW, $parsedH);
+
+                $distance = sqrt(($customMin - $optMin) ** 2 + ($customMax - $optMax) ** 2);
+
+                if ($minDistance === null || $distance < $minDistance) {
+                    $minDistance = $distance;
+                    $nearestOptionId = $opt->id;
+                }
+            }
+        }
+
+        return $nearestOptionId;
     }
 
     /**
@@ -874,7 +1013,7 @@ class Product extends Model implements HasMedia
                             $itemsPerSheet = $this->calculateItemsPerSheet($w, $h);
                             if ($itemsPerSheet > 0) {
                                 // Arrotonda la quantità al multiplo dei pezzi per foglio
-                                $qty = (int) round($minQty / $itemsPerSheet) * $itemsPerSheet;
+                                $qty = (int) ceil($minQty / $itemsPerSheet) * $itemsPerSheet;
                                 if ($qty < $itemsPerSheet) {
                                     $qty = $itemsPerSheet;
                                 }

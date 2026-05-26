@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Override;
 
 /**
  * @property int $id
@@ -57,6 +58,7 @@ class PricingTier extends Model
         'is_custom_price' => 'boolean',
     ];
 
+    #[Override]
     protected static function booted(): void
     {
         static::creating(function (PricingTier $pricingTier) {

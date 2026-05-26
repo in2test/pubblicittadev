@@ -144,7 +144,7 @@ class OrderForm
 
                                             // Dimensions
                                             if (! empty($json['width']) && ! empty($json['height'])) {
-                                                $html .= "<li><strong>Dimensioni:</strong> {$json['width']} x {$json['height']} cm</li>";
+                                                $html .= "<li><strong>Dimensioni:</strong> {$json['width']} x {$json['height']} mm</li>";
                                             }
 
                                             // Quantities breakdown

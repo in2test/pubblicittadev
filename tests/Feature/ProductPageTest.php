@@ -10,6 +10,7 @@ use App\Models\ProductSku;
 use App\Models\User;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use App\Services\CartManager;
 use Database\Seeders\StandardProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -192,5 +193,190 @@ class ProductPageTest extends TestCase
         ])
             ->set('quantities', [$activeSku->id => 100])
             ->assertSet('totalPrice', 11.00);
+    }
+
+    public function test_livewire_product_custom_format(): void
+    {
+        $this->seed(StandardProductSeeder::class);
+        $product = Product::where('slug', 'biglietti-da-visita')->firstOrFail();
+        $category = $product->category;
+
+        $product->update([
+            'allows_custom_size' => true,
+            'min_custom_width' => 30,
+            'max_custom_width' => 100,
+            'min_custom_height' => 30,
+            'max_custom_height' => 100,
+        ]);
+
+        $typeFormato = VariationType::where('name', 'Formato')->firstOrFail();
+        $typeFinitura = VariationType::where('name', 'Finitura')->firstOrFail();
+        $optPlast = VariationOption::where('variation_type_id', $typeFinitura->id)->firstOrFail();
+
+        $activeSku = $product->getActiveSku([
+            $typeFormato->id => 999999, // custom format virtual ID
+            $typeFinitura->id => $optPlast->id,
+        ]);
+
+        $this->assertNotNull($activeSku);
+
+        // Mount the Livewire component!
+        $component = Livewire::test('⚡product', [
+            'product' => $product,
+            'category' => $category,
+            'options' => [
+                $typeFormato->id => 999999,
+                $typeFinitura->id => $optPlast->id,
+            ],
+        ]);
+
+        // Quantities should be set for the active SKU
+        $component->set('quantities', [$activeSku->id => 100])
+            ->set('width', 45)
+            ->set('height', 45);
+
+        // Verify total price is computed
+        $component->assertSet('width', 45)
+            ->assertSet('height', 45)
+            ->assertSet('totalPrice', 25.92);
+
+        // Try to add to cart
+        $component->call('addToCart');
+
+        // Verify item is in cart with custom width and height
+        $cartItems = app(CartManager::class)->getItems();
+        $this->assertNotEmpty($cartItems);
+
+        $cartItem = collect($cartItems)->first();
+        $this->assertEquals(45, $cartItem['width']);
+        $this->assertEquals(45, $cartItem['height']);
+    }
+
+    public function test_livewire_product_custom_format_validation_out_of_bounds(): void
+    {
+        $this->seed(StandardProductSeeder::class);
+        $product = Product::where('slug', 'biglietti-da-visita')->firstOrFail();
+        $category = $product->category;
+
+        $product->update([
+            'allows_custom_size' => true,
+            'min_custom_width' => 30,
+            'max_custom_width' => 100,
+            'min_custom_height' => 30,
+            'max_custom_height' => 100,
+        ]);
+
+        $typeFormato = VariationType::where('name', 'Formato')->firstOrFail();
+        $typeFinitura = VariationType::where('name', 'Finitura')->firstOrFail();
+        $optPlast = VariationOption::where('variation_type_id', $typeFinitura->id)->firstOrFail();
+
+        // Mount the Livewire component!
+        $component = Livewire::test('⚡product', [
+            'product' => $product,
+            'category' => $category,
+            'options' => [
+                $typeFormato->id => 999999,
+                $typeFinitura->id => $optPlast->id,
+            ],
+        ]);
+
+        // Try setting out of bounds width
+        $component->set('width', 120)
+            ->call('validateDimensions')
+            ->assertHasErrors(['width']);
+
+        // Try setting out of bounds height
+        $component->set('width', 50)
+            ->set('height', 120)
+            ->call('validateDimensions')
+            ->assertHasErrors(['height']);
+    }
+
+    public function test_livewire_product_custom_format_rounding_and_under_tier_price(): void
+    {
+        $this->seed(StandardProductSeeder::class);
+        $product = Product::where('slug', 'biglietti-da-visita')->firstOrFail();
+        $category = $product->category;
+
+        $product->update([
+            'allows_custom_size' => true,
+            'min_custom_width' => 30,
+            'max_custom_width' => 100,
+            'min_custom_height' => 30,
+            'max_custom_height' => 100,
+        ]);
+
+        $typeFormato = VariationType::where('name', 'Formato')->firstOrFail();
+        $typeFinitura = VariationType::where('name', 'Finitura')->firstOrFail();
+        $optPlast = VariationOption::where('variation_type_id', $typeFinitura->id)->firstOrFail();
+
+        // Mount the Livewire component!
+        $component = Livewire::test('⚡product', [
+            'product' => $product,
+            'category' => $category,
+            'options' => [
+                $typeFormato->id => 999999,
+                $typeFinitura->id => $optPlast->id,
+            ],
+        ]);
+
+        // Set dimensions to 30x30 mm
+        $component->set('width', 30)
+            ->set('height', 30);
+
+        $itemsPerSheet = $component->get('itemsPerSheet');
+        $this->assertGreaterThan(0, $itemsPerSheet);
+
+        $activeSku = $product->getActiveSku([
+            $typeFormato->id => 999999,
+            $typeFinitura->id => $optPlast->id,
+        ]);
+
+        // Setting quantities below tier minimum or itemsPerSheet should round up to itemsPerSheet
+        $component->set("quantities.{$activeSku->id}", 50);
+
+        $quantities = $component->get('quantities');
+        $this->assertEquals($itemsPerSheet, $quantities[$activeSku->id]);
+
+        // Price should be computed correctly using fallback to 100 pz tier unit price
+        $totalPrice = $component->get('totalPrice');
+        $this->assertGreaterThan(0, $totalPrice);
+    }
+
+    public function test_livewire_product_custom_format_reverts_on_standard_match(): void
+    {
+        $this->seed(StandardProductSeeder::class);
+        $product = Product::where('slug', 'biglietti-da-visita')->firstOrFail();
+        $category = $product->category;
+
+        $product->update(['allows_custom_size' => true]);
+
+        $typeFormato = VariationType::where('name', 'Formato')->firstOrFail();
+        $typeFinitura = VariationType::where('name', 'Finitura')->firstOrFail();
+        $optPlast = VariationOption::where('variation_type_id', $typeFinitura->id)->firstOrFail();
+
+        // Mount the Livewire component!
+        $component = Livewire::test('⚡product', [
+            'product' => $product,
+            'category' => $category,
+            'options' => [
+                $typeFormato->id => 999999,
+                $typeFinitura->id => $optPlast->id,
+            ],
+        ]);
+
+        // "85x55 mm" is standard format option. Let's find its option ID
+        $opt85x55 = VariationOption::where('variation_type_id', $typeFormato->id)
+            ->where('name', '85x55 mm')
+            ->firstOrFail();
+
+        // Set dimensions to 55 x 85 mm (reversed 85x55)
+        $component->set('width', 55)
+            ->set('height', 85);
+
+        // It should automatically match, set the selection to $opt85x55->id and reset width/height to null!
+        $component->assertSet("selectedOptions.{$typeFormato->id}", $opt85x55->id)
+            ->assertSet('width', null)
+            ->assertSet('height', null);
     }
 }

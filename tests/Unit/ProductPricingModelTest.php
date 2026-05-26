@@ -17,7 +17,7 @@ test('it calculates area correctly for minimum area', function () {
     ]);
 
     // 1m x 1m = 1sqm, but min_area is 1.5. So 1.5 * 10 = 15.00
-    $price = $product->calculateTotalPrice(totalQuantity: 1, width: 100.0, height: 100.0);
+    $price = $product->calculateTotalPrice(totalQuantity: 1, width: 1000.0, height: 1000.0);
     expect($price)->toBe(15.00);
 });
 
@@ -29,7 +29,7 @@ test('it calculates area correctly above minimum area', function () {
     ]);
 
     // 2m x 2m = 4sqm. 4 * 10 = 40.00
-    $price = $product->calculateTotalPrice(totalQuantity: 1, width: 200.0, height: 200.0);
+    $price = $product->calculateTotalPrice(totalQuantity: 1, width: 2000.0, height: 2000.0);
     expect($price)->toBe(40.00);
 });
 

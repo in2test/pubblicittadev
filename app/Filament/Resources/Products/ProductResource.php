@@ -9,6 +9,7 @@ use App\Enums\ProductClass;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Category;
 use App\Models\Product;
@@ -372,7 +373,7 @@ class ProductResource extends Resource
                             })
                             ->required()
                             ->live()
-                            ->createOptionForm(function (Get $get) {
+                            ->createOptionForm(function (Get $get): array {
                                 $variationTypeId = $get('../../variation_type_id');
                                 $defaultType = 'flat';
                                 $isModifier = false;
@@ -417,7 +418,7 @@ class ProductResource extends Resource
                                         ->visible($isModifier),
                                     TextInput::make('color_hex')
                                         ->label('Hex Colore (es. #ff0000)')
-                                        ->visible(function () use ($variationTypeId) {
+                                        ->visible(function () use ($variationTypeId): bool {
                                             if ($variationTypeId) {
                                                 $type = VariationType::find($variationTypeId);
 
@@ -428,18 +429,16 @@ class ProductResource extends Resource
                                         }),
                                 ];
                             })
-                            ->createOptionUsing(function (array $data, Get $get) {
-                                return VariationOption::create([
-                                    'variation_type_id' => $get('../../variation_type_id'),
-                                    'name' => $data['name'],
-                                    'value' => $data['name'],
-                                    'default_modifier_type' => $data['default_modifier_type'] ?? 'flat',
-                                    'default_price_modifier' => $data['default_price_modifier'] ?? 0.00,
-                                    'width' => $data['width'] ?? null,
-                                    'height' => $data['height'] ?? null,
-                                    'color_hex' => $data['color_hex'] ?? null,
-                                ])->id;
-                            })
+                            ->createOptionUsing(fn (array $data, Get $get) => VariationOption::create([
+                                'variation_type_id' => $get('../../variation_type_id'),
+                                'name' => $data['name'],
+                                'value' => $data['name'],
+                                'default_modifier_type' => $data['default_modifier_type'] ?? 'flat',
+                                'default_price_modifier' => $data['default_price_modifier'] ?? 0.00,
+                                'width' => $data['width'] ?? null,
+                                'height' => $data['height'] ?? null,
+                                'color_hex' => $data['color_hex'] ?? null,
+                            ])->id)
                             ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                         TextInput::make('price_modifier')
                             ->label(fn (Get $get) => $get('../../impact_type') === 'percentage' ? 'Sovrapprezzo (%)' : 'Aggiunta (€)')
@@ -448,7 +447,7 @@ class ProductResource extends Resource
                             ->suffix(fn (Get $get) => $get('../../impact_type') === 'percentage' ? '%' : null)
                             ->placeholder('Usa default globale')
                             ->nullable()
-                            ->helperText(function (Get $get) {
+                            ->helperText(function (Get $get): ?string {
                                 $optionId = $get('variation_option_id');
                                 if (! $optionId) {
                                     return null;
@@ -524,7 +523,7 @@ class ProductResource extends Resource
                                 }
                             }
                         }
-                        if (empty($optionIds)) {
+                        if ($optionIds === []) {
                             return VariationOption::pluck('name', 'id');
                         }
 
@@ -534,7 +533,7 @@ class ProductResource extends Resource
                     ->live()
                     ->afterStateUpdated(function (Get $get, Set $set, ?array $state) {
                         $baseSku = $get('../../sku') ?? '';
-                        if (empty($state)) {
+                        if ($state === null || $state === []) {
                             $set('sku', $baseSku);
 
                             return;
@@ -550,7 +549,7 @@ class ProductResource extends Resource
                         $finalSku = $baseSku ? "{$baseSku}-".Str::upper($suffix) : Str::upper($suffix);
                         $set('sku', $finalSku);
                     }),
-                Schemas\ProductForm::getPricingTiersRepeater()
+                ProductForm::getPricingTiersRepeater()
                     ->label('Sconti per Quantità (Scaglioni)')
                     ->columnSpanFull(),
             ])
@@ -579,9 +578,7 @@ class ProductResource extends Resource
                             Select::make('custom_properties.color_ids')
                                 ->label('Associa a una o più varianti')
                                 ->multiple()
-                                ->options(function () {
-                                    return VariationOption::pluck('name', 'id');
-                                })
+                                ->options(fn () => VariationOption::pluck('name', 'id'))
                                 ->preload()
                                 ->searchable()
                                 ->columnSpan(2),
@@ -624,19 +621,19 @@ class ProductResource extends Resource
                     ->visible(fn (Get $get): bool => $get('allows_custom_size') === true)
                     ->schema([
                         TextInput::make('min_custom_width')
-                            ->label('Base Minima (cm)')
+                            ->label('Base Minima (mm)')
                             ->numeric()
                             ->step(0.01),
                         TextInput::make('max_custom_width')
-                            ->label('Base Massima (cm)')
+                            ->label('Base Massima (mm)')
                             ->numeric()
                             ->step(0.01),
                         TextInput::make('min_custom_height')
-                            ->label('Altezza Minima (cm)')
+                            ->label('Altezza Minima (mm)')
                             ->numeric()
                             ->step(0.01),
                         TextInput::make('max_custom_height')
-                            ->label('Altezza Massima (cm)')
+                            ->label('Altezza Massima (mm)')
                             ->numeric()
                             ->step(0.01),
                     ]),
