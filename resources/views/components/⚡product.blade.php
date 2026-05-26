@@ -483,7 +483,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :quantities="$this->quantities" :$jobId :$width :$height />
+            <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :quantities="$this->quantities" :$jobId :$width :$height :itemsPerSheet="$this->itemsPerSheet" />
 
             <x-product.trust-badges />
         </div>

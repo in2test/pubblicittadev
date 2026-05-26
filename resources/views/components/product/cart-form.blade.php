@@ -1,4 +1,4 @@
-@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'jobId' => null, 'width' => null, 'height' => null, 'quantities' => []])
+@props(['product', 'selectedOptions' => [], 'totalQuantity' => 0, 'totalPrice' => 0.0, 'jobId' => null, 'width' => null, 'height' => null, 'quantities' => [], 'itemsPerSheet' => 1])
 
 @php
     /** @var \App\Models\Product $product */
@@ -454,6 +454,20 @@
                         <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
                         <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
                     </div>
+
+                    @if ($product->sheet_width > 0 && $product->sheet_height > 0 && $itemsPerSheet > 0)
+                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
+                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Resa Foglio di Stampa</span>
+                            <span class="text-sm font-bold text-primary font-mono">{{ $itemsPerSheet }} pz / foglio</span>
+                        </div>
+                        @php
+                            $sheetsNeeded = ceil($totalQuantity / $itemsPerSheet);
+                        @endphp
+                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
+                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Fogli di Stampa Necessari</span>
+                            <span class="text-sm font-bold text-primary font-mono">{{ $sheetsNeeded }} {{ $sheetsNeeded == 1 ? 'foglio' : 'fogli' }}</span>
+                        </div>
+                    @endif
                     
                     @if($this->totalPrice > 0)
                         <div class="flex justify-between items-center pt-2 border-t border-primary/20">
