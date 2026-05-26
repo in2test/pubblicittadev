@@ -205,12 +205,9 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariationType::class);
     }
 
-    /**
-     * Base variations only (is_modifier = false) — used by the admin form repeater.
-     */
     public function baseVariationTypes(): HasMany
     {
-        return $this->hasMany(ProductVariationType::class)->where('is_modifier', false);
+        return $this->hasMany(ProductVariationType::class)->where('is_modifier', false)->orderBy('sort_order');
     }
 
     /**
@@ -218,7 +215,7 @@ class Product extends Model implements HasMedia
      */
     public function modifierVariationTypes(): HasMany
     {
-        return $this->hasMany(ProductVariationType::class)->where('is_modifier', true);
+        return $this->hasMany(ProductVariationType::class)->where('is_modifier', true)->orderBy('sort_order');
     }
 
     #[Override]

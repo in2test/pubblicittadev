@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name',
     'value',
     'color_hex',
+    'width',
+    'height',
     'sort_order',
     'default_modifier_type',
     'default_price_modifier',
@@ -30,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $variation_type_id
  * @property string|null $value
  * @property string|null $color_hex
+ * @property float|null $width
+ * @property float|null $height
  * @property int $sort_order
  * @property ModifierType|null $default_modifier_type
  * @property numeric $default_price_modifier

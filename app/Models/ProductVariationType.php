@@ -79,7 +79,8 @@ class ProductVariationType extends Pivot implements HasMedia
 
     public function options(): HasMany
     {
-        return $this->hasMany(ProductVariationOption::class, 'product_variation_type_id');
+        return $this->hasMany(ProductVariationOption::class, 'product_variation_type_id')
+            ->orderBy('sort_order');
     }
 
     /**

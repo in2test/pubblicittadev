@@ -46,6 +46,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'variation_option_id',
     'modifier_type',
     'price_modifier',
+    'sort_order',
 ])]
 #[Table(name: 'product_variation_options')]
 class ProductVariationOption extends Model
@@ -55,6 +56,7 @@ class ProductVariationOption extends Model
     protected $casts = [
         'modifier_type' => ModifierType::class,
         'price_modifier' => 'decimal:2',
+        'sort_order' => 'integer',
     ];
 
     public function option(): BelongsTo

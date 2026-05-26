@@ -45,6 +45,7 @@ use Override;
     'name',
     'presentation_type',
     'allow_multiple',
+    'default_modifier_type',
 ])]
 class VariationType extends Model
 {
