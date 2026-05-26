@@ -394,11 +394,11 @@ class ProductResource extends Resource
                                         ->label('Nome Opzione')
                                         ->required(),
                                     TextInput::make('width')
-                                        ->label('Larghezza (cm)')
+                                        ->label('Larghezza (mm)')
                                         ->numeric()
                                         ->visible($isDimensions),
                                     TextInput::make('height')
-                                        ->label('Altezza (cm)')
+                                        ->label('Lunghezza (mm)')
                                         ->numeric()
                                         ->visible($isDimensions),
                                     Select::make('default_modifier_type')
