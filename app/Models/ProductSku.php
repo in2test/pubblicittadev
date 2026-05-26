@@ -67,4 +67,9 @@ class ProductSku extends Model
     {
         return $this->hasMany(PricingTier::class);
     }
+
+    public function setQuantityAttribute($value): void
+    {
+        $this->attributes['quantity'] = $value === null ? -1 : (int) $value;
+    }
 }

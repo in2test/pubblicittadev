@@ -498,7 +498,8 @@ class ProductResource extends Resource
                 TextInput::make('quantity')
                     ->label('Disponibilità Magazzino')
                     ->numeric()
-                    ->default(100),
+                    ->default(-1)
+                    ->nullable(),
                 Toggle::make('is_available')
                     ->label('Disponibile')
                     ->default(true),

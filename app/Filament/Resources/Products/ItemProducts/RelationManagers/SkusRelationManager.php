@@ -35,8 +35,8 @@ class SkusRelationManager extends RelationManager
                 TextInput::make('quantity')
                     ->label('Quantità in Magazzino')
                     ->numeric()
-                    ->required()
-                    ->default(100),
+                    ->default(-1)
+                    ->nullable(),
                 Toggle::make('is_available')
                     ->label('Disponibile')
                     ->default(true),
