@@ -57,6 +57,18 @@ class PricingTier extends Model
         'is_custom_price' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (PricingTier $pricingTier) {
+            if (! $pricingTier->product_id && $pricingTier->product_sku_id) {
+                $sku = ProductSku::find($pricingTier->product_sku_id);
+                if ($sku) {
+                    $pricingTier->product_id = $sku->product_id;
+                }
+            }
+        });
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
