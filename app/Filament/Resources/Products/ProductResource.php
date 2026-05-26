@@ -528,7 +528,26 @@ class ProductResource extends Resource
 
                         return VariationOption::whereIn('id', $optionIds)->pluck('name', 'id');
                     })
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, ?array $state) {
+                        $baseSku = $get('../../sku') ?? '';
+                        if (empty($state)) {
+                            $set('sku', $baseSku);
+
+                            return;
+                        }
+
+                        $options = VariationOption::whereIn('id', $state)->get()->sortBy('sort_order');
+                        $suffix = $options->map(function (VariationOption $option) {
+                            $val = $option->value ?? $option->name;
+
+                            return Str::slug($val);
+                        })->implode('-');
+
+                        $finalSku = $baseSku ? "{$baseSku}-".Str::upper($suffix) : Str::upper($suffix);
+                        $set('sku', $finalSku);
+                    }),
                 Repeater::make('pricingTiers')
                     ->relationship('pricingTiers')
                     ->label('Sconti per Quantità (Scaglioni)')
