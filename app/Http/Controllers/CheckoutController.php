@@ -46,61 +46,8 @@ class CheckoutController extends Controller
                 'billing_address_id' => 'required|exists:addresses,id',
             ]);
 
-            /** @var Order $order */
-            $order = Order::create([
-                'user_id' => $request->user()->id,
-                'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
-                'payment_status' => $request->input('payment_method') === 'quotation' ? 'quotation' : 'pending',
-                'work_status' => 'pending',
-                'total_price' => $this->cartManager->total(),
-                'total_items' => $this->cartManager->count(),
-                'shipping_address_id' => $request->input('shipping_address_id'),
-                'billing_address_id' => $request->input('billing_address_id'),
-                'notes' => $request->input('notes'),
-            ]);
-
-            foreach ($items as $item) {
-                if (! $product = Product::find($item['product_id'])) {
-                    continue;
-                }
-
-                $qty = $this->cartManager->getItemQuantity($item);
-                $totalPrice = $product->calculateTotalPrice(
-                    $qty,
-                    $item['quantities'] ?? [],
-                    isset($item['width']) ? (float) $item['width'] : null,
-                    isset($item['height']) ? (float) $item['height'] : null,
-                    $item['selected_options'] ?? []
-                );
-                $unitPrice = $qty > 0 ? $totalPrice / $qty : 0.0;
-
-                // Controlliamo se l'articolo richiede personalizzazione (es. stampe, file di design, posizioni)
-                // Se sì, lo stato iniziale sarà 'awaiting_file', altrimenti 'pending' (articolo neutro).
-                $hasModifierOption = false;
-                if (! empty($item['selected_options'])) {
-                    $modifierTypeIds = $product->variationTypes()
-                        ->wherePivot('is_modifier', true)
-                        ->pluck('variation_types.id')
-                        ->toArray();
-                    foreach ($item['selected_options'] as $typeId => $optIds) {
-                        if (in_array((int) $typeId, $modifierTypeIds)) {
-                            $hasModifierOption = true;
-                            break;
-                        }
-                    }
-                }
-                $hasPersonalization = $hasModifierOption || ! empty($item['design_file_path']);
-                $initialWorkStatus = $hasPersonalization ? 'awaiting_file' : 'pending';
-
-                $order->items()->create([
-                    'product_id' => $product->id,
-                    'quantity' => $qty,
-                    'unit_price' => $unitPrice,
-                    'subtotal' => $totalPrice,
-                    'customization_json' => $item,
-                    'work_status' => $initialWorkStatus,
-                ]);
-            }
+            $isQuotation = $request->input('payment_method') === 'quotation';
+            $order = $this->createOrderFromCart($request, $items, null, null, $isQuotation);
 
             $order->load('items.product');
 
@@ -143,7 +90,7 @@ class CheckoutController extends Controller
             'cancel_url' => route('checkout.cancel'),
             'customer_email' => $request->user()->email,
             'metadata' => [
-                'order_id' => $order->id,
+                'order_id' => (string) $order->id,
             ],
         ]);
 
@@ -164,17 +111,55 @@ class CheckoutController extends Controller
         $defaultShipping = $request->user()->addresses()->where('is_default', true)->first()
             ?? $request->user()->addresses()->first();
         $defaultBilling = $defaultShipping; // fallback
+        $order = $this->createOrderFromCart($request, $items, $defaultShipping?->id, $defaultBilling?->id, true);
+        $order->load('items.product');
 
-        /** @var Order $order */
+        Mail::to($request->user())->send(new OrderPlacedNotification($order));
+        Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
+
+        $this->cartManager->clear();
+
+        return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
+    }
+
+    public function success(Request $request): View
+    {
+        $this->cartManager->clear();
+
+        $isQuotation = session()->has('success') && str_contains(
+            (string) session('success', ''),
+            'preventivo'
+        );
+
+        return view('checkout.success', ['isQuotation' => $isQuotation]);
+    }
+
+    public function cancel(): View
+    {
+        return view('checkout.cancel');
+    }
+
+    /**
+     * Common logic to create an order and its items from the cart.
+     *
+     * @param  Request  $request  The current HTTP request.
+     * @param  array<string, array<string, mixed>>  $items  The list of cart items to process.
+     * @param  int|null  $shippingId  Optional shipping address ID.
+     * @param  int|null  $billingId  Optional billing address ID.
+     * @param  bool  $isQuotation  Whether the order is a quotation.
+     * @return Order The newly created order.
+     */
+    protected function createOrderFromCart(Request $request, array $items, ?int $shippingId = null, ?int $billingId = null, bool $isQuotation = false): Order
+    {
         $order = Order::create([
             'user_id' => $request->user()->id,
             'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
-            'payment_status' => 'quotation',
+            'payment_status' => $isQuotation ? 'quotation' : 'pending',
             'work_status' => 'pending',
             'total_price' => $this->cartManager->total(),
             'total_items' => $this->cartManager->count(),
-            'shipping_address_id' => $defaultShipping?->id,
-            'billing_address_id' => $defaultBilling?->id,
+            'shipping_address_id' => $shippingId ?? $request->input('shipping_address_id'),
+            'billing_address_id' => $billingId ?? $request->input('billing_address_id'),
             'notes' => $request->input('notes'),
         ]);
 
@@ -219,30 +204,6 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $order->load('items.product');
-
-        Mail::to($request->user())->send(new OrderPlacedNotification($order));
-        Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
-
-        $this->cartManager->clear();
-
-        return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
-    }
-
-    public function success(Request $request): View
-    {
-        $this->cartManager->clear();
-
-        $isQuotation = session()->has('success') && str_contains(
-            session('success', ''),
-            'preventivo'
-        );
-
-        return view('checkout.success', ['isQuotation' => $isQuotation]);
-    }
-
-    public function cancel(): View
-    {
-        return view('checkout.cancel');
+        return $order;
     }
 }

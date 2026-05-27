@@ -17,9 +17,9 @@ class SyncNewWaveProductJob implements ShouldQueue
 {
     use Queueable;
 
-    public $tries = 1;
+    public int $tries = 1;
 
-    public $timeout = 600;
+    public int $timeout = 600;
 
     /**
      * Create a new job instance.

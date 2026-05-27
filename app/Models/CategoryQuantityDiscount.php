@@ -65,7 +65,7 @@ class CategoryQuantityDiscount extends Model
     /**
      * Get the category associated with this discount tier.
      *
-     * @return BelongsTo The relationship with the category.
+     * @return BelongsTo<Category, $this> The relationship with the category.
      */
     public function category(): BelongsTo
     {

@@ -122,7 +122,7 @@
                                 @method('PUT')
                                 <input type="hidden" name="key" value="{{ $row['job_id'] }}">
                                 <input type="hidden" name="update_type" value="size">
-                                <input type="hidden" name="size_id" value="{{ $row['sku_id'] }}">
+                                <input type="hidden" name="sku_id" value="{{ $row['sku_id'] }}">
 
                                 <button type="submit" name="quantity" value="{{ max(0, $row['qty'] - 1) }}"
                                     class="w-7 h-7 flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
@@ -142,31 +142,6 @@
                         @endforeach
                     </div>
 
-                    {{-- Single size or no-size products --}}
-                    @elseif (!empty($item['size_name']))
-                    <div class="border border-outline-variant/20">
-                        <div class="grid grid-cols-[1fr_auto_auto] items-center px-3 py-2">
-                            <span class="font-mono text-sm font-bold">{{ $item['size_name'] }}</span>
-                            <form action="{{ route('cart.update') }}" method="POST"
-                                class="flex items-center">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="key" value="{{ $jobId }}">
-                                <button type="submit" name="quantity" value="{{ max(0, $item['qty'] - 1) }}"
-                                    class="w-7 h-7 flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
-                                    <span class="material-symbols-outlined text-sm">remove</span>
-                                </button>
-                                <div class="w-10 h-7 flex items-center justify-center font-mono text-sm font-bold border-x border-outline-variant/20 bg-white">
-                                    {{ $item['qty'] }}
-                                </div>
-                                <button type="submit" name="quantity" value="{{ $item['qty'] + 1 }}"
-                                    class="w-7 h-7 flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
-                                    <span class="material-symbols-outlined text-sm">add</span>
-                                </button>
-                            </form>
-                            <span class="font-mono text-[10px] text-secondary w-8 text-right">pz</span>
-                        </div>
-                    </div>
                     @else
                     {{-- No size — global qty stepper --}}
                     <div class="flex items-center gap-2">
@@ -195,24 +170,19 @@
                     {{-- Footer row: personalizzazioni + subtotal --}}
                     <div class="flex items-end justify-between gap-4 pt-2 border-t border-outline-variant/10">
 
-                        {{-- Print placements & Print Sides --}}
+                        {{-- Variations (all selected options) --}}
                         <div>
                             <p class="text-[10px] font-mono uppercase tracking-widest text-secondary mb-1">Personalizzazioni</p>
                             <div class="flex flex-wrap gap-1">
-                                @if (!empty($item['print_side_name']))
-                                <span class="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 font-mono uppercase border border-secondary/20" title="Lato di Stampa">
-                                    {{ $item['print_side_name'] }}
-                                </span>
-                                @endif
                                 @if (!empty($item['placement_names']))
                                     @foreach ($item['placement_names'] as $pname)
-                                    <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 font-mono uppercase border border-primary/20" title="Posizione di Stampa">
+                                    <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 font-mono uppercase border border-primary/20" title="Opzione di variante">
                                         {{ $pname }}
                                     </span>
                                     @endforeach
                                 @endif
                             </div>
-                            @if (empty($item['print_side_name']) && empty($item['placement_names']))
+                            @if (empty($item['placement_names']))
                             <span class="text-xs text-outline italic">Nessuna</span>
                             @endif
                         </div>

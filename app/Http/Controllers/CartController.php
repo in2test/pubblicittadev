@@ -109,12 +109,6 @@ class CartController extends Controller
                     $displayImage = $img?->image_url;
                 }
 
-                if (! $displayImage && isset($item['color_id'])) {
-                    /** @var Image|null $img */
-                    $img = $product->images->firstWhere('variation_option_id', $item['color_id']);
-                    $displayImage = $img?->image_url;
-                }
-
                 $displayImage ??= $product->getFirstMediaUrl('images', 'thumbnail') ?: null;
             }
 
@@ -266,12 +260,12 @@ class CartController extends Controller
             'key' => 'required|string',
             'quantity' => 'required|integer|min:0',
             'update_type' => 'nullable|string',
-            'size_id' => 'nullable|integer',
+            'sku_id' => 'nullable|integer',
         ]);
 
         $jobId = $request->input('key');
         $quantity = (int) $request->input('quantity');
-        $skuId = $request->input('size_id') ? (int) $request->input('size_id') : null;
+        $skuId = $request->input('sku_id') ? (int) $request->input('sku_id') : null;
 
         $this->cart->updateItemQuantity($jobId, $quantity, $skuId);
 

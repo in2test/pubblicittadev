@@ -85,13 +85,18 @@ class Order extends Model
 {
     use HasFactory;
 
+    /**
+     * Casts for the Order model.
+     * ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
+     */
     protected $casts = [
         'paid_at' => 'datetime',
         'total_price' => 'decimal:2',
     ];
 
     /**
-     * Ottiene l'utente che ha effettuato questo ordine.
+     * Relationship: Order -> User.
+     * Get the customer who placed this order.
      *
      * @return BelongsTo<User, $this>
      */
@@ -101,7 +106,8 @@ class Order extends Model
     }
 
     /**
-     * Ottiene tutti gli articoli (righe) associati a questo ordine.
+     * Relationship: Order -> OrderItems.
+     * Get all products/items associated with this order.
      *
      * @return HasMany<OrderItem, $this>
      */
@@ -111,7 +117,8 @@ class Order extends Model
     }
 
     /**
-     * Ottiene l'indirizzo di spedizione utilizzato per questo ordine.
+     * Relationship: Order -> Address (Shipping).
+     * Get the address where the order should be delivered.
      *
      * @return BelongsTo<Address, $this>
      */
@@ -121,7 +128,8 @@ class Order extends Model
     }
 
     /**
-     * Ottiene l'indirizzo di fatturazione utilizzato per questo ordine.
+     * Relationship: Order -> Address (Billing).
+     * Get the address used for invoicing.
      *
      * @return BelongsTo<Address, $this>
      */

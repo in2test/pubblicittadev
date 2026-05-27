@@ -29,6 +29,11 @@ class CreateItemProduct extends CreateRecord
         return $data;
     }
 
+    /**
+     * Define the wizard steps for creating an item-based product.
+     *
+     * @return array<int, Step>
+     */
     protected function getSteps(): array
     {
         return [

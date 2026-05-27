@@ -43,12 +43,6 @@
                                     <div class="mt-4 bg-gray-100 p-4 border-2 border-gray-950 text-xs space-y-2 font-mono">
                                         <p class="font-black uppercase tracking-wider text-[10px] text-gray-400">Dettagli Personalizzazioni</p>
                                         @php $custom = $item->customization_json; @endphp
-                                        @if(isset($custom['print_side_name']))
-                                            <p class="text-gray-900">Lato di Stampa: <span class="font-bold text-gray-950">{{ $custom['print_side_name'] }}</span></p>
-                                        @endif
-                                        @if(isset($custom['print_placements']))
-                                            <p class="text-gray-900">Posizioni Stampa: <span class="font-bold text-gray-950">{{ count($custom['print_placements']) }} stampe</span></p>
-                                        @endif
                                         @if(isset($custom['sizes']))
                                             <div class="mt-1">
                                                 <span class="block text-gray-500 mb-1">Suddivisione Taglie:</span>

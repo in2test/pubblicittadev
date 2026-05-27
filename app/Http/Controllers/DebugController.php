@@ -62,7 +62,7 @@ class DebugController extends Controller
                 'image_url' => $img['url'],
             ], [
                 'image_description' => $product->name,
-                'color_id' => $img['color_id'] ?? null,
+                'variation_option_id' => $img['variation_option_ids'][0] ?? null,
                 'thumbnail_url' => $img['thumb'] ?? null,
                 'medium_url' => $img['medium'] ?? null,
                 'large_url' => $img['large'] ?? null,
@@ -93,7 +93,7 @@ class DebugController extends Controller
                 'image_url' => $img['url'],
             ], [
                 'image_description' => $product->name,
-                'color_id' => $img['color_id'] ?? null,
+                'variation_option_id' => $img['variation_option_ids'][0] ?? null,
                 'thumbnail_url' => $img['thumb'] ?? null,
                 'medium_url' => $img['medium'] ?? null,
                 'large_url' => $img['large'] ?? null,

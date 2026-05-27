@@ -116,7 +116,7 @@ class NewWaveProductsTable
                         ->label('Attiva')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => true])))
+                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => true])))
                         ->requiresConfirmation()
                         ->modalHeading('Attiva prodotti')
                         ->modalDescription('Sei sicuro di voler attivare i prodotti selezionati?')
@@ -125,7 +125,7 @@ class NewWaveProductsTable
                         ->label('Disattiva')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => false])))
+                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => false])))
                         ->requiresConfirmation()
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
@@ -134,7 +134,12 @@ class NewWaveProductsTable
                         ->label('Sincronizza')
                         ->icon('heroicon-o-arrow-path')
                         ->color('info')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => SyncNewWaveProductJob::dispatch($record)))
+                        ->action(function (Collection $records) {
+                            $records->each(function ($record) {
+                                /** @var Product $record */
+                                SyncNewWaveProductJob::dispatch($record);
+                            });
+                        })
                         ->requiresConfirmation()
                         ->modalHeading('Sincronizza prodotti')
                         ->modalDescription('Sei sicuro di voler sincronizzare i prodotti selezionati?')

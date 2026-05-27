@@ -61,6 +61,11 @@ class Address extends Model
 {
     use HasFactory;
 
+    /**
+     * Get the user that owns the address.
+     *
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

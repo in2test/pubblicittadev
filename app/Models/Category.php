@@ -80,7 +80,7 @@ class Category extends Model implements HasMedia
     /**
      * Get the parent category of the current category.
      *
-     * @return BelongsTo The relationship with the parent category.
+     * @return BelongsTo<Category, $this> The relationship with the parent category.
      */
     public function parent(): BelongsTo
     {
@@ -90,7 +90,7 @@ class Category extends Model implements HasMedia
     /**
      * Get all sub-categories of the current category.
      *
-     * @return HasMany The relationship with children categories.
+     * @return HasMany<Category, $this> The relationship with children categories.
      */
     public function children(): HasMany
     {
@@ -120,7 +120,7 @@ class Category extends Model implements HasMedia
     /**
      * Get all products associated with this category.
      *
-     * @return HasMany The relationship with products.
+     * @return HasMany<Product, $this> The relationship with products.
      */
     public function products(): HasMany
     {

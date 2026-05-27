@@ -71,12 +71,7 @@ class CartTest extends TestCase
         $this->assertEquals(90.0, $item['price']);
     }
 
-    public function test_add_item_with_print_placements(): void
-    {
-        $this->markTestSkipped('Requires print_placements pivot table setup');
-    }
-
-    public function test_add_item_with_color_and_size(): void
+    public function test_add_item_with_variation_options(): void
     {
         $product = Product::factory()->create(['price' => 50]);
 
@@ -85,10 +80,7 @@ class CartTest extends TestCase
             'product_name' => $product->name,
             'product_slug' => $product->slug,
             'quantity' => 1,
-            'color_id' => 1,
-            'color_name' => 'Red',
-            'size_id' => 2,
-            'size_name' => 'L',
+            'selected_options' => [1 => 10, 2 => 20],
         ]);
 
         $response->assertRedirect(route('cart'));
@@ -96,8 +88,7 @@ class CartTest extends TestCase
         $cart = new CartManager;
         $items = $cart->getItems();
         $item = reset($items);
-        $this->assertEquals('Red', $item['color_name']);
-        $this->assertEquals('L', $item['size_name']);
+        $this->assertEquals([1 => 10, 2 => 20], $item['selected_options']);
     }
 
     public function test_add_item_validates_required_fields(): void
@@ -198,8 +189,7 @@ class CartTest extends TestCase
             'product_name' => $product->name,
             'product_slug' => $product->slug,
             'quantity' => 1,
-            'color_id' => 1,
-            'size_id' => 0,
+            'selected_options' => [1 => 10],
         ]);
 
         $this->post(route('cart.add'), [
@@ -207,8 +197,7 @@ class CartTest extends TestCase
             'product_name' => $product->name,
             'product_slug' => $product->slug,
             'quantity' => 1,
-            'color_id' => 2,
-            'size_id' => 0,
+            'selected_options' => [1 => 20],
         ]);
 
         $cart = new CartManager;

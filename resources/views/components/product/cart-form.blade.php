@@ -103,6 +103,17 @@
         $matchingSkus = $product->skus;
     }
 
+    if ($matchingSkus->isEmpty()) {
+        $virtualSku = new \App\Models\ProductSku();
+        $virtualSku->id = 0;
+        $virtualSku->product_id = $product->id;
+        $virtualSku->sku = $product->sku ?: 'base';
+        $virtualSku->quantity = 999999;
+        $virtualSku->is_available = true;
+        $virtualSku->override_price = null;
+        $matchingSkus = collect([$virtualSku]);
+    }
+
     // --- FORMATI PERSONALIZZATI ---
     // Gestione dell'input per larghezza/altezza quando viene selezionato "Formato personalizzato"
     $isCustomFormatSelected = false;

@@ -558,8 +558,8 @@ class ProductForm
                         Placeholder::make('preview')
                             ->label('Immagine')
                             ->content(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Sconosciuta'),
-                        Select::make('custom_properties.color_ids')
-                            ->label('Associa a uno o più colori')
+                        Select::make('custom_properties.variation_option_ids')
+                            ->label('Associa a una o più varianti')
                             ->multiple()
                             ->options(fn ($record) => VariationOption::pluck('name', 'id'))
                             ->preload()

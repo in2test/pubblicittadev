@@ -151,7 +151,7 @@ class ProductDiscountTest extends TestCase
         $this->assertEquals(50.0, $product->getPriceForQuantity(10));
     }
 
-    public function test_applies_pricing_tier_without_print_side(): void
+    public function test_applies_pricing_tier_without_sku_filter(): void
     {
         $product = Product::factory()->create(['price' => 50]);
         $product->pricingTiers()->create([

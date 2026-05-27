@@ -29,6 +29,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 
@@ -175,8 +176,8 @@ class NewWaveProductForm
                                     ->label('Nascondi Colori')
                                     ->multiple()
                                     ->options(fn (?Product $record) => $record instanceof Model
-                                        ? VariationOption::whereHas('productVariationOptions', function ($query) use ($record) {
-                                            $query->whereHas('productVariationType', function ($q) use ($record) {
+                                        ? VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($record) {
+                                            $query->whereHas('productVariationType', function (Builder $q) use ($record) {
                                                 $q->where('product_id', $record->id);
                                             });
                                         })->pluck('name', 'id')->all()
@@ -219,8 +220,8 @@ class NewWaveProductForm
                                 TextEntry::make('preview')
                                     ->label('Anteprima')
                                     ->state(fn (?Image $record) => $record instanceof Image ? new HtmlString("<img src='".e($record->thumbnailUrl)."' class='h-32 w-auto rounded border shadow-sm mx-auto'>") : 'N/A'),
-                                Select::make('color_id')
-                                    ->label('Colore associato')
+                                Select::make('variation_option_id')
+                                    ->label('Variante associata')
                                     ->options($colorOptions)
                                     ->searchable()
                                     ->nullable()

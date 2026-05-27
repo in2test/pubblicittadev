@@ -22,7 +22,7 @@ class ProductDataMapper
                     'url' => $url,
                     'medium' => $img['largeThumbnailUrl'] ?? $img['standardUrl'] ?? '',
                     'thumb' => $img['thumbnailUrl'] ?? $img['largeThumbnailUrl'] ?? '',
-                    'color_ids' => [],
+                    'variation_option_ids' => [],
                 ];
             }
         }
@@ -41,7 +41,7 @@ class ProductDataMapper
                         'url' => $url,
                         'medium' => $vImg['largeThumbnailUrl'] ?? $vImg['standardUrl'] ?? '',
                         'thumb' => $vImg['thumbnailUrl'] ?? $vImg['largeThumbnailUrl'] ?? '',
-                        'color_ids' => [],
+                        'variation_option_ids' => [],
                     ];
                 }
             }

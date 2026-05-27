@@ -38,6 +38,11 @@ class CreateProduct extends CreateRecord
         return $data;
     }
 
+    /**
+     * Define the wizard steps for creating a product.
+     *
+     * @return array<int, Step>
+     */
     protected function getSteps(): array
     {
         return [

@@ -52,10 +52,12 @@ class WebhookController extends Controller
 
     /**
      * Update the order status to 'paid' when the checkout session is completed.
+     *
+     * @param  mixed  $session  The Stripe session object (typically Stripe\Checkout\Session).
      */
-    protected function handleCheckoutSessionCompleted(Session $session): void
+    protected function handleCheckoutSessionCompleted($session): void
     {
-        /** @var string|null $orderId */
+        /** @var Session $session */
         $orderId = $session->metadata->order_id ?? null;
 
         if (! $orderId) {

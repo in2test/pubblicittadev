@@ -29,6 +29,11 @@ class CreateApparelProduct extends CreateRecord
         return $data;
     }
 
+    /**
+     * Define the wizard steps for creating an apparel product.
+     *
+     * @return array<int, Step>
+     */
     protected function getSteps(): array
     {
         return [

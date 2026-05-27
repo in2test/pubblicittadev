@@ -257,7 +257,7 @@ new class extends Component {
             ? $product->getActiveSku($this->selectedOptions) 
             : $product->skus->first();
 
-        return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : 0;
+        return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : (int) ($this->quantities[0] ?? 0);
     }
 
     #[Computed]
@@ -415,7 +415,7 @@ new class extends Component {
                 ? $product->getActiveSku($this->selectedOptions) 
                 : $product->skus->first();
 
-            $quantitiesToStore = $activeSku ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0] : [];
+            $quantitiesToStore = $activeSku ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0] : [0 => $this->quantities[0] ?? 0];
         }
 
         // Genera il riepilogo leggibile delle opzioni scelte

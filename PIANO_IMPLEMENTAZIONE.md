@@ -36,23 +36,11 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 📦 categories
 ├── id, name, slug, parent_id, description, is_active, display_mode
 
-📦 colors
-├── id, color_name, color_hex, color_code, sort_order
-
-📦 sizes
-├── id, name, code, size_code, sort_order
-
 📦 media (Spatie Media Library)
 ├── id, model_type, model_id, file_name, mime_type, custom_properties, responsive_images, ecc.
 
-📦 print_placements (es. Petto, Schiena, Manica)
-├── id, name, template_path, default_price
-
-📦 print_sides (es. Fronte, Retro, Sinistra, Destra)
-├── id, name, template_path
-
 📦 pricing_tiers (Matrice prezzi e quantità)
-├── id, product_id, print_side_id, is_custom_price, min_quantity, max_quantity, price_per_unit
+├── id, product_id, product_sku_id, is_custom_price, min_quantity, max_quantity, price_per_unit
 
 📦 category_quantity_discounts (Sconti quantità per categoria)
 ├── id, category_id, min_quantity, max_quantity
@@ -104,7 +92,7 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 
 #### 🛒 Lavorazioni (Job-Based Cart) e Prodotti Standard
 - [x] **Job UUID**: Ogni aggiunta al carrello è trattata come una "Lavorazione" (Job) unica con UUID.
-- [x] **Configuratore Prodotti Standard**: Sviluppo form avanzato in Livewire per i prodotti standard (matrice combinazioni `print_sides` x `pricing_tiers`, configurazione dimensioni personalizzate e calcolo ritaglio fogli ottimali - `itemsPerSheet`).
+- [x] **Configuratore Prodotti Standard**: Sviluppo form avanzato in Livewire per i prodotti standard (configurazione varianti e pricing tiers, dimensioni personalizzate e calcolo ritaglio fogli ottimali - `itemsPerSheet`).
 - [x] **Recalculation logic**: Sconti quantità applicati alla singola lavorazione per garantire precisione sui prezzi personalizzati.
 - [x] **Size Selector UI**: Interfaccia avanzata per selezione quantità multi-taglia con feedback "Total Articles".
 

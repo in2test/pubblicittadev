@@ -24,7 +24,7 @@ class UpdateCartRequest extends FormRequest
         return [
             'key' => 'required|string',
             'quantity' => 'nullable|integer|min:0',
-            'size_id' => 'nullable|integer',
+            'sku_id' => 'nullable|integer',
             'update_type' => 'nullable|string',
         ];
     }

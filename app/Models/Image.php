@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\FormatEncoder;
@@ -99,17 +100,32 @@ class Image extends Model
         });
     }
 
-    public function product()
+    /**
+     * Get the product associated with this image.
+     *
+     * @return BelongsTo<Product, $this>
+     */
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function category()
+    /**
+     * Get the category associated with this image.
+     *
+     * @return BelongsTo<Category, $this>
+     */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function variationOption()
+    /**
+     * Get the variation option associated with this image.
+     *
+     * @return BelongsTo<VariationOption, $this>
+     */
+    public function variationOption(): BelongsTo
     {
         return $this->belongsTo(VariationOption::class, 'variation_option_id');
     }

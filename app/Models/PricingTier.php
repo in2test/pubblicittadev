@@ -16,7 +16,6 @@ use Override;
  * @property int $id
  * @property int $product_id
  * @property int|null $product_sku_id
- * @property int|null $print_side_id
  * @property int $min_quantity
  * @property int|null $max_quantity
  * @property string $price_per_unit
@@ -35,7 +34,6 @@ use Override;
  * @method static Builder<static>|PricingTier whereMaxQuantity($value)
  * @method static Builder<static>|PricingTier whereMinQuantity($value)
  * @method static Builder<static>|PricingTier wherePricePerUnit($value)
- * @method static Builder<static>|PricingTier wherePrintSideId($value)
  * @method static Builder<static>|PricingTier whereProductId($value)
  * @method static Builder<static>|PricingTier whereProductSkuId($value)
  * @method static Builder<static>|PricingTier whereUpdatedAt($value)

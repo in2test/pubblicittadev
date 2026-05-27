@@ -344,10 +344,14 @@ class Product extends Model implements HasMedia
                 $localRemoteUrls[] = $remoteUrl;
             }
 
-            $colorIds = $media->getCustomProperty('color_ids');
-            $colorId = $media->getCustomProperty('color_id');
-            // Allow matching if color_ids contains the color, or fallback to color_id
-            $resolvedColorId = is_array($colorIds) && count($colorIds) > 0 ? $colorIds[0] : $colorId;
+            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
+            // Support legacy color_ids/color_id custom properties
+            if (empty($variationOptionIds)) {
+                $colorIds = $media->getCustomProperty('color_ids');
+                $colorId = $media->getCustomProperty('color_id');
+                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
+            }
+            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
 
             $images[] = (object) [
                 'id' => (string) $media->id,
@@ -355,8 +359,8 @@ class Product extends Model implements HasMedia
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
                 'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
                 'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'variation_option_id' => $resolvedColorId,
-                'variation_option_ids' => is_array($colorIds) ? $colorIds : ($colorId ? [$colorId] : []),
+                'variation_option_id' => $resolvedVariationOptionId,
+                'variation_option_ids' => $variationOptionIds,
                 'order' => $media->order_column,
                 'type' => 'local',
                 'is_remote' => false,
@@ -414,7 +418,7 @@ class Product extends Model implements HasMedia
                     ],
                     [
                         'image_description' => $remote['image_description'] ?? null,
-                        'variation_option_id' => $remote['variation_option_id'] ?? $remote['color_id'] ?? null,
+                        'variation_option_id' => $remote['variation_option_id'] ?? null,
                     ]
                 );
             }

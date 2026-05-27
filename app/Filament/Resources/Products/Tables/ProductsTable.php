@@ -145,7 +145,7 @@ class ProductsTable
                         ->label('Attiva')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => true])))
+                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => true])))
                         ->requiresConfirmation()
                         ->modalHeading('Attiva prodotti')
                         ->modalDescription('Sei sicuro di voler attivare i prodotti selezionati?')
@@ -154,7 +154,7 @@ class ProductsTable
                         ->label('Disattiva')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn (Collection $records) => $records->each(fn (Product $record) => $record->update(['is_active' => false])))
+                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => false])))
                         ->requiresConfirmation()
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
@@ -168,7 +168,7 @@ class ProductsTable
                         ->form([
                             ProductForm::getCategoryField(),
                         ])
-                        ->action(fn (Collection $records, array $data) => $records->each(fn (Product $record) => $record->update(['category_id' => $data['category_id']])))
+                        ->action(fn (Collection $records, array $data) => $records->each(fn ($record) => $record->update(['category_id' => $data['category_id']])))
                         ->deselectRecordsAfterCompletion()
                         ->modalHeading('Assegna categoria')
                         ->modalDescription('Seleziona la categoria da assegnare ai prodotti selezionati.')

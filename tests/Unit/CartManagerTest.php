@@ -66,7 +66,7 @@ class CartManagerTest extends TestCase
         $this->assertEquals(2, $itemValues[1]['quantity']);
     }
 
-    public function test_adds_same_product_different_color_creates_new_line(): void
+    public function test_adds_same_product_different_variation_creates_new_line(): void
     {
         $product = Product::factory()->create(['price' => 50]);
 
@@ -76,7 +76,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'color_id' => 1,
+            'selected_options' => [1 => 10],
         ]);
 
         $this->cart->add([
@@ -85,7 +85,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'color_id' => 2,
+            'selected_options' => [1 => 20],
         ]);
 
         $items = $this->cart->getItems();
@@ -159,7 +159,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'color_id' => 1,
+            'selected_options' => [1 => 10],
         ]);
 
         $this->cart->add([
@@ -168,7 +168,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'color_id' => 2,
+            'selected_options' => [1 => 20],
         ]);
 
         $keys = array_keys($this->cart->getItems());
@@ -212,7 +212,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 2,
-            'color_id' => 1,
+            'selected_options' => [1 => 10],
         ]);
 
         $this->assertEquals(5, $this->cart->count());
@@ -223,7 +223,7 @@ class CartManagerTest extends TestCase
         $this->assertEquals(0, $this->cart->count());
     }
 
-    public function test_generates_different_keys_for_different_print_placements(): void
+    public function test_generates_different_keys_for_different_selected_options(): void
     {
         $product = Product::factory()->create(['price' => 50]);
 
@@ -233,7 +233,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'print_placements' => [1],
+            'selected_options' => [1 => 10],
         ]);
 
         $this->cart->add([
@@ -242,18 +242,18 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'print_placements' => [2],
+            'selected_options' => [1 => 20],
         ]);
 
         $items = $this->cart->getItems();
         $this->assertCount(2, $items);
     }
 
-    public function test_generates_unique_jobs_for_same_print_placements(): void
+    public function test_generates_unique_jobs_for_same_selected_options(): void
     {
         $product = Product::factory()->create(['price' => 50]);
 
-        $placements = [1, 2];
+        $options = [1 => 10, 2 => 20];
 
         $this->cart->add([
             'product_id' => $product->id,
@@ -261,7 +261,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'print_placements' => $placements,
+            'selected_options' => $options,
         ]);
 
         $this->cart->add([
@@ -270,7 +270,7 @@ class CartManagerTest extends TestCase
             'product_slug' => $product->slug,
             'price' => 50,
             'quantity' => 1,
-            'print_placements' => $placements,
+            'selected_options' => $options,
         ]);
 
         $items = $this->cart->getItems();

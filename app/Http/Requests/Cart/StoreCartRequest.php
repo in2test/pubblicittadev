@@ -24,10 +24,6 @@ class StoreCartRequest extends FormRequest
         return [
             'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'color_id' => 'nullable|integer',
-            'color_name' => 'nullable|string',
-            'size_id' => 'nullable|integer',
-            'size_name' => 'nullable|string',
             'selected_options' => 'nullable|array',
             'product_name' => 'required|string',
             'product_slug' => 'required|string',

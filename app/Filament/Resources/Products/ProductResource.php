@@ -26,6 +26,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -559,6 +560,11 @@ class ProductResource extends Resource
             ->addActionLabel('Aggiungi SKU Variante');
     }
 
+    /**
+     * Returns the schema for associating images with product variations.
+     *
+     * @return array<int, Component>
+     */
     public static function getAssignImagesSection(): array
     {
         return [
@@ -576,7 +582,7 @@ class ProductResource extends Resource
                             Placeholder::make('preview')
                                 ->label('Immagine')
                                 ->content(fn ($record) => $record ? new HtmlString("<img src='{$record->getUrl('thumbnail')}' class='h-20 w-auto rounded border shadow-sm'>") : 'Nessuna immagine'),
-                            Select::make('custom_properties.color_ids')
+                            Select::make('custom_properties.variation_option_ids')
                                 ->label('Associa a una o più varianti')
                                 ->multiple()
                                 ->options(fn () => VariationOption::pluck('name', 'id'))
