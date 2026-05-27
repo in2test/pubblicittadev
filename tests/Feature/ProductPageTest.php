@@ -167,10 +167,10 @@ class ProductPageTest extends TestCase
         $category = $product->category;
 
         $optA5 = VariationOption::where('name', 'A5 (14,8×21 cm)')->firstOrFail();
-        $opt115g = VariationOption::where('name', '115g Patinata Lucida')->firstOrFail();
+        $opt115g = VariationOption::where('name', 'Patinata Lucida 115 gr')->firstOrFail();
 
-        $typeGrafica = VariationType::where('name', 'Grafica')->firstOrFail();
-        $optGrafica = VariationOption::where('name', 'Fronte e retro uguali')
+        $typeGrafica = VariationType::where('name', 'Lato di Stampa')->firstOrFail();
+        $optGrafica = VariationOption::where('name', 'Fronte/Retro Stessa Grafica')
             ->where('variation_type_id', $typeGrafica->id)
             ->firstOrFail();
 

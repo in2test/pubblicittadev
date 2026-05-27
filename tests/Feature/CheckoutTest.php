@@ -149,4 +149,92 @@ class CheckoutTest extends TestCase
             ->assertSee($address->name)
             ->assertHasNoErrors();
     }
+
+    public function test_quotation_flow_creates_quotation_order_clears_cart_and_redirects_to_success(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $product = Product::factory()->create(['price' => 10.00]);
+
+        $this->cartManager->add([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_slug' => $product->slug,
+            'quantity' => 2,
+            'price' => 10.00,
+        ]);
+
+        $address = Address::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->post(route('checkout.session'), [
+                'shipping_address_id' => $address->id,
+                'billing_address_id' => $address->id,
+                'payment_method' => 'quotation',
+            ])
+            ->assertRedirect(route('checkout.success'));
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'payment_status' => 'quotation',
+            'work_status' => 'pending',
+            'total_price' => 20.00,
+        ]);
+
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 10.00,
+            'subtotal' => 20.00,
+        ]);
+
+        $this->assertEmpty($this->cartManager->getItems());
+
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
+    }
+
+    public function test_direct_quotation_flow_from_cart_creates_order_and_redirects_to_success(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $product = Product::factory()->create(['price' => 10.00]);
+
+        $this->cartManager->add([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_slug' => $product->slug,
+            'quantity' => 3,
+            'price' => 10.00,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('checkout.quotation'))
+            ->assertRedirect(route('checkout.success'));
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'payment_status' => 'quotation',
+            'work_status' => 'pending',
+            'total_price' => 30.00,
+            'shipping_address_id' => null,
+            'billing_address_id' => null,
+        ]);
+
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'quantity' => 3,
+            'unit_price' => 10.00,
+            'subtotal' => 30.00,
+        ]);
+
+        $this->assertEmpty($this->cartManager->getItems());
+
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertSent(OrderPlacedNotification::class, fn ($mail) => $mail->hasTo($admin->email));
+    }
 }

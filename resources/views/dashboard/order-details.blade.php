@@ -83,6 +83,7 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="inline-block px-3 py-1 text-xs font-mono font-black uppercase tracking-wider border-2 border-gray-950 rounded-sm
                             {{ $order->payment_status === 'pending' ? 'bg-amber-100 text-amber-950 border-amber-950' : '' }}
+                            {{ $order->payment_status === 'quotation' ? 'bg-blue-100 text-blue-950 border-blue-950' : '' }}
                             {{ $order->payment_status === 'paid' ? 'bg-emerald-100 text-emerald-950 border-emerald-950' : '' }}
                             {{ $order->payment_status === 'cancelled' ? 'bg-gray-100 text-gray-950 border-gray-950' : '' }}
                         ">
@@ -128,8 +129,8 @@
                 @if($order->shippingAddress)
                     <div class="text-xs font-mono space-y-1.5 text-gray-900 leading-relaxed">
                         <p class="font-bold text-gray-950 uppercase tracking-tight">{{ $order->shippingAddress->name }}</p>
-                        <p>{{ $order->shippingAddress->address }}</p>
-                        <p>{{ $order->shippingAddress->zip }} {{ $order->shippingAddress->city }} ({{ $order->shippingAddress->province }})</p>
+                        <p>{{ $order->shippingAddress->street }}</p>
+                        <p>{{ $order->shippingAddress->zip }} {{ $order->shippingAddress->city }} ({{ $order->shippingAddress->state }})</p>
                         <p class="uppercase">{{ $order->shippingAddress->country }}</p>
                     </div>
                 @else

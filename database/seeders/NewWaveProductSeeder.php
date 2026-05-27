@@ -8,6 +8,10 @@ use App\Enums\ProductClass;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariationOption;
+use App\Models\ProductVariationType;
+use App\Models\VariationOption;
+use App\Models\VariationType;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Illuminate\Database\Seeder;
@@ -70,6 +74,16 @@ EOD;
         $lines = array_map(trim(...), explode("\n", trim($input)));
         $lines = array_values(array_filter($lines, fn ($line) => $line !== ''));
 
+        $posizioniMap = [
+            'T-Shirts & Tops' => ['fronte', 'dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+            'Polo' => ['dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+            'Camicie' => ['dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+            'Felpe' => ['dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+            'Pile & Softshell' => ['dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+            'Pantaloni' => ['gamba-sinistra', 'gamba-destra'],
+            'Giacche' => ['dietro', 'lato-cuore', 'manica-sinistra', 'manica-destra'],
+        ];
+
         for ($i = 0; $i < count($lines); $i += 2) {
             $categoryName = $lines[$i];
             $skusLine = $lines[$i + 1] ?? '';
@@ -126,6 +140,38 @@ EOD;
                         'product_class' => ProductClass::Apparel,
                     ]);
                     $this->command->info("Updated product $sku category to {$category->name}");
+                }
+
+                // Sync printing position modifiers
+                if (isset($posizioniMap[$categoryName])) {
+                    $posizioneStampaType = VariationType::where('name', 'Posizione Stampa')->first();
+                    if ($posizioneStampaType) {
+                        $productVarType = ProductVariationType::updateOrCreate(
+                            ['product_id' => $product->id, 'variation_type_id' => $posizioneStampaType->id],
+                            ['has_images' => false, 'is_modifier' => true, 'sort_order' => 10]
+                        );
+
+                        $optionValues = $posizioniMap[$categoryName];
+                        $options = VariationOption::where('variation_type_id', $posizioneStampaType->id)
+                            ->whereIn('value', $optionValues)
+                            ->get();
+
+                        $existingPvoIds = [];
+                        foreach ($options as $opt) {
+                            $pvo = ProductVariationOption::updateOrCreate([
+                                'product_variation_type_id' => $productVarType->id,
+                                'variation_option_id' => $opt->id,
+                            ], [
+                                'modifier_type' => $opt->default_modifier_type ?? 'flat',
+                                'price_modifier' => null,
+                            ]);
+                            $existingPvoIds[] = $pvo->id;
+                        }
+
+                        ProductVariationOption::where('product_variation_type_id', $productVarType->id)
+                            ->whereNotIn('id', $existingPvoIds)
+                            ->delete();
+                    }
                 }
 
                 // Dispatch full sync job

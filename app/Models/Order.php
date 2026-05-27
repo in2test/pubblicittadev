@@ -139,6 +139,7 @@ class Order extends Model
             'pending' => 'In Attesa',
             'paid' => 'Pagato',
             'cancelled' => 'Annullato',
+            'quotation' => 'Preventivo',
             default => $this->payment_status,
         };
     }

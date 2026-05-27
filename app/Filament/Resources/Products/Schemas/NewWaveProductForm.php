@@ -258,12 +258,19 @@ class NewWaveProductForm
 
             ]);
 
+        $personalizationsTab = Tab::make('Personalizzazioni')
+            ->icon('heroicon-o-scissors')
+            ->schema([
+                ProductForm::getModifiersRepeater(),
+            ]);
+
         return $schema
             ->components([
                 Tabs::make('Prodotto NewWave')
                     ->tabs([
                         $generalTab,
                         $galleryTab,
+                        $personalizationsTab,
                     ])
                     ->columnSpanFull(),
             ]);

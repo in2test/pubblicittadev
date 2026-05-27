@@ -458,7 +458,8 @@ class ProductResource extends Resource
                                     return 'Nessun default globale impostato.';
                                 }
 
-                                $symbol = $option->default_modifier_type?->value === 'percentage' ? '%' : '€';
+                                $modifierType = $option->default_modifier_type;
+                                $symbol = $modifierType->value === 'percentage' ? '%' : '€';
 
                                 return "Default globale: {$option->default_price_modifier}{$symbol}";
                             })

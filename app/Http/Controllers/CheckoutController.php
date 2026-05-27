@@ -50,7 +50,7 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id' => $request->user()->id,
                 'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
-                'payment_status' => 'pending',
+                'payment_status' => $request->input('payment_method') === 'quotation' ? 'quotation' : 'pending',
                 'work_status' => 'pending',
                 'total_price' => $this->cartManager->total(),
                 'total_items' => $this->cartManager->count(),
@@ -110,6 +110,12 @@ class CheckoutController extends Controller
 
         $order->loadMissing('items.product');
 
+        if ($order->payment_status === 'quotation') {
+            $this->cartManager->clear();
+
+            return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
+        }
+
         Stripe::setApiKey(config('stripe.secret'));
         Stripe::setApiVersion(config('stripe.api_version'));
 
@@ -146,11 +152,93 @@ class CheckoutController extends Controller
         return redirect($session->url);
     }
 
+    public function requestQuotation(Request $request): RedirectResponse
+    {
+        $items = $this->cartManager->getItems();
+
+        if ($items === []) {
+            return redirect()->route('cart')->with('error', 'Il tuo carrello è vuoto.');
+        }
+
+        // Resolving default addresses if they exist
+        $defaultShipping = $request->user()->addresses()->where('is_default', true)->first()
+            ?? $request->user()->addresses()->first();
+        $defaultBilling = $defaultShipping; // fallback
+
+        /** @var Order $order */
+        $order = Order::create([
+            'user_id' => $request->user()->id,
+            'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
+            'payment_status' => 'quotation',
+            'work_status' => 'pending',
+            'total_price' => $this->cartManager->total(),
+            'total_items' => $this->cartManager->count(),
+            'shipping_address_id' => $defaultShipping?->id,
+            'billing_address_id' => $defaultBilling?->id,
+            'notes' => $request->input('notes'),
+        ]);
+
+        foreach ($items as $item) {
+            if (! $product = Product::find($item['product_id'])) {
+                continue;
+            }
+
+            $qty = $this->cartManager->getItemQuantity($item);
+            $totalPrice = $product->calculateTotalPrice(
+                $qty,
+                $item['quantities'] ?? [],
+                isset($item['width']) ? (float) $item['width'] : null,
+                isset($item['height']) ? (float) $item['height'] : null,
+                $item['selected_options'] ?? []
+            );
+            $unitPrice = $qty > 0 ? $totalPrice / $qty : 0.0;
+
+            $hasModifierOption = false;
+            if (! empty($item['selected_options'])) {
+                $modifierTypeIds = $product->variationTypes()
+                    ->wherePivot('is_modifier', true)
+                    ->pluck('variation_types.id')
+                    ->toArray();
+                foreach ($item['selected_options'] as $typeId => $optIds) {
+                    if (in_array((int) $typeId, $modifierTypeIds)) {
+                        $hasModifierOption = true;
+                        break;
+                    }
+                }
+            }
+            $hasPersonalization = $hasModifierOption || ! empty($item['design_file_path']);
+            $initialWorkStatus = $hasPersonalization ? 'awaiting_file' : 'pending';
+
+            $order->items()->create([
+                'product_id' => $product->id,
+                'quantity' => $qty,
+                'unit_price' => $unitPrice,
+                'subtotal' => $totalPrice,
+                'customization_json' => $item,
+                'work_status' => $initialWorkStatus,
+            ]);
+        }
+
+        $order->load('items.product');
+
+        Mail::to($request->user())->send(new OrderPlacedNotification($order));
+        Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
+
+        $this->cartManager->clear();
+
+        return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
+    }
+
     public function success(Request $request): View
     {
         $this->cartManager->clear();
 
-        return view('checkout.success');
+        $isQuotation = session()->has('success') && str_contains(
+            session('success', ''),
+            'preventivo'
+        );
+
+        return view('checkout.success', ['isQuotation' => $isQuotation]);
     }
 
     public function cancel(): View

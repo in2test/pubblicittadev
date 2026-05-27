@@ -74,10 +74,10 @@ class StandardProductSeeder extends Seeder
                             'Formato personalizzato' => 'custom',
                         ],
                     ],
-                    'Grammatura' => [
+                    'Carta' => [
                         'options' => [
-                            '350g Patinata' => '350g',
-                            '400g Patinata' => '400g',
+                            'Patinata Opaca 350 gr' => 'patinata-opaca-350g',
+                            'Patinata Opaca 400 gr' => 'patinata-opaca-400g',
                         ],
                     ],
                     'Finitura' => [
@@ -87,15 +87,6 @@ class StandardProductSeeder extends Seeder
                             'Plastificazione Opaca' => ['value' => 'opaca', 'modifier_type' => 'percentage', 'price_modifier' => 10.00],
                             'Plastificazione Lucida' => ['value' => 'lucida', 'modifier_type' => 'percentage', 'price_modifier' => 10.00],
                             'Soft Touch' => ['value' => 'soft-touch', 'modifier_type' => 'percentage', 'price_modifier' => 20.00],
-                        ],
-                    ],
-
-                    'Posizione di Stampa' => [
-                        'is_modifier' => true,
-                        'options' => [
-                            'Stampa sul fronte' => ['value' => 'fronte', 'modifier_type' => 'flat', 'price_modifier' => 0.00],
-                            'Fronte e retro uguali' => ['value' => 'fronte-retro-uguali', 'modifier_type' => 'percentage', 'price_modifier' => 50.00],
-                            'Fronte e retro differenti' => ['value' => 'fronte-retro-differenti', 'modifier_type' => 'percentage', 'price_modifier' => 50.00],
                         ],
                     ],
                 ],
@@ -122,7 +113,7 @@ class StandardProductSeeder extends Seeder
                 'name' => 'Volantini e Flyer',
                 'slug' => 'volantini-flyer',
                 'sku' => 'STD-FLY',
-                'description' => 'Volantini e flyer promozionali su carta patinata o riciclata. Disponibili nei formati A6, A5 e A4 con grammature da 115g a 200g. Ideali per la distribuzione sul territorio, eventi e campagne pubblicitarie. Stampa a 4 colori fronte/retro con resa cromatica eccellente.',
+                'description' => 'Volantini e flyer promozionali su carta patinata o riciclata. Disponibili nei formati A6, A5 e A4 con grammature da 115g a 200g. Ideali per la distribuzione sul territorio, events e campagne pubblicitarie. Stampa a 4 colori fronte/retro con resa cromatica eccellente.',
                 'price' => 0.05,
                 'product_class' => ProductClass::ItemBased,
                 'min_area' => null,
@@ -139,14 +130,14 @@ class StandardProductSeeder extends Seeder
                             'A4 (21×29,7 cm)' => 'A4',
                         ],
                     ],
-                    'Grammatura' => [
+                    'Carta' => [
                         'options' => [
-                            '115g Patinata Lucida' => '115g-lucida',
-                            '135g Patinata Lucida' => '135g-lucida',
-                            '135g Patinata Opaca' => '135g-opaca',
-                            '170g Patinata Lucida' => '170g-lucida',
-                            '170g Patinata Opaca' => '170g-opaca',
-                            '200g Patinata Lucida' => '200g-lucida',
+                            'Patinata Lucida 115 gr' => 'patinata-lucida-115g',
+                            'Patinata Lucida 130 gr' => 'patinata-lucida-130g',
+                            'Patinata Opaca 130 gr' => 'patinata-opaca-130g',
+                            'Patinata Lucida 170 gr' => 'patinata-lucida-170g',
+                            'Patinata Opaca 170 gr' => 'patinata-opaca-170g',
+                            'Patinata Lucida 200 gr' => 'patinata-lucida-200g',
                         ],
                     ],
                 ],
@@ -190,12 +181,12 @@ class StandardProductSeeder extends Seeder
                             'Gate fold (A4)' => 'gatefold-a4',
                         ],
                     ],
-                    'Grammatura' => [
+                    'Carta' => [
                         'options' => [
-                            '135g Patinata Lucida' => '135g-lucida',
-                            '135g Patinata Opaca' => '135g-opaca',
-                            '170g Patinata Lucida' => '170g-lucida',
-                            '170g Patinata Opaca' => '170g-opaca',
+                            'Patinata Lucida 130 gr' => 'patinata-lucida-130g',
+                            'Patinata Opaca 130 gr' => 'patinata-opaca-130g',
+                            'Patinata Lucida 170 gr' => 'patinata-lucida-170g',
+                            'Patinata Opaca 170 gr' => 'patinata-opaca-170g',
                         ],
                     ],
                 ],
@@ -237,12 +228,12 @@ class StandardProductSeeder extends Seeder
                             '70×100 cm' => '70x100',
                         ],
                     ],
-                    'Grammatura' => [
+                    'Carta' => [
                         'options' => [
-                            '135g Patinata Lucida' => '135g-lucida',
-                            '200g Patinata Lucida' => '200g-lucida',
-                            '250g Patinata Lucida' => '250g-lucida',
-                            '300g Patinata Opaca' => '300g-opaca',
+                            'Patinata Lucida 130 gr' => 'patinata-lucida-130g',
+                            'Patinata Lucida 200 gr' => 'patinata-lucida-200g',
+                            'Patinata Lucida 350 gr' => 'patinata-lucida-350g',
+                            'Patinata Opaca 350 gr' => 'patinata-opaca-350g',
                         ],
                     ],
                 ],
@@ -308,11 +299,11 @@ class StandardProductSeeder extends Seeder
                 'is_featured' => true,
                 'image_url' => 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=600&q=80',
                 'variations' => [
-                    'Spessore Forex' => [
+                    'Spessore' => [
                         'options' => [
-                            'Forex 3 mm' => '3mm',
-                            'Forex 5 mm' => '5mm',
-                            'Forex 10 mm' => '10mm',
+                            '3mm' => '3mm',
+                            '5mm' => '5mm',
+                            '10mm' => '10mm',
                         ],
                     ],
                 ],
@@ -583,7 +574,7 @@ class StandardProductSeeder extends Seeder
                 'is_featured' => false,
                 'image_url' => 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80',
                 'variations' => [
-                    'Colore braccialetto' => [
+                    'Colore' => [
                         'options' => [
                             'Bianco' => 'bianco',
                             'Rosso' => 'rosso',
@@ -619,7 +610,7 @@ class StandardProductSeeder extends Seeder
                 'is_featured' => true,
                 'image_url' => 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
                 'variations' => [
-                    'Colore tazza' => [
+                    'Colore' => [
                         'options' => [
                             'Bianca classica' => 'bianca',
                             'Bianca interno colorato Rosso' => 'interno-rosso',
@@ -649,13 +640,26 @@ class StandardProductSeeder extends Seeder
         foreach ($products as $pData) {
             $this->command->info("Seeding product: {$pData['name']}");
 
-            // Convert print_sides to a regular variation "Grafica"
+            // Convert print_sides to a regular variation "Lato di Stampa"
             if (! empty($pData['print_sides'])) {
                 $pData['variations'] ??= [];
-                $pData['variations']['Grafica'] = [
+                $pData['variations']['Lato di Stampa'] = [
                     'is_modifier' => false,
                     'options' => collect($pData['print_sides'])->mapWithKeys(function ($side) {
-                        return [$side => strtolower(str_replace([' ', '/'], '_', $side))];
+                        $name = match ($side) {
+                            'Stampa sul fronte', 'Solo Fronte' => 'Solo Fronte',
+                            'Fronte e retro uguali', 'Fronte/Retro Stessa Grafica' => 'Fronte/Retro Stessa Grafica',
+                            'Fronte e retro differenti', 'Fronte/Retro Differenti' => 'Fronte/Retro Differenti',
+                            default => $side,
+                        };
+                        $value = match ($name) {
+                            'Solo Fronte' => 'solo-fronte',
+                            'Fronte/Retro Stessa Grafica' => 'fronte-retro-stessa',
+                            'Fronte/Retro Differenti' => 'fronte-retro-differenti',
+                            default => strtolower(str_replace([' ', '/'], '-', $name)),
+                        };
+
+                        return [$name => $value];
                     })->all(),
                 ];
             }
@@ -799,10 +803,18 @@ class StandardProductSeeder extends Seeder
             foreach (($pData['pricing_tiers'] ?? []) as [$minQty, $maxQty, $price, $sideName]) {
                 $skuIds = [null]; // default fallback
                 if ($sideName) {
-                    // Find the VariationOption for this side name under variation type 'Grafica'
-                    $option = VariationOption::where('name', $sideName)
+                    // Find the VariationOption for this side name under variation type 'Lato di Stampa'
+                    $option = VariationOption::where(function ($query) use ($sideName) {
+                        $query->where('name', $sideName)
+                            ->orWhere('name', match ($sideName) {
+                                'Stampa sul fronte' => 'Solo Fronte',
+                                'Fronte e retro uguali' => 'Fronte/Retro Stessa Grafica',
+                                'Fronte e retro differenti' => 'Fronte/Retro Differenti',
+                                default => $sideName,
+                            });
+                    })
                         ->whereHas('type', function ($q) {
-                            $q->where('name', 'Grafica');
+                            $q->where('name', 'Lato di Stampa');
                         })->first();
                     if ($option) {
                         // Find all skus for this product that have this option

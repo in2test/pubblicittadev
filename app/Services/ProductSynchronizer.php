@@ -39,7 +39,7 @@ class ProductSynchronizer
 
         $sizeType = VariationType::firstOrCreate(
             ['name' => 'Taglia'],
-            ['presentation_type' => 'select']
+            ['presentation_type' => 'radio']
         );
 
         // For NewWave products, we cache/update the product metadata as well

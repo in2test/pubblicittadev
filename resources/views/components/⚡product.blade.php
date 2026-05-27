@@ -180,7 +180,10 @@ new class extends Component {
 
         // Resettiamo le quantità perché il cambio di opzione potrebbe 
         // corrispondere ad un nuovo SKU, invalidando la quantità precedente
-        $this->quantities = []; 
+        // Lo facciamo solo se la variazione modificata non è un modificatore
+        if (!$type || !$type->pivot?->is_modifier) {
+            $this->quantities = []; 
+        }
     }
 
     #[Computed]

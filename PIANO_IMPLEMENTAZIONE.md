@@ -1,19 +1,19 @@
 # 📋 Piano di Implementazione - Abbigliamento Personalizzato
 
-**Status**: 🚧 IN CORSO (Fase 2: Transizione E-commerce)
+**Status**: 🚧 IN CORSO (Fase 3: Completamento Flusso Ordini)
 **Scadenza MVP**: Raggiunta
-**Ultimo aggiornamento**: 23 Maggio 2026
+**Ultimo aggiornamento**: 27 Maggio 2026
 
 ---
 
 ## 📊 Panoramica Progetto
 
 **Nome**: Piattaforma di E-commerce per stampe personalizzate su abbigliamento e prodotti standard (es. Forex, Biglietti da Visita)
-**Focus**: E-commerce Completo
-**Flusso**: Acquisto diretto nel Carrello → Pagamento (Stripe/Bank) → Gestione Ordini (Lavorazioni)
+**Focus**: E-commerce Completo con Preventivi Privati
+**Flusso**: Acquisto nel Carrello → Pagamento Stripe **oppure** Richiesta Preventivo Privato → Gestione Ordini (Lavorazioni)
 **Lingua**: Italiano
 **Team**: 1 developer
-**Timeline**: 4 settimane (Fase 1 + Fase 2 in corso)
+**Timeline**: 4+ settimane (Fase 1 + Fase 2 + Fase 3 in corso)
 
 ---
 
@@ -66,6 +66,7 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 ├── id, user_id (FK), order_number, payment_status, work_status
 ├── total_price, total_items, shipping_address_id, billing_address_id
 ├── stripe_session_id, stripe_payment_intent_id, paid_at, notes
+├── payment_status: pending | paid | quotation | failed | refunded
 
 📦 order_items (Singoli elementi dell'ordine / Lavorazioni)
 ├── id, order_id, product_id, quantity, unit_price, subtotal
@@ -107,6 +108,11 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 - [x] **Recalculation logic**: Sconti quantità applicati alla singola lavorazione per garantire precisione sui prezzi personalizzati.
 - [x] **Size Selector UI**: Interfaccia avanzata per selezione quantità multi-taglia con feedback "Total Articles".
 
+#### 🧩 Variazioni Prodotto Avanzate (NewWave)
+- [x] **Tipo variazione "Quantità/Input"**: Gestione varianti multi-valore (es. 2XS: 1, L: 2) distinte dalle varianti select.
+- [x] **Posizioni di Stampa**: Aggiunta selezione posizione stampa (es. petto, schiena) come variante modificatore indipendente.
+- [x] **Consolidamento varianti obsolete**: Grammatura, materiale, spessore, colore tazza/braccialetto ora usano le varianti base esistenti (colore, spessore, ecc.).
+
 ### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
 - [x] **User Management**: Ruoli (admin/client) e is_active.
 - [x] **Fortify Email Verification**: Obbligatoria per accedere alla dashboard.
@@ -117,11 +123,21 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 
 ---
 
+### 🧾 Modulo 3: Pagamenti & Preventivi (COMPLETATO)
+- [x] **Stripe Checkout**: Pagamento diretto con redirect a Stripe.
+- [x] **Stripe Webhooks**: Aggiornamento automatico stato ordine al pagamento.
+- [x] **Inventory Decrement**: Decremento automatico giacenze al pagamento confermato.
+- [x] **Richiesta Preventivo Privato**: Bottone "Richiedi Preventivo" nel carrello per utenti autenticati (salta il checkout, crea ordine con `payment_status = quotation`).
+- [x] **Pagina Successo Contestuale**: Messaggio differenziato tra "Ordine Confermato" (pagamento Stripe) e "Richiesta Inviata" (preventivo), con icone diverse.
+- [x] **Email Notifiche**: Notifica automatica al cliente e all'admin sia per ordini pagati che per preventivi.
+
+---
+
 ## 📅 Checkpoint Aggiornati
 
 ```
 MAGGIO 2026 (Stato Attuale)
-├─ ✅ Rimozione logica preventiva (Quote-based flow abolito)
+├─ ✅ Rimozione logica preventiva (Quote-based flow abolito, sostituito da Preventivo Privato semplificato)
 ├─ ✅ Unificazione Migrations (1 migration = 1 schema)
 ├─ ✅ Laravel Code Simplification (Codice commentato in ITA su modelli e carrello)
 ├─ ✅ NewWave Sync v2.0 (Lazy-sync + Availability)
@@ -133,11 +149,16 @@ MAGGIO 2026 (Stato Attuale)
 ├─ ✅ Admin Order Management (Filament Resource)
 ├─ ✅ Pricing Models (Fixed, Quantity, Area-based)
 ├─ ✅ Refactoring Prodotti Standard (Filament 2-Column Form, Prod. Table)
-└─ ✅ Test Suite (170+ test Pest, 100% Passing)
+├─ ✅ Consolidamento varianti obsolete (incorporate in varianti base)
+├─ ✅ Risoluzione errori PHPStan (0 errori)
+├─ ✅ Flusso Preventivo Privato dal Carrello (senza checkout)
+├─ ✅ Pagina successo contestuale (preventivo vs pagamento)
+└─ ✅ Test Suite (172 test Pest completati e passanti, 2 skippati)
 
 PIANO PROSSIMI GIORNI
-├─ 🚧 Email Notifications (Conferma ordine)
-├─ 🚧 Invoice Generation (PDF invoices)
+├─ 🚧 Test e verifica di prodotti a superficie (Pannelli rigidi / Rigid panels)
+├─ 🚧 Test e verifica di prodotti unitari/fissi (Espositori roll-up / Roll-ups)
+├─ 🚧 Gestione Fatture (PDF invoices)
 └─ 🚧 Shipping Tracking integration
 ```
 
@@ -145,37 +166,24 @@ PIANO PROSSIMI GIORNI
 
 ## 🧪 Test Suite
 
-Creati oltre **170 test** (Pest) che coprono:
+Creati oltre **172 test** (Pest) che coprono:
 - `CartTest`, `SearchTest`, `ProductPageTest`, `OrderTest`, `QuantityDiscountServiceTest`.
 - Nuovi test per `ProductSynchronizer` e `NwgApiClient`.
 - Copertura formati custom e calcoli di ridimensionamento (`StandardProductResourceTest`).
+- Test flusso preventivo privato (`CheckoutTest` – `test_direct_quotation_flow_from_cart_creates_order_and_redirects_to_success`).
 
 ---
 
-## ⏭️ PHASE 2: Full E-commerce Transition
+## ⏭️ PHASE 3: Completamento & Go-Live
 
-### 📦 Modulo 1: L'Engine delle "Lavorazioni" (COMPLETATO)
-- [x] Refactoring del `CartManager` (Job-based).
-- [x] Logica Sconti per Lavorazione e prezzario al metro quadro.
-- [x] Implementazione form per prodotti senza varianti taglia/colore, ma basati su preventivo matrice righe.
-- [x] Implementazione funzione "Modifica Lavorazione" nel carrello.
-
-### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
-- [x] User Management con ruoli (admin/client) e is_active.
-- [x] Filament UserResource.
-- [x] Login/Register modal Livewire (Minimal Alpine/Livewire Refactor).
-- [x] Configurazione Fortify (Verifica Email).
-- [x] Area "I miei Ordini" e gestione indirizzi.
-
-### 💳 Modulo 3: Pagamenti & Checkout (Stripe) (COMPLETATO)
-- [x] Integrazione Stripe Checkout.
-- [x] Stripe Webhooks per creazione ordine.
-- [x] Incremento/Decremento automatico inventario al pagamento.
-
-### 🛠️ Modulo 4: Admin Order Management (IN CORSO)
+### 📦 Modulo 4: Admin Order Management (IN CORSO)
 - [x] `OrderResource` in Filament.
+- [x] Sistema Notifiche Email automatiche (ordine pagato + richiesta preventivo).
 - [ ] Gestione Fatture & Tracking Spedizioni.
-- [x] Sistema Notifiche Email automatiche (Basic Paid Confirmation).
+
+### 📐 Modulo 5: Verifica Tipologie di Prodotto Avanzate (IN CORSO)
+- [ ] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
+- [ ] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
 
 ---
 

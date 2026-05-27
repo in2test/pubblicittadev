@@ -306,8 +306,25 @@
                         <span class="material-symbols-outlined text-base">payments</span>
                     </a>
 
+                    @auth
+                    <form action="{{ route('checkout.quotation') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                            class="w-full border-2 border-primary text-primary py-3 font-black uppercase tracking-tighter text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                            Richiedi Preventivo Privato
+                            <span class="material-symbols-outlined text-base">document_scanner</span>
+                        </button>
+                    </form>
+                    @else
+                    <a href="{{ route('login') }}?redirect={{ urlencode(route('cart')) }}"
+                        class="w-full border-2 border-primary text-primary py-3 font-black uppercase tracking-tighter text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                        Accedi per Richiedere Preventivo
+                        <span class="material-symbols-outlined text-base">login</span>
+                    </a>
+                    @endauth
+
                     <p class="text-[10px] text-center text-secondary font-mono leading-relaxed pt-1">
-                        Inviando la richiesta accetti i termini e le condizioni di vendita.
+                        I preventivi privati non richiedono pagamento e vengono elaborati manualmente.
                     </p>
                 </div>
             </div>

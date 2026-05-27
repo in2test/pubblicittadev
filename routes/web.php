@@ -58,6 +58,7 @@ require __DIR__.'/settings.php';
 Route::middleware(['auth'])->group(function () {
     Volt::route('/checkout', 'pages.checkout')->name('checkout');
     Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
+    Route::post('/checkout/quotation', [CheckoutController::class, 'requestQuotation'])->name('checkout.quotation');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
 });

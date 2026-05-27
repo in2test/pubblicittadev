@@ -205,19 +205,33 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                         <input type="hidden" name="billing_address_id" value="{{ $selectedBillingAddressId }}">
                         <input type="hidden" name="notes" value="{{ $notes }}">
                         
-                        <flux:button 
-                            type="submit" 
-                            variant="primary" 
-                            class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tighter! text-lg! shadow-lg shadow-gray-950/10"
-                            :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
-                        >
-                            Paga Ora con Stripe
-                            <flux:icon icon="credit-card" class="ml-2" />
-                        </flux:button>
+                        <div class="space-y-3">
+                            <flux:button 
+                                type="submit" 
+                                variant="primary" 
+                                class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tighter! text-lg! shadow-lg shadow-gray-950/10"
+                                :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
+                            >
+                                Paga Ora con Stripe
+                                <flux:icon icon="credit-card" class="ml-2" />
+                            </flux:button>
+
+                            <flux:button 
+                                type="submit" 
+                                name="payment_method"
+                                value="quotation"
+                                variant="outline" 
+                                class="w-full h-12 border-2 border-gray-950! text-gray-950! font-black! uppercase! tracking-tighter! text-sm! hover:bg-gray-100!"
+                                :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
+                            >
+                                Richiedi Preventivo Privato
+                                <flux:icon icon="document-text" class="ml-2" />
+                            </flux:button>
+                        </div>
                     </form>
 
                     <p class="mt-4 text-[10px] text-center text-gray-400 leading-tight">
-                        Verrai reindirizzato al server sicuro di Stripe per completare il pagamento in tutta sicurezza.
+                        I preventivi privati non richiedono pagamento immediato online e saranno elaborati manualmente dall'amministratore.
                     </p>
                 </div>
             </div>

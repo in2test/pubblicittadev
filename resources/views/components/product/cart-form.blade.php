@@ -23,8 +23,8 @@
     //   Viene mostrata solo una SKU (combinazione esatta selezionata) con un singolo input di quantità.
     // ────────────────────────────────────────────────────────────────────────────────────────────
     if ($isNewwave) {
-        $matrixType    = $variationTypes->last(); // Ultima opzione funge da riga
-        $selectorTypes = $variationTypes->slice(0, -1); // Tutte le altre fungono da bottoni/selettori
+        $matrixType    = $variationTypes->reject(fn($t) => $t->pivot?->is_modifier)->last(); // Ultima opzione non-modifier funge da riga
+        $selectorTypes = $variationTypes->reject(fn($t) => $t->id === ($matrixType?->id ?? 0)); // Tutte le altre (inclusi modificatori) fungono da bottoni/selettori
     } else {
         $matrixType    = null;
         $selectorTypes = $variationTypes;   // Nessuna matrice, tutte le opzioni sono bottoni/selettori
@@ -208,48 +208,68 @@
                     @endforeach
                 </div>
             @else
-                <div class="flex flex-wrap gap-2">
-                    @foreach ($productOptions as $pvo)
-                        @php
-                            $option = $pvo->option;
-                            if (!$option) continue;
-                            $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
-                        @endphp
-
-                        @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
-                            {{-- Rendering come campione di colore (swatch) o immagine --}}
+                @if($type->presentation_type === 'select')
+                    <div class="relative w-full max-w-xs">
+                        <select 
+                            wire:change="setOption({{ $type->id }}, $event.target.value)"
+                            class="w-full h-11 border border-gray-600/20 bg-gray-50 px-4 text-xs font-mono font-bold uppercase text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                            @foreach ($productOptions as $pvo)
+                                @php
+                                    $option = $pvo->option;
+                                    if (!$option) continue;
+                                    $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
+                                @endphp
+                                <option value="{{ $option->id }}" @selected($isActive)>
+                                    {{ $option->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($productOptions as $pvo)
                             @php
-                                $hexColors = $option->getHexColors();
-                                // Gradiente a 135deg per bicolori, colore solido altrimenti
-                                $swatchStyle = count($hexColors) >= 2
-                                    ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
-                                    : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
+                                $option = $pvo->option;
+                                if (!$option) continue;
+                                $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
                             @endphp
-                            <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
-                                wire:key="option-swatch-{{ $option->id }}"
-                                @class([
-                                    'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
-                                    'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
-                                    'border-gray-300' => !$isActive
-                                ])
-                                @style([$swatchStyle])
-                                title="{{ $option->name }}"
-                            ></button>
-                        @else
-                            {{-- Rendering come classico pulsante testuale --}}
-                            <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
-                                wire:key="option-btn-{{ $option->id }}"
-                                @class([
-                                    'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
-                                    'bg-primary text-gray-50 border-primary' => $isActive,
-                                    'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
-                                ])
-                            >
-                                {{ $option->name }}
-                            </button>
-                        @endif
-                    @endforeach
-                </div>
+
+                            @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
+                                {{-- Rendering come campione di colore (swatch) o immagine --}}
+                                @php
+                                    $hexColors = $option->getHexColors();
+                                    // Gradiente a 135deg per bicolori, colore solido altrimenti
+                                    $swatchStyle = count($hexColors) >= 2
+                                        ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
+                                        : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
+                                @endphp
+                                <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                    wire:key="option-swatch-{{ $option->id }}"
+                                    @class([
+                                        'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
+                                        'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                        'border-gray-300' => !$isActive
+                                    ])
+                                    @style([$swatchStyle])
+                                    title="{{ $option->name }}"
+                                ></button>
+                            @else
+                                {{-- Rendering come classico pulsante testuale --}}
+                                <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                    wire:key="option-btn-{{ $option->id }}"
+                                    @class([
+                                        'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                        'bg-primary text-gray-50 border-primary' => $isActive,
+                                        'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
+                                    ])
+                                >
+                                    {{ $option->name }}
+                                </button>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
             @endif
         </div>
     @endforeach

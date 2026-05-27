@@ -488,9 +488,9 @@ class Product extends Model implements HasMedia
                 return $match;
             }
 
-            /** @var PricingTier|null $tier */
             $query = $this->pricingTiers()->where('product_sku_id', $skuId);
 
+            /** @var PricingTier|null $tier */
             $tier = (clone $query)
                 ->where('min_quantity', '<=', $quantity)
                 ->where(function (Builder $query) use ($quantity) {
@@ -501,7 +501,10 @@ class Product extends Model implements HasMedia
                 ->first();
 
             if (! $tier && ($this->price <= 0 || $this->allows_custom_size)) {
-                return $query->orderBy('min_quantity')->first();
+                /** @var PricingTier|null $fallbackTier */
+                $fallbackTier = $query->orderBy('min_quantity')->first();
+
+                return $fallbackTier;
             }
 
             return $tier;
@@ -553,7 +556,9 @@ class Product extends Model implements HasMedia
 
         if ((clone $matchedTiersQuery)->count() === 0) {
             if ($this->price <= 0 || $this->allows_custom_size) {
-                $minPrice = $this->pricingTiers()->orderBy('min_quantity')->first()?->price_per_unit;
+                /** @var PricingTier|null $firstTier */
+                $firstTier = $this->pricingTiers()->orderBy('min_quantity')->first();
+                $minPrice = $firstTier?->price_per_unit;
             } else {
                 $minPrice = null;
             }

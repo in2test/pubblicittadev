@@ -238,6 +238,8 @@ class ProductForm
             ->label('Varianti Base')
             ->helperText('Queste varianti definiscono la struttura di prezzo del prodotto (es. Spessore: 5mm, 10mm; Modello roll-up). Ogni opzione può avere le proprie foto.')
             ->defaultItems(0)
+            ->reorderable(true)
+            ->orderColumn('sort_order')
             ->schema([
                 Hidden::make('is_modifier')->default(false),
                 Select::make('variation_type_id')
@@ -301,6 +303,8 @@ class ProductForm
             ->label('Modificatori di Prezzo')
             ->helperText('Questi aggiungono un sovrapprezzo al totale (es. Stampa Fronte+Retro +25%, Plastificazione +10%). Il valore di default è globale; qui puoi sovrascriverlo per questo prodotto.')
             ->defaultItems(0)
+            ->reorderable(true)
+            ->orderColumn('sort_order')
             ->schema([
                 Hidden::make('is_modifier')->default(true),
                 Select::make('variation_type_id')
