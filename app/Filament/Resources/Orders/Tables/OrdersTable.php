@@ -82,8 +82,9 @@ class OrdersTable
                     ->label('Creato il')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

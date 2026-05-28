@@ -137,18 +137,41 @@ new class extends Component {
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
         if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
+            $category->children->load(['products' => function ($query) use ($showInactive) {
+                $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
+                    ->with([
+                        'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
+                        'category', 'variationTypes', 
+                        'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
+                        'pricingTiers', 
+                        'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
+                    ])
+                    ->withMin('skus as skus_min_override_price', 'override_price')
+                    ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
+                    ->take(8);
+            }]);
+
+            $category->children->loadCount(['products' => function ($query) use ($showInactive) {
+                $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'));
+            }]);
+
             $childrenData = $category->children->map(fn ($child) => [
                 'category' => $child,
-                'products' => $child->products()
-                    ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
-                    ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
-                    ->take(8)
-                    ->get(),
+                'products' => $child->products,
+                'total_products_count' => $child->products_count,
             ]);
 
             $ownProducts = $category->products()
                 ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
-                ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
+                ->with([
+                    'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
+                    'category', 'variationTypes', 
+                    'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
+                    'pricingTiers', 
+                    'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
+                ])
+                ->withMin('skus as skus_min_override_price', 'override_price')
+                ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                 ->get();
 
             return [
@@ -156,10 +179,53 @@ new class extends Component {
                 'groups' => $childrenData,
                 'standalone' => $ownProducts,
             ];
+        } elseif (! $this->getIsFiltering() && ! $category) {
+            $rootCategories = Category::whereNull('parent_id')->with('children')->get();
+            
+            $groups = $rootCategories->map(function ($root) use ($showInactive) {
+                $categoryIds = $root->children->pluck('id')->push($root->id);
+                
+                $totalCount = \App\Models\Product::whereIn('category_id', $categoryIds)
+                    ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
+                    ->count();
+
+                $products = \App\Models\Product::whereIn('category_id', $categoryIds)
+                    ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
+                    ->with([
+                        'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
+                        'category', 'variationTypes', 
+                        'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
+                        'pricingTiers', 
+                        'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
+                    ])
+                    ->withMin('skus as skus_min_override_price', 'override_price')
+                    ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
+                    ->take(8)
+                    ->get();
+                    
+                return [
+                    'category' => $root,
+                    'products' => $products,
+                    'total_products_count' => $totalCount,
+                ];
+            });
+            
+            return [
+                'type' => 'grouped',
+                'groups' => $groups,
+            ];
         }
 
         $products = $this->getBaseFilteredQuery()
-            ->with(['media', 'category', 'variationTypes.options', 'images', 'pricingTiers', 'productVariationTypes.options.option'])
+            ->with([
+                'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
+                'category', 'variationTypes', 
+                'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
+                'pricingTiers', 
+                'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
+            ])
+            ->withMin('skus as skus_min_override_price', 'override_price')
+            ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
             ->orderBy(
                 $this->sort === 'price_asc' ? 'price' : ($this->sort === 'price_desc' ? 'price' : 'name'),
                 $this->sort === 'price_desc' ? 'desc' : 'asc'

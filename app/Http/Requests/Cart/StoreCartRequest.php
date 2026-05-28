@@ -30,6 +30,7 @@ class StoreCartRequest extends FormRequest
             'image_url' => 'nullable|string',
             'width' => 'nullable|numeric|min:0.1',
             'height' => 'nullable|numeric|min:0.1',
+            'notes' => 'nullable|string',
         ];
     }
 }

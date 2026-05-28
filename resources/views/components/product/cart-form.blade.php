@@ -103,7 +103,7 @@
         $matchingSkus = $product->skus;
     }
 
-    if ($matchingSkus->isEmpty()) {
+    if ($matchingSkus->isEmpty() && $allSelectorsChosen) {
         $virtualSku = new \App\Models\ProductSku();
         $virtualSku->id = 0;
         $virtualSku->product_id = $product->id;
@@ -603,8 +603,8 @@
         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
             Note aggiuntive
         </label>
-        <textarea name="notes" rows="4"
-            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">{{ old('notes') }}</textarea>
+        <textarea wire:model="notes" name="notes" rows="4"
+            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"></textarea>
         @error('notes')
             <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
         @enderror

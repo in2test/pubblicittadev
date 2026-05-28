@@ -12,6 +12,8 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -56,7 +58,8 @@ class OrderForm
                                 ->label('Totale')
                                 ->numeric()
                                 ->prefix('€')
-                                ->disabled(),
+                                ->disabled()
+                                ->dehydrated(),
                             TextInput::make('total_items')
                                 ->label('Articoli Totali')
                                 ->numeric()
@@ -103,11 +106,12 @@ class OrderForm
                     ->disabled(),
 
                 Section::make('Lavorazioni (Items)')
+                    ->columnSpanFull()
                     ->schema([
                         Repeater::make('items')
-                            ->relationship()
+                            ->relationship(modifyQueryUsing: fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with('product'))
                             ->schema([
-                                Grid::make(3)->schema([
+                                Grid::make(5)->schema([
                                     Select::make('product_id')
                                         ->relationship('product', 'name')
                                         ->label('Prodotto')
@@ -115,6 +119,37 @@ class OrderForm
                                     TextInput::make('quantity')
                                         ->label('Quantità')
                                         ->disabled(),
+                                    TextInput::make('unit_price')
+                                        ->label('Prezzo Unitario')
+                                        ->numeric()
+                                        ->prefix('€')
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $qty = (int) $get('quantity');
+                                            $unit = (float) $get('unit_price');
+                                            $subtotal = round($qty * $unit, 2);
+                                            $set('subtotal', $subtotal);
+
+                                            $items = $get('../../items') ?? [];
+                                            $total = collect($items)->sum(fn ($item) => (float) ($item['subtotal'] ?? 0));
+                                            $set('../../total_price', $total);
+                                        }),
+                                    TextInput::make('subtotal')
+                                        ->label('Subtotale')
+                                        ->numeric()
+                                        ->prefix('€')
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $qty = (int) $get('quantity');
+                                            $subtotal = (float) $get('subtotal');
+                                            if ($qty > 0) {
+                                                $set('unit_price', round($subtotal / $qty, 2));
+                                            }
+
+                                            $items = $get('../../items') ?? [];
+                                            $total = collect($items)->sum(fn ($item) => (float) ($item['subtotal'] ?? 0));
+                                            $set('../../total_price', $total);
+                                        }),
                                     Select::make('work_status')
                                         ->label('Stato Lavorazione')
                                         ->options([
@@ -134,32 +169,82 @@ class OrderForm
                                             }
                                             $json = $record->customization_json;
                                             $html = '<ul class="list-disc pl-4 space-y-1 text-sm">';
+                                            $qty = $record->quantity ?? 1;
 
-                                            // Options Summary
+                                            // Options Summary & Thickness Parsing
+                                            $thicknessMm = 0;
                                             if (! empty($json['options_summary'])) {
                                                 foreach ($json['options_summary'] as $key => $val) {
                                                     $html .= "<li><strong>{$key}:</strong> {$val}</li>";
+
+                                                    // Parse thickness/depth for package size
+                                                    $combined = strtolower($key.' '.$val);
+                                                    if (str_contains($combined, 'spessore') || str_contains($combined, 'profondit') || str_contains($combined, 'telaio')) {
+                                                        if (preg_match('/([0-9.,]+)\s*(mm|cm)/i', $combined, $matches)) {
+                                                            $valNum = (float) str_replace(',', '.', $matches[1]);
+                                                            if (strtolower($matches[2]) === 'cm') {
+                                                                $valNum *= 10;
+                                                            }
+                                                            $thicknessMm = $valNum;
+                                                        }
+                                                    }
                                                 }
                                             }
 
-                                            // Dimensions
-                                            if (! empty($json['width']) && ! empty($json['height'])) {
-                                                $html .= "<li><strong>Dimensioni:</strong> {$json['width']} x {$json['height']} mm</li>";
+                                            // Dimensions & Advanced Calculations
+                                            $width = isset($json['width']) ? (float) $json['width'] : 0;
+                                            $height = isset($json['height']) ? (float) $json['height'] : 0;
+                                            $product = $record->relationLoaded('product') ? $record->product : \App\Models\Product::find($record->product_id);
+
+                                            if ($width > 0 && $height > 0) {
+                                                $html .= "<li><strong>Dimensioni singole:</strong> {$width} x {$height} mm</li>";
+
+                                                // Area Totale
+                                                $totalSqm = ($width * $height) / 1000000.0 * $qty;
+                                                $html .= '<li><strong>Area Totale:</strong> '.number_format($totalSqm, 2, ',', '.').' mq</li>';
+
+                                                // Sheets Impagination
+                                                if ($product && $product->sheet_width > 0 && $product->sheet_height > 0) {
+                                                    $sw = (float) $product->sheet_width;
+                                                    $sh = (float) $product->sheet_height;
+
+                                                    $fit1 = floor($sw / $width) * floor($sh / $height);
+                                                    $fit2 = floor($sw / $height) * floor($sh / $width);
+                                                    $itemsPerSheet = max($fit1, $fit2);
+
+                                                    if ($itemsPerSheet > 0) {
+                                                        $sheetsNeeded = ceil($qty / $itemsPerSheet);
+                                                        $html .= "<li><strong>Impaginazione:</strong> {$itemsPerSheet} pz per lastra ({$sw}x{$sh}mm). Totale lastre necessarie: {$sheetsNeeded}</li>";
+                                                    }
+                                                }
+
+                                                // Package Size
+                                                if ($thicknessMm > 0) {
+                                                    $packDepth = $thicknessMm * $qty;
+                                                    $html .= "<li><strong>Ingombro Pacco Stimato:</strong> {$width} x {$height} x {$packDepth} mm</li>";
+                                                }
                                             }
 
-                                            // Quantities breakdown
-                                            if (! empty($json['quantities'])) {
+                                            // Quantities breakdown (hide only for single-sku Area products to avoid duplication)
+                                            $showQuantities = true;
+                                            if (! empty($json['quantities']) && count($json['quantities']) === 1) {
+                                                if (isset($product) && $product->product_class === \App\Enums\ProductClass::AreaBased) {
+                                                    $showQuantities = false;
+                                                }
+                                            }
+
+                                            if (! empty($json['quantities']) && $showQuantities) {
                                                 $html .= '<li><strong>Taglie/Varianti:</strong> ';
                                                 $html .= '<ul class="pl-4 mt-1 space-y-1">';
-                                                foreach ($json['quantities'] as $skuId => $qty) {
-                                                    $sku = ProductSku::with('options.type')->find($skuId);
+                                                foreach ($json['quantities'] as $skuId => $q) {
+                                                    $sku = \App\Models\ProductSku::with('options.type')->find($skuId);
                                                     if ($sku && $sku->options->isNotEmpty()) {
-                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
+                                                        $optionLabels = $sku->options->map(fn (\App\Models\VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
                                                         $skuLabel = $optionLabels;
                                                     } else {
                                                         $skuLabel = "Variante #{$skuId}";
                                                     }
-                                                    $html .= "<li>- {$skuLabel}: <strong>{$qty} pz</strong></li>";
+                                                    $html .= "<li>- {$skuLabel}: <strong>{$q} pz</strong></li>";
                                                 }
                                                 $html .= '</ul></li>';
                                             }

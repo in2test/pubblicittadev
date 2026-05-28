@@ -27,7 +27,7 @@ class ProductController extends Controller
         $product->load([
             'category.parent',
             'pricingTiers',
-            'variationTypes.options',
+            'productVariationTypes.options.option',
             'skus.options.type',
             'media',
         ]);

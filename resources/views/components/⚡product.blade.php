@@ -30,6 +30,8 @@ new class extends Component {
     public ?float $width = null;
     public ?float $height = null;
 
+    public ?string $notes = null;
+
     /**
      * Inizializza il componente al caricamento della pagina.
      * Carica le relazioni necessarie e, se è presente un $jobId,
@@ -69,6 +71,9 @@ new class extends Component {
                     
                 $this->width = $item['width'] ?? null;
                 $this->height = $item['height'] ?? null;
+                $this->notes = $item['notes'] ?? null;
+            } else {
+                $this->jobId = null;
             }
         }
 
@@ -458,6 +463,7 @@ new class extends Component {
             'price' => ($this->totalPrice() / $this->totalQuantity()),
             'quantity' => $this->totalQuantity(),
             'quantities' => $quantitiesToStore,
+            'notes' => $this->notes,
         ];
 
         if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustom)) {

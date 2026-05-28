@@ -41,7 +41,7 @@
                         <h2 class="text-4xl font-black uppercase tracking-tighter text-on-surface">
                             {{ $group['category']->name }}
                             <span class="text-secondary text-[10px] font-mono uppercase tracking-[0.3em] ml-6 opacity-40">
-                                {{ $group['category']->products_count ?? $group['category']->products()->count() }} Prodotti
+                                {{ $group['total_products_count'] ?? ($group['category']->products_count ?? $group['category']->products()->count()) }} Prodotti
                             </span>
                         </h2>
                         

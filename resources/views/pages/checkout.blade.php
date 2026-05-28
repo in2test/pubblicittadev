@@ -12,7 +12,10 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
     public $billingAddresses = [];
     public ?int $selectedShippingAddressId = null;
     public ?int $selectedBillingAddressId = null;
+    
+    #[\Livewire\Attributes\Url]
     public $notes = '';
+    
     public $total = 0;
     public $items = [];
 

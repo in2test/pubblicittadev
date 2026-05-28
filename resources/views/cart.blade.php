@@ -185,6 +185,14 @@
                             @if (empty($item['placement_names']))
                             <span class="text-xs text-outline italic">Nessuna</span>
                             @endif
+                            
+                            {{-- Item Notes --}}
+                            @if (!empty($item['notes']))
+                            <div class="mt-3">
+                                <p class="text-[10px] font-mono uppercase tracking-widest text-secondary mb-1">Note Lavorazione</p>
+                                <p class="text-xs text-primary font-bold italic">{{ Str::limit($item['notes'], 60) }}</p>
+                            </div>
+                            @endif
                         </div>
 
                         {{-- Price --}}
@@ -268,34 +276,43 @@
                     </div>
                 </div>
 
-                {{-- CTAs --}}
-                <div class="space-y-3">
-                    <a href="{{ route('checkout') }}"
-                        class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-base hover:bg-black transition-all flex items-center justify-center gap-2">
-                        Procedi al Pagamento
-                        <span class="material-symbols-outlined text-base">payments</span>
-                    </a>
+                {{-- CTAs with Overall Notes --}}
+                <div class="space-y-4" x-data="{ orderNotes: '' }">
+                    <div>
+                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
+                        <textarea x-model="orderNotes" rows="2" placeholder="Istruzioni speciali per la consegna..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                    </div>
 
-                    @auth
-                    <form action="{{ route('checkout.quotation') }}" method="POST">
-                        @csrf
-                        <button type="submit"
+                    <div class="space-y-3">
+                        <form action="{{ route('checkout') }}" method="GET">
+                            <input type="hidden" name="notes" :value="orderNotes">
+                            <button type="submit" class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-base hover:bg-black transition-all flex items-center justify-center gap-2">
+                                Procedi al Pagamento
+                                <span class="material-symbols-outlined text-base">payments</span>
+                            </button>
+                        </form>
+
+                        @auth
+                        <form action="{{ route('checkout.quotation') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="notes" :value="orderNotes">
+                            <button type="submit" class="w-full border-2 border-primary text-primary py-3 font-black uppercase tracking-tighter text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+                                Richiedi Preventivo Privato
+                                <span class="material-symbols-outlined text-base">document_scanner</span>
+                            </button>
+                        </form>
+                        @else
+                        <a href="{{ route('login') }}?redirect={{ urlencode(route('cart')) }}"
                             class="w-full border-2 border-primary text-primary py-3 font-black uppercase tracking-tighter text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
-                            Richiedi Preventivo Privato
-                            <span class="material-symbols-outlined text-base">document_scanner</span>
-                        </button>
-                    </form>
-                    @else
-                    <a href="{{ route('login') }}?redirect={{ urlencode(route('cart')) }}"
-                        class="w-full border-2 border-primary text-primary py-3 font-black uppercase tracking-tighter text-sm hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
-                        Accedi per Richiedere Preventivo
-                        <span class="material-symbols-outlined text-base">login</span>
-                    </a>
-                    @endauth
-
-                    <p class="text-[10px] text-center text-secondary font-mono leading-relaxed pt-1">
-                        I preventivi privati non richiedono pagamento e vengono elaborati manualmente.
-                    </p>
+                            Accedi per Richiedere Preventivo
+                            <span class="material-symbols-outlined text-base">login</span>
+                        </a>
+                        @endauth
+                        
+                        <p class="text-[10px] text-center text-secondary font-mono leading-relaxed pt-1">
+                            I preventivi privati non richiedono pagamento e vengono elaborati manualmente.
+                        </p>
+                    </div>
                 </div>
             </div>
         </aside>

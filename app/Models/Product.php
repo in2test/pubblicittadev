@@ -1109,7 +1109,11 @@ class Product extends Model implements HasMedia
         }
 
         // Controlla se ci sono SKU (varianti) che sovrascrivono questo prezzo base
-        if ($this->relationLoaded('skus')) {
+        if (array_key_exists('skus_min_override_price', $this->attributes)) {
+            $minSkuOverride = $this->skus_min_override_price;
+            $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
+            $hasSkuWithoutOverride = $this->has_sku_without_override ?? false;
+        } elseif ($this->relationLoaded('skus')) {
             $skuPrices = $this->skus
                 ->filter(fn ($sku) => $sku->override_price !== null)
                 ->pluck('override_price')
