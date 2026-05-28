@@ -56,8 +56,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
+/**
+ * @use HasFactory<CategoryFactory>
+ */
 class Category extends Model implements HasMedia
 {
+    /**
+     * @use HasFactory<CategoryFactory>
+     */
     use HasFactory, InteractsWithMedia;
 
     #[Override]

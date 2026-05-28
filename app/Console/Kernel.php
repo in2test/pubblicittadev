@@ -11,6 +11,7 @@ use Override;
 
 class Kernel extends ConsoleKernel
 {
+    /** @var array<int, string> */
     protected $commands = [
         SyncProductImagesCommand::class,
     ];

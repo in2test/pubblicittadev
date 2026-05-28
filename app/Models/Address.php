@@ -57,8 +57,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @mixin \Eloquent
  */
 #[Fillable(['user_id', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'vat_number', 'fiscal_code', 'sdi_code', 'pec_email', 'is_default'])]
+/**
+ * @use HasFactory<AddressFactory>
+ */
 class Address extends Model
 {
+    /**
+     * @use HasFactory<AddressFactory>
+     */
     use HasFactory;
 
     /**

@@ -52,7 +52,7 @@ use Throwable;
  * @property int $sync_progress
  * @property bool $override_price
  * @property bool $override_description
- * @property array $remote_images
+ * @property array<string, mixed> $remote_images
  * @property ProductClass|null $product_class
  * @property float|null $min_area
  * @property float|null $max_width Maximum printable width in cm (null = unlimited)
@@ -138,10 +138,15 @@ use Throwable;
 ])]
 class Product extends Model implements HasMedia
 {
+    /**
+     * @use HasFactory<ProductFactory>
+     */
     use HasFactory;
+
     use InteractsWithMedia;
     use Searchable;
 
+    /** @var Collection<int, CategoryQuantityDiscount>|null */
     private ?Collection $quantityDiscountsCache = null;
 
     public const TYPE_STANDARD = 'standard';
@@ -172,11 +177,17 @@ class Product extends Model implements HasMedia
     /**
      * Relationships
      */
+    /**
+     * @return BelongsTo<Category, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * @return BelongsToMany<VariationType, $this, ProductVariationType>
+     */
     public function variationTypes(): BelongsToMany
     {
         return $this->belongsToMany(VariationType::class, 'product_variation_types')
@@ -185,26 +196,41 @@ class Product extends Model implements HasMedia
             ->orderByPivot('sort_order');
     }
 
+    /**
+     * @return HasMany<ProductSku, $this>
+     */
     public function skus(): HasMany
     {
         return $this->hasMany(ProductSku::class);
     }
 
+    /**
+     * @return HasMany<Image, $this>
+     */
     public function images(): HasMany
     {
         return $this->hasMany(Image::class);
     }
 
+    /**
+     * @return HasMany<PricingTier, $this>
+     */
     public function pricingTiers(): HasMany
     {
         return $this->hasMany(PricingTier::class);
     }
 
+    /**
+     * @return HasMany<ProductVariationType, $this>
+     */
     public function productVariationTypes(): HasMany
     {
         return $this->hasMany(ProductVariationType::class);
     }
 
+    /**
+     * @return HasMany<ProductVariationType, $this>
+     */
     public function baseVariationTypes(): HasMany
     {
         return $this->hasMany(ProductVariationType::class)->where('is_modifier', false)->orderBy('sort_order');
@@ -212,6 +238,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Modifier variations only (is_modifier = true) — used by the admin form repeater.
+     *
+     * @return HasMany<ProductVariationType, $this>
      */
     public function modifierVariationTypes(): HasMany
     {
@@ -264,6 +292,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Get a list of unique options for the visual variation (e.g., Color) for preview
+     *
+     * @return array{display: Collection<int, VariationOption>, remaining: int, total: int}
      */
     public function getPreviewColors(int $limit = 8): array
     {
@@ -312,6 +342,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Get display price data including discounts
+     *
+     * @return array{price: float, base_price: float, is_discounted: bool, on_request: bool}
      */
     public function getDisplayPriceData(int $quantity = 1): array
     {
@@ -329,6 +361,8 @@ class Product extends Model implements HasMedia
     /**
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
+     *
+     * @return Collection<int, object>
      */
     public function getAllImages(): Collection
     {
@@ -657,6 +691,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the active SKU based on selected options.
+     *
+     * @param  array<int, int|array<int>>  $selectedOptions
      */
     public function getActiveSku(array $selectedOptions): ?ProductSku
     {
@@ -873,6 +909,8 @@ class Product extends Model implements HasMedia
     /**
      * Applies the surcharge from price modifiers (percentage or flat per-unit).
      * Uses a two-level fallback: product-level override → global default on VariationOption.
+     *
+     * @param  array<int, int|array<int>>  $selectedOptions
      */
     protected function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
     {
@@ -951,7 +989,12 @@ class Product extends Model implements HasMedia
     public function getMinimumOrderQuantity(): int
     {
         if ($this->product_class !== ProductClass::AreaBased) {
-            $minTierQty = $this->pricingTiers()->min('min_quantity');
+            if ($this->relationLoaded('pricingTiers')) {
+                $minTierQty = $this->pricingTiers->min('min_quantity');
+            } else {
+                $minTierQty = $this->pricingTiers()->min('min_quantity');
+            }
+
             if ($minTierQty !== null) {
                 return (int) $minTierQty;
             }
@@ -1054,19 +1097,32 @@ class Product extends Model implements HasMedia
         $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
 
         if ($this->product_class === ProductClass::Apparel || $this->product_class === ProductClass::AreaBased) {
-            $minTierPrice = $this->pricingTiers()->min('price_per_unit');
+            if ($this->relationLoaded('pricingTiers')) {
+                $minTierPrice = $this->pricingTiers->min('price_per_unit');
+            } else {
+                $minTierPrice = $this->pricingTiers()->min('price_per_unit');
+            }
+
             if ($minTierPrice !== null) {
                 $baseFallback = (float) $minTierPrice;
             }
         }
 
         // Controlla se ci sono SKU (varianti) che sovrascrivono questo prezzo base
-        $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
+        if ($this->relationLoaded('skus')) {
+            $skuPrices = $this->skus
+                ->filter(fn ($sku) => $sku->override_price !== null)
+                ->pluck('override_price')
+                ->map(fn ($p) => (float) $p);
+            $hasSkuWithoutOverride = $this->skus->filter(fn ($sku) => $sku->override_price === null)->isNotEmpty();
+        } else {
+            $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
+            $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
+        }
 
         if ($skuPrices->isNotEmpty()) {
             // Il prezzo di partenza è il minimo tra le SKU con override,
             // E potenzialmente il baseFallback se qualche SKU NON ha un override.
-            $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
             if ($hasSkuWithoutOverride) {
                 return min($baseFallback, $skuPrices->min());
             }
@@ -1080,6 +1136,8 @@ class Product extends Model implements HasMedia
     /**
      * Get applicable quantity discounts for this product, including those
      * from its category and all parent categories.
+     *
+     * @return Collection<int, CategoryQuantityDiscount>
      */
     public function getQuantityDiscounts(): Collection
     {
@@ -1102,6 +1160,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Scout Search Configuration
+     *
+     * @return array{id: int, name: string, sku: string, description: string}
      */
     public function toSearchableArray(): array
     {
@@ -1150,11 +1210,19 @@ class Product extends Model implements HasMedia
     /**
      * Scopes
      */
+    /**
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', '=', true, 'and');
     }
 
+    /**
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
     public function scopeVisibleTo(Builder $query, ?User $user = null): Builder
     {
         if ($user?->isAdmin()) {

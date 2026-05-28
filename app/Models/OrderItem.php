@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\OrderItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,8 +55,14 @@ use Override;
  *
  * @mixin \Eloquent
  */
+/**
+ * @use HasFactory<OrderItemFactory>
+ */
 class OrderItem extends Model
 {
+    /**
+     * @use HasFactory<OrderItemFactory>
+     */
     use HasFactory;
 
     protected $casts = [

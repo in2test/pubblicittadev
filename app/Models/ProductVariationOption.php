@@ -59,11 +59,17 @@ class ProductVariationOption extends Model
         'sort_order' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<VariationOption, $this>
+     */
     public function option(): BelongsTo
     {
         return $this->belongsTo(VariationOption::class, 'variation_option_id');
     }
 
+    /**
+     * @return BelongsTo<ProductVariationType, $this>
+     */
     public function productVariationType(): BelongsTo
     {
         return $this->belongsTo(ProductVariationType::class, 'product_variation_type_id');

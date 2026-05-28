@@ -41,6 +41,7 @@ class QuantityDiscountService
     {
         if (! array_key_exists($id, self::$categories)) {
             if (self::$categories === []) {
+                // Load all categories into the static per-request cache to prevent N+1 queries
                 $all = Category::all();
                 foreach ($all as $cat) {
                     self::$categories[$cat->id] = $cat;

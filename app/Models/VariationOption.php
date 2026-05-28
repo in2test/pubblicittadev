@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\ModifierType;
 use Carbon\CarbonImmutable;
+use Database\Factories\VariationOptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -59,6 +60,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class VariationOption extends Model
 {
+    /**
+     * @use HasFactory<VariationOptionFactory>
+     */
     use HasFactory;
 
     protected $casts = [
@@ -66,16 +70,25 @@ class VariationOption extends Model
         'default_price_modifier' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<VariationType, $this>
+     */
     public function type(): BelongsTo
     {
         return $this->belongsTo(VariationType::class, 'variation_type_id');
     }
 
+    /**
+     * @return BelongsTo<VariationType, $this>
+     */
     public function variationType(): BelongsTo
     {
         return $this->belongsTo(VariationType::class, 'variation_type_id');
     }
 
+    /**
+     * @return HasMany<ProductVariationOption, $this>
+     */
     public function productVariationOptions(): HasMany
     {
         return $this->hasMany(ProductVariationOption::class);

@@ -72,11 +72,17 @@ class ProductVariationType extends Pivot implements HasMedia
         'is_modifier' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<VariationType, $this>
+     */
     public function type(): BelongsTo
     {
         return $this->belongsTo(VariationType::class, 'variation_type_id');
     }
 
+    /**
+     * @return HasMany<ProductVariationOption, $this>
+     */
     public function options(): HasMany
     {
         return $this->hasMany(ProductVariationOption::class, 'product_variation_type_id')

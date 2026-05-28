@@ -66,8 +66,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @mixin \Eloquent
  */
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'variation_option_id', 'order_by'])]
+/**
+ * @use HasFactory<ImageFactory>
+ */
 class Image extends Model
 {
+    /**
+     * @use HasFactory<ImageFactory>
+     */
     use HasFactory;
 
     #[Override]

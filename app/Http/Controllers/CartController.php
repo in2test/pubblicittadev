@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -46,6 +47,7 @@ class CartController extends Controller
      */
     public function index(): View
     {
+        /** @var Collection<string, array<string, mixed>> $rawItems */
         $rawItems = collect($this->cart->getItems());
 
         // --- Batch-load all related data up front ---

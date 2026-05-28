@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\PricingTierFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,10 +49,11 @@ use Override;
     'price_per_unit',
     'is_custom_price',
 ])]
+/**
+ * @use HasFactory<PricingTierFactory>
+ */
 class PricingTier extends Model
 {
-    use HasFactory;
-
     protected $casts = [
         'is_custom_price' => 'boolean',
     ];
@@ -69,11 +71,17 @@ class PricingTier extends Model
         });
     }
 
+    /**
+     * @return BelongsTo<Product, $this>
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * @return BelongsTo<ProductSku, $this>
+     */
     public function productSku(): BelongsTo
     {
         return $this->belongsTo(ProductSku::class);

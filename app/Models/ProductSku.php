@@ -52,23 +52,32 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class ProductSku extends Model
 {
+    /**
+     * @use HasFactory<ProductSkuFactory>
+     */
     use HasFactory;
 
     protected $casts = [
         'is_available' => 'boolean',
     ];
 
+    /**
+     * @return BelongsToMany<VariationOption, $this>
+     */
     public function options(): BelongsToMany
     {
         return $this->belongsToMany(VariationOption::class, 'product_sku_options', 'product_sku_id', 'variation_option_id');
     }
 
+    /**
+     * @return HasMany<PricingTier, $this>
+     */
     public function pricingTiers(): HasMany
     {
         return $this->hasMany(PricingTier::class);
     }
 
-    public function setQuantityAttribute($value): void
+    public function setQuantityAttribute(mixed $value): void
     {
         $this->attributes['quantity'] = $value === null ? -1 : (int) $value;
     }

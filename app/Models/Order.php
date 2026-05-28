@@ -81,8 +81,14 @@ use Override;
     'paid_at',
     'notes',
 ])]
+/**
+ * @use HasFactory<OrderFactory>
+ */
 class Order extends Model
 {
+    /**
+     * @use HasFactory<OrderFactory>
+     */
     use HasFactory;
 
     /**

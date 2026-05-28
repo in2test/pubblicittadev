@@ -49,6 +49,9 @@ use Override;
 ])]
 class VariationType extends Model
 {
+    /**
+     * @use HasFactory<VariationTypeFactory>
+     */
     use HasFactory;
 
     #[Override]
@@ -59,11 +62,17 @@ class VariationType extends Model
         ];
     }
 
+    /**
+     * @return HasMany<VariationOption, $this>
+     */
     public function options(): HasMany
     {
         return $this->hasMany(VariationOption::class)->orderBy('sort_order');
     }
 
+    /**
+     * @return BelongsToMany<Product, $this, ProductVariationType>
+     */
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_variation_types')
@@ -72,6 +81,9 @@ class VariationType extends Model
             ->orderByPivot('sort_order');
     }
 
+    /**
+     * @return HasMany<ProductVariationType, $this>
+     */
     public function productVariationTypes(): HasMany
     {
         return $this->hasMany(ProductVariationType::class);
