@@ -151,6 +151,11 @@ class CheckoutController extends Controller
      */
     protected function createOrderFromCart(Request $request, array $items, ?int $shippingId = null, ?int $billingId = null, bool $isQuotation = false): Order
     {
+        $productIds = collect($items)->pluck('product_id')->filter()->unique();
+        $products = $productIds->isEmpty()
+            ? collect()
+            : Product::with(['variationTypes', 'skus.options', 'pricingTiers', 'media'])->whereIn('id', $productIds)->get()->keyBy('id');
+
         $order = Order::create([
             'user_id' => $request->user()->id,
             'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
@@ -164,7 +169,7 @@ class CheckoutController extends Controller
         ]);
 
         foreach ($items as $item) {
-            if (! $product = Product::find($item['product_id'])) {
+            if (! $product = $products->get((int) $item['product_id'])) {
                 continue;
             }
 

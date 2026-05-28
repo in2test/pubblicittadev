@@ -51,8 +51,7 @@ class CartController extends Controller
         $rawItems = collect($this->cart->getItems());
 
         // --- Batch-load all related data up front ---
-        $productIds = $rawItems->pluck('product_id')->filter()->unique();
-        $products = Product::with(['images', 'category', 'skus.options', 'variationTypes'])->whereIn('id', $productIds)->get()->keyBy('id');
+        $products = $this->cart->getProducts();
 
         $allSkuIds = $rawItems->pluck('quantities')->filter(fn ($item) => is_array($item))->flatMap(fn ($q) => array_keys($q))->unique();
         $skus = ProductSku::with('options')->whereIn('id', $allSkuIds)->get()->keyBy('id');

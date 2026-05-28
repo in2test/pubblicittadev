@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Enums\ProductClass;
+use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
 use Filament\Forms\Components\DateTimePicker;
@@ -12,11 +14,12 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class OrderForm
@@ -109,7 +112,7 @@ class OrderForm
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('items')
-                            ->relationship(modifyQueryUsing: fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with('product'))
+                            ->relationship(modifyQueryUsing: fn (Builder $query) => $query->with('product'))
                             ->schema([
                                 Grid::make(5)->schema([
                                     Select::make('product_id')
@@ -194,7 +197,7 @@ class OrderForm
                                             // Dimensions & Advanced Calculations
                                             $width = isset($json['width']) ? (float) $json['width'] : 0;
                                             $height = isset($json['height']) ? (float) $json['height'] : 0;
-                                            $product = $record->relationLoaded('product') ? $record->product : \App\Models\Product::find($record->product_id);
+                                            $product = $record->relationLoaded('product') ? $record->product : Product::find($record->product_id);
 
                                             if ($width > 0 && $height > 0) {
                                                 $html .= "<li><strong>Dimensioni singole:</strong> {$width} x {$height} mm</li>";
@@ -228,7 +231,7 @@ class OrderForm
                                             // Quantities breakdown (hide only for single-sku Area products to avoid duplication)
                                             $showQuantities = true;
                                             if (! empty($json['quantities']) && count($json['quantities']) === 1) {
-                                                if (isset($product) && $product->product_class === \App\Enums\ProductClass::AreaBased) {
+                                                if (isset($product) && $product->product_class === ProductClass::AreaBased) {
                                                     $showQuantities = false;
                                                 }
                                             }
@@ -237,9 +240,9 @@ class OrderForm
                                                 $html .= '<li><strong>Taglie/Varianti:</strong> ';
                                                 $html .= '<ul class="pl-4 mt-1 space-y-1">';
                                                 foreach ($json['quantities'] as $skuId => $q) {
-                                                    $sku = \App\Models\ProductSku::with('options.type')->find($skuId);
+                                                    $sku = ProductSku::with('options.type')->find($skuId);
                                                     if ($sku && $sku->options->isNotEmpty()) {
-                                                        $optionLabels = $sku->options->map(fn (\App\Models\VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
+                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
                                                         $skuLabel = $optionLabels;
                                                     } else {
                                                         $skuLabel = "Variante #{$skuId}";

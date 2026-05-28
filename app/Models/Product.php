@@ -57,6 +57,10 @@ use Throwable;
  * @property float|null $min_area
  * @property float|null $max_width Maximum printable width in cm (null = unlimited)
  * @property float|null $max_height Maximum printable height in cm (null = unlimited)
+ * @property float|null $skus_min_override_price
+ * @property bool|null $has_sku_without_override
+ * @property float|null $pricing_tiers_min_price_per_unit
+ * @property int|null $pricing_tiers_min_quantity
  * @property-read Category $category
  * @property-read \Illuminate\Database\Eloquent\Collection<int, VariationType> $variationTypes
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
@@ -297,20 +301,18 @@ class Product extends Model implements HasMedia
      */
     public function getPreviewColors(int $limit = 8): array
     {
-        $visualType = $this->variationTypes->firstWhere('pivot.has_images', true);
-        if (! $visualType) {
-            return ['display' => collect(), 'remaining' => 0, 'total' => 0];
-        }
-
-        // Get all options associated with this product's visual type
-        /** @var ProductVariationType|null $productVariationType */
-        $productVariationType = null;
         if ($this->relationLoaded('productVariationTypes')) {
-            $productVariationType = $this->productVariationTypes
-                ->firstWhere('variation_type_id', $visualType->id);
-        }
+            $productVariationType = $this->productVariationTypes->firstWhere('has_images', true);
+            if (! $productVariationType) {
+                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+            }
+        } else {
+            $visualType = $this->variationTypes->firstWhere('pivot.has_images', true);
+            if (! $visualType) {
+                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+            }
 
-        if ($productVariationType === null) {
+            // Get all options associated with this product's visual type
             $productVariationType = ProductVariationType::where('product_id', $this->id)
                 ->where('variation_type_id', $visualType->id)
                 ->first();
@@ -362,7 +364,7 @@ class Product extends Model implements HasMedia
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, object>
+     * @return Collection<int, \stdClass>
      */
     public function getAllImages(): Collection
     {
@@ -432,7 +434,10 @@ class Product extends Model implements HasMedia
         // Sort by order
         usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
 
-        return collect($images);
+        /** @var Collection<int, \stdClass> $result */
+        $result = collect($images);
+
+        return $result;
     }
 
     /**
@@ -989,7 +994,9 @@ class Product extends Model implements HasMedia
     public function getMinimumOrderQuantity(): int
     {
         if ($this->product_class !== ProductClass::AreaBased) {
-            if ($this->relationLoaded('pricingTiers')) {
+            if (array_key_exists('pricing_tiers_min_quantity', $this->attributes)) {
+                $minTierQty = $this->pricing_tiers_min_quantity;
+            } elseif ($this->relationLoaded('pricingTiers')) {
                 $minTierQty = $this->pricingTiers->min('min_quantity');
             } else {
                 $minTierQty = $this->pricingTiers()->min('min_quantity');
@@ -1097,7 +1104,9 @@ class Product extends Model implements HasMedia
         $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
 
         if ($this->product_class === ProductClass::Apparel || $this->product_class === ProductClass::AreaBased) {
-            if ($this->relationLoaded('pricingTiers')) {
+            if (array_key_exists('pricing_tiers_min_price_per_unit', $this->attributes)) {
+                $minTierPrice = $this->pricing_tiers_min_price_per_unit;
+            } elseif ($this->relationLoaded('pricingTiers')) {
                 $minTierPrice = $this->pricingTiers->min('price_per_unit');
             } else {
                 $minTierPrice = $this->pricingTiers()->min('price_per_unit');

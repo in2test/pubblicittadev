@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Product;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
@@ -21,6 +22,11 @@ class CartManager
      * The session key used to store cart items.
      */
     private const string CART_KEY = 'cart_items';
+
+    /**
+     * @var Collection<int, Product>|null
+     */
+    protected ?Collection $products = null;
 
     /**
      * Retrieve all items currently in the cart.
@@ -55,6 +61,7 @@ class CartManager
         ]);
 
         Session::put(self::CART_KEY, $items);
+        $this->products = null;
     }
 
     public function update(string $jobId, int $quantity): void
@@ -91,6 +98,7 @@ class CartManager
         }
 
         $this->replace($jobId, $item);
+        $this->products = null;
     }
 
     /**
@@ -117,6 +125,7 @@ class CartManager
         $items[$jobId] = $item;
 
         Session::put(self::CART_KEY, $items);
+        $this->products = null;
     }
 
     /**
@@ -129,6 +138,7 @@ class CartManager
         $items = $this->getItems();
         unset($items[$jobId]);
         Session::put(self::CART_KEY, $items);
+        $this->products = null;
     }
 
     /**
@@ -143,6 +153,7 @@ class CartManager
             unset($items[$jobId]);
         }
         Session::put(self::CART_KEY, $items);
+        $this->products = null;
     }
 
     /**
@@ -151,6 +162,7 @@ class CartManager
     public function clear(): void
     {
         Session::forget(self::CART_KEY);
+        $this->products = null;
     }
 
     /**
@@ -186,11 +198,14 @@ class CartManager
      */
     public function total(): float
     {
-        $total = collect($this->getItems())->sum(function (array $item): float {
+        $items = $this->getItems();
+        $products = $this->getProducts();
+
+        $total = collect($items)->sum(function (array $item) use ($products): float {
             $qty = $this->getItemQuantity($item);
             $price = (float) ($item['price'] ?? 0);
 
-            if (! empty($item['product_id']) && $product = Product::find((int) $item['product_id'])) {
+            if (! empty($item['product_id']) && $product = $products->get((int) $item['product_id'])) {
                 $totalPrice = $product->calculateTotalPrice(
                     $qty,
                     $item['quantities'] ?? [],
@@ -206,6 +221,34 @@ class CartManager
         });
 
         return round((float) $total, 2);
+    }
+
+    /**
+     * Get the products in the cart with their relations, caching them in memory.
+     *
+     * @return Collection<int, Product>
+     */
+    public function getProducts(): Collection
+    {
+        if ($this->products !== null) {
+            return $this->products;
+        }
+
+        $items = $this->getItems();
+        $productIds = collect($items)->pluck('product_id')->filter()->unique();
+
+        if ($productIds->isEmpty()) {
+            return $this->products = collect();
+        }
+
+        return $this->products = Product::with([
+            'images',
+            'category',
+            'skus.options',
+            'variationTypes',
+            'pricingTiers',
+            'media',
+        ])->whereIn('id', $productIds)->get()->keyBy('id');
     }
 
     /**

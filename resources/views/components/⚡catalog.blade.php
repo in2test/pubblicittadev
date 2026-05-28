@@ -141,11 +141,13 @@ new class extends Component {
                 $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                     ->with([
                         'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
-                        'category', 'variationTypes', 
+                        'category', 
                         'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
                         'pricingTiers', 
                         'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
                     ])
+                    ->withMin('pricingTiers as pricing_tiers_min_price_per_unit', 'price_per_unit')
+                    ->withMin('pricingTiers as pricing_tiers_min_quantity', 'min_quantity')
                     ->withMin('skus as skus_min_override_price', 'override_price')
                     ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                     ->take(8);
@@ -165,11 +167,13 @@ new class extends Component {
                 ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                 ->with([
                     'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
-                    'category', 'variationTypes', 
+                    'category', 
                     'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
                     'pricingTiers', 
                     'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
                 ])
+                ->withMin('pricingTiers as pricing_tiers_min_price_per_unit', 'price_per_unit')
+                ->withMin('pricingTiers as pricing_tiers_min_quantity', 'min_quantity')
                 ->withMin('skus as skus_min_override_price', 'override_price')
                 ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                 ->get();
@@ -193,11 +197,13 @@ new class extends Component {
                     ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                     ->with([
                         'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
-                        'category', 'variationTypes', 
+                        'category', 
                         'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
                         'pricingTiers', 
                         'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
                     ])
+                    ->withMin('pricingTiers as pricing_tiers_min_price_per_unit', 'price_per_unit')
+                    ->withMin('pricingTiers as pricing_tiers_min_quantity', 'min_quantity')
                     ->withMin('skus as skus_min_override_price', 'override_price')
                     ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                     ->take(8)
@@ -219,11 +225,13 @@ new class extends Component {
         $products = $this->getBaseFilteredQuery()
             ->with([
                 'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
-                'category', 'variationTypes', 
+                'category', 
                 'images' => fn($q) => $q->orderBy('order_by')->limit(1), 
                 'pricingTiers', 
                 'productVariationTypes' => fn($q) => $q->where('has_images', true)->with('options.option')
             ])
+            ->withMin('pricingTiers as pricing_tiers_min_price_per_unit', 'price_per_unit')
+            ->withMin('pricingTiers as pricing_tiers_min_quantity', 'min_quantity')
             ->withMin('skus as skus_min_override_price', 'override_price')
             ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
             ->orderBy(
