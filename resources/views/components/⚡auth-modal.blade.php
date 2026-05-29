@@ -77,17 +77,21 @@ new class extends Component {
         $this->validate([
             'name' => 'required|min:2',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::default()],
             'password_confirmation' => 'required',
         ]);
+
+        $isFirstUser = User::count() === 0;
 
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
             'password' => $this->password,
-            'role' => User::ROLE_CLIENT,
+            'role' => $isFirstUser ? User::ROLE_ADMIN : User::ROLE_CLIENT,
             'is_active' => true,
         ]);
+
+        event(new \Illuminate\Auth\Events\Registered($user));
 
         /** @var StatefulGuard $guard */
         $guard = auth();
@@ -120,10 +124,10 @@ new class extends Component {
             <div class="fixed inset-0 bg-gray-500/75 transition-opacity" wire:click="close"></div>
 
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div class="relative transform overflow-hidden rounded-2xl bg-gray-50 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-gray-100">
+                <div class="relative transform overflow-hidden bg-gray-50 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border-2 border-gray-950">
                     
                     <!-- Close Button -->
-                    <button type="button" wire:click="close" class="absolute right-4 top-4 text-gray-400 hover:text-gray-505 transition-colors">
+                    <button type="button" wire:click="close" class="absolute right-4 top-4 text-gray-400 hover:text-gray-950 transition-colors">
                         <span class="material-symbols-outlined">close</span>
                     </button>
 
@@ -131,11 +135,11 @@ new class extends Component {
                         <div class="space-y-6">
                             <div class="flex flex-col items-center justify-center text-center">
                                 <h2 class="text-2xl font-black uppercase tracking-widest text-gray-950">{{ $mode === 'login' ? 'Accedi' : 'Registrati' }}</h2>
-                                <p class="mt-1 text-sm text-gray-500">Benvenuto su Abbigliamento Personalizzato</p>
+                                <p class="mt-1 text-sm text-gray-500">Benvenuto su {{ config('app.name') }}</p>
                             </div>
 
                             @if($error)
-                                <div class="rounded-lg bg-red-50 p-4 border border-red-100">
+                                <div class="bg-red-50 p-4 border-2 border-red-950">
                                     <div class="flex">
                                         <div class="flex-shrink-0">
                                             <span class="material-symbols-outlined text-red-400">warning</span>
@@ -147,16 +151,16 @@ new class extends Component {
                                 </div>
                             @endif
 
-                            <div class="flex gap-4 border-b border-gray-100">
+                            <div class="flex gap-4 border-b border-gray-200">
                                 <button
                                     wire:click="switchMode('login')"
-                                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'login' ? 'border-b-2 border-amber-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
+                                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'login' ? 'border-b-2 border-accent-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
                                 >
                                     Accedi
                                 </button>
                                 <button
                                     wire:click="switchMode('register')"
-                                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'register' ? 'border-b-2 border-amber-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
+                                    class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'register' ? 'border-b-2 border-accent-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
                                 >
                                     Registrati
                                 </button>
@@ -167,22 +171,22 @@ new class extends Component {
                                     <div>
                                         <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Email</label>
                                         <input type="email" id="email" wire:model="email" required placeholder="Inserisci la tua email" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div>
                                         <div class="flex justify-between mb-1">
                                             <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700">Password</label>
-                                            <a href="#" class="text-[10px] font-bold uppercase tracking-widest text-amber-600 hover:text-amber-700">Dimenticata?</a>
+                                            <a href="#" class="text-[10px] font-bold uppercase tracking-widest text-accent-500 hover:text-accent-700">Dimenticata?</a>
                                         </div>
                                         <input type="password" id="password" wire:model="password" required placeholder="••••••••" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div class="pt-2">
-                                        <button type="submit" class="group relative flex w-full justify-center rounded-xl bg-gray-950 px-4 py-4 text-sm font-bold uppercase tracking-widest text-gray-50 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-lg active:scale-[0.98]">
+                                        <button type="submit" class="group relative flex w-full justify-center bg-gray-950 px-4 py-4 text-sm font-bold uppercase tracking-widest text-gray-50 border-2 border-gray-950 hover:bg-accent-500 focus:outline-none focus:border-accent-500 transition-all shadow-lg active:scale-[0.98]">
                                             <span>Entra</span>
                                             <span class="absolute right-4 transition-transform group-hover:translate-x-1">
                                                 <span class="material-symbols-outlined text-sm">arrow_forward</span>
@@ -195,33 +199,59 @@ new class extends Component {
                                     <div>
                                         <label for="reg_name" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Nome Completo</label>
                                         <input type="text" id="reg_name" wire:model="name" required placeholder="Nome e Cognome" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div>
                                         <label for="reg_email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Email</label>
-                                        <input type="email" id="reg_email" wire:model="email" required placeholder="La tua email migliore" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                        <input type="email" id="reg_email" wire:model="email" required placeholder="email@example.com" 
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
-                                    <div>
+                                    <div x-data="{ 
+                                        password: '',
+                                        get hasMinLength() { return this.password.length >= 8 },
+                                        get hasMixedCase() { return /[a-z]/.test(this.password) && /[A-Z]/.test(this.password) },
+                                        get hasNumber() { return /[0-9]/.test(this.password) },
+                                        get hasSymbol() { return /[^A-Za-z0-9]/.test(this.password) }
+                                    }">
                                         <label for="reg_password" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Password</label>
-                                        <input type="password" id="reg_password" wire:model="password" required placeholder="Minimo 8 caratteri" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                        <input type="password" id="reg_password" wire:model="password" @input="password = $event.target.value" required placeholder="Es. P@ssword123 (min. 8 caratteri, maiuscola, numero e simbolo)" 
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+
+                                        <div class="mt-3 p-3 border-2 border-gray-950 bg-gray-50 text-[11px] font-mono uppercase tracking-wider space-y-2">
+                                            <p class="font-black text-gray-950">Requisiti password:</p>
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm font-black" :class="hasMinLength ? 'text-emerald-600' : 'text-accent-500'" x-text="hasMinLength ? 'check' : 'close'"></span>
+                                                <span :class="hasMinLength ? 'text-emerald-600 font-bold' : 'text-gray-400'">Almeno 8 caratteri</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm font-black" :class="hasMixedCase ? 'text-emerald-600' : 'text-accent-500'" x-text="hasMixedCase ? 'check' : 'close'"></span>
+                                                <span :class="hasMixedCase ? 'text-emerald-600 font-bold' : 'text-gray-400'">Maiuscole e minuscole</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm font-black" :class="hasNumber ? 'text-emerald-600' : 'text-accent-500'" x-text="hasNumber ? 'check' : 'close'"></span>
+                                                <span :class="hasNumber ? 'text-emerald-600 font-bold' : 'text-gray-400'">Almeno un numero</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-sm font-black" :class="hasSymbol ? 'text-emerald-600' : 'text-accent-500'" x-text="hasSymbol ? 'check' : 'close'"></span>
+                                                <span :class="hasSymbol ? 'text-emerald-600 font-bold' : 'text-gray-400'">Almeno un carattere speciale</span>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div>
                                         <label for="reg_password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Conferma Password</label>
                                         <input type="password" id="reg_password_confirmation" wire:model="password_confirmation" required placeholder="Ripeti la password" 
-                                            class="block w-full rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-amber-500 focus:ring-amber-500 transition-all shadow-sm">
+                                            class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('password_confirmation') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div class="pt-2">
-                                        <button type="submit" class="group relative flex w-full justify-center rounded-xl bg-gray-950 px-4 py-4 text-sm font-bold uppercase tracking-widest text-gray-50 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all shadow-lg active:scale-[0.98]">
+                                        <button type="submit" class="group relative flex w-full justify-center bg-gray-950 px-4 py-4 text-sm font-bold uppercase tracking-widest text-gray-50 border-2 border-gray-950 hover:bg-accent-500 focus:outline-none focus:border-accent-500 transition-all shadow-lg active:scale-[0.98]">
                                             <span>Crea Account</span>
                                             <span class="absolute right-4 transition-transform group-hover:translate-x-1">
                                                 <span class="material-symbols-outlined text-sm">person_add</span>

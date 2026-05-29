@@ -39,5 +39,17 @@
   "Continue": "Continua",
   "or you can": "oppure puoi",
   "login using a recovery code": "accedere usando un codice di recupero",
-  "login using an authentication code": "accedere usando un codice di autenticazione"
+  "login using an authentication code": "accedere usando un codice di autenticazione",
+  "Verify Email Address": "Verifica indirizzo email",
+  "Please click the button below to verify your email address.": "Clicca sul pulsante qui sotto per verificare il tuo indirizzo email.",
+  "If you did not create an account, no further action is required.": "Se non hai creato un account, non è richiesta alcuna ulteriore azione.",
+  "Hello!": "Ciao!",
+  "Regards": "Cordiali saluti",
+  "If you're having trouble clicking the \":actionText\" button, copy and paste the URL below\ninto your web browser:": "Se riscontri problemi nel cliccare sul pulsante \":actionText\", copia e incolla l'URL qui sotto\nnel tuo browser:",
+  "validation.password.min": "La password deve contenere almeno :min caratteri.",
+  "validation.password.mixed": "La password deve contenere almeno una lettera maiuscola e una minuscola.",
+  "validation.password.letters": "La password deve contenere almeno una lettera.",
+  "validation.password.symbols": "La password deve contenere almeno un carattere speciale (es. !@#$%^&*).",
+  "validation.password.numbers": "La password deve contenere almeno un numero.",
+  "validation.password.uncompromised": "La password inserita è apparsa in una violazione dei dati. Scegli una password diversa."
 }

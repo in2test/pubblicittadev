@@ -38,13 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/addresses', [DashboardController::class, 'addresses'])->name('dashboard.addresses');
     Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get('/dashboard/orders/{order}', [DashboardController::class, 'showOrder'])->name('dashboard.orders.show');
-    Route::post('/logout', function (): Redirector|RedirectResponse {
-        auth()->logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        return redirect('/');
-    })->name('logout');
 
     Route::post('/admin/products/{product}/toggle-active', [AdminProductController::class, 'toggleActive'])
         ->name('admin.products.toggle-active');
@@ -56,6 +49,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/settings.php';
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('/logout', function (): Redirector|RedirectResponse {
+        auth()->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect('/');
+    })->name('logout');
+
     Volt::route('/checkout', 'pages.checkout')->name('checkout');
     Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
     Route::post('/checkout/quotation', [CheckoutController::class, 'requestQuotation'])->name('checkout.quotation');
