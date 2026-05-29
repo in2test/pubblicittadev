@@ -472,13 +472,14 @@ new class extends Component {
         }
 
         // 4. Inserimento o Sostituzione nel Carrello
-        if ($this->jobId) {
-            // Se eravamo in modifica, sostituiamo l'articolo pre-esistente
+        if ($this->jobId && isset($cart->getItems()[$this->jobId])) {
+            // Se eravamo in modifica e l'item esiste ancora, sostituiamo l'articolo pre-esistente
             $cart->replace($this->jobId, $itemData);
             session()->flash('success', 'Lavorazione aggiornata nel carrello!');
         } else {
             // Altrimenti, aggiungiamo come nuovo item
             $cart->add($itemData);
+            $this->jobId = null; // Clear any invalid jobId
             session()->flash('success', 'Prodotto aggiunto al carrello!');
         }
 

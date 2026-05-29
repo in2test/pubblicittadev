@@ -103,10 +103,13 @@ class OrderForm
                             ->disabled(),
                     ]),
 
-                Textarea::make('notes')
-                    ->label('Note Cliente')
-                    ->columnSpanFull()
-                    ->disabled(),
+                Section::make('Note Ordine Generale')
+                    ->schema([
+                        Textarea::make('notes')
+                            ->label('Note Cliente (Inserite al Checkout)')
+                            ->columnSpanFull()
+                            ->disabled(),
+                    ]),
 
                 Section::make('Lavorazioni (Items)')
                     ->columnSpanFull()
@@ -253,7 +256,7 @@ class OrderForm
 
                                             // Item Notes
                                             if (! empty($json['notes'])) {
-                                                $html .= "<li><strong>Note Cliente:</strong> <span class=\"text-red-600 font-bold\">{$json['notes']}</span></li>";
+                                                $html .= "<li><strong>Note Specifica Articolo:</strong> <span class=\"text-red-600 font-bold\">{$json['notes']}</span></li>";
                                             }
 
                                             $html .= '</ul>';

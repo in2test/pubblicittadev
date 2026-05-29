@@ -21,6 +21,10 @@ class OrdersTable
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
+                TextColumn::make('created_at')
+                    ->label('Data Ordine')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
                 TextColumn::make('user.name')
                     ->label('Cliente')
                     ->searchable()
@@ -75,11 +79,6 @@ class OrdersTable
                     ->sortable(),
                 TextColumn::make('paid_at')
                     ->label('Pagato il')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
-                TextColumn::make('created_at')
-                    ->label('Creato il')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),

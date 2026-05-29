@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
             'password' => bcrypt('adelante'),
             'role' => User::ROLE_ADMIN,
             'is_active' => true,
+            'email_verified_at' => now(),
         ]);
 
     }

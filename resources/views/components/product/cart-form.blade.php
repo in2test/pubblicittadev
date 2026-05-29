@@ -470,9 +470,26 @@
                 <p class="text-[10px] font-mono text-amber-600 uppercase">Attenzione: più varianti corrispondono. Seleziona un'opzione per ogni caratteristica.</p>
             @endif
 
+            @php
+                $missingVariations = false;
+                if ($isNewwave) {
+                    foreach ($product->variationTypes as $type) {
+                        if ((!$matrixType || $type->id !== $matrixType->id) && empty($selectedOptions[$type->id])) {
+                            $missingVariations = true;
+                            break;
+                        }
+                    }
+                }
+            @endphp
+
             {{-- Input Quantità (Singolo per standard, Multiplo per matrice taglie) --}}
-            <div class="{{ $isNewwave ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4' : 'flex' }}">
-                @foreach ($displaySkus as $sku)
+            @if ($isNewwave && $missingVariations)
+                <div class="p-4 border border-amber-600/20 bg-amber-50/50 rounded text-amber-700 text-sm">
+                    Seleziona le caratteristiche del prodotto (es. colore) per inserire le quantità.
+                </div>
+            @else
+                <div class="{{ $isNewwave ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4' : 'flex' }}">
+                    @foreach ($displaySkus as $sku)
                     @php
                         if ($isNewwave && $matrixType) {
                             $matrixOption = $sku->options->firstWhere('variation_type_id', $matrixType->id);
@@ -540,6 +557,16 @@
                     </div>
                 @endforeach
             </div>
+            @endif
+        </div>
+            @if (!$isNewwave || !$missingVariations)
+                @if ($isNewwave && $this->totalItemsQuantity > 0)
+                    <div class="mt-4 pt-4 border-t border-dashed border-outline-variant/20 flex items-center justify-between">
+                        <span class="text-sm font-bold text-secondary">Totale Capi:</span>
+                        <span class="text-lg font-mono text-primary font-bold">{{ $this->totalItemsQuantity }}</span>
+                    </div>
+                @endif
+            @endif
 
             {{-- Resoconto del Totale --}}
             @if($this->totalQuantity > 0)
