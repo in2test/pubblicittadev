@@ -284,7 +284,12 @@ class ProductForm
                     ]),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => ($type = VariationType::find($state['variation_type_id'] ?? null)) ? $type->name : null)
+            ->itemLabel(function (array $state): ?string {
+                /** @var VariationType|null $type */
+                $type = VariationType::find($state['variation_type_id'] ?? null);
+
+                return $type ? $type->name : null;
+            })
             ->addActionLabel('Aggiungi Variante Base');
     }
 
@@ -337,6 +342,7 @@ class ProductForm
                             ->live()
                             ->afterStateUpdated(function (Set $set, $state) {
                                 if ($state) {
+                                    /** @var VariationOption|null $option */
                                     $option = VariationOption::find($state);
                                     if ($option) {
                                         // Pre-fill with global default (user can override)
@@ -360,6 +366,7 @@ class ProductForm
                                     return null;
                                 }
 
+                                /** @var VariationOption|null $option */
                                 $option = VariationOption::find($optionId);
                                 if (! $option || $option->default_price_modifier <= 0) {
                                     return 'Nessun default globale impostato.';
@@ -375,7 +382,12 @@ class ProductForm
                     ->addActionLabel('Aggiungi Opzione'),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => ($type = VariationType::find($state['variation_type_id'] ?? null)) ? $type->name : null)
+            ->itemLabel(function (array $state): ?string {
+                /** @var VariationType|null $type */
+                $type = VariationType::find($state['variation_type_id'] ?? null);
+
+                return $type ? $type->name : null;
+            })
             ->addActionLabel('Aggiungi Modificatore');
     }
 
@@ -505,8 +517,8 @@ class ProductForm
             }
 
             $qty = (int) ($tiers[$key]['min_quantity'] ?? 0);
-            $qtyBefore = (int) ($tiers[$keys[$beforeIdx]]['min_quantity'] ?? 0);
-            $priceBefore = (float) ($tiers[$keys[$beforeIdx]]['price_per_unit'] ?? 0);
+            $qtyBefore = $beforeIdx !== null ? (int) ($tiers[$keys[$beforeIdx]]['min_quantity'] ?? 0) : 0;
+            $priceBefore = $beforeIdx !== null ? (float) ($tiers[$keys[$beforeIdx]]['price_per_unit'] ?? 0) : 0;
 
             if ($afterIdx !== null) {
                 $qtyAfter = (int) ($tiers[$keys[$afterIdx]]['min_quantity'] ?? 0);
@@ -525,7 +537,9 @@ class ProductForm
             $tiers[$key]['total_price'] = round($qty * $tiers[$key]['price_per_unit'], 2);
         }
 
-        data_set($livewire, $statePath, $tiers);
+        if (is_string($statePath)) {
+            data_set($livewire, $statePath, $tiers);
+        }
     }
 
     public static function getImagesField(): SpatieMediaLibraryFileUpload

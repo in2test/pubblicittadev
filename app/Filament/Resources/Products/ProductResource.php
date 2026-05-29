@@ -148,7 +148,7 @@ class ProductResource extends Resource
                 $slug = SlugGenerator::unique(Product::class, $state, $record);
                 $set('slug', $slug);
 
-                $words = preg_split('/[\s\-\_\,]+/', $state ?? '');
+                $words = preg_split('/[\s\-\_\,]+/', $state ?? '') ?: [];
                 $acronym = '';
                 foreach ($words as $word) {
                     if (! empty($word)) {
@@ -295,6 +295,7 @@ class ProductResource extends Resource
                     ->live()
                     ->afterStateUpdated(function (Set $set, $state) {
                         if ($state) {
+                            /** @var VariationType|null $type */
                             $type = VariationType::find($state);
                             if ($type && $type->default_modifier_type) {
                                 $set('impact_type', $type->default_modifier_type);
@@ -380,6 +381,7 @@ class ProductResource extends Resource
                                 $isModifier = false;
                                 $isDimensions = false;
                                 if ($variationTypeId) {
+                                    /** @var VariationType|null $type */
                                     $type = VariationType::find($variationTypeId);
                                     if ($type) {
                                         $isDimensions = $type->presentation_type === 'dimensions';
@@ -421,6 +423,7 @@ class ProductResource extends Resource
                                         ->label('Hex Colore (es. #ff0000)')
                                         ->visible(function () use ($variationTypeId): bool {
                                             if ($variationTypeId) {
+                                                /** @var VariationType|null $type */
                                                 $type = VariationType::find($variationTypeId);
 
                                                 return $type && $type->presentation_type === 'color_swatch';
@@ -454,6 +457,7 @@ class ProductResource extends Resource
                                     return null;
                                 }
 
+                                /** @var VariationOption|null $option */
                                 $option = VariationOption::find($optionId);
                                 if (! $option || ! $option->default_price_modifier) {
                                     return 'Nessun default globale impostato.';
@@ -479,7 +483,12 @@ class ProductResource extends Resource
                     ->columnSpanFull(),
             ])
             ->collapsible()
-            ->itemLabel(fn (array $state): ?string => ($type = VariationType::find($state['variation_type_id'] ?? null)) ? $type->name : null)
+            ->itemLabel(function (array $state): ?string {
+                /** @var VariationType|null $type */
+                $type = VariationType::find($state['variation_type_id'] ?? null);
+
+                return $type ? $type->name : null;
+            })
             ->addActionLabel('Aggiungi Variante');
     }
 

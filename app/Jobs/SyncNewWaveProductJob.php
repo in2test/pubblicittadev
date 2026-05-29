@@ -31,6 +31,7 @@ class SyncNewWaveProductJob implements ShouldQueue
      */
     public function handle(ProductAvailabilityService $service): void
     {
+        /** @var Product|null $product */
         $product = Product::find($this->productId);
 
         if (! $product) {
@@ -57,6 +58,7 @@ class SyncNewWaveProductJob implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
+        /** @var Product|null $product */
         $product = Product::find($this->productId);
 
         if ($product) {

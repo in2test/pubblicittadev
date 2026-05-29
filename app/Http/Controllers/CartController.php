@@ -139,6 +139,9 @@ class CartController extends Controller
                 }
             }
 
+            /** @var array<int|string, int|array<int, int>> $selectedOptions */
+            $selectedOptions = $item['selected_options'] ?? [];
+
             $items[$jobId] = array_merge($item, [
                 'job_id' => $jobId,
                 'product' => $product,
@@ -150,7 +153,7 @@ class CartController extends Controller
                 'display_image' => $displayImage,
                 'color_name' => $colorName,
                 'color_hexes' => $colorHexes,
-                'placement_names' => collect($item['selected_options'] ?? [])
+                'placement_names' => collect($selectedOptions)
                     ->flatMap(function ($optionIds, $typeId) use ($options, $types) {
                         $type = $types->get((int) $typeId);
                         if ($type && $type->allow_multiple) {

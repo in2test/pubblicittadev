@@ -115,6 +115,8 @@ class QuantityDiscountService
 
     /**
      * Build path from starting category up to root (closest to farthest).
+     *
+     * @return array<int, int>
      */
     protected function buildCategoryPath(int $startCategoryId): array
     {

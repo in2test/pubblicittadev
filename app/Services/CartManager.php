@@ -31,7 +31,7 @@ class CartManager
     /**
      * Retrieve all items currently in the cart.
      *
-     * @return array<string, array> An associative array of cart items, keyed by their Job UUID.
+     * @return array<string, array<string, mixed>> An associative array of cart items, keyed by their Job UUID.
      */
     public function getItems(): array
     {
@@ -44,7 +44,7 @@ class CartManager
      * Every call to add() creates a unique entry (Job), even if the product
      * configuration is identical to another item in the cart.
      *
-     * @param  array  $item  The item data containing product_id, quantity, and configuration.
+     * @param  array<string, mixed>  $item  The item data containing product_id, quantity, and configuration.
      */
     public function add(array $item): void
     {
@@ -108,7 +108,7 @@ class CartManager
      * for a specific job without changing its UUID.
      *
      * @param  string  $jobId  The unique UUID of the job to update.
-     * @param  array  $item  The new item data.
+     * @param  array<string, mixed>  $item  The new item data.
      */
     public function replace(string $jobId, array $item): void
     {
@@ -144,7 +144,7 @@ class CartManager
     /**
      * Remove multiple jobs from the cart based on a list of IDs.
      *
-     * @param  array  $jobIds  An array of Job UUIDs to be removed.
+     * @param  array<int|string, string>  $jobIds  An array of Job UUIDs to be removed.
      */
     public function removeMultiple(array $jobIds): void
     {
@@ -177,6 +177,8 @@ class CartManager
 
     /**
      * Get the total quantity for a single cart item.
+     *
+     * @param  array<string, mixed>  $item
      */
     public function getItemQuantity(array $item): int
     {
@@ -230,7 +232,7 @@ class CartManager
      */
     public function getProducts(): Collection
     {
-        if ($this->products !== null) {
+        if ($this->products instanceof Collection) {
             return $this->products;
         }
 

@@ -135,7 +135,6 @@ new class extends Component {
     {
         $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
-
         if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
             $category->children->load(['products' => function ($query) use ($showInactive) {
                 $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
@@ -152,17 +151,14 @@ new class extends Component {
                     ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                     ->take(8);
             }]);
-
             $category->children->loadCount(['products' => function ($query) use ($showInactive) {
                 $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'));
             }]);
-
             $childrenData = $category->children->map(fn ($child) => [
                 'category' => $child,
                 'products' => $child->products,
                 'total_products_count' => $child->products_count,
             ]);
-
             $ownProducts = $category->products()
                 ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                 ->with([
@@ -177,16 +173,16 @@ new class extends Component {
                 ->withMin('skus as skus_min_override_price', 'override_price')
                 ->withExists(['skus as has_sku_without_override' => fn($q) => $q->whereNull('override_price')])
                 ->get();
-
             return [
                 'type' => 'grouped',
                 'groups' => $childrenData,
                 'standalone' => $ownProducts,
             ];
-        } elseif (! $this->getIsFiltering() && ! $category) {
+        }
+
+        if (! $this->getIsFiltering() && ! $category) {
             $rootCategories = Category::whereNull('parent_id')->with('children')->get();
-            
-            $groups = $rootCategories->map(function ($root) use ($showInactive) {
+            $groups = $rootCategories->map(function ($root) use ($showInactive): array {
                 $categoryIds = $root->children->pluck('id')->push($root->id);
                 
                 $totalCount = \App\Models\Product::whereIn('category_id', $categoryIds)
@@ -215,7 +211,6 @@ new class extends Component {
                     'total_products_count' => $totalCount,
                 ];
             });
-            
             return [
                 'type' => 'grouped',
                 'groups' => $groups,

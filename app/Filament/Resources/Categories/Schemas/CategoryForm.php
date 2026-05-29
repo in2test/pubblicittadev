@@ -37,7 +37,7 @@ class CategoryForm
                         titleAttribute: 'name',
                         modifyQueryUsing: fn ($query, ?Category $record) => $query
                             ->whereNull('parent_id')
-                            ->when($record, fn ($query) => $query->where('id', '!=', $record->id)),
+                            ->when($record, fn ($query, Category $recordValue) => $query->where('id', '!=', $recordValue->id)),
                     )
                     ->searchable()
                     ->preload()

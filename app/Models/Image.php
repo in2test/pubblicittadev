@@ -202,12 +202,14 @@ class Image extends Model
 
     protected function generateImageVariants(): void
     {
-        if ($this->image_url) {
+        if ($this->image_url || ! $this->image_path) {
             return;
         }
 
         $disk = Storage::disk('public');
-        $originalPath = $disk->path($this->image_path);
+        /** @var string $imagePath */
+        $imagePath = $this->image_path;
+        $originalPath = $disk->path($imagePath);
 
         if (! file_exists($originalPath)) {
             return;

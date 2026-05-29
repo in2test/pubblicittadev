@@ -65,7 +65,7 @@ class ListNewWaveProducts extends ListRecords
                 ])
                 ->action(function (array $data) {
                     $skus = array_filter(
-                        array_map(trim(...), preg_split('/[\s,;]+/', (string) $data['skus'])));
+                        array_map(trim(...), preg_split('/[\s,;]+/', (string) $data['skus']) ?: []));
 
                     if ($skus === []) {
                         Notification::make()->title('Errore')->body('Inserisci almeno un codice SKU.')->danger()->send();

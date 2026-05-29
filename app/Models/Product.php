@@ -262,6 +262,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the first available image (thumbnail)
+     *
+     * @return object{url: string, thumb: string, medium: string, large: string, thumbnail_url: string|null}|null
      */
     public function getFirstImage(): ?object
     {
@@ -364,7 +366,7 @@ class Product extends Model implements HasMedia
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, \stdClass>
+     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
      */
     public function getAllImages(): Collection
     {
@@ -389,7 +391,12 @@ class Product extends Model implements HasMedia
             }
             $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
 
-            $images[] = (object) [
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null} $localObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $localObj = (object) [
                 'id' => (string) $media->id,
                 'url' => $media->getUrl(),
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
@@ -401,7 +408,9 @@ class Product extends Model implements HasMedia
                 'type' => 'local',
                 'is_remote' => false,
                 'alt' => $media->getCustomProperty('alt'),
+                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
             ];
+            $images[] = $localObj;
         }
 
         // 2. Add remote images from the dedicated 'images' table
@@ -417,27 +426,32 @@ class Product extends Model implements HasMedia
                 continue;
             }
 
-            $images[] = (object) [
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null} $remoteObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $remoteObj = (object) [
                 'id' => (string) $remote->id,
                 'url' => $remote->image_url,
                 'thumb' => $remote->thumbnail_url ?: $remote->image_url,
                 'medium' => $remote->medium_url ?: $remote->image_url,
                 'large' => $remote->large_url ?: $remote->image_url,
                 'variation_option_id' => $remote->variation_option_id,
+                'variation_option_ids' => [],
                 'order' => $remote->order_by,
                 'type' => 'remote',
-                'alt' => $remote->alt,
                 'is_remote' => true,
+                'alt' => $remote->alt,
+                'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
             ];
+            $images[] = $remoteObj;
         }
 
         // Sort by order
         usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
 
-        /** @var Collection<int, \stdClass> $result */
-        $result = collect($images);
-
-        return $result;
+        return collect($images)->sortBy('order')->values();
     }
 
     /**
@@ -705,7 +719,9 @@ class Product extends Model implements HasMedia
 
         return $this->skus->first(function ($sku) use ($selectedOptions): bool {
             foreach ($this->variationTypes as $type) {
-                if ($type->pivot->is_modifier) {
+                /** @var ProductVariationType|null $pivot */
+                $pivot = $type->pivot;
+                if ($pivot && $pivot->is_modifier) {
                     continue;
                 }
 
@@ -788,7 +804,7 @@ class Product extends Model implements HasMedia
         }
 
         $nearestSku = null;
-        if ($isCustomFormat) {
+        if ($isCustomFormat && $width !== null && $height !== null) {
             $nearestFormatId = $this->getNearestFormatOptionId($width, $height);
             if ($nearestFormatId) {
                 $targetOptions = $selectedOptions;
@@ -929,7 +945,12 @@ class Product extends Model implements HasMedia
         $percentageModifiers = 0.0;
 
         foreach ($this->variationTypes as $type) {
-            if (! $type->pivot->is_modifier) {
+            /** @var ProductVariationType|null $pivot */
+            $pivot = $type->pivot;
+            if (! $pivot) {
+                continue;
+            }
+            if (! $pivot->is_modifier) {
                 continue;
             }
 
@@ -940,7 +961,7 @@ class Product extends Model implements HasMedia
             $selectedOptionIds = array_filter($selectedOptionIds);
 
             foreach ($selectedOptionIds as $selectedOptionId) {
-                $productVariationOption = ProductVariationOption::where('product_variation_type_id', $type->pivot->id)
+                $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
                     ->where('variation_option_id', $selectedOptionId)
                     ->with('option')
                     ->first();
@@ -1136,11 +1157,12 @@ class Product extends Model implements HasMedia
         if ($skuPrices->isNotEmpty()) {
             // Il prezzo di partenza è il minimo tra le SKU con override,
             // E potenzialmente il baseFallback se qualche SKU NON ha un override.
+            $minSkuPrice = (float) $skuPrices->min();
             if ($hasSkuWithoutOverride) {
-                return min($baseFallback, $skuPrices->min());
+                return min($baseFallback, $minSkuPrice);
             }
 
-            return $skuPrices->min();
+            return $minSkuPrice;
         }
 
         return $baseFallback;

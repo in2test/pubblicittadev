@@ -22,6 +22,8 @@ class NwgApiClient
 
     /**
      * Get full product data including metadata and variations.
+     *
+     * @return array<string, mixed>|null
      */
     public function getFullProductData(string $productNumber): ?array
     {
@@ -90,6 +92,9 @@ class NwgApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getBasicProductData(string $productNumber): ?array
     {
         $query = <<<'GRAPHQL'
@@ -134,6 +139,9 @@ class NwgApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getProductAvailability(string $productNumber): ?array
     {
         $query = <<<'GRAPHQL'
@@ -174,7 +182,11 @@ class NwgApiClient
         }
     }
 
-    // Fetch full GraphQL payload using the exact provided query
+    /**
+     * Fetch full GraphQL payload using the exact provided query
+     *
+     * @return array<string, mixed>|null
+     */
     public function fetchFullGraphQLProductData(string $productNumber, string $language): ?array
     {
         $query = <<<'GQL'

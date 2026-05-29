@@ -128,13 +128,14 @@ class OrderForm
                                         ->prefix('€')
                                         ->live(onBlur: true)
                                         ->afterStateUpdated(function (Get $get, Set $set) {
-                                            $qty = (int) $get('quantity');
-                                            $unit = (float) $get('unit_price');
+                                            $qty = (int) (string) $get('quantity');
+                                            $unit = (float) (string) $get('unit_price');
                                             $subtotal = round($qty * $unit, 2);
                                             $set('subtotal', $subtotal);
 
+                                            /** @var array<int|string, array<string, mixed>> $items */
                                             $items = $get('../../items') ?? [];
-                                            $total = collect($items)->sum(fn ($item) => (float) ($item['subtotal'] ?? 0));
+                                            $total = collect($items)->sum(fn ($item) => (float) (string) ($item['subtotal'] ?? 0));
                                             $set('../../total_price', $total);
                                         }),
                                     TextInput::make('subtotal')
@@ -143,14 +144,15 @@ class OrderForm
                                         ->prefix('€')
                                         ->live(onBlur: true)
                                         ->afterStateUpdated(function (Get $get, Set $set) {
-                                            $qty = (int) $get('quantity');
-                                            $subtotal = (float) $get('subtotal');
+                                            $qty = (int) (string) $get('quantity');
+                                            $subtotal = (float) (string) $get('subtotal');
                                             if ($qty > 0) {
                                                 $set('unit_price', round($subtotal / $qty, 2));
                                             }
 
+                                            /** @var array<int|string, array<string, mixed>> $items */
                                             $items = $get('../../items') ?? [];
-                                            $total = collect($items)->sum(fn ($item) => (float) ($item['subtotal'] ?? 0));
+                                            $total = collect($items)->sum(fn ($item) => (float) (string) ($item['subtotal'] ?? 0));
                                             $set('../../total_price', $total);
                                         }),
                                     Select::make('work_status')
@@ -182,14 +184,12 @@ class OrderForm
 
                                                     // Parse thickness/depth for package size
                                                     $combined = strtolower($key.' '.$val);
-                                                    if (str_contains($combined, 'spessore') || str_contains($combined, 'profondit') || str_contains($combined, 'telaio')) {
-                                                        if (preg_match('/([0-9.,]+)\s*(mm|cm)/i', $combined, $matches)) {
-                                                            $valNum = (float) str_replace(',', '.', $matches[1]);
-                                                            if (strtolower($matches[2]) === 'cm') {
-                                                                $valNum *= 10;
-                                                            }
-                                                            $thicknessMm = $valNum;
+                                                    if ((str_contains($combined, 'spessore') || str_contains($combined, 'profondit') || str_contains($combined, 'telaio')) && preg_match('/([0-9.,]+)\s*(mm|cm)/i', $combined, $matches)) {
+                                                        $valNum = (float) str_replace(',', '.', $matches[1]);
+                                                        if (strtolower($matches[2]) === 'cm') {
+                                                            $valNum *= 10;
                                                         }
+                                                        $thicknessMm = $valNum;
                                                     }
                                                 }
                                             }
@@ -230,19 +230,18 @@ class OrderForm
 
                                             // Quantities breakdown (hide only for single-sku Area products to avoid duplication)
                                             $showQuantities = true;
-                                            if (! empty($json['quantities']) && count($json['quantities']) === 1) {
-                                                if (isset($product) && $product->product_class === ProductClass::AreaBased) {
-                                                    $showQuantities = false;
-                                                }
+                                            if (! empty($json['quantities']) && count($json['quantities']) === 1 && (isset($product) && $product->product_class === ProductClass::AreaBased)) {
+                                                $showQuantities = false;
                                             }
 
                                             if (! empty($json['quantities']) && $showQuantities) {
                                                 $html .= '<li><strong>Taglie/Varianti:</strong> ';
                                                 $html .= '<ul class="pl-4 mt-1 space-y-1">';
                                                 foreach ($json['quantities'] as $skuId => $q) {
+                                                    /** @var ProductSku|null $sku */
                                                     $sku = ProductSku::with('options.type')->find($skuId);
                                                     if ($sku && $sku->options->isNotEmpty()) {
-                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? $opt->type->getAttribute('name').': ' : '').$opt->getAttribute('name'))->join(', ');
+                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? ((string) $opt->type->getAttribute('name')).': ' : '').((string) $opt->getAttribute('name')))->join(', ');
                                                         $skuLabel = $optionLabels;
                                                     } else {
                                                         $skuLabel = "Variante #{$skuId}";

@@ -23,7 +23,7 @@ class SlugGenerator
         while (
             $modelClass::query()
                 ->where('slug', $slug)
-                ->when($ignoreRecord, fn ($query) => $query->whereKeyNot($ignoreRecord->getKey()))
+                ->when($ignoreRecord, fn ($query, Model $ignoreRecordValue) => $query->whereKeyNot($ignoreRecordValue->getKey()))
                 ->exists()
         ) {
             $slug = $baseSlug.'-'.$count++;

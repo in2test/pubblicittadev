@@ -27,8 +27,8 @@ class WebhookController extends Controller
         try {
             $event = Webhook::constructEvent(
                 $request->getContent(),
-                $request->header('Stripe-Signature'),
-                config('stripe.webhook_secret')
+                $request->header('Stripe-Signature') ?? '',
+                config('stripe.webhook_secret') ?? ''
             );
         } catch (UnexpectedValueException $e) {
             Log::error('Stripe Webhook: Invalid payload', ['error' => $e->getMessage()]);
@@ -66,6 +66,7 @@ class WebhookController extends Controller
             return;
         }
 
+        /** @var Order|null $order */
         $order = Order::find($orderId);
 
         if (! $order) {

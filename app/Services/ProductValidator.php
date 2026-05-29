@@ -11,6 +11,9 @@ class ProductValidator
     /**
      * Validate multiple SKUs from the API.
      * Returns array with valid and invalid SKU codes.
+     *
+     * @param  array<int, string>  $skus
+     * @return array{valid: array<string, array{name: string, price: float|null}>, invalid: array<int, string>}
      */
     public function validateSkus(array $skus): array
     {

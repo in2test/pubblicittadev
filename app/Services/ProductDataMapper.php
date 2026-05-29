@@ -6,7 +6,12 @@ namespace App\Services;
 
 class ProductDataMapper
 {
-    // Map a full GraphQL payload to remote_images structure
+    /**
+     * Map a full GraphQL payload to remote_images structure
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<int, array<string, mixed>>
+     */
     public function mapFullProductPayloadToRemoteImages(array $payload): array
     {
         $remoteImages = [];

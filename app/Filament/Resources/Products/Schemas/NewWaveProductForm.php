@@ -117,7 +117,7 @@ class NewWaveProductForm
                                                 titleAttribute: 'name',
                                                 modifyQueryUsing: fn ($query, ?Category $record) => $query
                                                     ->whereNull('parent_id')
-                                                    ->when($record, fn ($query) => $query->where('id', '!=', $record->id)),
+                                                    ->when($record, fn ($query, Category $recordValue) => $query->where('id', '!=', $recordValue->id)),
                                             )
                                             ->searchable()
                                             ->preload()
@@ -243,6 +243,7 @@ class NewWaveProductForm
                                     ->icon(Heroicon::OutlinedArrowDownTray)
                                     ->action(function (array $arguments, Repeater $component): void {
                                         $item = $component->getItemState($arguments['item']);
+                                        /** @var Image|null $image */
                                         $image = Image::query()->find($item['id'] ?? null);
 
                                         if (! $image) {

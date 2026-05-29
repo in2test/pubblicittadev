@@ -26,12 +26,17 @@ class ProductAvailabilityService
 
     /**
      * Get full product data including metadata and variations.
+     *
+     * @return array<string, mixed>|null
      */
     public function getFullProductData(string $productNumber): ?array
     {
         return $this->apiClient->getFullProductData($productNumber);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getBasicProductData(string $productNumber): ?array
     {
         return $this->apiClient->getBasicProductData($productNumber);
@@ -40,6 +45,8 @@ class ProductAvailabilityService
     /**
      * Fetch basic info (name and price) for a SKU.
      * Useful for real-time verification in admin.
+     *
+     * @return array<string, mixed>|null
      */
     public function fetchBasicInfo(string $productNumber): ?array
     {
@@ -58,13 +65,22 @@ class ProductAvailabilityService
         ];
     }
 
-    // Fetch full GraphQL payload using the exact provided query
+    /**
+     * Fetch full GraphQL payload using the exact provided query
+     *
+     * @return array<string, mixed>|null
+     */
     public function fetchFullGraphQLProductData(string $productNumber, string $language): ?array
     {
         return $this->apiClient->getFullProductData($productNumber);
     }
 
-    // Map a full GraphQL payload to remote_images structure
+    /**
+     * Map a full GraphQL payload to remote_images structure
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<int, array<string, mixed>>
+     */
     public function mapFullProductPayloadToRemoteImages(array $payload): array
     {
         return $this->dataMapper->mapFullProductPayloadToRemoteImages($payload);
@@ -73,6 +89,9 @@ class ProductAvailabilityService
     /**
      * Validate multiple SKUs from the API.
      * Returns array with valid and invalid SKU codes.
+     *
+     * @param  array<int, string>  $skus
+     * @return array{valid: array<string, array{name: string, price: float|null}>, invalid: array<int, string>}
      */
     public function validateSkus(array $skus): array
     {

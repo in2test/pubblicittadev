@@ -27,7 +27,10 @@ class CheckoutController extends Controller
             /** @var Order $order */
             $order = Order::with('items.product')->findOrFail($request->input('order_id'));
 
-            if ($order->user_id !== $request->user()->id) {
+            /** @var User $user */
+            $user = $request->user();
+
+            if ($order->user_id !== $user->id) {
                 abort(403);
             }
 
@@ -51,7 +54,10 @@ class CheckoutController extends Controller
 
             $order->load('items.product');
 
-            Mail::to($request->user())->send(new OrderPlacedNotification($order));
+            /** @var User $user */
+            $user = $request->user();
+
+            Mail::to($user)->send(new OrderPlacedNotification($order));
             Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
         }
 
@@ -83,12 +89,15 @@ class CheckoutController extends Controller
             ];
         })->toArray();
 
+        /** @var User $user */
+        $user = $request->user();
+
         $session = Session::create([
             'line_items' => $lineItems,
             'mode' => 'payment',
             'success_url' => route('checkout.success').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => route('checkout.cancel'),
-            'customer_email' => $request->user()->email,
+            'customer_email' => $user->email,
             'metadata' => [
                 'order_id' => (string) $order->id,
             ],
@@ -96,7 +105,7 @@ class CheckoutController extends Controller
 
         $order->update(['stripe_session_id' => $session->id]);
 
-        return redirect($session->url);
+        return redirect()->away($session->url ?? '');
     }
 
     public function requestQuotation(Request $request): RedirectResponse
@@ -107,14 +116,17 @@ class CheckoutController extends Controller
             return redirect()->route('cart')->with('error', 'Il tuo carrello è vuoto.');
         }
 
+        /** @var User $user */
+        $user = $request->user();
+
         // Resolving default addresses if they exist
-        $defaultShipping = $request->user()->addresses()->where('is_default', true)->first()
-            ?? $request->user()->addresses()->first();
+        $defaultShipping = $user->addresses()->where('is_default', true)->first()
+            ?? $user->addresses()->first();
         $defaultBilling = $defaultShipping; // fallback
         $order = $this->createOrderFromCart($request, $items, $defaultShipping?->id, $defaultBilling?->id, true);
         $order->load('items.product');
 
-        Mail::to($request->user())->send(new OrderPlacedNotification($order));
+        Mail::to($user)->send(new OrderPlacedNotification($order));
         Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
 
         $this->cartManager->clear();
@@ -156,8 +168,11 @@ class CheckoutController extends Controller
             ? collect()
             : Product::with(['variationTypes', 'skus.options', 'pricingTiers', 'media'])->whereIn('id', $productIds)->get()->keyBy('id');
 
+        /** @var User $user */
+        $user = $request->user();
+
         $order = Order::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
             'payment_status' => $isQuotation ? 'quotation' : 'pending',
             'work_status' => 'pending',
