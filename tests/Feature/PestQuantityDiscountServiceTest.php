@@ -32,6 +32,8 @@ it('calculates the correct discounted price for a product', function () {
     ]);
 
     // Quantity below threshold
+    QuantityDiscountService::clearCache();
+    $product = $product->fresh();
     expect($service->calculatePrice($product, 5))->toBe(100.00);
 
     // Quantity at threshold
@@ -56,6 +58,8 @@ it('respects fixed discount type', function () {
         'discount_value' => 15.50,
     ]);
 
+    QuantityDiscountService::clearCache();
+    $product = $product->fresh();
     expect($service->calculatePrice($product, 10))->toBe(84.50);
 });
 
@@ -77,5 +81,7 @@ it('walks up the category tree for discounts', function () {
     ]);
 
     // Child has no discount, should use parent
+    QuantityDiscountService::clearCache();
+    $product = $product->fresh();
     expect($service->calculatePrice($product, 10))->toBe(80.00);
 });

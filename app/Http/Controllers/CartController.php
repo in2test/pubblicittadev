@@ -94,6 +94,10 @@ class CartController extends Controller
                     $billedAreaPerUnit = $qty > 0 ? $billedAreaTotal / $qty : 0.0;
                     $basePrice *= $billedAreaPerUnit;
                 }
+
+                // Add modifiers (personalizations) to the base price
+                $basePriceTotal = $product->applyModifiersToTotal($basePrice * $qty, $qty, $item['selected_options'] ?? []);
+                $basePrice = $qty > 0 ? $basePriceTotal / $qty : 0.0;
             }
 
             // Determine active/main image for this configuration

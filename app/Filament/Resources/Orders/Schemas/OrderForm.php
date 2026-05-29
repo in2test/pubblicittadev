@@ -244,7 +244,7 @@ class OrderForm
                                                     /** @var ProductSku|null $sku */
                                                     $sku = ProductSku::with('options.type')->find($skuId);
                                                     if ($sku && $sku->options->isNotEmpty()) {
-                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? ((string) $opt->type->getAttribute('name')).': ' : '').((string) $opt->getAttribute('name')))->join(', ');
+                                                        $optionLabels = $sku->options->map(fn (VariationOption $opt) => ($opt->type ? ($opt->type->getAttribute('name')).': ' : '').($opt->getAttribute('name')))->join(', ');
                                                         $skuLabel = $optionLabels;
                                                     } else {
                                                         $skuLabel = "Variante #{$skuId}";

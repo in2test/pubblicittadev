@@ -27,7 +27,29 @@ class HomePageController extends Controller
     public function index(): View
     {
         $products = Product::active()
-            ->with(['category', 'variationTypes', 'productVariationTypes.options.option', 'media', 'images'])
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'sku',
+                'description',
+                'price',
+                'offer_price',
+                'pricing_model',
+                'is_featured',
+                'is_active',
+                'category_id',
+                'cached_starting_price',
+                'cached_starting_unit_price',
+                'created_at',
+            ])
+            ->with([
+                'category:id,name,slug',
+                'productVariationTypes:id,product_id,variation_type_id,has_images',
+                'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
+                'productVariationTypes.options.option:id,name,value,color_hex',
+                'media',
+            ])
             ->orderByDesc('is_featured')
             ->orderByDesc('created_at')
             ->take(9)

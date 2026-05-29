@@ -63,7 +63,7 @@ test('it gets correct starting unit price for quantity pricing model', function 
     ]);
 
     // The starting unit price should be the lowest price from pricing tiers
-    expect($product->getStartingUnitPrice())->toBe(35.00);
+    expect($product->fresh()->getStartingUnitPrice())->toBe(35.00);
 });
 
 test('it gets correct starting unit price for area pricing model', function () {
@@ -82,7 +82,7 @@ test('it gets correct starting unit price for area pricing model', function () {
         'price_per_unit' => 38.00,
     ]);
 
-    expect($product->getStartingUnitPrice())->toBe(38.00);
+    expect($product->fresh()->getStartingUnitPrice())->toBe(38.00);
 });
 
 test('it gets minimum order quantity based on pricing model', function () {

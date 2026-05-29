@@ -153,6 +153,12 @@ class Product extends Model implements HasMedia
     /** @var Collection<int, CategoryQuantityDiscount>|null */
     private ?Collection $quantityDiscountsCache = null;
 
+    /** @var array<string, float|null> */
+    private array $priceCache = [];
+
+    /** @var array<string, float|null> */
+    private array $tierPriceCache = [];
+
     public const TYPE_STANDARD = 'standard';
 
     public const TYPE_NEWWAVE = 'newwave';
@@ -160,6 +166,9 @@ class Product extends Model implements HasMedia
     protected $casts = [
         'price' => 'decimal:2',
         'offer_price' => 'decimal:2',
+        'cached_base_price' => 'decimal:2',
+        'cached_starting_price' => 'decimal:2',
+        'cached_starting_unit_price' => 'decimal:2',
         'is_featured' => 'boolean',
         'synced_at' => 'datetime',
         'is_active' => 'boolean',
@@ -505,20 +514,25 @@ class Product extends Model implements HasMedia
      */
     public function getPriceForQuantity(int $quantity = 1, ?ProductSku $sku = null): float
     {
+        $cacheKey = $quantity.'_'.($sku->id ?? 'null');
+        if (array_key_exists($cacheKey, $this->priceCache)) {
+            return (float) $this->priceCache[$cacheKey];
+        }
+
         // Se c'è un'offerta attiva, usa l'offerta.
         if ($this->offer_price > 0) {
-            return (float) $this->offer_price;
+            return $this->priceCache[$cacheKey] = (float) $this->offer_price;
         }
 
         // Priorità 1: Cerca un prezzo a scaglioni (tier) specifico per questo prodotto e/o SKU
         if ($tierPrice = $this->getTierPrice($quantity, $sku)) {
-            return $tierPrice;
+            return $this->priceCache[$cacheKey] = $tierPrice;
         }
 
         // Priorità 2: Sconti per quantità basati sulla categoria
         $service = app(QuantityDiscountService::class);
 
-        return max(0.0, $service->calculatePrice($this, $quantity));
+        return $this->priceCache[$cacheKey] = max(0.0, $service->calculatePrice($this, $quantity));
     }
 
     /**
@@ -526,6 +540,11 @@ class Product extends Model implements HasMedia
      */
     public function getTierPrice(int $quantity, ?ProductSku $sku = null): ?float
     {
+        $cacheKey = $quantity.'_'.($sku->id ?? 'null');
+        if (array_key_exists($cacheKey, $this->tierPriceCache)) {
+            return $this->tierPriceCache[$cacheKey];
+        }
+
         $findTier = function (?int $skuId) use ($quantity): ?PricingTier {
             if ($this->relationLoaded('pricingTiers')) {
                 $tiers = $this->pricingTiers
@@ -573,14 +592,14 @@ class Product extends Model implements HasMedia
         if ($skuId) {
             $tier = $findTier($skuId);
             if ($tier instanceof PricingTier) {
-                return (float) $tier->price_per_unit;
+                return $this->tierPriceCache[$cacheKey] = (float) $tier->price_per_unit;
             }
         }
 
         // Fallback: SKU null (tier globale prodotto)
         $tier = $findTier(null);
         if ($tier instanceof PricingTier) {
-            return (float) $tier->price_per_unit;
+            return $this->tierPriceCache[$cacheKey] = (float) $tier->price_per_unit;
         }
 
         // Se non c'è un tier globale, ma ci sono tier specifici per SKU per questa quantità,
@@ -601,29 +620,21 @@ class Product extends Model implements HasMedia
                 $minPrice = $matchedTiers->min('price_per_unit');
             }
 
-            return $minPrice !== null ? (float) $minPrice : null;
+            return $this->tierPriceCache[$cacheKey] = $minPrice !== null ? (float) $minPrice : null;
         }
 
-        $matchedTiersQuery = $this->pricingTiers()
+        $minPrice = $this->pricingTiers()
             ->where('min_quantity', '<=', $quantity)
             ->where(function (Builder $query) use ($quantity) {
                 $query->where('max_quantity', '>=', $quantity)
                     ->orWhereNull('max_quantity');
-            });
+            })->min('price_per_unit');
 
-        if ((clone $matchedTiersQuery)->count() === 0) {
-            if ($this->price <= 0 || $this->allows_custom_size) {
-                /** @var PricingTier|null $firstTier */
-                $firstTier = $this->pricingTiers()->orderBy('min_quantity')->first();
-                $minPrice = $firstTier?->price_per_unit;
-            } else {
-                $minPrice = null;
-            }
-        } else {
-            $minPrice = $matchedTiersQuery->min('price_per_unit');
+        if ($minPrice === null && ($this->price <= 0 || $this->allows_custom_size)) {
+            $minPrice = $this->pricingTiers()->orderBy('min_quantity')->value('price_per_unit');
         }
 
-        return $minPrice !== null ? (float) $minPrice : null;
+        return $this->tierPriceCache[$cacheKey] = $minPrice !== null ? (float) $minPrice : null;
     }
 
     /**
@@ -933,7 +944,7 @@ class Product extends Model implements HasMedia
      *
      * @param  array<int, int|array<int>>  $selectedOptions
      */
-    protected function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
+    public function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
     {
         if ($selectedOptions === []) {
             return $total;
@@ -1043,8 +1054,12 @@ class Product extends Model implements HasMedia
      * Calcola il prezzo minimo assoluto che un cliente può pagare per un ordine.
      * Considera i limiti di area minima, i formati personalizzati e le quantità minime (MOQ).
      */
-    public function getAbsoluteMinimumPrice(): float
+    public function getAbsoluteMinimumPrice(bool $skipCache = false): float
     {
+        if (! $skipCache && $this->cached_starting_price !== null) {
+            return (float) $this->cached_starting_price;
+        }
+
         $minQty = $this->getMinimumOrderQuantity();
 
         // Per il calcolo ad area, potrebbe esserci un vincolo di area minima (min_area).
@@ -1057,7 +1072,7 @@ class Product extends Model implements HasMedia
         // Per i prezzi a quantità, controlliamo se il prodotto supporta formati personalizzati,
         // che potrebbero influenzare l'ottimizzazione sul foglio di stampa.
         if ($this->allows_custom_size) {
-            $formatType = $this->relationLoaded('variationTypes') 
+            $formatType = $this->relationLoaded('variationTypes')
                 ? $this->variationTypes->firstWhere('name', 'Formato')
                 : $this->variationTypes()->where('name', 'Formato')->first();
 
@@ -1069,10 +1084,10 @@ class Product extends Model implements HasMedia
                 $pvt = $this->relationLoaded('productVariationTypes')
                     ? $this->productVariationTypes->where('variation_type_id', $formatType->id)->first()
                     : $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
-                    
+
                 if ($pvt) {
                     if ($pvt->relationLoaded('options')) {
-                        $options = $pvt->options->map(fn($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())->filter();
+                        $options = $pvt->options->map(fn ($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())->filter();
                     } else {
                         $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
                             $query->where('product_variation_type_id', $pvt->id);
@@ -1129,8 +1144,12 @@ class Product extends Model implements HasMedia
      * Ottiene il prezzo unitario più basso possibile per un nuovo ordine.
      * Utile per visualizzare "A partire da €X / pezzo" o "A partire da €X / mq" nei cataloghi.
      */
-    public function getStartingUnitPrice(): float
+    public function getStartingUnitPrice(bool $skipCache = false): float
     {
+        if (! $skipCache && $this->cached_starting_unit_price !== null) {
+            return (float) $this->cached_starting_unit_price;
+        }
+
         $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
 
         if ($this->product_class === ProductClass::Apparel || $this->product_class === ProductClass::AreaBased) {
@@ -1274,5 +1293,18 @@ class Product extends Model implements HasMedia
         }
 
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Ricalcola e salva i prezzi di partenza cachati nel database.
+     * Da chiamare dopo la modifica del prodotto, dei tier di prezzo o delle varianti.
+     */
+    public function updateCachedPrices(): void
+    {
+        // Skip cache per forzare il ricalcolo reale
+        $this->cached_starting_price = $this->getAbsoluteMinimumPrice(true);
+        $this->cached_starting_unit_price = $this->getStartingUnitPrice(true);
+
+        $this->saveQuietly();
     }
 }

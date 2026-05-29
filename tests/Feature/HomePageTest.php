@@ -53,7 +53,7 @@ class HomePageTest extends TestCase
 
         foreach ($products as $product) {
             $this->assertTrue($product->relationLoaded('category'));
-            $this->assertTrue($product->relationLoaded('variationTypes'));
+            $this->assertTrue($product->relationLoaded('productVariationTypes'));
             $this->assertTrue($product->relationLoaded('media'));
         }
     }

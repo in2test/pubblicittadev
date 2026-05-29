@@ -5,7 +5,13 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
+use App\Models\PricingTier;
+use App\Models\Product;
+use App\Models\ProductSku;
 use App\Observers\MediaObserver;
+use App\Observers\PricingTierObserver;
+use App\Observers\ProductObserver;
+use App\Observers\ProductSkuObserver;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
@@ -42,6 +48,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register observer for Spatie Media deletion to clean up orphaned Image records
         Media::observe(MediaObserver::class);
+
+        // Register observers for caching prices
+        Product::observe(ProductObserver::class);
+        PricingTier::observe(PricingTierObserver::class);
+        ProductSku::observe(ProductSkuObserver::class);
 
         // Register Filament resources (global menu)
         if (class_exists(Filament::class)) {

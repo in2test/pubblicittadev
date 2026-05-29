@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property numeric|null $override_price
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Product|null $product
  * @property-read Collection<int, VariationOption> $options
  * @property-read int|null $options_count
  * @property-read Collection<int, PricingTier> $pricingTiers
@@ -60,6 +62,14 @@ class ProductSku extends Model
     protected $casts = [
         'is_available' => 'boolean',
     ];
+
+    /**
+     * @return BelongsTo<Product, $this>
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
 
     /**
      * @return BelongsToMany<VariationOption, $this>

@@ -474,6 +474,8 @@
                 $missingVariations = false;
                 if ($isNewwave) {
                     foreach ($product->variationTypes as $type) {
+                        if ($type->pivot?->is_modifier) continue;
+                        
                         if ((!$matrixType || $type->id !== $matrixType->id) && empty($selectedOptions[$type->id])) {
                             $missingVariations = true;
                             break;
@@ -559,10 +561,10 @@
             </div>
             @endif
             @if (!$isNewwave || !$missingVariations)
-                @if ($isNewwave && $this->totalItemsQuantity > 0)
+                @if ($isNewwave && $this->totalQuantity > 0)
                     <div class="mt-4 pt-4 border-t border-dashed border-outline-variant/20 flex items-center justify-between">
                         <span class="text-sm font-bold text-secondary">Totale Capi:</span>
-                        <span class="text-lg font-mono text-primary font-bold">{{ $this->totalItemsQuantity }}</span>
+                        <span class="text-lg font-mono text-primary font-bold">{{ $this->totalQuantity }}</span>
                     </div>
                 @endif
             @endif
