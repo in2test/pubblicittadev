@@ -1057,18 +1057,27 @@ class Product extends Model implements HasMedia
         // Per i prezzi a quantità, controlliamo se il prodotto supporta formati personalizzati,
         // che potrebbero influenzare l'ottimizzazione sul foglio di stampa.
         if ($this->allows_custom_size) {
-            $formatType = $this->variationTypes->firstWhere('name', 'Formato');
+            $formatType = $this->relationLoaded('variationTypes') 
+                ? $this->variationTypes->firstWhere('name', 'Formato')
+                : $this->variationTypes()->where('name', 'Formato')->first();
 
             $minPriceFound = null;
 
             if ($formatType) {
                 // Recupera le opzioni di formato per questo prodotto
                 /** @var ProductVariationType|null $pvt */
-                $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+                $pvt = $this->relationLoaded('productVariationTypes')
+                    ? $this->productVariationTypes->where('variation_type_id', $formatType->id)->first()
+                    : $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+                    
                 if ($pvt) {
-                    $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
-                        $query->where('product_variation_type_id', $pvt->id);
-                    })->get();
+                    if ($pvt->relationLoaded('options')) {
+                        $options = $pvt->options->map(fn($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())->filter();
+                    } else {
+                        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
+                            $query->where('product_variation_type_id', $pvt->id);
+                        })->get();
+                    }
 
                     foreach ($options as $format) {
                         $w = null;

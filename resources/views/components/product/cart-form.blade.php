@@ -558,7 +558,6 @@
                 @endforeach
             </div>
             @endif
-        </div>
             @if (!$isNewwave || !$missingVariations)
                 @if ($isNewwave && $this->totalItemsQuantity > 0)
                     <div class="mt-4 pt-4 border-t border-dashed border-outline-variant/20 flex items-center justify-between">
