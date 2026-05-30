@@ -9,15 +9,21 @@ use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariationOption;
+use App\Models\ProductVariationType;
+use App\Models\VariationOption;
+use App\Models\VariationType;
 use App\Services\ProductAvailabilityService;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Utilities\Get;
 use Override;
 use Throwable;
 
@@ -62,6 +68,27 @@ class ListNewWaveProducts extends ListRecords
                             'parent_id' => $data['parent_id'] ?? null,
                             'is_active' => true,
                         ])->id),
+
+                    Repeater::make('variation_types')
+                        ->label('Varianti')
+                        ->schema([
+                            Select::make('variation_type_id')
+                                ->label('Tipo Variante')
+                                ->options(VariationType::pluck('name', 'id'))
+                                ->required()
+                                ->live(),
+                            Select::make('variation_option_ids')
+                                ->label('Opzioni')
+                                ->options(fn (Get $get) => VariationOption::where('variation_type_id', $get('variation_type_id'))->pluck('name', 'id'))
+                                ->multiple()
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->visible(fn (Get $get) => filled($get('variation_type_id'))),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(0)
+                        ->addActionLabel('Aggiungi variante'),
                 ])
                 ->action(function (array $data) {
                     $skus = array_filter(
@@ -95,6 +122,33 @@ class ListNewWaveProducts extends ListRecords
                                 'sync_status' => SyncStatus::Pending,
                                 'is_active' => false,
                             ]);
+
+                            if (! empty($data['variation_types'])) {
+                                foreach ($data['variation_types'] as $index => $variationData) {
+                                    $variationTypeId = $variationData['variation_type_id'] ?? null;
+                                    if (! $variationTypeId) {
+                                        continue;
+                                    }
+
+                                    $pvt = ProductVariationType::firstOrCreate([
+                                        'product_id' => $product->id,
+                                        'variation_type_id' => $variationTypeId,
+                                    ], [
+                                        'sort_order' => $index,
+                                        'has_images' => false,
+                                        'is_modifier' => true,
+                                    ]);
+
+                                    if (! empty($variationData['variation_option_ids'])) {
+                                        foreach ($variationData['variation_option_ids'] as $optId) {
+                                            ProductVariationOption::firstOrCreate([
+                                                'product_variation_type_id' => $pvt->id,
+                                                'variation_option_id' => $optId,
+                                            ]);
+                                        }
+                                    }
+                                }
+                            }
 
                             SyncNewWaveProductJob::dispatch($product->id);
                             $imported++;

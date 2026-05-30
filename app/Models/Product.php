@@ -6,9 +6,7 @@ namespace App\Models;
 
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
-use App\Filament\Resources\Products\ApparelProducts\ApparelProductResource;
-use App\Filament\Resources\Products\AreaProducts\AreaProductResource;
-use App\Filament\Resources\Products\ItemProducts\ItemProductResource;
+use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
@@ -498,9 +496,7 @@ class Product extends Model implements HasMedia
             }
 
             return match ($this->product_class) {
-                ProductClass::Apparel => ApparelProductResource::getUrl('edit', ['record' => $this]),
-                ProductClass::AreaBased => AreaProductResource::getUrl('edit', ['record' => $this]),
-                ProductClass::ItemBased => ItemProductResource::getUrl('edit', ['record' => $this]),
+                ProductClass::Apparel, ProductClass::AreaBased, ProductClass::ItemBased => ProductResource::getUrl('edit', ['record' => $this]),
                 default => '#',
             };
         } catch (Throwable) {

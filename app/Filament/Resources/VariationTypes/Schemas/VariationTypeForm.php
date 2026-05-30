@@ -65,6 +65,15 @@ class VariationTypeForm
                                                     'md' => 4,
                                                 ]),
 
+                                            TextInput::make('description')
+                                                ->label('Descrizione (Opzionale)')
+                                                ->placeholder('es. Fino a 10x10 cm')
+                                                ->maxLength(255)
+                                                ->columnSpan([
+                                                    'default' => 12,
+                                                    'md' => 4,
+                                                ]),
+
                                             TextInput::make('value')
                                                 ->label('Valore')
                                                 ->placeholder('opzionale')

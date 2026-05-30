@@ -208,7 +208,12 @@
                                     wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                                     @if($isActive) checked @endif
                                     class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary">
-                                <span class="text-sm font-bold">{{ $option->name }}</span>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-sm font-bold">{{ $option->name }}</span>
+                                    @if ($option->description)
+                                        <span class="text-xs text-secondary normal-case">{{ $option->description }}</span>
+                                    @endif
+                                </div>
                             </div>
                             @if ($modifier > 0)
                                 <span class="text-[10px] font-mono text-primary ml-7">
@@ -270,12 +275,15 @@
                                 <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                                     wire:key="option-btn-{{ $option->id }}"
                                     @class([
-                                        'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                        'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex flex-col items-center justify-center gap-1',
                                         'bg-primary text-gray-50 border-primary' => $isActive,
                                         'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
                                     ])
                                 >
-                                    {{ $option->name }}
+                                    <span>{{ $option->name }}</span>
+                                    @if ($option->description)
+                                        <span class="text-[9px] font-normal normal-case tracking-normal opacity-80">{{ $option->description }}</span>
+                                    @endif
                                 </button>
                             @endif
                         @endforeach

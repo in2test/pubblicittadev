@@ -16,12 +16,19 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Override;
+use UnitEnum;
 
 class VariationTypeResource extends Resource
 {
     protected static ?string $model = VariationType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Catalogo';
+
+    protected static ?string $modelLabel = 'Tipo Variante';
+
+    protected static ?string $pluralModelLabel = 'Tipi Variante';
 
     #[Override]
     public static function form(Schema $schema): Schema

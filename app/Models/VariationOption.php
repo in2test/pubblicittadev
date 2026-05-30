@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'variation_type_id',
     'name',
     'value',
+    'description',
     'color_hex',
     'width',
     'height',
