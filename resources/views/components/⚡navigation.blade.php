@@ -55,7 +55,7 @@ new class extends Component {
                 <!-- Dropdown item for Catalog -->
                 <li class="mega-item" @click.away="megaMenuOpen = false">
                     <button class="mega-trigger" type="button" @click="megaMenuOpen = !megaMenuOpen; searchOpen = false" :class="megaMenuOpen ? 'border-b-accent-500 text-gray-950' : ''">
-                        Catalogo
+                        CATALOGO
                         <span class="mega-trigger-icon material-symbols-outlined transition-transform duration-300" :class="megaMenuOpen ? 'rotate-180 text-accent-500' : ''">expand_more</span>
                     </button>
 
@@ -64,13 +64,13 @@ new class extends Component {
                         <div class="mega-panel-grid">
                             @foreach ($this->categories->where('parent_id', null) as $category)
                             <div>
-                                <h3 class="mega-col-title border-b border-gray-200 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">{{ $category->name }}</h3>
+                                <h3 class="mega-col-title border-b border-gray-200 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">{{ mb_strtoupper($category->name) }}</h3>
                                 <ul class="mega-link-list space-y-2">
                                     @foreach ($category->children as $categoryChild)
                                     <li>
                                         <a href="{{ route('category', $categoryChild->slug) }}"
                                             class="mega-link block hover:text-accent-500 transition-colors py-1">
-                                            <span class="mega-link-title block font-semibold text-gray-900">{{ $categoryChild->name }}</span>
+                                            <span class="mega-link-title block font-semibold text-gray-900 uppercase">{{ mb_strtoupper($categoryChild->name) }}</span>
                                             <span
                                                 class="mega-link-copy block text-[10px] leading-relaxed text-gray-400 font-sans normal-case tracking-normal mt-0.5">{{ Str::limit($categoryChild->description ?? '', 60) }}</span>
                                         </a>
@@ -91,7 +91,7 @@ new class extends Component {
             <a href="/" class="mega-logo">PUBBLICITTA24</a>
 
             <!-- Right Section: Actions/Icons -->
-            <div class="flex items-center gap-2 lg:gap-4 justify-self-end">
+            <div class="flex items-center lg:gap-4 justify-self-end">
                 <!-- Search trigger button -->
                 <button id="search-trigger" aria-label="Cerca"
                     class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full"
@@ -113,7 +113,7 @@ new class extends Component {
 
                 <!-- Account dropdown / trigger button -->
                 @if ($this->authUser)
-                <div class="relative" x-data="{ open: false }">
+                <div class="relative hidden lg:block" x-data="{ open: false }">
                     <button id="user-menu-button" aria-label="Account menu" @click="open = !open"
                         @mouseenter="open = true"
                         class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full">
@@ -143,7 +143,7 @@ new class extends Component {
                 </div>
                 @else
                 <button id="account-button" aria-label="Account"
-                    class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full"
+                    class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full hidden lg:block"
                     onclick="openAuthModal()">
                     <span class="material-symbols-outlined">account_circle</span>
                 </button>
@@ -194,7 +194,7 @@ new class extends Component {
                     <!-- Mobile Catalog Accordion -->
                     <div x-data="{ expanded: false }">
                         <button @click="expanded = !expanded" class="flex items-center justify-between w-full py-2 font-semibold text-gray-900">
-                            <span>Catalogo</span>
+                            <span>CATALOGO</span>
                             <span class="material-symbols-outlined transition-transform" :class="expanded ? 'rotate-180' : ''">expand_more</span>
                         </button>
 
@@ -202,18 +202,18 @@ new class extends Component {
                             @foreach ($this->categories->where('parent_id', null) as $category)
                             <div x-data="{ subExpanded: false }" class="space-y-2">
                                 @if ($category->children->isEmpty())
-                                <a href="{{ route('category', $category->slug) }}" class="block py-1 text-gray-600 hover:text-accent-500 transition-colors">
-                                    {{ $category->name }}
+                                <a href="{{ route('category', $category->slug) }}" class="block py-1 text-gray-600 hover:text-accent-500 transition-colors uppercase font-semibold">
+                                    {{ mb_strtoupper($category->name) }}
                                 </a>
                                 @else
-                                <button @click="subExpanded = !subExpanded" class="flex items-center justify-between w-full py-1 text-gray-700">
-                                    <span>{{ $category->name }}</span>
+                                <button @click="subExpanded = !subExpanded" class="flex items-center justify-between w-full py-1 text-gray-700 uppercase font-semibold">
+                                    <span>{{ mb_strtoupper($category->name) }}</span>
                                     <span class="material-symbols-outlined text-[14px] transition-transform duration-300" :class="subExpanded ? 'rotate-180 text-accent-500' : ''">expand_more</span>
                                 </button>
                                 <div x-show="subExpanded" x-collapse class="pl-3 space-y-2">
                                     @foreach ($category->children as $categoryChild)
-                                    <a href="{{ route('category', $categoryChild->slug) }}" class="block py-1 text-[11px] text-gray-500 hover:text-accent-500 transition-colors">
-                                        {{ $categoryChild->name }}
+                                     <a href="{{ route('category', $categoryChild->slug) }}" class="block py-1 text-[11px] text-gray-500 hover:text-accent-500 transition-colors uppercase font-semibold">
+                                        {{ mb_strtoupper($categoryChild->name) }}
                                     </a>
                                     @endforeach
                                 </div>
@@ -297,8 +297,8 @@ new class extends Component {
                             <h4 class="font-mono text-[10px] tracking-widest text-gray-400 uppercase mb-4">Link Rapidi</h4>
                             <div class="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-widest text-gray-950">
                                 @foreach ($this->categories->where('parent_id', null) as $category)
-                                <a href="{{ route('category', $category->slug) }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2">
-                                    <span>{{ $category->name }}</span>
+                                <a href="{{ route('category', $category->slug) }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2 uppercase">
+                                    <span>{{ mb_strtoupper($category->name) }}</span>
                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                 </a>
                                 @endforeach

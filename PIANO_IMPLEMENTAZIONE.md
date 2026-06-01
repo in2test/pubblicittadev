@@ -173,6 +173,51 @@ Creati oltre **172 test** (Pest) che coprono:
 - [ ] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
 - [ ] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
 
+### 🛠️ Modulo 6: UI/UX Fixes & Improvements (Feedback Utente)
+
+#### Home Page
+- [ ] **Menu**: Fix inconsistent text casing (currently passes between lower/uppercase).
+- [ ] **Hero Section**: Redesign the hero section (consider replacing it with a carousel).
+- [ ] **Certification Links**: Add/fix certification links.
+- [x] **Newsletter**: Implement/fix newsletter section.
+- [x] **Footer**: Add links to maps in the footer.
+
+#### Catalogo Page
+- [x] **Spacing**: Reduce excessive space around the title and align left to match navigation.
+- [x] **Filter Menu**: Fix inconsistent text casing (passes from uppercase to lowercase).
+- [x] **Padding**: Unify padding of filter menu and catalog grid to match navigation (`px-6`).
+- [x] **Mobile Layout**: Fix title overflow on small screens for long titles (e.g., "Abbigliamento da lavoro").
+
+#### Product Page
+- [x] **UI**: Remove "Carica il tuo design" (not needed).
+- [x] **UI**: Fix overflow issue on the "Aggiungi al carrello" button.
+- [ ] **Data Sourcing**: Review static text vs database-driven text for "Certifications", "Specifiche tecniche", "Caratteristiche Costruttive", and "Note per la Personalizzazione".
+- [x] **Sizes**: Improve formatting of sizes for better readability.
+
+#### Cart Page
+- [x] **Mobile Layout**: Reduce excessive padding on mobile view.
+- [x] **Placeholder**: Change/remove the placeholder "Istruzioni speciali per la consegna" as it makes no sense.
+
+#### Login Page
+- [x] **Error Messages**: Fix the `auth.failed` message to be more user-friendly.
+
+#### Order Page
+- [x] **UI**: Fix overflow on "ID SESSIONE:...".
+- [x] **UI**: Improve contrast on the "I tuoi ordini" button.
+
+#### Dashboard
+- [x] **UI/Layout**: Fix overflow and excessive paddings on "Paga ora con stripe" and "Richiedi preventivo" buttons.
+- [x] **UI**: Fix "I miei indirizzi" PLUS button placement.
+- [x] **Navigation**: Re-evaluate the "Torna alla dashboard" button placement (seems out of place).
+- [x] **Forms**: Change "Dati di fatturazione" to a single-column layout instead of two columns.
+- [x] **Forms**: Fix the "Imposta come predefinito" checkbox (currently cannot be checked).
+
+#### Static Pages & General
+- [x] **Cookies Banner**: Implement/fix the Cookies banner.
+- [ ] **Copywriting**: Rewrite texts for the "Servizi" and "Contact" static pages.
+- [ ] **Legal Pages**: Create missing pages for "Informativa Privacy" and "Termini e Condizioni".
+- [ ] **Portfolio**: Implement portfolio pages and an admin section to manage previous works.
+
 ---
 
 ## 🚨 Rischi & Mitigation

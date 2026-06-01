@@ -512,11 +512,11 @@
                     @endphp
                     <div wire:key="sku-qty-container-{{ $sku->id }}" class="flex items-center justify-between p-3 border border-gray-600/20 bg-gray-50/30 transition-all w-full {{ $sku->quantity <= 0 && $isNewwave ? 'opacity-50 grayscale-[0.5]' : '' }}">
                         <div class="flex flex-col flex-1 min-w-0 pr-4">
-                            <span class="font-mono text-sm font-bold truncate">{{ $rowLabel }}</span>
-                            <span class="text-[9px] text-gray-500 uppercase tracking-tighter mt-1">
+                            <span class="font-mono text-base font-black uppercase tracking-wider truncate text-gray-900">{{ $rowLabel }}</span>
+                            <span class="text-[10px] text-gray-500 uppercase tracking-widest mt-1 font-semibold">
                                 @if ($isNewwave)
                                     @if ($sku->quantity > 0)
-                                        <span>Disponibili:
+                                        <span>Disp:
                                             <span class="font-bold text-primary/70">{{ $sku->quantity }}</span>
                                         </span>
                                     @else
@@ -622,17 +622,7 @@
 
 
 
-    {{-- SEZIONE: Upload File Grafica --}}
-    <div>
-        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-            Carica il tuo design
-        </label>
-        <input type="file" name="design_file" accept="image/*,.pdf"
-            class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm file:border-0 file:bg-primary file:text-gray-50 file:px-4" />
-        @error('design_file')
-            <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
-        @enderror
-    </div>
+
 
     {{-- SEZIONE: Note del Cliente --}}
     <div>
@@ -648,9 +638,9 @@
 
     {{-- AZIONI FINALI (Acquista/Modifica) --}}
     <div class="flex flex-col gap-3 mt-6">
-        <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 uppercase tracking-widest font-bold" :disabled="$totalQuantity < 1">
+        <flux:button type="submit" variant="filled" color="primary" class="w-full h-14 sm:h-14 uppercase tracking-widest font-bold whitespace-normal sm:whitespace-nowrap px-1 text-xs sm:text-sm" :disabled="$totalQuantity < 1">
             {{ $jobId ? 'Modifica Lavorazione' : 'Aggiungi al Carrello' }} 
-            ({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})
+            <span class="block sm:inline sm:ml-1 mt-1 sm:mt-0 opacity-80">({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})</span>
         </flux:button>
 
         <flux:button href="mailto:info@example.com?subject=Richiesta%20informazioni%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">

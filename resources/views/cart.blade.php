@@ -1,8 +1,8 @@
 <x-layout>
 
-    <header class="mb-12 px-8 py-12 3xl:px-32 ">
-        <h1 class="text-5xl font-black tracking-tighter uppercase text-primary leading-none mb-2">Il Tuo Carrello</h1>
-        <p class="font-mono text-sm uppercase tracking-widest text-secondary">Riepilogo Lavorazioni</p>
+    <header class="mb-6 sm:mb-12 px-4 sm:px-8 py-4 sm:py-12 3xl:px-32">
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tighter uppercase text-primary leading-none mb-2">Il Tuo Carrello</h1>
+        <p class="font-mono text-xs sm:text-sm uppercase tracking-widest text-secondary">Riepilogo Lavorazioni</p>
     </header>
 
     @if (count($items ?? []) === 0)
@@ -20,7 +20,7 @@
     </div>
 
     @else
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-8 py-12 3xl:px-32">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 px-2 sm:px-8 py-4 sm:py-12 3xl:px-32">
 
         {{-- ─── Job list ─────────────────────────────────────────────────── --}}
         <section class="lg:col-span-8 space-y-4">
@@ -235,9 +235,9 @@
 
         {{-- ─── Order summary sidebar ────────────────────────────────────── --}}
         <aside class="lg:col-span-4">
-            <div class="bg-surface-container p-8 sticky top-32">
-                <h2 class="text-xs font-mono uppercase tracking-[0.2em] text-secondary mb-1">Riepilogo</h2>
-                <p class="text-2xl font-black uppercase tracking-tighter mb-8">Ordine</p>
+            <div class="bg-surface-container p-4 sm:p-8 sticky top-32">
+                <h2 class="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-secondary mb-1">Riepilogo</h2>
+                <p class="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-6 sm:mb-8">Ordine</p>
 
                 {{-- Stats --}}
                 <div class="grid grid-cols-2 gap-0.5 bg-outline-variant/20 mb-8 border border-outline-variant/20">
@@ -280,7 +280,7 @@
                 <div class="space-y-4" x-data="{ orderNotes: '' }">
                     <div>
                         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
-                        <textarea x-model="orderNotes" rows="2" placeholder="Istruzioni speciali per la consegna..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                        <textarea x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
                     </div>
 
                     <div class="space-y-3">

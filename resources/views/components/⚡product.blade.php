@@ -669,8 +669,6 @@ new class extends Component {
 
             <x-product.cart-form :product="$this->product()" :selectedOptions="$selectedOptions" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :quantities="$this->quantities" :$jobId :$width :$height :itemsPerSheet="$this->itemsPerSheet" />
 
-            <x-product.trust-badges />
         </div>
     </div>
-    <x-product.technical-specs />
 </div>

@@ -6,8 +6,8 @@ namespace App\Models;
 
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
-use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
+use App\Filament\Resources\Products\ProductResource;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;

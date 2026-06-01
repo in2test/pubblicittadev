@@ -45,10 +45,10 @@
                 <button
                     wire:click="selectCategory('{{ $root->slug }}')"
                     @class([
-                        'w-full text-left transition-all duration-300 flex items-center justify-between group py-2 px-3 rounded',
+                        'w-full text-left transition-all duration-300 flex items-center justify-between group py-2 px-3 rounded uppercase tracking-tight',
                         'text-primary bg-primary/10 border-l-4 border-primary font-black underline decoration-primary decoration-2 underline-offset-4' => $isExactRoot,
                         'text-primary font-bold' => $isActiveRoot && !$isExactRoot,
-                        'text-on-surface font-bold uppercase tracking-tight hover:text-primary hover:bg-gray-50' => !$isActiveRoot
+                        'text-on-surface font-bold hover:text-primary hover:bg-gray-50' => !$isActiveRoot
                     ])
                 >
                     <span class="flex items-center gap-2">

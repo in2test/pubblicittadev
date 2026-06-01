@@ -75,6 +75,7 @@
         }
     </script>
     <livewire:auth-modal />
+    <x-cookie-banner />
 </body>
 
 </html>

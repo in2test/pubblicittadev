@@ -1,13 +1,11 @@
 <x-layouts::app :title="__('Dettaglio Ordine') . ' ' . $order->order_number">
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">Dettaglio Ordine</h2>
-            <p class="text-gray-500 text-sm mt-1 font-mono">{{ $order->order_number }} • {{ $order->created_at->format('d/m/Y H:i') }}</p>
-        </div>
-        <a href="{{ route('dashboard.orders') }}" class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-gray-950">
-            <span class="material-symbols-outlined text-lg">arrow_back</span>
+    <div class="mb-8">
+        <a href="{{ route('dashboard.orders') }}" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-950 mb-4 transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
             <span>Torna ai miei Ordini</span>
         </a>
+        <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">Dettaglio Ordine</h2>
+        <p class="text-gray-500 text-sm mt-1 font-mono">{{ $order->order_number }} • {{ $order->created_at->format('d/m/Y H:i') }}</p>
     </div>
 
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
@@ -109,8 +107,9 @@
                         <form action="{{ route('checkout.session') }}" method="POST">
                             @csrf
                             <input type="hidden" name="order_id" value="{{ $order->id }}">
-                            <button type="submit" class="w-full bg-secondary text-gray-50 py-3.5 px-4 border-2 border-gray-950 font-black uppercase tracking-wider hover:bg-gray-950 transition-colors text-xs">
-                                Completa il Pagamento con Stripe
+                            <button type="submit" class="w-full bg-secondary text-gray-50 py-3.5 px-2 border-2 border-gray-950 font-black uppercase tracking-widest hover:bg-gray-950 transition-colors text-xs flex justify-center items-center gap-1">
+                                Paga Ora
+                                <span class="material-symbols-outlined text-sm">credit_card</span>
                             </button>
                         </form>
                     </div>

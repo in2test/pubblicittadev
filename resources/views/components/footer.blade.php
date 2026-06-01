@@ -8,6 +8,11 @@
                 SS 155 per Fiuggi, 128<br />
                 03010 Trivigliano (FR) - Italy
             </p>
+            <div class="mt-4">
+                <a href="https://maps.app.goo.gl/D2YXZVwvT2G7a" target="_blank" class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-accent-500 hover:text-accent-700 transition-colors">
+                    <span class="material-symbols-outlined text-[14px]">map</span> Vedi sulla Mappa
+                </a>
+            </div>
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Servizi</span>
@@ -33,13 +38,13 @@
         </div>
         <div>
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-6 block">Newsletter</span>
-            <div class="flex border-b border-gray-300 pb-2 mb-4">
+            <form action="#" method="POST" class="flex border-b border-gray-300 pb-2 mb-4" onsubmit="event.preventDefault(); alert('Iscrizione completata!');">
                 <input class="bg-transparent border-none outline-none focus:ring-0 text-[10px] font-mono w-full px-0"
-                    placeholder="INDIRIZZO EMAIL" type="email" />
-                <button class="text-accent-500 hover:text-accent-700 transition-colors">
+                    placeholder="INDIRIZZO EMAIL" type="email" name="email" required />
+                <button type="submit" class="text-accent-500 hover:text-accent-700 transition-colors">
                     <span class="material-symbols-outlined">east</span>
                 </button>
-            </div>
+            </form>
             <p class="text-[9px] font-mono text-accent-500">Ricevi aggiornamenti tecnici e nuovi arrivi DPI.</p>
         </div>
     </div>

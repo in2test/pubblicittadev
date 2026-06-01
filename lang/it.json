@@ -51,5 +51,6 @@
   "validation.password.letters": "La password deve contenere almeno una lettera.",
   "validation.password.symbols": "La password deve contenere almeno un carattere speciale (es. !@#$%^&*).",
   "validation.password.numbers": "La password deve contenere almeno un numero.",
-  "validation.password.uncompromised": "La password inserita è apparsa in una violazione dei dati. Scegli una password diversa."
+  "validation.password.uncompromised": "La password inserita è apparsa in una violazione dei dati. Scegli una password diversa.",
+  "auth.failed": "Credenziali non valide."
 }

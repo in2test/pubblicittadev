@@ -12,13 +12,13 @@
             <p class="text-xl text-secondary mb-8">Grazie per il tuo ordine. Stiamo elaborando la tua richiesta e riceverai una conferma via email a breve.</p>
             @if (request('session_id'))
                 <div class="bg-surface-container p-6 rounded-lg mb-8 inline-block">
-                    <p class="font-mono text-sm uppercase text-secondary">ID Sessione: <span class="text-primary">{{ request('session_id') }}</span></p>
+                    <p class="font-mono text-sm uppercase text-secondary">ID Sessione: <span class="text-primary break-all">{{ request('session_id') }}</span></p>
                 </div>
             @endif
         @endif
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <a href="{{ route('dashboard.orders') }}" class="bg-primary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-primary-container transition-colors">
+            <a href="{{ route('dashboard.orders') }}" class="bg-gray-900 text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">
                 I tuoi ordini
             </a>
             <a href="{{ route('catalog') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">

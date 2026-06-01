@@ -1,13 +1,11 @@
 <x-layouts::app :title="__('I Miei Ordini')">
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">I Miei Ordini</h2>
-            <p class="text-gray-500 text-sm mt-1">Cronologia dei tuoi acquisti e stato delle lavorazioni.</p>
-        </div>
-        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-gray-500 hover:text-gray-950">
-            <span class="material-symbols-outlined text-lg">arrow_back</span>
+    <div class="mb-8">
+        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-950 mb-4 transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
             <span>Torna alla Dashboard</span>
         </a>
+        <h2 class="text-2xl font-black uppercase tracking-tight text-gray-950">I Miei Ordini</h2>
+        <p class="text-gray-500 text-sm mt-1">Cronologia dei tuoi acquisti e stato delle lavorazioni.</p>
     </div>
 
     <div class="border-2 border-gray-950 bg-gray-50 overflow-x-auto shadow-md shadow-gray-950/5">

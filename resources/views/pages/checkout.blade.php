@@ -158,7 +158,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                         <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">3</div>
                         <h2 class="text-xl font-bold uppercase tracking-tight">Note sull'ordine (Opzionale)</h2>
                     </div>
-                    <flux:textarea wire:model.live="notes" placeholder="Istruzioni speciali per la consegna o la stampa..." rows="3" />
+                    <flux:textarea wire:model.live="notes" placeholder="Note aggiuntive per l'ordine (opzionale)..." rows="3" />
                 </section>
             </div>
 
@@ -212,10 +212,10 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                             <flux:button 
                                 type="submit" 
                                 variant="primary" 
-                                class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tighter! text-lg! shadow-lg shadow-gray-950/10"
+                                class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tight! text-xs sm:text-base! shadow-lg shadow-gray-950/10 px-2!"
                                 :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
                             >
-                                Paga Ora con Stripe
+                                Paga Ora
                                 <flux:icon icon="credit-card" class="ml-2" />
                             </flux:button>
 
@@ -224,10 +224,10 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                                 name="payment_method"
                                 value="quotation"
                                 variant="outline" 
-                                class="w-full h-12 border-2 border-gray-950! text-gray-950! font-black! uppercase! tracking-tighter! text-sm! hover:bg-gray-100!"
+                                class="w-full h-12 border-2 border-gray-950! text-gray-950! font-black! uppercase! tracking-tight! text-[10px] sm:text-xs! hover:bg-gray-100! px-2!"
                                 :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
                             >
-                                Richiedi Preventivo Privato
+                                Preventivo Privato
                                 <flux:icon icon="document-text" class="ml-2" />
                             </flux:button>
                         </div>

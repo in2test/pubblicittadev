@@ -253,7 +253,7 @@ new class extends Component {
 };
 ?>
 
-<div class="flex flex-col lg:flex-row gap-12 px-8 3xl:px-32 mt-12 mb-24 border-t border-gray-200 pt-12">
+<div class="flex flex-col lg:flex-row gap-12 px-6 lg:px-12 3xl:px-24 mt-4 mb-24 border-t border-gray-200 pt-8">
 
     {{-- Left Sidebar: Navigation and Filters --}}
     <x-catalog.sidebar

@@ -113,10 +113,11 @@ new class extends \Livewire\Component
 ?>
 
 <div>
-    <div class="mb-8">
+    <div class="mb-8 flex justify-between items-center border-b-2 border-gray-950 pb-4">
+        <h2 class="text-xl font-black uppercase tracking-wider text-gray-950">I Miei Indirizzi</h2>
         <button wire:click="openCreate" class="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-gray-50 border-2 border-gray-950 text-xs font-black uppercase tracking-widest hover:bg-gray-950 transition-colors">
-            <span class="material-symbols-outlined text-lg">plus</span>
-            <span>Aggiungi Indirizzo</span>
+            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="hidden sm:inline">Aggiungi</span>
         </button>
     </div>
 
@@ -247,7 +248,7 @@ new class extends \Livewire\Component
                         <div class="border-t-2 border-gray-950 pt-6 space-y-4">
                             <h4 class="text-xs font-black uppercase tracking-wider text-gray-950">Dati di Fatturazione Elettronica</h4>
                             
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 gap-4">
                                 <div class="space-y-2">
                                     <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Partita IVA</label>
                                     <input type="text" wire:model="vat_number" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
@@ -260,7 +261,7 @@ new class extends \Livewire\Component
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 gap-4">
                                 <div class="space-y-2">
                                     <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Codice SDI (7 caratteri)</label>
                                     <input type="text" wire:model="sdi_code" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
@@ -277,7 +278,7 @@ new class extends \Livewire\Component
 
                     <!-- Imposta Predefinito -->
                     <div class="flex items-center gap-2 py-2">
-                        <input type="checkbox" id="is_default" wire:model="is_default" class="w-4 h-4 border-2 border-gray-950 bg-gray-50 text-secondary focus:ring-0" />
+                        <input type="checkbox" id="is_default" wire:model="is_default" value="1" class="w-4 h-4 border-2 border-gray-950 bg-gray-50 text-secondary focus:ring-0" />
                         <label for="is_default" class="text-xs font-bold uppercase tracking-wide text-gray-900 cursor-pointer">Imposta come predefinito</label>
                     </div>
 
