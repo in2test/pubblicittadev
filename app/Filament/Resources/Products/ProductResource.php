@@ -304,13 +304,10 @@ class ProductResource extends Resource
                     ->required()
                     ->live()
                     ->afterStateUpdated(function (Set $set, $state) {
-                        if ($state) {
-                            /** @var VariationType|null $type */
-                            $type = VariationType::find($state);
-                            if ($type && $type->default_modifier_type) {
-                                $set('impact_type', $type->default_modifier_type);
-                                $set('is_modifier', $type->default_modifier_type !== 'redefine');
-                            }
+                        /** @var VariationType|null $type */
+                        if ($state && ($type = VariationType::find($state)) && $type->default_modifier_type) {
+                            $set('impact_type', $type->default_modifier_type);
+                            $set('is_modifier', $type->default_modifier_type !== 'redefine');
                         }
                     })
                     ->createOptionForm([
@@ -375,34 +372,16 @@ class ProductResource extends Resource
                     ->schema([
                         Select::make('variation_option_id')
                             ->label('Opzione')
-                            ->options(function (Get $get) {
-                                $variationTypeId = $get('../../variation_type_id');
-                                if (! $variationTypeId) {
-                                    return [];
-                                }
-
-                                return VariationOption::where('variation_type_id', $variationTypeId)->pluck('name', 'id');
-                            })
+                            ->options(fn (Get $get) => $get('../../variation_type_id') ? VariationOption::where('variation_type_id', $get('../../variation_type_id'))->pluck('name', 'id') : [])
                             ->required()
                             ->live()
                             ->createOptionForm(function (Get $get): array {
-                                $variationTypeId = $get('../../variation_type_id');
-                                $defaultType = 'flat';
-                                $isModifier = false;
-                                $isDimensions = false;
-                                if ($variationTypeId) {
-                                    /** @var VariationType|null $type */
-                                    $type = VariationType::find($variationTypeId);
-                                    if ($type) {
-                                        $isDimensions = $type->presentation_type === 'dimensions';
-                                        if ($type->default_modifier_type) {
-                                            $isModifier = in_array($type->default_modifier_type, ['flat', 'percentage']);
-                                            if ($isModifier) {
-                                                $defaultType = $type->default_modifier_type;
-                                            }
-                                        }
-                                    }
-                                }
+                                /** @var VariationType|null $type */
+                                $type = $get('../../variation_type_id') ? VariationType::find($get('../../variation_type_id')) : null;
+
+                                $isDimensions = $type?->presentation_type === 'dimensions';
+                                $isModifier = in_array($type?->default_modifier_type, ['flat', 'percentage']);
+                                $defaultType = $isModifier ? $type->default_modifier_type : 'flat';
 
                                 return [
                                     TextInput::make('name')
@@ -431,16 +410,7 @@ class ProductResource extends Resource
                                         ->visible($isModifier),
                                     TextInput::make('color_hex')
                                         ->label('Hex Colore (es. #ff0000)')
-                                        ->visible(function () use ($variationTypeId): bool {
-                                            if ($variationTypeId) {
-                                                /** @var VariationType|null $type */
-                                                $type = VariationType::find($variationTypeId);
-
-                                                return $type && $type->presentation_type === 'color_swatch';
-                                            }
-
-                                            return false;
-                                        }),
+                                        ->visible($type?->presentation_type === 'color_swatch'),
                                 ];
                             })
                             ->createOptionUsing(fn (array $data, Get $get) => VariationOption::create([
