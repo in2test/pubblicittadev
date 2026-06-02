@@ -93,8 +93,7 @@
                             <div>
                                 <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Sede
                                     Centrale</h3>
-                                <p class="text-xl font-bold tracking-tight">Via dell'Industria, 42<br />20100 Milano
-                                    (MI), Italia</p>
+                                <p class="text-xl font-bold tracking-tight">SS 155 per Fiuggi, 128<br />03010 Trivigliano (FR), Italia</p>
                             </div>
                         </div>
                         <div class="flex gap-6 items-start">
@@ -102,10 +101,9 @@
                                 <span class="material-symbols-outlined text-primary" data-icon="call">call</span>
                             </div>
                             <div>
-                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Reparto
-                                    Vendite</h3>
-                                <p class="text-xl font-bold tracking-tight">+39 02 1234 5678</p>
-                                <p class="text-sm text-secondary">commerciale@officinapro.it</p>
+                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Telefono e Vendite</h3>
+                                <p class="text-xl font-bold tracking-tight">+39 0775 520 273</p>
+                                <p class="text-sm text-secondary">info@pubblicitta24.it</p>
                             </div>
                         </div>
                         <div class="flex gap-6 items-start">
@@ -113,10 +111,9 @@
                                 <span class="material-symbols-outlined text-primary" data-icon="build">build</span>
                             </div>
                             <div>
-                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Assistenza
-                                    Tecnica</h3>
-                                <p class="text-xl font-bold tracking-tight">+39 02 1234 5679</p>
-                                <p class="text-sm text-secondary">supporto@officinapro.it</p>
+                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Supporto Clienti</h3>
+                                <p class="text-xl font-bold tracking-tight">+39 0775 520 273</p>
+                                <p class="text-sm text-secondary">assistenza@pubblicitta24.it</p>
                             </div>
                         </div>
                     </div>
@@ -139,19 +136,19 @@
                     </div>
                 </section>
                 <!-- Styled Map Placeholder -->
-                <div
-                    class="relative h-64 w-full grayscale contrast-125 border border-outline-variant overflow-hidden group">
+                <a href="https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679!16s%2Fg%2F11b6jgf95v?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank"
+                    class="block relative h-64 w-full grayscale contrast-125 border border-outline-variant overflow-hidden group">
                     <div
-                        class="absolute inset-0 bg-primary/5 group-hover:bg-transparent transition-colors z-10 pointer-events-none">
+                        class="absolute inset-0 bg-primary/5 group-hover:bg-primary/20 transition-colors z-10 pointer-events-none">
                     </div>
-                    <img alt="Vista mappa tecnica dell'area industriale" class="w-full h-full object-cover"
-                        data-alt="Vista mappa tecnica dell'area industriale" data-location="Milano"
+                    <img alt="Vista mappa di PubbliCittà 24" class="w-full h-full object-cover"
+                        data-alt="Mappa sede PubbliCittà 24 Trivigliano" data-location="Trivigliano"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYGJrboMpsfLGJC8PqUvDTTnMW2m01J8oDLwwNXIXK4s8o8xAN2P4538k5hdAAtpPVPqo53SX8qBF5NoA8zRNyONy34VOMa6bO-hvcIh8JO0SVzIdXNPDtShYePK9ac6MNlZW2zTbPzKR99QLfV0OvhPrWbw8FapwKqt41-dRzdQBLAh1R-BrRZrj8I5BJBVTLtGK13AcpPfT7ppdFxcXnEJMNvFeINvHfv9JM7cW6l28ptIBgGtsVW7YkEDWTh3H-igy0y4TwQa8" />
                     <div class="absolute bottom-4 left-4 bg-gray-50 px-4 py-2 shadow-xl z-20">
-                        <span class="font-mono text-[10px] uppercase tracking-tighter">Lat: 45.4642 | Long:
-                            9.1900</span>
+                        <span class="font-mono text-[10px] uppercase tracking-tighter">Lat: 41.7723 | Long:
+                            13.2718</span>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     </div>

@@ -4,14 +4,13 @@
         <div class="max-w-screen-2xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-20">
             <div class="lg:col-span-7 z-10">
                 <span
-                    class="inline-block px-3 py-1 bg-primary text-on-primary font-mono text-xs mb-6 uppercase tracking-widest">Established
-                    1994</span>
+                    class="inline-block px-3 py-1 bg-primary text-on-primary font-mono text-xs mb-6 uppercase tracking-widest">Esperti in
+                    Personalizzazione</span>
                 <h1 class="text-6xl md:text-8xl font-black tracking-tighter text-on-surface leading-[0.9] mb-8">
-                    Precisione <br /> Industriale <br /> <span class="text-primary-container">dal 1994</span>
+                    Abbigliamento e <br /> Stampa <br /> <span class="text-primary-container">Professionale</span>
                 </h1>
                 <p class="max-w-xl text-lg text-secondary leading-relaxed">
-                    Siamo gli architetti dell'identità professionale. Da tre decenni trasformiamo il concetto di
-                    abbigliamento da lavoro in uno strumento tecnico di precisione e sicurezza.
+                    Siamo i tuoi partner per l'identità visiva. Trasformiamo le tue idee in prodotti concreti, che si tratti di abbigliamento da lavoro personalizzato, gadget promozionali o stampa di grande formato.
                 </p>
             </div>
             <div class="lg:col-span-5 relative">
@@ -44,26 +43,21 @@
                 </div>
                 <div class="space-y-12">
                     <div class="border-l-2 border-primary-container pl-8 py-2">
-                        <h3 class="text-xl font-bold mb-4">Integrità Strutturale</h3>
+                        <h3 class="text-xl font-bold mb-4">Qualità senza compromessi</h3>
                         <p class="text-secondary leading-relaxed">
-                            Ogni capo e ogni branding che produciamo non è solo un prodotto estetico, ma una
-                            soluzione funzionale studiata per resistere agli ambienti più ostili. Applichiamo i
-                            principi della progettazione architettonica al tessile tecnico.
+                            Selezioniamo i migliori brand di abbigliamento (come NewWave, Projob, Clique) per offrirti capi che durano nel tempo, resistenti a lavaggi frequenti e perfetti per ogni ambiente di lavoro, dall'officina al ristorante.
                         </p>
                     </div>
                     <div class="border-l-2 border-outline pl-8 py-2">
-                        <h3 class="text-xl font-bold mb-4">Sostenibilità Certificata</h3>
+                        <h3 class="text-xl font-bold mb-4">Tecniche di personalizzazione</h3>
                         <p class="text-secondary leading-relaxed">
-                            La qualità industriale non può prescindere dalla responsabilità. Selezioniamo materiali
-                            e processi che garantiscono longevità al prodotto, riducendo gli sprechi e l'impatto
-                            ambientale della filiera produttiva.
+                            Ricamo, serigrafia, stampa transfer o stampa diretta (DTG/DTF). Scegliamo sempre la tecnica più adatta al tuo logo, al materiale del capo e al tuo budget, garantendo una resa estetica impeccabile.
                         </p>
                     </div>
                     <div class="border-l-2 border-outline pl-8 py-2">
-                        <h3 class="text-xl font-bold mb-4">Digitalizzazione del Branding</h3>
+                        <h3 class="text-xl font-bold mb-4">Oltre l'abbigliamento</h3>
                         <p class="text-secondary leading-relaxed">
-                            Integriamo tecnologie di stampa e ricamo di ultima generazione per assicurare che
-                            l'identità visiva del cliente sia resa con fedeltà micrometrica e resistenza permanente.
+                            La tua immagine coordinata non si ferma ai vestiti. Produciamo insegne, roll-up, banner, espositori, biglietti da visita e gadget promozionali. Un unico fornitore per tutta la tua comunicazione visiva.
                         </p>
                     </div>
                 </div>
@@ -156,14 +150,13 @@
                         class="w-12 h-12 flex items-center justify-center bg-surface-container-low mb-6 text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-all">
                         <span class="material-symbols-outlined">health_and_safety</span>
                     </div>
-                    <h3 class="text-xl font-bold mb-4">OEKO-TEX®</h3>
+                    <h3 class="text-xl font-bold mb-4">Stampa Digitale</h3>
                     <p class="text-secondary text-sm leading-relaxed mb-6">
-                        Standard globale che certifica l'assenza di sostanze nocive in ogni componente dei nostri
-                        capi di abbigliamento.
+                        Inchiostri ecologici di ultima generazione per stampe brillanti, durature e resistenti all'esterno.
                     </p>
                     <a class="text-xs font-bold uppercase text-primary-container tracking-tighter flex items-center hover:gap-2 transition-all"
                         href="#">
-                        Verifica Etichette <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                        Scopri di più <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
                     </a>
                 </div>
             </div>
@@ -219,9 +212,8 @@
                     <div
                         class="absolute top-0 right-0 bg-primary-container text-on-primary px-4 py-2 font-mono text-sm">
                         DIV-03</div>
-                    <h4 class="text-2xl font-bold mb-2 uppercase tracking-tighter">Branding Strategico</h4>
-                    <p class="text-secondary text-sm leading-relaxed">Sviluppo dell'identità visiva aziendale
-                        applicata a ogni touchpoint, dalla segnaletica al merchandising.</p>
+                    <h4 class="text-2xl font-bold mb-2 uppercase tracking-tighter">Merchandising & Gadget</h4>
+                    <p class="text-secondary text-sm leading-relaxed">Articoli promozionali, penne, borracce, portachiavi e tutto ciò che serve per lasciare un ricordo tangibile del tuo brand ai clienti.</p>
                 </div>
             </div>
         </div>
@@ -230,16 +222,16 @@
     <section class="py-20 bg-primary-container text-on-primary overflow-hidden relative">
         <div class="max-w-screen-2xl mx-auto px-6 flex flex-col items-center text-center relative z-10">
             <h2 class="text-4xl md:text-5xl font-black mb-8 max-w-2xl leading-[0.9] tracking-tighter uppercase">
-                Pronti a elevare i vostri standard industriali?</h2>
+                Pronti a dare vita al vostro brand?</h2>
             <div class="flex flex-wrap justify-center gap-4">
-                <button
-                    class="px-10 py-4 bg-on-primary text-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-surface active:scale-95 shadow-lg">
-                    Richiedi Consulenza Tecnica
-                </button>
-                <button
-                    class="px-10 py-4 border-2 border-on-primary text-on-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-on-primary/10 active:scale-95">
-                    Scarica Company Profile
-                </button>
+                <a href="{{ route('contact') }}"
+                    class="px-10 py-4 bg-on-primary text-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-surface active:scale-95 shadow-lg block text-center">
+                    Richiedi Preventivo Gratuito
+                </a>
+                <a href="{{ route('catalog.index') }}"
+                    class="px-10 py-4 border-2 border-on-primary text-on-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-on-primary/10 active:scale-95 block text-center">
+                    Sfoglia il Catalogo
+                </a>
             </div>
         </div>
         <!-- Decoro geometrico -->

@@ -218,7 +218,7 @@ Creati oltre **172 test** (Pest) che coprono:
 
 #### Static Pages & General
 - [x] **Cookies Banner**: Implement/fix the Cookies banner.
-- [ ] **Copywriting**: Rewrite texts for the "Servizi" and "Contact" static pages.
+- [x] **Copywriting**: Rewrite texts for the "Servizi" and "Contact" static pages.
 - [x] **Legal Pages**: Create missing pages for "Informativa Privacy", "Termini e Condizioni", "Cookie Policy", and "Spedizioni e Resi".
 - [x] **Portfolio**: Implement portfolio pages and an admin section to manage previous works.
 
