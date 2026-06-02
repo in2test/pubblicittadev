@@ -150,7 +150,7 @@ PIANO PROSSIMI GIORNI
 └─ ✅ Shipping Tracking integration
 
 Nuovi task da analizzare:
-├─ 🚧 Homepage Menu completion
+├─ ✅ Homepage Menu completion
 └─ ✅ Homepage Hero section redesign (carousel)
 ```
 
@@ -195,7 +195,7 @@ Creati oltre **172 test** (Pest) che coprono:
 #### Product Page
 - [x] **UI**: Remove "Carica il tuo design" (not needed).
 - [x] **UI**: Fix overflow issue on the "Aggiungi al carrello" button.
-- [ ] **Data Sourcing**: Review static text vs database-driven text for "Certifications", "Specifiche tecniche", "Caratteristiche Costruttive", and "Note per la Personalizzazione".
+- [x] **Data Sourcing**: Review static text vs database-driven text for "Certifications", "Specifiche tecniche", "Caratteristiche Costruttive", and "Note per la Personalizzazione".
 - [x] **Sizes**: Improve formatting of sizes for better readability.
 
 #### Cart Page

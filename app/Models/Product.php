@@ -137,6 +137,10 @@ use Throwable;
     'min_custom_height',
     'max_custom_height',
     'product_class',
+    'certifications',
+    'technical_specs',
+    'construction_features',
+    'customization_notes',
 ])]
 class Product extends Model implements HasMedia
 {

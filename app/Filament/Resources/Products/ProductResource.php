@@ -20,6 +20,7 @@ use BackedEnum;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -86,20 +87,29 @@ class ProductResource extends Resource
                                 static::getSheetSettingsSection(),
                             ]),
 
-                        Tab::make('2. Galleria e Varianti')
+                        Tab::make('2. Specifiche Aggiuntive')
+                            ->icon('heroicon-m-document-text')
+                            ->schema([
+                                RichEditor::make('technical_specs')->label('Specifiche Tecniche')->columnSpanFull(),
+                                RichEditor::make('certifications')->label('Certificazioni')->columnSpanFull(),
+                                RichEditor::make('construction_features')->label('Caratteristiche Costruttive')->columnSpanFull(),
+                                RichEditor::make('customization_notes')->label('Note per la Personalizzazione')->columnSpanFull(),
+                            ]),
+
+                        Tab::make('3. Galleria e Varianti')
                             ->icon('heroicon-m-photo')
                             ->schema([
                                 static::getImagesField(),
                                 static::getBaseVariationsRepeater(),
                             ]),
 
-                        Tab::make('3. Prezzi Varianti')
+                        Tab::make('4. Prezzi Varianti')
                             ->icon('heroicon-m-currency-euro')
                             ->schema([
                                 static::getSkusRepeater(),
                             ]),
 
-                        Tab::make('4. Associa Immagini')
+                        Tab::make('5. Associa Immagini')
                             ->icon('heroicon-m-squares-plus')
                             ->schema(static::getAssignImagesSection()),
                     ])
