@@ -113,3 +113,49 @@
 
     @endif
 </div>
+
+@php
+    $itemListElements = [];
+    $position = 1;
+
+    if ($catalogData['type'] === 'grouped') {
+        foreach ($catalogData['groups'] as $group) {
+            foreach ($group['products'] as $p) {
+                $itemListElements[] = [
+                    '@type' => 'ListItem',
+                    'position' => $position++,
+                    'url' => $p->url
+                ];
+            }
+        }
+        if (isset($catalogData['standalone'])) {
+            foreach ($catalogData['standalone'] as $p) {
+                $itemListElements[] = [
+                    '@type' => 'ListItem',
+                    'position' => $position++,
+                    'url' => $p->url
+                ];
+            }
+        }
+    } else {
+        foreach ($catalogData['products'] as $p) {
+            $itemListElements[] = [
+                '@type' => 'ListItem',
+                'position' => $position++,
+                'url' => $p->url
+            ];
+        }
+    }
+
+    $itemListSchema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'ItemList',
+        'itemListElement' => $itemListElements
+    ];
+@endphp
+
+@if(!empty($itemListElements))
+<script type="application/ld+json">
+{!! json_encode($itemListSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endif

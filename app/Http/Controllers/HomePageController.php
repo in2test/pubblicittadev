@@ -45,10 +45,11 @@ class HomePageController extends Controller
             ])
             ->with([
                 'category:id,name,slug',
-                'productVariationTypes:id,product_id,variation_type_id,has_images',
+                'productVariationTypes' => fn ($q) => $q->where('has_images', true)->select('id', 'product_id', 'variation_type_id', 'has_images'),
                 'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
                 'productVariationTypes.options.option:id,name,value,color_hex',
-                'media',
+                'media' => fn ($query) => $query->orderBy('order_column')->limit(1),
+                'images' => fn ($query) => $query->orderBy('order_by')->limit(1),
             ])
             ->orderByDesc('is_featured')
             ->orderByDesc('created_at')

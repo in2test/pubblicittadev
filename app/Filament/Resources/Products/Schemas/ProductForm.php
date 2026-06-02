@@ -17,6 +17,7 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -77,6 +78,21 @@ class ProductForm
                                             static::getPriceField(),
                                             static::getOfferPriceField(),
                                             static::getMinAreaField(),
+                                        ]),
+                                    Section::make('Dettagli Estesi')
+                                        ->schema([
+                                            RichEditor::make('technical_specs')
+                                                ->label('Specifiche Tecniche')
+                                                ->columnSpanFull(),
+                                            RichEditor::make('certifications')
+                                                ->label('Certificazioni')
+                                                ->columnSpanFull(),
+                                            RichEditor::make('construction_features')
+                                                ->label('Caratteristiche Costruttive')
+                                                ->columnSpanFull(),
+                                            RichEditor::make('customization_notes')
+                                                ->label('Note di Personalizzazione')
+                                                ->columnSpanFull(),
                                         ]),
                                     Section::make('Ottimizzazione Resa (Fogli e Misure)')
                                         ->visible(fn () => $productClass !== ProductClass::Apparel)

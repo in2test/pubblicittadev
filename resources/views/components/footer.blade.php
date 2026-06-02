@@ -17,45 +17,38 @@
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Servizi</span>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Biglietti da visita</a>
+                href="{{ route('services') }}">Biglietti da visita</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Volantini e brochure</a>
+                href="{{ route('services') }}">Volantini e brochure</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">T-shirt e abbigliamento</a>
+                href="{{ route('services') }}">T-shirt e abbigliamento</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Supporto</a>
+                href="{{ route('contact') }}">Supporto</a>
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Servizi</span>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Ricamo Industriale</a>
+                href="{{ route('services') }}">Ricamo Industriale</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Serigrafia</a>
+                href="{{ route('services') }}">Serigrafia</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Allestimenti</a>
+                href="{{ route('services') }}">Allestimenti</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="#">Gadget Tech</a>
+                href="{{ route('portfolio') }}">Portfolio Lavori</a>
         </div>
         <div>
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-6 block">Newsletter</span>
-            <form action="#" method="POST" class="flex border-b border-gray-300 pb-2 mb-4" onsubmit="event.preventDefault(); alert('Iscrizione completata!');">
-                <input class="bg-transparent border-none outline-none focus:ring-0 text-[10px] font-mono w-full px-0"
-                    placeholder="INDIRIZZO EMAIL" type="email" name="email" required />
-                <button type="submit" class="text-accent-500 hover:text-accent-700 transition-colors">
-                    <span class="material-symbols-outlined">east</span>
-                </button>
-            </form>
-            <p class="text-[9px] font-mono text-accent-500">Ricevi aggiornamenti tecnici e nuovi arrivi DPI.</p>
+            <livewire:newsletter-form />
         </div>
     </div>
     <div
         class="px-12 py-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-        <span class="font-mono text-xs uppercase tracking-widest text-gray-700">© 2026 PUBBLICITTÀ24 srls</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-gray-700">© {{ date('Y') }} PUBBLICITTÀ24 srls</span>
         <div class="flex gap-8">
             <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
-                href="#">Informativa Privacy</a>
+                href="{{ route('privacy') }}">Informativa Privacy</a>
             <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
-                href="#">Termini e Condizioni</a>
+                href="{{ route('terms') }}">Termini e Condizioni</a>
         </div>
     </div>
 </footer>

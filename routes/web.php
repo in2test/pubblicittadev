@@ -7,7 +7,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GoogleMerchantFeedController;
 use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\WebhookController;
@@ -20,6 +22,9 @@ use Livewire\Volt\Volt;
 
 Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
+Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/terms', 'terms')->name('terms');
+Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
 Route::view('/palette', 'palette')->name('palette');
 
 // Cart routes
@@ -30,6 +35,9 @@ Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.rem
 Route::delete('/cart/remove-multiple', [CartController::class, 'removeMultiple'])->name('cart.removeMultiple');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/cart/price', [CartController::class, 'price'])->name('cart.price');
+
+// Google Merchant XML Feed
+Route::get('/feed/google-merchant.xml', [GoogleMerchantFeedController::class, 'index'])->name('feed.google-merchant');
 
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 

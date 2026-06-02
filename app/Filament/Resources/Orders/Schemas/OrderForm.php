@@ -12,6 +12,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
@@ -109,6 +110,29 @@ class OrderForm
                             ->label('Note Cliente (Inserite al Checkout)')
                             ->columnSpanFull()
                             ->disabled(),
+                    ]),
+
+                Section::make('Spedizione (Tracking)')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            Select::make('transporter_id')
+                                ->relationship('transporter', 'name')
+                                ->label('Corriere'),
+                            TextInput::make('tracking_code')
+                                ->label('Codice di Tracciamento')
+                                ->maxLength(255),
+                        ]),
+                    ]),
+
+                Section::make('Fatturazione (PDF)')
+                    ->schema([
+                        SpatieMediaLibraryFileUpload::make('invoice')
+                            ->collection('invoices')
+                            ->label('Carica Fattura PDF')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->maxSize(5120)
+                            ->downloadable()
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Lavorazioni (Items)')

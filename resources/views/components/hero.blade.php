@@ -38,19 +38,41 @@
         </div>
     </div>
     <!-- Right Side: Imagery -->
-    <div class="w-full lg:w-1/2 relative bg-gray-950 group">
-        <img alt="Industrial Workwear Detail"
-            class="object-cover grayscale brightness-75 dark:brightness-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300 w-full h-full"
-            data-alt="Close up of high quality technical workwear fabric and stitching"
-            src="https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg" />
-        <!-- Overlay Elements -->
-        <div class="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent"></div>
-        <div class="absolute bottom-12 right-8 3xl:right-32 text-gray-50 text-right">
-            <div class="font-mono text-xs mb-2 opacity-60">REF: PB-2024</div>
-            <div class="text-2xl font-black tracking-tight italic">STAMPA ALTA DEFINIZIONE</div>
-        </div>
-        <!-- Floating Card -->
-        <div class="absolute top-20 left-12 lg:left-20 bg-gray-50/80 p-6 shadow-2xl max-w-xs hidden md:block backdrop-blur-sm">
+    <div class="w-full lg:w-1/2 relative bg-gray-950 group overflow-hidden" x-data="{
+        activeSlide: 0,
+        slides: [
+            { img: 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', label: 'STAMPA ALTA DEFINIZIONE', sub: 'REF: PB-2024' },
+            { img: 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', label: 'MATERIALI PREMIUM', sub: 'REF: MAT-100' },
+            { img: 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', label: 'ABBIGLIAMENTO LAVORO', sub: 'REF: WORK-99' }
+        ],
+        init() {
+            setInterval(() => {
+                this.activeSlide = this.activeSlide === this.slides.length - 1 ? 0 : this.activeSlide + 1;
+            }, 5000);
+        }
+    }">
+        <template x-for="(slide, index) in slides" :key="index">
+            <div x-show="activeSlide === index"
+                 x-transition:enter="transition-opacity ease-in-out duration-1000"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity ease-in-out duration-1000"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="absolute inset-0 w-full h-full">
+                <img :src="slide.img"
+                    class="object-cover grayscale brightness-75 dark:brightness-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300 w-full h-full"
+                    :alt="slide.label" />
+                <!-- Overlay Elements -->
+                <div class="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent"></div>
+                <div class="absolute bottom-12 right-8 3xl:right-32 text-gray-50 text-right">
+                    <div class="font-mono text-xs mb-2 opacity-60" x-text="slide.sub"></div>
+                    <div class="text-2xl font-black tracking-tight italic" x-text="slide.label"></div>
+                </div>
+            </div>
+        </template>
+        <!-- Floating Card (Static on top of carousel) -->
+        <div class="absolute top-20 left-12 lg:left-20 bg-gray-50/80 p-6 shadow-2xl max-w-xs hidden md:block backdrop-blur-sm z-20">
             <div class="font-mono text-[10px] text-accent-500 mb-4">SYSTEM_STATUS: ACTIVE</div>
             <h3 class="text-xl font-bold mb-2 text-gray-900">Abbigliamento Premium</h3>
             <p class="text-sm text-gray-700 mb-4 leading-snug">Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.</p>

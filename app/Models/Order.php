@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Override;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property int $id
@@ -80,16 +82,20 @@ use Override;
     'stripe_payment_intent_id',
     'paid_at',
     'notes',
+    'transporter_id',
+    'tracking_code',
 ])]
 /**
  * @use HasFactory<OrderFactory>
  */
-class Order extends Model
+class Order extends Model implements HasMedia
 {
     /**
      * @use HasFactory<OrderFactory>
      */
     use HasFactory;
+
+    use InteractsWithMedia;
 
     /**
      * Casts for the Order model.
@@ -142,6 +148,33 @@ class Order extends Model
     public function billingAddress(): BelongsTo
     {
         return $this->belongsTo(Address::class, 'billing_address_id');
+    }
+
+    /**
+     * Relationship: Order -> Transporter
+     *
+     * @return BelongsTo<Transporter, $this>
+     */
+    public function transporter(): BelongsTo
+    {
+        return $this->belongsTo(Transporter::class);
+    }
+
+    /**
+     * Get the full tracking URL if transporter and tracking code are set.
+     */
+    public function getTrackingUrlAttribute(): ?string
+    {
+        if (! $this->transporter_id || ! $this->tracking_code || ! $this->transporter) {
+            return null;
+        }
+
+        $template = $this->transporter->tracking_url_template;
+        if (! $template) {
+            return null;
+        }
+
+        return str_replace('{tracking_code}', $this->tracking_code, $template);
     }
 
     /**

@@ -8,28 +8,28 @@
                 WhatsApp per maggiori informazioni.</p>
         </div>
         <div class="xl:w-2/3 flex flex-wrap justify-between gap-8 w-full">
-            <div class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px]">
+            <a href="https://wa.me/393278564120" target="_blank" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">phone</span>
                 <div>
                     <div class="font-bold text-xs">WhatsApp</div>
-                    <div class="text-[10px] font-mono text-secondary">+39 0775 520 273</div>
+                    <div class="text-[10px] font-mono text-secondary">+39 327 8564120</div>
                 </div>
-            </div>
-            <div class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px]">
+            </a>
+            <a href="mailto:info@pubblicitta24.it" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">mail</span>
                 <div>
                     <div class="font-bold text-xs">Email</div>
                     <div class="text-[10px] font-mono text-secondary">info@pubblicitta24.it</div>
                 </div>
-            </div>
-            <div class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px]">
+            </a>
+            <a href="https://maps.google.com/?q=SS+155+per+Fiuggi,+128+-+03010+Trivigliano+(FR)" target="_blank" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">pin</span>
                 <div>
                     <div class="font-bold text-xs">Sede</div>
                     <div class="text-[10px] font-mono text-secondary">SS 155 per Fiuggi, 128 - 03010 Trivigliano (FR)
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </section>

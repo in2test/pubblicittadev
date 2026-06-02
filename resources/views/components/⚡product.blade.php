@@ -671,4 +671,69 @@ new class extends Component {
 
         </div>
     </div>
+
+    @if($this->product()->technical_specs || $this->product()->certifications || $this->product()->construction_features || $this->product()->customization_notes)
+        <div class="px-8 py-16 3xl:px-32 bg-white border-t-4 border-gray-950">
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+                @if($this->product()->technical_specs)
+                    <div>
+                        <h2 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-4 border-b-2 border-gray-950 pb-2 inline-block">Specifiche Tecniche</h2>
+                        <div class="prose prose-sm prose-gray max-w-none">
+                            {!! $this->product()->technical_specs !!}
+                        </div>
+                    </div>
+                @endif
+                
+                @if($this->product()->certifications)
+                    <div>
+                        <h2 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-4 border-b-2 border-gray-950 pb-2 inline-block">Certificazioni</h2>
+                        <div class="prose prose-sm prose-gray max-w-none">
+                            {!! $this->product()->certifications !!}
+                        </div>
+                    </div>
+                @endif
+                
+                @if($this->product()->construction_features)
+                    <div>
+                        <h2 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-4 border-b-2 border-gray-950 pb-2 inline-block">Caratteristiche Costruttive</h2>
+                        <div class="prose prose-sm prose-gray max-w-none">
+                            {!! $this->product()->construction_features !!}
+                        </div>
+                    </div>
+                @endif
+                
+                @if($this->product()->customization_notes)
+                    <div>
+                        <h2 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-4 border-b-2 border-gray-950 pb-2 inline-block">Note di Personalizzazione</h2>
+                        <div class="prose prose-sm prose-gray max-w-none">
+                            {!! $this->product()->customization_notes !!}
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ $product->name }}",
+  "image": "{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images', 'large') : url('/placeholder.png') }}",
+  "description": "{{ $product->plain_description }}",
+  "sku": "{{ $product->sku }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ $product->brand }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ $product->url }}",
+    "priceCurrency": "EUR",
+    "price": "{{ number_format((float) $product->calculated_min_price, 2, '.', '') }}",
+    "availability": "https://schema.org/InStock",
+    "itemCondition": "https://schema.org/NewCondition"
+  }
+}
+</script>

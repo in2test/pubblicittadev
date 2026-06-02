@@ -10,7 +10,6 @@
     $colorData = $product->getPreviewColors(8);
 
     // Pricing Data
-    $priceData = $product->getDisplayPriceData(1);
     $startingPrice = $product->getStartingPrice();
 @endphp
 
@@ -45,7 +44,7 @@
 
                 {{-- Pricing --}}
                 <div class="flex flex-col items-end">
-                    @if ($priceData['on_request'])
+                    @if ($product->isOnRequest())
                         <span class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
                             Su Richiesta
                         </span>

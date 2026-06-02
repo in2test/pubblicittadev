@@ -264,6 +264,44 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Check if product is on request.
+     */
+    public function isOnRequest(): bool
+    {
+        return $this->price <= 0 && $this->offer_price <= 0;
+    }
+
+    /**
+     * Get the brand of the product.
+     */
+    public function getBrandAttribute(): string
+    {
+        $nameLower = strtolower($this->name);
+        if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
+            return 'NewWave';
+        }
+        if (str_contains($nameLower, 'projob')) {
+            return 'ProJob';
+        }
+        if (str_contains($nameLower, 'clique')) {
+            return 'Clique';
+        }
+        if (str_contains($nameLower, 'craft')) {
+            return 'Craft';
+        }
+
+        return 'Pubblicittà24';
+    }
+
+    /**
+     * Get the plain text description.
+     */
+    public function getPlainDescriptionAttribute(): string
+    {
+        return trim(strip_tags($this->description ?? ''));
+    }
+
+    /**
      * Helper Methods for Views
      */
 

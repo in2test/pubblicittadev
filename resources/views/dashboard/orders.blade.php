@@ -49,10 +49,18 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('dashboard.orders.show', $order) }}" 
-                               class="inline-block px-3 py-1 bg-secondary text-gray-50 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-950 hover:text-gray-50 transition-colors">
-                                Dettagli
-                            </a>
+                            <div class="flex gap-2 justify-end">
+                                @if($order->hasMedia('invoices'))
+                                    <a href="{{ $order->getFirstMediaUrl('invoices') }}" target="_blank"
+                                       class="inline-block px-3 py-1 bg-white text-gray-950 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-100 transition-colors">
+                                        Fattura
+                                    </a>
+                                @endif
+                                <a href="{{ route('dashboard.orders.show', $order) }}" 
+                                   class="inline-block px-3 py-1 bg-secondary text-gray-50 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-950 hover:text-gray-50 transition-colors">
+                                    Dettagli
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty

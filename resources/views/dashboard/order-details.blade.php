@@ -101,6 +101,26 @@
                         </span>
                     </div>
                 </div>
+
+                @if($order->trackingUrl)
+                    <div>
+                        <h3 class="mb-2 font-black uppercase tracking-widest text-[10px] text-gray-400">Tracciamento Spedizione</h3>
+                        <a href="{{ $order->trackingUrl }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors">
+                            <span>Traccia con {{ $order->transporter->name }}</span>
+                            <span class="material-symbols-outlined text-sm">local_shipping</span>
+                        </a>
+                        <p class="text-[10px] text-gray-500 font-mono mt-1">Codice: {{ $order->tracking_code }}</p>
+                    </div>
+                @endif
+
+                @if($order->hasMedia('invoices'))
+                    <div class="pt-4 border-t-2 border-dashed border-gray-250">
+                        <a href="{{ $order->getFirstMediaUrl('invoices') }}" target="_blank" class="w-full bg-white text-gray-950 py-3.5 px-2 border-2 border-gray-950 font-black uppercase tracking-widest hover:bg-gray-100 transition-colors text-xs flex justify-center items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">receipt</span>
+                            Scarica Fattura
+                        </a>
+                    </div>
+                @endif
                 
                 @if($order->payment_status === 'pending')
                     <div class="mt-6 pt-2 border-t-2 border-dashed border-gray-250">

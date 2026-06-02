@@ -144,10 +144,14 @@ MAGGIO 2026 (Stato Attuale)
 └─ ✅ Test Suite (172 test Pest completati e passanti, 2 skippati)
 
 PIANO PROSSIMI GIORNI
-├─ 🚧 Test e verifica di prodotti a superficie (Pannelli rigidi / Rigid panels)
-├─ 🚧 Test e verifica di prodotti unitari/fissi (Espositori roll-up / Roll-ups)
-├─ 🚧 Gestione Fatture (PDF invoices)
-└─ 🚧 Shipping Tracking integration
+├─ ✅ Test e verifica di prodotti a superficie (Pannelli rigidi / Rigid panels)
+├─ ✅ Test e verifica di prodotti unitari/fissi (Espositori roll-up / Roll-ups)
+├─ ✅ Gestione Fatture (PDF invoices)
+└─ ✅ Shipping Tracking integration
+
+Nuovi task da analizzare:
+├─ 🚧 Homepage Menu completion
+└─ 🚧 Homepage Hero section redesign (carousel)
 ```
 
 ---
@@ -164,14 +168,14 @@ Creati oltre **172 test** (Pest) che coprono:
 
 ## ⏭️ PHASE 3: Completamento & Go-Live
 
-### 📦 Modulo 4: Admin Order Management (IN CORSO)
+### 📦 Modulo 4: Admin Order Management (COMPLETATO)
 - [x] `OrderResource` in Filament.
 - [x] Sistema Notifiche Email automatiche (ordine pagato + richiesta preventivo).
-- [ ] Gestione Fatture & Tracking Spedizioni.
+- [x] Gestione Fatture & Tracking Spedizioni.
 
-### 📐 Modulo 5: Verifica Tipologie di Prodotto Avanzate (IN CORSO)
-- [ ] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
-- [ ] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
+### 📐 Modulo 5: Verifica Tipologie di Prodotto Avanzate (COMPLETATO)
+- [x] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
+- [x] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
 
 ### 🛠️ Modulo 6: UI/UX Fixes & Improvements (Feedback Utente)
 
