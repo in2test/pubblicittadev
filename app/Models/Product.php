@@ -416,7 +416,7 @@ class Product extends Model implements HasMedia
      * Much more efficient than getAllImages() when only one color's images are needed.
      *
      * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
+     * @return Collection<int, object{id: string, url: string|null, thumb: string|null, medium: string|null, large: string|null, variation_option_id: mixed, variation_option_ids: mixed, order: int|null, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
      */
     public function getImagesForOption(?int $variationOptionId): Collection
     {
@@ -508,7 +508,7 @@ class Product extends Model implements HasMedia
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
+     * @return Collection<int, object{id: string, url: string|null, thumb: string|null, medium: string|null, large: string|null, variation_option_id: mixed, variation_option_ids: mixed, order: int|null, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
      */
     public function getAllImages(): Collection
     {

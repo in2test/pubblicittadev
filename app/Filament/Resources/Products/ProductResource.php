@@ -305,7 +305,8 @@ class ProductResource extends Resource
                     ->live()
                     ->afterStateUpdated(function (Set $set, $state) {
                         /** @var VariationType|null $type */
-                        if ($state && ($type = VariationType::find($state)) && $type->default_modifier_type) {
+                        $type = $state ? VariationType::find($state) : null;
+                        if ($type && $type->default_modifier_type) {
                             $set('impact_type', $type->default_modifier_type);
                             $set('is_modifier', $type->default_modifier_type !== 'redefine');
                         }
@@ -381,7 +382,7 @@ class ProductResource extends Resource
 
                                 $isDimensions = $type?->presentation_type === 'dimensions';
                                 $isModifier = in_array($type?->default_modifier_type, ['flat', 'percentage']);
-                                $defaultType = $isModifier ? $type->default_modifier_type : 'flat';
+                                $defaultType = ($isModifier && $type) ? $type->default_modifier_type : 'flat';
 
                                 return [
                                     TextInput::make('name')
