@@ -68,7 +68,7 @@
     <!-- Sidebar -->
     @endif
     <!-- Main Content -->
-    <main class="pt-20">
+    <main class="pt-4 lg:pt-20">
         {{ $slot }}
     </main>
     <x-footer />

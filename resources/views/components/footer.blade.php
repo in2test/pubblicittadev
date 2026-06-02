@@ -1,5 +1,5 @@
 <footer class="bg-gray-50 border-t-0">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 3xl:px-32 py-16 w-full mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 lg:px-12 3xl:px-24 py-16 w-full mx-auto">
         <div>
             <div class="text-lg font-bold text-gray-900 mb-6 font-headline">PUBBLICITTÀ24
             </div>
@@ -38,7 +38,7 @@
         </div>
     </div>
     <div
-        class="px-12 py-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+        class="px-6 lg:px-12 3xl:px-24 py-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <span class="font-mono text-xs uppercase tracking-widest text-gray-700">© {{ date('Y') }} PUBBLICITTÀ24 srls</span>
         <div class="flex flex-wrap gap-x-8 gap-y-2 justify-center md:justify-end">
             <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
