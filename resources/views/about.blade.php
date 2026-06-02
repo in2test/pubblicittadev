@@ -1,7 +1,7 @@
 <x-layout>
     <!-- Hero Section: Precisione Industriale -->
     <section class="relative min-h-[614px] flex items-center overflow-hidden bg-surface-container-low technical-grid">
-        <div class="max-w-screen-2xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-20">
+        <div class="mx-auto px-8 3xl:px-32 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-20">
             <div class="lg:col-span-7 z-10">
                 <span
                     class="inline-block px-3 py-1 bg-primary text-on-primary font-mono text-xs mb-6 uppercase tracking-widest">Esperti in
@@ -30,7 +30,7 @@
     </section>
     <!-- Sezione 1: Missione (Layout Audace) -->
     <section class="py-24 bg-surface-container-lowest">
-        <div class="max-w-screen-2xl mx-auto px-6">
+        <div class="mx-auto px-8 3xl:px-32">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                 <div class="sticky top-32">
                     <h2 class="text-sm font-bold uppercase tracking-widest text-primary mb-4 flex items-center">
@@ -66,7 +66,7 @@
     </section>
     <!-- Sezione 2: I Nostri Numeri (Bento Grid Tecnico) -->
     <section class="py-24 bg-surface-container">
-        <div class="max-w-screen-2xl mx-auto px-6">
+        <div class="mx-auto px-8 3xl:px-32">
             <div
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0.5 bg-outline-variant/30 border border-outline-variant/30">
                 <div class="bg-surface p-12 flex flex-col justify-between aspect-square group">
@@ -106,7 +106,7 @@
     </section>
     <!-- Sezione 3: Certificazioni e Qualità -->
     <section class="py-24 bg-surface-container-lowest overflow-hidden">
-        <div class="max-w-screen-2xl mx-auto px-6">
+        <div class="mx-auto px-8 3xl:px-32">
             <div class="mb-16">
                 <h2 class="text-3xl font-black tracking-tight mb-4 uppercase">Certificazioni e Qualità</h2>
                 <div class="h-1 w-24 bg-primary-container"></div>
@@ -164,7 +164,7 @@
     </section>
     <!-- Sezione 4: Divisioni Operative -->
     <section class="py-24 bg-surface technical-grid">
-        <div class="max-w-screen-2xl mx-auto px-6">
+        <div class="mx-auto px-8 3xl:px-32">
             <div class="text-center mb-16">
                 <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-secondary mb-4">Ecosistema Produttivo
                 </h2>
@@ -220,7 +220,7 @@
     </section>
     <!-- CTA Finale -->
     <section class="py-20 bg-primary-container text-on-primary overflow-hidden relative">
-        <div class="max-w-screen-2xl mx-auto px-6 flex flex-col items-center text-center relative z-10">
+        <div class="mx-auto px-8 3xl:px-32 flex flex-col items-center text-center relative z-10">
             <h2 class="text-4xl md:text-5xl font-black mb-8 max-w-2xl leading-[0.9] tracking-tighter uppercase">
                 Pronti a dare vita al vostro brand?</h2>
             <div class="flex flex-wrap justify-center gap-4">

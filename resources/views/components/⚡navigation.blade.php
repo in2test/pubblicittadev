@@ -84,7 +84,7 @@ new class extends Component {
                 </li>
 
                 <li><a href="{{ route('portfolio') }}" class="mega-simple-link">PORTFOLIO</a></li>
-                <li><a href="{{ route('services') }}" class="mega-simple-link">SERVIZI</a></li>
+                <li><a href="{{ route('about') }}" class="mega-simple-link">CHI SIAMO</a></li>
                 <li><a href="{{ route('contact') }}" class="mega-simple-link">CONTATTI</a></li>
             </ul>
 
@@ -227,8 +227,8 @@ new class extends Component {
                     <a href="{{ route('portfolio') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
                         PORTFOLIO
                     </a>
-                    <a href="{{ route('services') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
-                        SERVIZI
+                    <a href="{{ route('about') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
+                        CHI SIAMO
                     </a>
                     <a href="{{ route('contact') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
                         CONTATTI
@@ -306,8 +306,8 @@ new class extends Component {
                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                 </a>
                                 @endforeach
-                                <a href="{{ route('services') }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2">
-                                    <span>Servizi</span>
+                                <a href="{{ route('about') }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2">
+                                    <span>Chi Siamo</span>
                                     <span class="material-symbols-outlined text-xs">arrow_forward</span>
                                 </a>
                                 <a href="{{ route('contact') }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2">

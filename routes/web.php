@@ -20,7 +20,7 @@ use Livewire\Volt\Volt;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
 
-Route::view('/services', 'services')->name('services');
+Route::view('/chi-siamo', 'about')->name('about');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/cookie-policy', 'cookie-policy')->name('cookie-policy');

@@ -1,5 +1,5 @@
 <x-layout title="Cookie Policy">
-    <div class="max-w-screen-xl mx-auto px-6 py-16 md:py-24">
+    <div class="mx-auto px-8 3xl:px-32 py-16 md:py-24">
         <div class="mb-12">
             <h1 class="text-4xl md:text-6xl font-black tracking-tighter text-on-surface leading-tight uppercase">
                 Cookie Policy
