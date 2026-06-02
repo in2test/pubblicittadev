@@ -27,18 +27,10 @@
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Lavorazioni & Prodotti</span>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Ricamo Industriale</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Serigrafia</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Allestimenti</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('services') }}">Biglietti da visita</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('services') }}">Volantini e brochure</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('catalog', 't-shirts') }}">T-shirt e abbigliamento</a>
+            @foreach(\App\Models\Category::whereNull('parent_id')->where('is_active', true)->get() as $category)
+                <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+                    href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
+            @endforeach
         </div>
         <div>
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-6 block">Newsletter</span>
