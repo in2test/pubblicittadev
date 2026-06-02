@@ -28,11 +28,11 @@
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Servizi</span>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Ricamo Industriale</a>
+                href="{{ route('services') }}">Ricamo Industriale</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Serigrafia</a>
+                href="{{ route('services') }}">Serigrafia</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Allestimenti</a>
+                href="{{ route('services') }}">Allestimenti</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
                 href="{{ route('portfolio') }}">Portfolio Lavori</a>
         </div>
