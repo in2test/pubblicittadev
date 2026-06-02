@@ -14,7 +14,7 @@
                     https://www.pubblicitta24.it/
                     </x-slot>
                     <!-- Hero Section -->
-                    <x-hero />
+                    <x-hero :slides="$heroSlides" />
                     <!-- Services Section: Bento Grid -->
                     <x-services />
                     <!-- Featured Products -->

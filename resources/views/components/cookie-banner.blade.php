@@ -7,9 +7,21 @@
                 setTimeout(() => this.show = true, 1000);
             }
         },
-        accept() {
-            localStorage.setItem('cookie_consent', 'true');
+        acceptAll() {
+            localStorage.setItem('cookie_consent', 'all');
+            this.updateGtagConsent('granted');
             this.show = false;
+        },
+        acceptEssential() {
+            localStorage.setItem('cookie_consent', 'essential');
+            this.show = false;
+        },
+        updateGtagConsent(status) {
+            if (typeof gtag === 'function') {
+                gtag('consent', 'update', {
+                    'analytics_storage': status
+                });
+            }
         }
     }"
     x-show="show"
@@ -31,10 +43,10 @@
             </p>
         </div>
         <div class="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-            <button @click="accept()" class="w-full sm:w-auto bg-secondary text-gray-50 px-8 py-3 font-black border-2 border-gray-950 uppercase tracking-widest text-xs hover:bg-gray-950 transition-colors whitespace-nowrap">
+            <button @click="acceptAll()" class="w-full sm:w-auto bg-secondary text-gray-50 px-8 py-3 font-black border-2 border-gray-950 uppercase tracking-widest text-xs hover:bg-gray-950 transition-colors whitespace-nowrap">
                 Accetta Tutto
             </button>
-            <button @click="accept()" class="w-full sm:w-auto bg-gray-50 border-2 border-gray-950 text-gray-950 px-8 py-3 font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
+            <button @click="acceptEssential()" class="w-full sm:w-auto bg-gray-50 border-2 border-gray-950 text-gray-950 px-8 py-3 font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
                 Solo Essenziali
             </button>
         </div>

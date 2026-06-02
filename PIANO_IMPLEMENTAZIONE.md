@@ -151,7 +151,7 @@ PIANO PROSSIMI GIORNI
 
 Nuovi task da analizzare:
 ├─ 🚧 Homepage Menu completion
-└─ 🚧 Homepage Hero section redesign (carousel)
+└─ ✅ Homepage Hero section redesign (carousel)
 ```
 
 ---
@@ -180,9 +180,9 @@ Creati oltre **172 test** (Pest) che coprono:
 ### 🛠️ Modulo 6: UI/UX Fixes & Improvements (Feedback Utente)
 
 #### Home Page
-- [ ] **Menu**: Fix inconsistent text casing (currently passes between lower/uppercase).
-- [ ] **Hero Section**: Redesign the hero section (consider replacing it with a carousel).
-- [ ] **Certification Links**: Add/fix certification links.
+- [x] **Menu**: Fix inconsistent text casing (currently passes between lower/uppercase).
+- [x] **Hero Section**: Redesign the hero section (consider replacing it with a carousel).
+- [x] **Certification Links**: Add/fix certification links.
 - [x] **Newsletter**: Implement/fix newsletter section.
 - [x] **Footer**: Add links to maps in the footer.
 
@@ -219,8 +219,8 @@ Creati oltre **172 test** (Pest) che coprono:
 #### Static Pages & General
 - [x] **Cookies Banner**: Implement/fix the Cookies banner.
 - [ ] **Copywriting**: Rewrite texts for the "Servizi" and "Contact" static pages.
-- [ ] **Legal Pages**: Create missing pages for "Informativa Privacy" and "Termini e Condizioni".
-- [ ] **Portfolio**: Implement portfolio pages and an admin section to manage previous works.
+- [x] **Legal Pages**: Create missing pages for "Informativa Privacy", "Termini e Condizioni", "Cookie Policy", and "Spedizioni e Resi".
+- [x] **Portfolio**: Implement portfolio pages and an admin section to manage previous works.
 
 ---
 

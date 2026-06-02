@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\PortfolioItem;
 use App\Models\Product;
 use Illuminate\View\View;
 
@@ -56,6 +57,68 @@ class HomePageController extends Controller
             ->take(9)
             ->get();
 
-        return view('welcome', ['products' => $products]);
+        $portfolioItems = PortfolioItem::has('media')
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get();
+
+        $portfolioCount = $portfolioItems->count();
+        $productsNeeded = 6 - $portfolioCount;
+
+        $carouselProducts = Product::active()
+            ->where(function ($q) {
+                $q->has('media')->orHas('images');
+            })
+            ->with(['media', 'images'])
+            ->orderByDesc('is_featured')
+            ->inRandomOrder()
+            ->take($productsNeeded)
+            ->get();
+
+        $heroSlides = [];
+
+        foreach ($portfolioItems as $item) {
+            $heroSlides[] = [
+                'img' => $item->getFirstMediaUrl('portfolio_images'),
+                'label' => mb_strtoupper((string) $item->title),
+                'sub' => 'PROGETTO PORTFOLIO',
+            ];
+        }
+
+        foreach ($carouselProducts as $item) {
+            $img = $item->getFirstMediaUrl('product_images');
+            if (! $img && $item->images->first()) {
+                $firstImg = $item->images->first();
+                $img = $firstImg->image_url ?: ($firstImg->image_path ? asset('storage/'.$firstImg->image_path) : '');
+            }
+
+            $heroSlides[] = [
+                'img' => $img,
+                'label' => mb_strtoupper((string) $item->name),
+                'sub' => 'REF: '.($item->sku ?? 'PROD-'.$item->id),
+            ];
+        }
+
+        $defaultSlides = [
+            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'STAMPA ALTA DEFINIZIONE', 'sub' => 'REF: PB-2024'],
+            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'MATERIALI PREMIUM', 'sub' => 'REF: MAT-100'],
+            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'ABBIGLIAMENTO LAVORO', 'sub' => 'REF: WORK-99'],
+            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'QUALITÀ GARANTITA', 'sub' => 'REF: PB-2025'],
+            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'PERSONALIZZAZIONE', 'sub' => 'REF: MAT-101'],
+            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'SUPPORTO UMANO', 'sub' => 'REF: WORK-100'],
+        ];
+
+        $c = count($heroSlides);
+        if ($c < 6) {
+            for ($i = $c; $i < 6; $i++) {
+                $heroSlides[] = $defaultSlides[$i];
+            }
+        }
+
+        return view('welcome', [
+            'products' => $products,
+            'heroSlides' => $heroSlides,
+        ]);
     }
 }

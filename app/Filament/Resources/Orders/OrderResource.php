@@ -16,10 +16,19 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Override;
+use UnitEnum;
 
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Ordini';
+
+    protected static ?string $navigationLabel = 'Ordini';
+
+    protected static ?string $modelLabel = 'Ordine';
+
+    protected static ?string $pluralModelLabel = 'Ordini';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

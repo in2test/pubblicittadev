@@ -19,12 +19,21 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGRZSCYNNX"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        
+        // Default consent to denied
+        gtag('consent', 'default', {
+            'analytics_storage': 'denied'
+        });
 
-        function gtag() {
-            dataLayer.push(arguments);
+        // Update if already accepted
+        if (localStorage.getItem('cookie_consent') === 'all') {
+            gtag('consent', 'update', {
+                'analytics_storage': 'granted'
+            });
         }
-        gtag('js', new Date());
 
+        gtag('js', new Date());
         gtag('config', 'G-YGRZSCYNNX');
     </script>
     @endproduction

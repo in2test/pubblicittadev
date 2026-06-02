@@ -1,3 +1,5 @@
+@props(['slides'])
+
 <!-- Hero Section: Asymmetric Split -->
 <section class="relative min-h-[600px] flex flex-col lg:flex-row overflow-hidden lg:h-[calc(100vh-80px)] mt-20 lg:mt-0">
     <!-- Left Side: Typography Content -->
@@ -40,11 +42,7 @@
     <!-- Right Side: Imagery -->
     <div class="w-full lg:w-1/2 relative bg-gray-950 group overflow-hidden" x-data="{
         activeSlide: 0,
-        slides: [
-            { img: 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', label: 'STAMPA ALTA DEFINIZIONE', sub: 'REF: PB-2024' },
-            { img: 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', label: 'MATERIALI PREMIUM', sub: 'REF: MAT-100' },
-            { img: 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', label: 'ABBIGLIAMENTO LAVORO', sub: 'REF: WORK-99' }
-        ],
+        slides: {{ Js::from($slides) }},
         init() {
             setInterval(() => {
                 this.activeSlide = this.activeSlide === this.slides.length - 1 ? 0 : this.activeSlide + 1;

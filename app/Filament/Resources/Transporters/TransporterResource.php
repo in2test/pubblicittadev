@@ -16,10 +16,19 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Override;
+use UnitEnum;
 
 class TransporterResource extends Resource
 {
     protected static ?string $model = Transporter::class;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Impostazioni';
+
+    protected static ?string $navigationLabel = 'Corrieri';
+
+    protected static ?string $modelLabel = 'Corriere';
+
+    protected static ?string $pluralModelLabel = 'Corrieri';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

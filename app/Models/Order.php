@@ -84,6 +84,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
     'notes',
     'transporter_id',
     'tracking_code',
+    'tracking_url',
 ])]
 /**
  * @use HasFactory<OrderFactory>
@@ -165,6 +166,10 @@ class Order extends Model implements HasMedia
      */
     public function getTrackingUrlAttribute(): ?string
     {
+        if (! empty($this->tracking_url)) {
+            return $this->tracking_url;
+        }
+
         if (! $this->transporter_id || ! $this->tracking_code || ! $this->transporter) {
             return null;
         }

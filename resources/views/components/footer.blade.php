@@ -9,7 +9,7 @@
                 03010 Trivigliano (FR) - Italy
             </p>
             <div class="mt-4">
-                <a href="https://maps.app.goo.gl/D2YXZVwvT2G7a" target="_blank" class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-accent-500 hover:text-accent-700 transition-colors">
+                <a href="https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679!16s%2Fg%2F11b6jgf95v?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-accent-500 hover:text-accent-700 transition-colors">
                     <span class="material-symbols-outlined text-[14px]">map</span> Vedi sulla Mappa
                 </a>
             </div>
@@ -44,11 +44,15 @@
     <div
         class="px-12 py-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <span class="font-mono text-xs uppercase tracking-widest text-gray-700">© {{ date('Y') }} PUBBLICITTÀ24 srls</span>
-        <div class="flex gap-8">
+        <div class="flex flex-wrap gap-x-8 gap-y-2 justify-center md:justify-end">
             <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
-                href="{{ route('privacy') }}">Informativa Privacy</a>
+                href="{{ route('terms') }}">Condizioni di Vendita</a>
             <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
-                href="{{ route('terms') }}">Termini e Condizioni</a>
+                href="{{ route('privacy') }}">Privacy Policy</a>
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+                href="{{ route('cookie-policy') }}">Cookie Policy</a>
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+                href="{{ route('shipping-returns') }}">Spedizioni e Resi</a>
         </div>
     </div>
 </footer>

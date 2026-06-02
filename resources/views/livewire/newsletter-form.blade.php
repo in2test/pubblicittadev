@@ -7,11 +7,15 @@ use Illuminate\Validation\Rule;
 new class extends Component {
     public string $email = '';
     public bool $subscribed = false;
+    public bool $consent = false;
 
     public function subscribe(): void
     {
         $this->validate([
             'email' => ['required', 'email', 'max:255'],
+            'consent' => ['accepted'],
+        ], [
+            'consent.accepted' => 'Devi prestare il consenso per iscriverti.'
         ]);
 
         $subscription = NewsletterSubscription::firstOrCreate(
@@ -50,6 +54,15 @@ new class extends Component {
         @error('email')
             <p class="text-[9px] font-mono text-red-600 mt-1 mb-2">{{ $message }}</p>
         @enderror
+        
+        <label class="flex items-start gap-2 mt-3 cursor-pointer">
+            <input type="checkbox" wire:model="consent" class="mt-0.5 border-gray-300 rounded text-accent-500 focus:ring-accent-500" required>
+            <span class="text-[9px] font-mono text-gray-500 leading-tight">
+                Desidero ricevere comunicazioni informative e promozionali via email. Il consenso è facoltativo e può essere revocato in qualsiasi momento. <a href="{{ route('privacy') }}" class="text-accent-500 hover:underline">Privacy Policy</a>.
+            </span>
+        </label>
+        @error('consent')
+            <p class="text-[9px] font-mono text-red-600 mt-1 mb-2">{{ $message }}</p>
+        @enderror
     @endif
-    <p class="text-[9px] font-mono text-accent-500">Ricevi aggiornamenti tecnici e nuovi arrivi DPI.</p>
 </div>

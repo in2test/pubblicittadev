@@ -83,8 +83,9 @@ new class extends Component {
                     </div>
                 </li>
 
-                <li><a href="{{ route('services') }}" class="mega-simple-link">Servizi</a></li>
-                <li><a href="{{ route('contact') }}" class="mega-simple-link">Contatti</a></li>
+                <li><a href="{{ route('portfolio') }}" class="mega-simple-link">PORTFOLIO</a></li>
+                <li><a href="{{ route('services') }}" class="mega-simple-link">SERVIZI</a></li>
+                <li><a href="{{ route('contact') }}" class="mega-simple-link">CONTATTI</a></li>
             </ul>
 
             <!-- Center Section: Centered Logo -->
@@ -126,17 +127,17 @@ new class extends Component {
                             <p class="text-[10px] text-gray-500 truncate normal-case tracking-normal">{{ $this->authUser->email }}</p>
                         </div>
                         <a href="{{ route('dashboard') }}"
-                            class="block px-4 py-2 text-[11px] text-gray-700 hover:bg-gray-100">
-                            Dashboard
+                            class="block px-4 py-2 text-[11px] uppercase tracking-widest text-gray-700 hover:bg-gray-100">
+                            DASHBOARD
                         </a>
-                        <a href="{{ route('dashboard.orders') }}" class="block px-4 py-2 text-[11px] text-gray-700 hover:bg-gray-100">
-                            I tuoi ordini
+                        <a href="{{ route('dashboard.orders') }}" class="block px-4 py-2 text-[11px] uppercase tracking-widest text-gray-700 hover:bg-gray-100">
+                            I TUOI ORDINI
                         </a>
                         <form method="POST" action="{{ route('logout') }}" class="block">
                             @csrf
                             <button type="submit"
-                                class="block w-full text-left px-4 py-2 text-[11px] text-red-600 hover:bg-gray-100">
-                                Esci
+                                class="block w-full text-left px-4 py-2 text-[11px] uppercase tracking-widest text-red-600 hover:bg-gray-100">
+                                ESCI
                             </button>
                         </form>
                     </div>
@@ -223,11 +224,14 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <a href="{{ route('services') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors">
-                        Servizi
+                    <a href="{{ route('portfolio') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
+                        PORTFOLIO
                     </a>
-                    <a href="{{ route('contact') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors">
-                        Contatti
+                    <a href="{{ route('services') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
+                        SERVIZI
+                    </a>
+                    <a href="{{ route('contact') }}" class="block py-2 font-semibold text-gray-900 hover:text-accent-500 transition-colors uppercase">
+                        CONTATTI
                     </a>
                 </div>
             </div>
@@ -237,13 +241,13 @@ new class extends Component {
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-green-600">verified_user</span>
                     <div class="text-[10px]">
-                        <div class="font-bold text-gray-900 leading-none">{{ $this->authUser->name }}</div>
-                        <a href="{{ route('dashboard') }}" class="text-gray-500 hover:text-accent-500 transition-colors">Dashboard</a>
+                        <div class="font-bold text-gray-900 leading-none uppercase">{{ $this->authUser->name }}</div>
+                        <a href="{{ route('dashboard') }}" class="text-gray-500 hover:text-accent-500 transition-colors uppercase tracking-widest mt-1 block">DASHBOARD</a>
                     </div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="text-[10px] text-red-600 hover:underline">Esci</button>
+                    <button type="submit" class="text-[10px] text-red-600 hover:underline uppercase tracking-widest">ESCI</button>
                 </form>
                 @else
                 <button class="text-[10px] font-bold text-gray-900 tracking-widest hover:text-accent-500 transition-colors flex items-center gap-1.5" @click="mobileMenuOpen = false; openAuthModal()">

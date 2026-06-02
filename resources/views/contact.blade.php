@@ -61,6 +61,14 @@
                                 class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface placeholder:text-outline-variant transition-all resize-none"
                                 placeholder="Descriva la sua richiesta nei dettagli..." rows="4"></textarea>
                         </div>
+                        
+                        <label class="flex items-start gap-3 mt-8 cursor-pointer">
+                            <input type="checkbox" required class="mt-1 border-gray-300 rounded text-primary focus:ring-primary">
+                            <span class="text-sm font-mono text-gray-600 leading-tight">
+                                Ho letto l’<a href="{{ route('privacy') }}" class="text-primary hover:underline">Informativa Privacy</a> e acconsento al trattamento dei miei dati per la gestione della richiesta.
+                            </span>
+                        </label>
+
                         <div class="pt-6">
                             <button
                                 class="bg-primary hover:bg-primary-container text-on-primary font-mono text-sm uppercase tracking-widest px-10 py-5 transition-all duration-300 flex items-center gap-4 group"

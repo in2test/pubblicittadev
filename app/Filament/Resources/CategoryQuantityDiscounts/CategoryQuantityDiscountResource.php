@@ -26,6 +26,12 @@ class CategoryQuantityDiscountResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Catalogo';
 
+    protected static ?string $navigationLabel = 'Sconti Quantità';
+
+    protected static ?string $modelLabel = 'Sconto Quantità Categoria';
+
+    protected static ?string $pluralModelLabel = 'Sconti Quantità Categorie';
+
     protected static string|BackedEnum|null $navigationIcon = null;
 
     protected static ?string $recordTitleAttribute = 'id';

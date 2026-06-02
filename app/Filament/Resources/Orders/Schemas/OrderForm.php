@@ -114,13 +114,18 @@ class OrderForm
 
                 Section::make('Spedizione (Tracking)')
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             Select::make('transporter_id')
                                 ->relationship('transporter', 'name')
-                                ->label('Corriere'),
+                                ->label('Corriere Predefinito'),
                             TextInput::make('tracking_code')
                                 ->label('Codice di Tracciamento')
                                 ->maxLength(255),
+                            TextInput::make('tracking_url')
+                                ->label('Link di Tracciamento Diretto (Opzionale)')
+                                ->url()
+                                ->maxLength(255)
+                                ->helperText('Ignora il corriere/codice e usa direttamente questo link URL.'),
                         ]),
                     ]),
 

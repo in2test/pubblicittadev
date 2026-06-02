@@ -23,7 +23,9 @@ use Livewire\Volt\Volt;
 Route::view('/services', 'services')->name('services');
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/cookie-policy', 'cookie-policy')->name('cookie-policy');
 Route::view('/terms', 'terms')->name('terms');
+Route::view('/shipping-returns', 'shipping-returns')->name('shipping-returns');
 Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
 Route::view('/palette', 'palette')->name('palette');
 

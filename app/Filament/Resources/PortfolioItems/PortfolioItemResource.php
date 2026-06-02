@@ -16,10 +16,19 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Override;
+use UnitEnum;
 
 class PortfolioItemResource extends Resource
 {
     protected static ?string $model = PortfolioItem::class;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Sito Pubblico';
+
+    protected static ?string $navigationLabel = 'Portfolio';
+
+    protected static ?string $modelLabel = 'Progetto Portfolio';
+
+    protected static ?string $pluralModelLabel = 'Progetti Portfolio';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
