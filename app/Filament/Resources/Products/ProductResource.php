@@ -26,6 +26,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
@@ -44,6 +45,12 @@ use Illuminate\Support\Str;
 use Override;
 use UnitEnum;
 
+/**
+ * Resource class for managing Products in the Filament administration panel.
+ *
+ * Handles the creation, editing, and listing of products, including their
+ * categories, base settings, media (images), and complex pricing/variation logic.
+ */
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
@@ -60,6 +67,13 @@ class ProductResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    /**
+     * Define the form schema for creating and editing products.
+     *
+     * The form is divided into multiple tabs handling general information,
+     * additional specifications, image gallery and variations, variant pricing,
+     * and image associations.
+     */
     #[Override]
     public static function form(Schema $schema): Schema
     {
@@ -117,12 +131,23 @@ class ProductResource extends Resource
             ]);
     }
 
+    /**
+     * Define the table configuration for the resource index page.
+     *
+     * The table logic (columns, filters, actions) is delegated to the
+     * external ProductsTable class to keep this resource class clean and focused.
+     */
     #[Override]
     public static function table(Table $table): Table
     {
         return ProductsTable::configure($table);
     }
 
+    /**
+     * Get the base Eloquent query builder for the resource.
+     *
+     * Ensures we only retrieve standard products for this administration view.
+     */
     #[Override]
     public static function getEloquentQuery(): Builder
     {
@@ -130,6 +155,11 @@ class ProductResource extends Resource
         return parent::getEloquentQuery();
     }
 
+    /**
+     * Define the pages associated with this resource.
+     *
+     * @return array<string, PageRegistration>
+     */
     #[Override]
     public static function getPages(): array
     {
@@ -142,6 +172,9 @@ class ProductResource extends Resource
 
     // --- Core Schema Fields ---
 
+    /**
+     * Returns the hidden type field, defaulting to a standard product.
+     */
     public static function getTypeField(): Hidden
     {
         return Hidden::make('type')
@@ -149,15 +182,20 @@ class ProductResource extends Resource
             ->dehydrated();
     }
 
+    /**
+     * Returns the product name field and auto-generates slug and SKU.
+     */
     public static function getNameField(): TextInput
     {
         return TextInput::make('name')
             ->label('Nome Prodotto')
             ->live(onBlur: true)
             ->afterStateUpdated(function (Set $set, ?string $state, ?Model $record) {
+                // Auto-generate the slug based on the product name
                 $slug = SlugGenerator::unique(Product::class, $state, $record);
                 $set('slug', $slug);
 
+                // Auto-generate a basic SKU acronym from the name words
                 $words = preg_split('/[\s\-\_\,]+/', $state ?? '') ?: [];
                 $acronym = '';
                 foreach ($words as $word) {
@@ -170,6 +208,9 @@ class ProductResource extends Resource
             ->required();
     }
 
+    /**
+     * Returns the product slug field.
+     */
     public static function getSlugField(): TextInput
     {
         return TextInput::make('slug')
@@ -178,6 +219,9 @@ class ProductResource extends Resource
             ->required();
     }
 
+    /**
+     * Returns the base SKU field.
+     */
     public static function getSkuField(): TextInput
     {
         return TextInput::make('sku')
@@ -185,6 +229,9 @@ class ProductResource extends Resource
             ->required();
     }
 
+    /**
+     * Returns the category selection field with inline creation support.
+     */
     public static function getCategoryField(): Select
     {
         return Select::make('category_id')
@@ -216,6 +263,9 @@ class ProductResource extends Resource
             ]);
     }
 
+    /**
+     * Returns the product class field determining the pricing calculation method.
+     */
     public static function getProductClassField(): Select
     {
         return Select::make('product_class')
@@ -228,6 +278,7 @@ class ProductResource extends Resource
             ->required()
             ->live()
             ->afterStateUpdated(function (Set $set, ?string $state) {
+                // Automatically set the appropriate pricing model based on the product class
                 if ($state === 'area_based') {
                     $set('pricing_model', 'area');
                 } elseif ($state === 'item_based') {
@@ -238,6 +289,9 @@ class ProductResource extends Resource
             });
     }
 
+    /**
+     * Returns the base price field.
+     */
     public static function getPriceField(): TextInput
     {
         return TextInput::make('price')
@@ -246,6 +300,9 @@ class ProductResource extends Resource
             ->prefix('€');
     }
 
+    /**
+     * Returns the offer price field.
+     */
     public static function getOfferPriceField(): TextInput
     {
         return TextInput::make('offer_price')
@@ -254,6 +311,9 @@ class ProductResource extends Resource
             ->prefix('€');
     }
 
+    /**
+     * Returns the active toggle field.
+     */
     public static function getIsActiveField(): Toggle
     {
         return Toggle::make('is_active')
@@ -261,6 +321,9 @@ class ProductResource extends Resource
             ->default(true);
     }
 
+    /**
+     * Returns the featured toggle field.
+     */
     public static function getIsFeaturedField(): Toggle
     {
         return Toggle::make('is_featured')
@@ -268,6 +331,9 @@ class ProductResource extends Resource
             ->default(false);
     }
 
+    /**
+     * Returns the description textarea field.
+     */
     public static function getDescriptionField(): Textarea
     {
         return Textarea::make('description')
@@ -276,6 +342,9 @@ class ProductResource extends Resource
             ->columnSpanFull();
     }
 
+    /**
+     * Returns the media library file upload field for product images.
+     */
     public static function getImagesField(): SpatieMediaLibraryFileUpload
     {
         return SpatieMediaLibraryFileUpload::make('images')
@@ -288,6 +357,13 @@ class ProductResource extends Resource
             ->columnSpanFull();
     }
 
+    /**
+     * Returns the repeater for base variations and options.
+     *
+     * This schema handles defining variation types (e.g., Color, Size) and their
+     * specific options. It includes complex logic to determine how variations impact
+     * the base price (modifiers vs redefining SKU prices).
+     */
     public static function getBaseVariationsRepeater(): Repeater
     {
         return Repeater::make('productVariationTypes')
@@ -303,11 +379,13 @@ class ProductResource extends Resource
                     ->relationship('type', 'name')
                     ->required()
                     ->live()
+                    // Set default modifier types when a variation type is selected
                     ->afterStateUpdated(function (Set $set, $state) {
                         /** @var VariationType|null $type */
                         $type = $state ? VariationType::find($state) : null;
                         if ($type && $type->default_modifier_type) {
                             $set('impact_type', $type->default_modifier_type);
+                            // If it's not a redefine (which creates a new base price SKU), it acts as a price modifier
                             $set('is_modifier', $type->default_modifier_type !== 'redefine');
                         }
                     })
@@ -346,6 +424,7 @@ class ProductResource extends Resource
                     ->required()
                     ->live()
                     ->dehydrated(false)
+                    // Hydrate impact_type based on whether the variant is a modifier and what the first option contains
                     ->afterStateHydrated(function (Set $set, $state, $record) {
                         if ($record) {
                             if (! $record->is_modifier) {
@@ -360,11 +439,14 @@ class ProductResource extends Resource
                             }
                         }
                     })
+                    // Toggle is_modifier based on the chosen impact type
                     ->afterStateUpdated(function (Set $set, $state) {
                         $set('is_modifier', $state !== 'redefine');
                     }),
                 Hidden::make('is_modifier')
                     ->default(false),
+
+                // Nested Repeater for specific options within a variation type (e.g., Red, Blue for Color)
                 Repeater::make('options')
                     ->relationship('options')
                     ->orderColumn('sort_order')
@@ -373,6 +455,7 @@ class ProductResource extends Resource
                     ->schema([
                         Select::make('variation_option_id')
                             ->label('Opzione')
+                            // Dynamically load options belonging to the parent variation type
                             ->options(fn (Get $get) => $get('../../variation_type_id') ? VariationOption::where('variation_type_id', $get('../../variation_type_id'))->pluck('name', 'id') : [])
                             ->required()
                             ->live()
@@ -414,6 +497,7 @@ class ProductResource extends Resource
                                         ->visible($type?->presentation_type === 'color_swatch'),
                                 ];
                             })
+                            // Create the related variation option directly from this form
                             ->createOptionUsing(fn (array $data, Get $get) => VariationOption::create([
                                 'variation_type_id' => $get('../../variation_type_id'),
                                 'name' => $data['name'],
@@ -432,6 +516,7 @@ class ProductResource extends Resource
                             ->suffix(fn (Get $get) => $get('../../impact_type') === 'percentage' ? '%' : null)
                             ->placeholder('Usa default globale')
                             ->nullable()
+                            // Helper to display the global default modifier for this specific option
                             ->helperText(function (Get $get): ?string {
                                 $optionId = $get('variation_option_id');
                                 if (! $optionId) {
@@ -473,6 +558,13 @@ class ProductResource extends Resource
             ->addActionLabel('Aggiungi Variante');
     }
 
+    /**
+     * Returns the repeater for SKUs and specific variation pricing tiers.
+     *
+     * This section generates base SKU variations from the main product variations
+     * (the ones marked as 'redefine'). It includes quantity discount tiers for
+     * each SKU generated.
+     */
     public static function getSkusRepeater(): Repeater
     {
         return Repeater::make('skus')
@@ -500,6 +592,8 @@ class ProductResource extends Resource
                     ->relationship('options', 'name')
                     ->multiple()
                     ->preload()
+                    // Filter available options based on those mapped in the base variations repeater
+                    // that use the 'redefine' impact type (i.e., generate a new sku/price).
                     ->options(function (Get $get) {
                         $allVariations = $get('../../productVariationTypes') ?? [];
                         $optionIds = [];
@@ -523,6 +617,7 @@ class ProductResource extends Resource
                     })
                     ->required()
                     ->live()
+                    // Auto-generate the variant SKU suffix when an option is selected.
                     ->afterStateUpdated(function (Get $get, Set $set, ?array $state) {
                         $baseSku = $get('../../sku') ?? '';
                         if ($state === null || $state === []) {
@@ -531,6 +626,7 @@ class ProductResource extends Resource
                             return;
                         }
 
+                        // Order the options so the SKU is consistently generated.
                         $options = VariationOption::whereIn('id', $state)->get()->sortBy('sort_order');
                         $suffix = $options->map(function (VariationOption $option) {
                             $val = $option->value ?? $option->name;
@@ -541,6 +637,7 @@ class ProductResource extends Resource
                         $finalSku = $baseSku ? "{$baseSku}-".Str::upper($suffix) : Str::upper($suffix);
                         $set('sku', $finalSku);
                     }),
+                // Inject the pricing tiers (quantity discounts) for this specific SKU variation
                 ProductForm::getPricingTiersRepeater()
                     ->label('Sconti per Quantità (Scaglioni)')
                     ->columnSpanFull(),
@@ -551,7 +648,10 @@ class ProductResource extends Resource
     }
 
     /**
-     * Returns the schema for associating images with product variations.
+     * Returns the schema for associating uploaded images with specific product variations.
+     *
+     * Uses media library to retrieve uploaded images and allows the admin to assign
+     * them to specific variation options (e.g. a red shirt image to the "Red" color option).
      *
      * @return array<int, Component>
      */
@@ -593,6 +693,12 @@ class ProductResource extends Resource
         ];
     }
 
+    /**
+     * Returns the section for configuring print sheet settings.
+     *
+     * Used for area-based products or items that require specific print dimensions.
+     * Allows configuring max/min dimensions if custom sizes are allowed.
+     */
     public static function getSheetSettingsSection(): Section
     {
         return Section::make('Ottimizzazione Resa (Fogli e Misure)')

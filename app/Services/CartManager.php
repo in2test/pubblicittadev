@@ -205,9 +205,17 @@ class CartManager
 
         $total = collect($items)->sum(function (array $item) use ($products): float {
             $qty = $this->getItemQuantity($item);
+
+            // Fallback price used if the product has been deleted or is otherwise unavailable
             $price = (float) ($item['price'] ?? 0);
 
+            // If the product still exists in the database, calculate its exact total dynamically
             if (! empty($item['product_id']) && $product = $products->get((int) $item['product_id'])) {
+
+                // Calculate dynamic price based on:
+                // 1. Quantity discounts (pricing tiers)
+                // 2. Custom dimensions (width/height for banners, etc.)
+                // 3. Selected modifier options (e.g., premium finishes)
                 $totalPrice = $product->calculateTotalPrice(
                     $qty,
                     $item['quantities'] ?? [],
@@ -216,9 +224,11 @@ class CartManager
                     $item['selected_options'] ?? []
                 );
 
+                // Safeguard to ensure the calculated total price is never negative
                 return max(0.0, $totalPrice);
             }
 
+            // Fallback: multiply the static cart price by the total quantity
             return $price * max(0, $qty);
         });
 

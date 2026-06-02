@@ -1,5 +1,5 @@
 <x-layout :title="$title ?? 'Area Riservata'">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="px-2 sm:px-8 py-4 sm:py-12 3xl:px-32">
         <!-- Dashboard Title Header -->
         <div class="mb-10">
             <h1 class="text-3xl font-black uppercase tracking-tighter text-gray-950">Area Riservata</h1>

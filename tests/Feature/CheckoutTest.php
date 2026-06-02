@@ -69,6 +69,7 @@ class CheckoutTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('checkout.session'), [
+                'shipping_method' => 'delivery',
                 'shipping_address_id' => $address->id,
                 'billing_address_id' => $address->id,
             ])
@@ -170,6 +171,7 @@ class CheckoutTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('checkout.session'), [
+                'shipping_method' => 'delivery',
                 'shipping_address_id' => $address->id,
                 'billing_address_id' => $address->id,
                 'payment_method' => 'quotation',

@@ -8,6 +8,7 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
 {
+    public $shippingMethod = 'delivery'; // 'delivery' or 'pickup'
     public $shippingAddresses = [];
     public $billingAddresses = [];
     public ?int $selectedShippingAddressId = null;
@@ -18,6 +19,26 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
     
     public $total = 0;
     public $items = [];
+
+    #[\Livewire\Attributes\Computed]
+    public function shippingCost(): float
+    {
+        if ($this->shippingMethod === 'pickup') {
+            return 0.00;
+        }
+
+        $tier = \App\Models\ShippingTier::where('min_order_total', '<=', $this->total)
+            ->orderBy('min_order_total', 'desc')
+            ->first();
+
+        return $tier ? (float) $tier->shipping_cost : 0.00;
+    }
+
+    #[\Livewire\Attributes\Computed]
+    public function grandTotal(): float
+    {
+        return $this->total + $this->shippingCost();
+    }
 
     public function mount(CartManager $cartManager): void
     {
@@ -67,10 +88,21 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
     {
         $this->selectedBillingAddressId = $id;
     }
+    
+    public function setShippingMethod(string $method): void
+    {
+        $this->shippingMethod = $method;
+        if ($method === 'pickup') {
+            $this->selectedShippingAddressId = null;
+        } else {
+            $defaultShipping = $this->shippingAddresses->where('is_default', true)->first() ?? $this->shippingAddresses->first();
+            if ($defaultShipping) $this->selectedShippingAddressId = $defaultShipping->id;
+        }
+    }
 };
 ?>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div>
         <div class="flex items-center gap-4 mb-8">
             <a href="{{ route('cart') }}" class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                 <flux:icon icon="arrow-left" size="sm" />
@@ -85,11 +117,60 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
             <!-- Left Column: Addresses -->
             <div class="lg:col-span-8 space-y-10">
                 
-                <!-- Shipping Address -->
+                <!-- Shipping Method -->
                 <section>
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">1</div>
+                            <h2 class="text-xl font-bold uppercase tracking-tight">Metodo di Consegna</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div 
+                            wire:click="setShippingMethod('delivery')"
+                            class="relative p-4 rounded-xl border-2 cursor-pointer transition-all {{ $shippingMethod === 'delivery' ? 'border-secondary bg-secondary/5' : 'border-gray-200 hover:border-gray-300' }}"
+                        >
+                            @if($shippingMethod === 'delivery')
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-secondary text-gray-50 rounded-full flex items-center justify-center">
+                                    <flux:icon icon="check" size="xs" />
+                                </div>
+                            @endif
+                            <div class="flex items-center gap-3">
+                                <flux:icon icon="truck" class="text-gray-400" />
+                                <div>
+                                    <p class="font-bold text-sm">Spedizione a domicilio</p>
+                                    <p class="text-xs text-gray-500 mt-1">Consegna al tuo indirizzo</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div 
+                            wire:click="setShippingMethod('pickup')"
+                            class="relative p-4 rounded-xl border-2 cursor-pointer transition-all {{ $shippingMethod === 'pickup' ? 'border-secondary bg-secondary/5' : 'border-gray-200 hover:border-gray-300' }}"
+                        >
+                            @if($shippingMethod === 'pickup')
+                                <div class="absolute -top-2 -right-2 w-6 h-6 bg-secondary text-gray-50 rounded-full flex items-center justify-center">
+                                    <flux:icon icon="check" size="xs" />
+                                </div>
+                            @endif
+                            <div class="flex items-center gap-3">
+                                <flux:icon icon="building-storefront" class="text-gray-400" />
+                                <div>
+                                    <p class="font-bold text-sm">Ritiro in negozio</p>
+                                    <p class="text-xs text-green-600 font-bold mt-1 uppercase">Gratis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Shipping Address -->
+                @if($shippingMethod === 'delivery')
+                <section>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">2</div>
                             <h2 class="text-xl font-bold uppercase tracking-tight">Indirizzo di Spedizione</h2>
                         </div>
                     </div>
@@ -120,12 +201,13 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                     </div>
                     @error('selectedShippingAddressId') <p class="mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
                 </section>
+                @endif
 
                 <!-- Billing Address -->
                 <section>
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">2</div>
+                            <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">{{ $shippingMethod === 'delivery' ? '3' : '2' }}</div>
                             <h2 class="text-xl font-bold uppercase tracking-tight">Indirizzo di Fatturazione</h2>
                         </div>
                     </div>
@@ -155,7 +237,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                 <!-- Notes -->
                 <section>
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">3</div>
+                        <div class="w-8 h-8 rounded-full bg-secondary text-gray-50 flex items-center justify-center font-bold text-sm">{{ $shippingMethod === 'delivery' ? '4' : '3' }}</div>
                         <h2 class="text-xl font-bold uppercase tracking-tight">Note sull'ordine (Opzionale)</h2>
                     </div>
                     <flux:textarea wire:model.live="notes" placeholder="Note aggiuntive per l'ordine (opzionale)..." rows="3" />
@@ -191,12 +273,16 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-500">Spedizione</span>
-                            <span class="text-green-600 font-bold uppercase text-xs">Gratis</span>
+                            @if($this->shippingCost > 0)
+                                <span class="font-bold">€ {{ number_format($this->shippingCost, 2) }}</span>
+                            @else
+                                <span class="text-green-600 font-bold uppercase text-xs">Gratis</span>
+                            @endif
                         </div>
                         <div class="pt-4 border-t-2 border-primary flex justify-between items-end">
                             <div>
                                 <p class="text-[10px] font-bold uppercase text-primary">Totale da pagare</p>
-                                <p class="text-2xl font-black">€ {{ number_format($total, 2) }}</p>
+                                <p class="text-2xl font-black">€ {{ number_format($this->grandTotal, 2) }}</p>
                             </div>
                             <span class="text-[10px] font-mono text-gray-400">EUR</span>
                         </div>
@@ -204,6 +290,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
 
                     <form action="{{ route('checkout.session') }}" method="POST">
                         @csrf
+                        <input type="hidden" name="shipping_method" value="{{ $shippingMethod }}">
                         <input type="hidden" name="shipping_address_id" value="{{ $selectedShippingAddressId }}">
                         <input type="hidden" name="billing_address_id" value="{{ $selectedBillingAddressId }}">
                         <input type="hidden" name="notes" value="{{ $notes }}">
@@ -213,7 +300,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                                 type="submit" 
                                 variant="primary" 
                                 class="w-full h-14 bg-secondary! hover:bg-gray-950! text-gray-50! font-black! uppercase! tracking-tight! text-xs sm:text-base! shadow-lg shadow-gray-950/10 px-2!"
-                                :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
+                                :disabled="($shippingMethod === 'delivery' && !$selectedShippingAddressId) || !$selectedBillingAddressId"
                             >
                                 Paga Ora
                                 <flux:icon icon="credit-card" class="ml-2" />
@@ -225,7 +312,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                                 value="quotation"
                                 variant="outline" 
                                 class="w-full h-12 border-2 border-gray-950! text-gray-950! font-black! uppercase! tracking-tight! text-[10px] sm:text-xs! hover:bg-gray-100! px-2!"
-                                :disabled="!$selectedShippingAddressId || !$selectedBillingAddressId"
+                                :disabled="($shippingMethod === 'delivery' && !$selectedShippingAddressId) || !$selectedBillingAddressId"
                             >
                                 Preventivo Privato
                                 <flux:icon icon="document-text" class="ml-2" />

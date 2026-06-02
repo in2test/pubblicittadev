@@ -23,6 +23,24 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
+ * Class Order
+ *
+ * Represents a customer's order for apparel or custom items.
+ *
+ * Workflow states for `work_status`:
+ * - pending: Initial state, order is created but not yet being worked on.
+ * - awaiting_file: Order is waiting for the customer to upload required design files.
+ * - processing: The items in the order are currently being manufactured or prepared.
+ * - ready: The order is complete and ready to be shipped.
+ * - shipped: The order has been handed over to the transporter.
+ * - completed: The order has been delivered and finalized.
+ *
+ * Workflow states for `payment_status`:
+ * - pending: Payment has not yet been received or confirmed.
+ * - paid: Payment has been successfully processed.
+ * - cancelled: Payment was cancelled or failed.
+ * - quotation: The order is a quote and has not been paid yet.
+ *
  * @property int $id
  * @property int $user_id
  * @property string $order_number
@@ -75,6 +93,9 @@ use Spatie\MediaLibrary\InteractsWithMedia;
     'payment_status',
     'work_status',
     'total_price',
+    'items_total',
+    'shipping_cost',
+    'shipping_method',
     'total_items',
     'shipping_address_id',
     'billing_address_id',
@@ -99,8 +120,11 @@ class Order extends Model implements HasMedia
     use InteractsWithMedia;
 
     /**
-     * Casts for the Order model.
-     * ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
+     * The attributes that should be cast to native types.
+     *
+     * Ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'paid_at' => 'datetime',
@@ -163,6 +187,11 @@ class Order extends Model implements HasMedia
 
     /**
      * Get the full tracking URL if transporter and tracking code are set.
+     *
+     * Replaces the '{tracking_code}' placeholder in the transporter's URL template
+     * with the actual tracking code for this order.
+     *
+     * @return string|null The computed tracking URL, or null if missing required data.
      */
     public function getTrackingUrlAttribute(): ?string
     {
@@ -184,9 +213,17 @@ class Order extends Model implements HasMedia
 
     /**
      * Restituisce un'etichetta descrittiva e tradotta per lo stato del pagamento.
+     *
+     * Maps the internal payment_status to a human-readable Italian label.
+     *
+     * @return string The translated payment status label.
      */
     public function getPaymentStatusLabel(): string
     {
+        // pending: Payment has not yet been received or confirmed.
+        // paid: Payment has been successfully processed.
+        // cancelled: Payment was cancelled or failed.
+        // quotation: The order is a quote and has not been paid yet.
         return match ($this->payment_status) {
             'pending' => 'In Attesa',
             'paid' => 'Pagato',
@@ -198,9 +235,19 @@ class Order extends Model implements HasMedia
 
     /**
      * Restituisce un'etichetta descrittiva e tradotta per lo stato di lavorazione.
+     *
+     * Maps the internal work_status to a human-readable Italian label.
+     *
+     * @return string The translated work status label.
      */
     public function getWorkStatusLabel(): string
     {
+        // pending: Initial state, order is created but not yet being worked on.
+        // awaiting_file: Order is waiting for the customer to upload required design files.
+        // processing: The items in the order are currently being manufactured or prepared.
+        // ready: The order is complete and ready to be shipped.
+        // shipped: The order has been handed over to the transporter.
+        // completed: The order has been delivered and finalized.
         return match ($this->work_status) {
             'pending' => 'In Attesa',
             'awaiting_file' => 'Attendiamo File',
@@ -256,6 +303,12 @@ class Order extends Model implements HasMedia
         }
     }
 
+    /**
+     * Bootstrap the model and its traits.
+     *
+     * Registers the "updated" model event to send notifications when
+     * payment or work statuses change.
+     */
     #[Override]
     protected static function booted(): void
     {
@@ -329,6 +382,7 @@ class Order extends Model implements HasMedia
     {
         /** @var OrderItem $item */
         foreach ($this->items as $item) {
+            /** @var array{quantity?: int|string, quantities?: array<int|string, int|string>} $config */
             $config = $item->customization_json;
             $productId = $item->product_id;
             $quantities = $config['quantities'] ?? [];

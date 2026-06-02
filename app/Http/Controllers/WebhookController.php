@@ -17,7 +17,10 @@ use UnexpectedValueException;
 class WebhookController extends Controller
 {
     /**
-     * Handle the Stripe webhook event.
+     * Handle incoming Stripe webhook events.
+     *
+     * Validates the webhook signature securely and dispatches the event
+     * to the appropriate handler method based on the event type.
      */
     public function handle(Request $request): JsonResponse
     {

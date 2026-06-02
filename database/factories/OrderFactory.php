@@ -22,7 +22,12 @@ class OrderFactory extends Factory
             'order_number' => 'ORD-'.strtoupper(fake()->unique()->bothify('??####')),
             'payment_status' => fake()->randomElement(['pending', 'paid', 'cancelled']),
             'work_status' => fake()->randomElement(['pending', 'processing', 'ready', 'shipped', 'completed']),
-            'total_price' => fake()->randomFloat(2, 50, 500),
+            'items_total' => fake()->randomFloat(2, 50, 500),
+            'shipping_cost' => fake()->randomFloat(2, 0, 20),
+            'shipping_method' => fake()->randomElement(['delivery', 'pickup']),
+            'total_price' => function (array $attributes) {
+                return $attributes['items_total'] + $attributes['shipping_cost'];
+            },
             'total_items' => fake()->numberBetween(1, 10),
             'user_id' => User::factory(),
         ];

@@ -32,6 +32,8 @@ class VariationTypeForm
                                     ->helperText('es. Colore, Taglia, Posizione Stampa')
                                     ->required()
                                     ->maxLength(255),
+
+                                // The presentation type drives conditional visibility in the options repeater below.
                                 Select::make('presentation_type')
                                     ->label('Tipo di Visualizzazione')
                                     ->options([
@@ -41,7 +43,9 @@ class VariationTypeForm
                                     ])
                                     ->required()
                                     ->default('select')
-                                    ->live(),
+                                    ->live(), // Crucial for making the UI reactive when this selection changes
+
+                                // Allows users to configure if this variation type supports selecting multiple options simultaneously.
                                 Toggle::make('allow_multiple')
                                     ->label('Consenti Selezione Multipla')
                                     ->helperText('Permette di scegliere più di un\'opzione per questa variante (es. stampa sia sul fronte che sul retro).')
@@ -51,6 +55,8 @@ class VariationTypeForm
                         Tab::make('Opzioni della Variante')
                             ->icon('heroicon-m-list-bullet')
                             ->schema([
+                                // A Repeater component is used here to manage a 'HasMany' relationship with the options.
+                                // It allows adding, editing, reordering, and deleting options directly within this form.
                                 Repeater::make('options')
                                     ->relationship()
                                     ->schema([
@@ -74,6 +80,8 @@ class VariationTypeForm
                                                     'md' => 4,
                                                 ]),
 
+                                            // The text 'value' field is dynamically hidden if the overall presentation type is 'color_swatch'.
+                                            // The Get utility reaches up two levels (../../) to read the parent presentation_type value.
                                             TextInput::make('value')
                                                 ->label('Valore')
                                                 ->placeholder('opzionale')
@@ -84,6 +92,7 @@ class VariationTypeForm
                                                     'md' => 4,
                                                 ]),
 
+                                            // The 'color_hex' field is only visible and required when the presentation type is 'color_swatch'.
                                             ColorPicker::make('color_hex')
                                                 ->label('Colore (HEX)')
                                                 ->visible(fn (Get $get) => $get('../../presentation_type') === 'color_swatch')
@@ -104,6 +113,8 @@ class VariationTypeForm
                                         ]),
 
                                         Grid::make(12)->schema([
+                                            // Modifier configuration: Determines how this option affects the overall pricing.
+                                            // It leverages the ModifierType enum for available flat or percentage modifiers.
                                             Select::make('default_modifier_type')
                                                 ->label('Tipo Sovrapprezzo di Default')
                                                 ->options(ModifierType::class)
@@ -126,13 +137,13 @@ class VariationTypeForm
                                                 ]),
                                         ]),
                                     ])
-                                    ->orderColumn('sort_order')
+                                    ->orderColumn('sort_order') // Sorts options using the dedicated 'sort_order' column
                                     ->defaultItems(1)
                                     ->addActionLabel('Aggiungi Opzione')
                                     ->reorderable(true)
-                                    ->cloneable()
-                                    ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                                    ->cloneable() // Provides a quick way to duplicate an existing option
+                                    ->collapsible() // Keeps the UI clean by allowing options to be collapsed
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null), // Dynamically shows the option name as the repeater item label
                             ]),
                     ])
                     ->columnSpanFull(),

@@ -278,7 +278,7 @@ new class extends \Livewire\Component
 
                     <!-- Imposta Predefinito -->
                     <div class="flex items-center gap-2 py-2">
-                        <input type="checkbox" id="is_default" wire:model="is_default" value="1" class="w-4 h-4 border-2 border-gray-950 bg-gray-50 text-secondary focus:ring-0" />
+                        <input type="checkbox" id="is_default" wire:model="is_default" class="w-4 h-4 border-2 border-gray-950 bg-gray-50 text-secondary focus:ring-0" />
                         <label for="is_default" class="text-xs font-bold uppercase tracking-wide text-gray-900 cursor-pointer">Imposta come predefinito</label>
                     </div>
 

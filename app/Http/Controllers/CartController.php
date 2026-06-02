@@ -24,10 +24,16 @@ use Illuminate\View\View;
  * updating, removing, and clearing items.
  *
  * It leverages the CartManager service to handle session-based storage
- * and pricing logic.
+ * and pricing logic. This separation of concerns allows the controller to focus
+ * on HTTP requests while CartManager handles the domain logic of cart state.
  */
 class CartController extends Controller
 {
+    /**
+     * Create a new CartController instance.
+     *
+     * @param  CartManager  $cart  The cart manager instance for session-based cart operations.
+     */
     public function __construct(
         private readonly CartManager $cart
     ) {}
@@ -44,6 +50,8 @@ class CartController extends Controller
      * It then iterates over the raw session items to compute live pricing, discounts,
      * and resolve display names/images. This ensures that the cart page always reflects
      * the most up-to-date pricing and product data, even if it changed after the item was added.
+     *
+     * @return View Returns the cart view with enriched items, totals, and savings.
      */
     public function index(): View
     {
@@ -90,12 +98,17 @@ class CartController extends Controller
                 $basePrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
 
                 if ($product->product_class === ProductClass::AreaBased && isset($item['width'], $item['height'])) {
+                    // For AreaBased products (e.g., banners), price is calculated based on dimensions rather than fixed units.
+                    // We calculate the total billed area across all quantities, then determine the per-unit area multiplier
+                    // to accurately reflect the base price scaled by the physical size of the product.
                     $billedAreaTotal = $product->calculateTotalBilledArea($qty, (float) $item['width'], (float) $item['height']);
                     $billedAreaPerUnit = $qty > 0 ? $billedAreaTotal / $qty : 0.0;
                     $basePrice *= $billedAreaPerUnit;
                 }
 
                 // Add modifiers (personalizations) to the base price
+                // This accounts for additional costs from selected options (e.g., premium materials, extra print sides)
+                // which are applied on top of the base product price.
                 $basePriceTotal = $product->applyModifiersToTotal($basePrice * $qty, $qty, $item['selected_options'] ?? []);
                 $basePrice = $qty > 0 ? $basePriceTotal / $qty : 0.0;
             }
@@ -245,6 +258,9 @@ class CartController extends Controller
 
     /**
      * Remove multiple items from the cart.
+     *
+     * @param  Request  $request  Request containing an array of Job UUIDs ('keys') to remove.
+     * @return RedirectResponse Redirects back to the cart with a success message.
      */
     public function removeMultiple(Request $request): RedirectResponse
     {
@@ -260,7 +276,11 @@ class CartController extends Controller
 
     /**
      * Update the quantity of a specific item in the cart.
-     * Supports both global quantity update and size-specific updates.
+     *
+     * Supports both global quantity update and size-specific updates for products with multiple sizes.
+     *
+     * @param  Request  $request  Request containing the Job UUID ('key'), new quantity, and optional sku_id.
+     * @return RedirectResponse Redirects back to the cart after updating the quantity.
      */
     public function update(Request $request): RedirectResponse
     {
@@ -283,6 +303,8 @@ class CartController extends Controller
     /**
      * Clear all items from the cart.
      *
+     * Completely empties the cart stored in the session via the CartManager.
+     *
      * @return RedirectResponse Redirects back.
      */
     public function clear(): RedirectResponse
@@ -301,6 +323,7 @@ class CartController extends Controller
      * or selects a new print placement). It instantly recalculates the total price, unit price,
      * and detects if a discount is currently active, returning the data as JSON to update the UI instantly.
      *
+     * @param  Request  $request  The incoming request containing product configuration parameters.
      * @return JsonResponse Returns JSON with unit_price, total_price, quantity, and discount_applied flag.
      */
     public function price(Request $request): JsonResponse

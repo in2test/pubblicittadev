@@ -75,6 +75,21 @@ use Throwable;
  * @property-read int|null $skus_count
  * @property-read ProductVariationType|null $pivot
  * @property-read int|null $variation_types_count
+ * @property string $pricing_model The pricing model (e.g., standard, area-based)
+ * @property float|null $sheet_width The physical width of the print sheet in mm
+ * @property float|null $sheet_height The physical height of the print sheet in mm
+ * @property bool $allows_custom_size Indicates if the product allows custom sizing
+ * @property float|null $min_custom_width Minimum allowed custom width
+ * @property float|null $max_custom_width Maximum allowed custom width
+ * @property float|null $min_custom_height Minimum allowed custom height
+ * @property float|null $max_custom_height Maximum allowed custom height
+ * @property array<mixed>|null $certifications JSON array of product certifications
+ * @property array<mixed>|null $technical_specs JSON array of technical specifications
+ * @property array<mixed>|null $construction_features JSON array of construction features
+ * @property string|null $customization_notes Optional customization notes
+ * @property float|null $cached_base_price Cached base price
+ * @property float|null $cached_starting_price Cached minimum starting price
+ * @property float|null $cached_starting_unit_price Cached minimum starting unit price
  *
  * @method static Builder<static>|Product active()
  * @method static ProductFactory factory($count = null, $state = [])
@@ -193,6 +208,8 @@ class Product extends Model implements HasMedia
      * Relationships
      */
     /**
+     * Get the category that this product belongs to.
+     *
      * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
@@ -201,6 +218,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get the variation types associated with this product.
+     * Includes pivot data like has_images, is_modifier, and sort_order.
+     *
      * @return BelongsToMany<VariationType, $this, ProductVariationType>
      */
     public function variationTypes(): BelongsToMany
@@ -212,6 +232,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get the SKUs (Stock Keeping Units) associated with this product.
+     * Represents concrete combinatons of variations.
+     *
      * @return HasMany<ProductSku, $this>
      */
     public function skus(): HasMany
@@ -220,6 +243,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get remote/synced images associated with this product.
+     *
      * @return HasMany<Image, $this>
      */
     public function images(): HasMany
@@ -228,6 +253,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get the quantity-based pricing tiers for this product.
+     *
      * @return HasMany<PricingTier, $this>
      */
     public function pricingTiers(): HasMany
@@ -236,6 +263,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get the intermediate pivot models for variation types.
+     * Useful for eager loading options for a specific product.
+     *
      * @return HasMany<ProductVariationType, $this>
      */
     public function productVariationTypes(): HasMany
@@ -244,6 +274,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Base variation types only (is_modifier = false).
+     * These are fundamental variations like Size or Color.
+     *
      * @return HasMany<ProductVariationType, $this>
      */
     public function baseVariationTypes(): HasMany
@@ -261,6 +294,9 @@ class Product extends Model implements HasMedia
         return $this->hasMany(ProductVariationType::class)->where('is_modifier', true)->orderBy('sort_order');
     }
 
+    /**
+     * Get the route key for the model.
+     */
     #[Override]
     public function getRouteKeyName(): string
     {
@@ -268,7 +304,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Check if product is on request.
+     * Check if the product requires a custom quote (on request).
+     *
+     * @return bool True if both price and offer_price are <= 0.
      */
     public function isOnRequest(): bool
     {
@@ -276,7 +314,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the brand of the product.
+     * Get the brand of the product based on its name.
+     *
+     * @return string The resolved brand name.
      */
     public function getBrandAttribute(): string
     {
@@ -298,7 +338,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the plain text description.
+     * Get the plain text version of the description.
+     *
+     * @return string The description without HTML tags.
      */
     public function getPlainDescriptionAttribute(): string
     {
@@ -321,6 +363,12 @@ class Product extends Model implements HasMedia
         return $all->first();
     }
 
+    /**
+     * Get the URL of the first available image.
+     *
+     * @param  string  $conversion  The image conversion to use (e.g., 'medium', 'thumbnail')
+     * @return string The URL to the image, or a placeholder if no image exists.
+     */
     public function getFirstImageUrl(string $conversion = 'medium'): string
     {
         $image = $this->getFirstImage();
@@ -337,6 +385,8 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the thumbnail URL for the product.
+     *
+     * @return string|null The thumbnail URL, or null if no image exists.
      */
     public function getThumbnailUrl(): ?string
     {
@@ -651,8 +701,12 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola il prezzo per una determinata quantità, includendo opzionalmente la SKU.
-     * Se è presente un prezzo in offerta (offer_price), viene restituito l'offerta.
+     * Calculates the price for a given quantity, optionally including a specific SKU.
+     * If an offer price is active, the offer price is returned regardless of quantity.
+     *
+     * @param  int  $quantity  The quantity to price
+     * @param  ProductSku|null  $sku  The specific SKU to price (optional)
+     * @return float The calculated price per unit
      */
     public function getPriceForQuantity(int $quantity = 1, ?ProductSku $sku = null): float
     {
@@ -678,7 +732,17 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Recupera il prezzo a scaglioni (Tier Pricing) in base alla quantità e SKU opzionale.
+     * Retrieves the tier price based on quantity and optional SKU.
+     *
+     * Priority:
+     * 1. SKU-specific tier for the given quantity
+     * 2. Global product tier for the given quantity
+     * 3. Minimum unit price among all specific SKU tiers for the given quantity (if global is missing)
+     * 4. Minimum tier unit price across the product (if no quantity matches, and price is <=0 or custom size allowed)
+     *
+     * @param  int  $quantity  The requested quantity
+     * @param  ProductSku|null  $sku  The specific SKU (optional)
+     * @return float|null The tier price per unit, or null if no tier is found
      */
     public function getTierPrice(int $quantity, ?ProductSku $sku = null): ?float
     {
@@ -780,13 +844,15 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola quanti fogli fisici sono necessari per le dimensioni fornite.
+     * Calculates how many physical sheets are needed for the given dimensions.
      *
-     * Viene provato sia l'orientamento originale che quello ruotato di 90°;
-     * si utilizza l'orientamento che richiede il minor numero di fogli.
-     * Se max_width o max_height è null, l'asse corrispondente è considerato illimitato.
-     * Il prezzo non è influenzato da questo calcolo: è puramente informativo per il cliente.
+     * Tests both original and 90-degree rotated orientations to find the one that
+     * requires the fewest sheets. If max_width or max_height is null, that axis is
+     * considered unlimited. This calculation is purely informational for the customer
+     * and does not affect pricing.
      *
+     * @param  float  $width  Item width in mm
+     * @param  float  $height  Item height in mm
      * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
      */
     public function getSheetsNeeded(float $width, float $height): array
@@ -815,8 +881,15 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola quanti pezzi di una determinata dimensione possono essere stampati su un singolo foglio.
-     * Utilizza la larghezza (sheet_width) e l'altezza (sheet_height) del foglio configurate per il prodotto.
+     * Calculates how many items of a given size can fit on a single print sheet.
+     * Uses the configured sheet_width and sheet_height for the product.
+     *
+     * Tests both normal and 90-degree rotated orientations to maximize yield.
+     * Includes a fixed 6mm gap between items for cutting margins.
+     *
+     * @param  float  $itemWidth  Item width in mm
+     * @param  float  $itemHeight  Item height in mm
+     * @return int The maximum number of items that fit on a single sheet
      */
     public function calculateItemsPerSheet(float $itemWidth, float $itemHeight): int
     {
@@ -837,12 +910,14 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola l'area totale fatturata (in metri quadrati) per la quantità e le dimensioni fornite.
+     * Calculates the total billed area (in square meters) for the given quantity and dimensions.
+     * If the product has a min_area configured, the actual area is rounded up to the nearest
+     * multiple of min_area before returning.
      *
-     * @param  int  $quantity  Numero di articoli
-     * @param  float  $width  Larghezza fisica dell'articolo in MILLIMETRI (mm)
-     * @param  float  $height  Altezza fisica dell'articolo in MILLIMETRI (mm)
-     * @return float L'area totale calcolata in metri quadrati (mq), arrotondata all'area minima del prodotto (se applicabile).
+     * @param  int  $quantity  Number of items
+     * @param  float  $width  Physical width of the item in MILLIMETERS (mm)
+     * @param  float  $height  Physical height of the item in MILLIMETERS (mm)
+     * @return float The total calculated area in square meters (sqm), rounded to min_area if applicable.
      */
     public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
     {
@@ -864,7 +939,11 @@ class Product extends Model implements HasMedia
     /**
      * Get the active SKU based on selected options.
      *
-     * @param  array<int, int|array<int>>  $selectedOptions
+     * Iterates through all the product's SKUs to find the one that matches all the non-modifier
+     * variation type options provided in $selectedOptions.
+     *
+     * @param  array<int, int|array<int>>  $selectedOptions  Map of variation_type_id => variation_option_id(s)
+     * @return ProductSku|null The matching SKU, or null if no exact match is found.
      */
     public function getActiveSku(array $selectedOptions): ?ProductSku
     {
@@ -874,11 +953,13 @@ class Product extends Model implements HasMedia
             foreach ($this->variationTypes as $type) {
                 /** @var ProductVariationType|null $pivot */
                 $pivot = $type->pivot;
+                // Modifiers don't affect the base SKU resolution
                 if ($pivot && $pivot->is_modifier) {
                     continue;
                 }
 
                 $selectedId = $selectedOptions[$type->id] ?? null;
+                // 999999 is a special ID for "Custom Format", ignore it for exact SKU matching
                 if ($selectedId && $selectedId != 999999 && ! $sku->options->contains('id', $selectedId)) {
                     return false;
                 }
@@ -889,22 +970,22 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola il prezzo totale per un intero lavoro (elemento del carrello o configurazione prodotto).
+     * Calculates the total price for an entire job (cart item or product configuration).
      *
-     * Questo è il motore di calcolo principale della piattaforma. Gestisce tutti e 3 i modelli di prezzo:
-     * 1. A superficie (area): Calcola l'area totale fatturata (rispettando l'area minima per pezzo) e moltiplica per il prezzo al mq.
-     * 2. A quantità (quantity): Cerca la fascia di prezzo esatta basata sulla quantità e sul lato di stampa selezionato.
-     * 3. Fisso: Usa un prezzo unitario standard indipendentemente dalla quantità.
+     * This is the main pricing engine of the platform. It handles all 3 pricing models:
+     * 1. Area-based: Calculates the total billed area (respecting minimum area per piece) and multiplies by the price per sqm.
+     * 2. Quantity-based: Finds the exact price tier based on quantity and selected print side.
+     * 3. Fixed: Uses a standard unit price regardless of quantity.
      *
-     * Aggrega anche eventuali costi aggiuntivi derivanti dai posizionamenti di stampa selezionati (es. Fronte, Retro)
-     * e applica correttamente le sovrascritture di prezzo specifiche della variante (SKU), se presenti.
+     * It also aggregates any additional costs from selected print placements (e.g., Front, Back)
+     * and correctly applies variant-specific (SKU) price overrides if present.
      *
-     * @param  int  $totalQuantity  Quantità totale di articoli per questa lavorazione.
-     * @param  array<int, int>  $skuQuantities  Mappa ID SKU -> quantità (es. [12 => 5, 13 => 10]) per il dettaglio delle varianti.
-     * @param  float|null  $width  Larghezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
-     * @param  float|null  $height  Altezza fisica in CENTIMETRI (obbligatoria se pricing_model è 'area').
-     * @param  array<int>  $selectedOptions  ID delle opzioni di variazione usate per determinare la SKU attiva.
-     * @return float Il prezzo totale finale, formattato e pronto.
+     * @param  int  $totalQuantity  Total quantity of items for this job.
+     * @param  array<int, int>  $skuQuantities  Map of SKU ID -> quantity (e.g., [12 => 5, 13 => 10]) for variant breakdown.
+     * @param  float|null  $width  Physical width in CENTIMETERS (required if pricing_model is 'area').
+     * @param  float|null  $height  Physical height in CENTIMETERS (required if pricing_model is 'area').
+     * @param  array<int, int|array<int>>  $selectedOptions  IDs of variation options used to determine the active SKU.
+     * @return float The final total price, formatted and ready.
      */
     public function calculateTotalPrice(
         int $totalQuantity,
@@ -919,7 +1000,7 @@ class Product extends Model implements HasMedia
 
         $this->loadMissing(['skus.options', 'variationTypes']);
 
-        // --- Modello di prezzo basato sull'area (es. striscioni, adesivi grandi formati) ---
+        // --- Area-based Pricing Model (e.g., banners, large format stickers) ---
         if ($this->product_class === ProductClass::AreaBased) {
             if (empty($width) || empty($height)) {
                 return 0.0;
@@ -930,7 +1011,7 @@ class Product extends Model implements HasMedia
 
             $activeSku = $this->getActiveSku($selectedOptions) ?? $this->skus->first();
 
-            // Se la SKU attiva ha un prezzo personalizzato (override), usalo come prezzo al mq
+            // If the active SKU has a custom price override, use it as the price per sqm
             if ($activeSku && $activeSku->override_price !== null) {
                 $pricePerSqm = (float) $activeSku->override_price;
             }
@@ -942,14 +1023,14 @@ class Product extends Model implements HasMedia
             return (float) number_format($total, 2, '.', '');
         }
 
-        // --- Modello di prezzo Fisso o a Quantità (scaglioni) ---
+        // --- Fixed or Quantity-based (tiers) Pricing Model ---
         $total = 0.0;
 
-        // Determina se è stato scelto il formato personalizzato
+        // Determine if a custom format was chosen
         $isCustomFormat = false;
         if ($this->allows_custom_size && $width && $height) {
             foreach ($selectedOptions as $optionId) {
-                if ($optionId == 999999) {
+                if ($optionId == 999999) { // 999999 represents the custom format option ID
                     $isCustomFormat = true;
                     break;
                 }
@@ -969,23 +1050,25 @@ class Product extends Model implements HasMedia
             }
         }
 
-        // Se sono state specificate le quantità per ogni singola SKU (varianti)
+        // If quantities were specified for each individual SKU (variants)
         foreach ($skuQuantities as $skuId => $rawQty) {
             $skuQty = (int) $rawQty;
             if ($skuQty > 0) {
                 $sku = $this->skus->firstWhere('id', $skuId);
 
+                // For custom formats, we fall back to the nearest SKU's pricing tier structure
                 if ($isCustomFormat && $nearestSku) {
                     $sku = $nearestSku;
                 }
 
                 $unitPrice = $this->calculateFinalUnitPrice($skuQty, null, null, $sku);
 
-                // Applica il prezzo di override della SKU se presente
+                // Apply SKU price override if present
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;
                 }
 
+                // Apply a 20% surcharge for custom formats
                 if ($isCustomFormat) {
                     $unitPrice *= 1.20;
                 }
@@ -994,7 +1077,7 @@ class Product extends Model implements HasMedia
             }
         }
 
-        // Se non abbiamo un dettaglio per SKU, calcola la quantità totale sul prodotto base
+        // If we don't have a SKU breakdown, calculate the total quantity on the base product
         if ($skuQuantities === []) {
             $sku = null;
             if ($isCustomFormat && $nearestSku) {
@@ -1007,6 +1090,7 @@ class Product extends Model implements HasMedia
                 $unitPrice = (float) $sku->override_price;
             }
 
+            // Apply a 20% surcharge for custom formats
             if ($isCustomFormat) {
                 $unitPrice *= 1.20;
             }
@@ -1014,13 +1098,19 @@ class Product extends Model implements HasMedia
             $total += $unitPrice * $totalQuantity;
         }
 
+        // Add additional modifier costs (like front/back printing) to the total
         $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
 
         return (float) number_format($total, 2, '.', '');
     }
 
     /**
-     * Trova l'opzione di formato esistente più vicina alle dimensioni personalizzate fornite.
+     * Finds the nearest existing format option ID for the provided custom dimensions.
+     * Uses Euclidean distance to find the closest match.
+     *
+     * @param  float  $width  Custom width in mm
+     * @param  float  $height  Custom height in mm
+     * @return int|null The ID of the nearest format option, or null if none found
      */
     public function getNearestFormatOptionId(float $width, float $height): ?int
     {
@@ -1147,7 +1237,14 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola il prezzo unitario per una singola quantità (usato per stime e modelli a quantità/fissi).
+     * Calculates the unit price for a single quantity.
+     * Useful for estimations and displaying "price per unit" for fixed or quantity-based models.
+     *
+     * @param  int  $quantity  Target quantity
+     * @param  float|null  $width  Item width (required for area-based model)
+     * @param  float|null  $height  Item height (required for area-based model)
+     * @param  ProductSku|null  $sku  Specific SKU (optional)
+     * @return float The calculated final unit price
      */
     public function calculateFinalUnitPrice(int $quantity, ?float $width = null, ?float $height = null, ?ProductSku $sku = null): float
     {
@@ -1163,7 +1260,10 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Restituisce la quantità minima ordinabile (MOQ) per questo prodotto.
+     * Returns the Minimum Order Quantity (MOQ) for this product.
+     * Based on the pricing tiers configuration. Area based products always return 1.
+     *
+     * @return int The minimum order quantity
      */
     public function getMinimumOrderQuantity(): int
     {
@@ -1185,7 +1285,9 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Restituisce il prezzo totale minimo possibile per un nuovo ordine di questo prodotto.
+     * Returns the lowest possible total price for a new order of this product.
+     *
+     * @return float The starting absolute price
      */
     public function getStartingPrice(): float
     {
@@ -1193,8 +1295,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Calcola il prezzo minimo assoluto che un cliente può pagare per un ordine.
-     * Considera i limiti di area minima, i formati personalizzati e le quantità minime (MOQ).
+     * Calculates the absolute minimum total price a customer could pay for an order.
+     * Considers minimum area constraints, custom formats, and minimum order quantities (MOQ).
+     *
+     * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
+     * @return float The absolute minimum total price
      */
     public function getAbsoluteMinimumPrice(bool $skipCache = false): float
     {
@@ -1283,8 +1388,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Ottiene il prezzo unitario più basso possibile per un nuovo ordine.
-     * Utile per visualizzare "A partire da €X / pezzo" o "A partire da €X / mq" nei cataloghi.
+     * Retrieves the lowest possible unit price for a new order.
+     * Useful for displaying "Starting from $X / piece" or "Starting from $X / sqm" in catalogs.
+     *
+     * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
+     * @return float The starting unit price
      */
     public function getStartingUnitPrice(bool $skipCache = false): float
     {
@@ -1416,6 +1524,8 @@ class Product extends Model implements HasMedia
      * Scopes
      */
     /**
+     * Scope a query to only include active products.
+     *
      * @param  Builder<Product>  $query
      * @return Builder<Product>
      */
@@ -1425,7 +1535,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Scope a query to only include products visible to the given user.
+     * Admins can see all products, other users can only see active products.
+     *
      * @param  Builder<Product>  $query
+     * @param  User|null  $user  The user to check visibility for.
      * @return Builder<Product>
      */
     public function scopeVisibleTo(Builder $query, ?User $user = null): Builder
@@ -1438,8 +1552,8 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Ricalcola e salva i prezzi di partenza cachati nel database.
-     * Da chiamare dopo la modifica del prodotto, dei tier di prezzo o delle varianti.
+     * Recalculates and saves the cached starting prices to the database.
+     * Should be called after modifying the product, its pricing tiers, or its variants.
      */
     public function updateCachedPrices(): void
     {

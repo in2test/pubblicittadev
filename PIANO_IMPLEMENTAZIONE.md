@@ -1,8 +1,8 @@
 # 📋 Piano di Implementazione - Abbigliamento Personalizzato
 
-**Status**: 🚧 IN CORSO (Fase 3: Completamento Flusso Ordini)
+**Status**: ✅ COMPLETATO (Pronto per il Go-Live)
 **Scadenza MVP**: Raggiunta
-**Ultimo aggiornamento**: 27 Maggio 2026
+**Ultimo aggiornamento**: 2 Giugno 2026
 
 ---
 
@@ -13,7 +13,7 @@
 **Flusso**: Acquisto nel Carrello → Pagamento Stripe **oppure** Richiesta Preventivo Privato → Gestione Ordini (Lavorazioni)
 **Lingua**: Italiano
 **Team**: 1 developer
-**Timeline**: 4+ settimane (Fase 1 + Fase 2 + Fase 3 in corso)
+**Timeline**: Completata
 
 ---
 
@@ -52,7 +52,7 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 
 📦 orders (Ordini Ecommerce)
 ├── id, user_id (FK), order_number, payment_status, work_status
-├── total_price, total_items, shipping_address_id, billing_address_id
+├── total_price, total_items, shipping_cost, shipping_method, shipping_address_id, billing_address_id
 ├── stripe_session_id, stripe_payment_intent_id, paid_at, notes
 ├── payment_status: pending | paid | quotation | failed | refunded
 
@@ -61,6 +61,9 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 ├── customization_json (JSON con le opzioni selezionate)
 ├── design_file_path (Percorso file caricato)
 ├── work_status
+
+📦 shipping_tiers (Scaglioni Spedizione)
+├── id, name, min_order_total, cost, is_active
 ```
 
 ---
@@ -124,7 +127,7 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 ## 📅 Checkpoint Aggiornati
 
 ```
-MAGGIO 2026 (Stato Attuale)
+GIUGNO 2026 (Stato Attuale: Completato)
 ├─ ✅ Rimozione logica preventiva (Quote-based flow abolito, sostituito da Preventivo Privato semplificato)
 ├─ ✅ Unificazione Migrations (1 migration = 1 schema)
 ├─ ✅ Laravel Code Simplification (Codice commentato in ITA su modelli e carrello)
@@ -141,28 +144,21 @@ MAGGIO 2026 (Stato Attuale)
 ├─ ✅ Risoluzione errori PHPStan (0 errori)
 ├─ ✅ Flusso Preventivo Privato dal Carrello (senza checkout)
 ├─ ✅ Pagina successo contestuale (preventivo vs pagamento)
-└─ ✅ Test Suite (172 test Pest completati e passanti, 2 skippati)
-
-PIANO PROSSIMI GIORNI
-├─ ✅ Test e verifica di prodotti a superficie (Pannelli rigidi / Rigid panels)
-├─ ✅ Test e verifica di prodotti unitari/fissi (Espositori roll-up / Roll-ups)
-├─ ✅ Gestione Fatture (PDF invoices)
-└─ ✅ Shipping Tracking integration
-
-Nuovi task da analizzare:
-├─ ✅ Homepage Menu completion
-└─ ✅ Homepage Hero section redesign (carousel)
+├─ ✅ Test Suite (173 test Pest completati e passanti)
+├─ ✅ UI/UX Fixes completati
+├─ ✅ Implementazione Spese di Spedizione (Shipping Tiers & Ritiro Sede)
+└─ ✅ Documentazione Codebase (PHPDocs, inline comments, pulizia codice)
 ```
 
 ---
 
 ## 🧪 Test Suite
 
-Creati oltre **172 test** (Pest) che coprono:
+Creati oltre **173 test** (Pest) passanti con successo che coprono:
 - `CartTest`, `SearchTest`, `ProductPageTest`, `OrderTest`, `QuantityDiscountServiceTest`.
 - Nuovi test per `ProductSynchronizer` e `NwgApiClient`.
 - Copertura formati custom e calcoli di ridimensionamento (`StandardProductResourceTest`).
-- Test flusso preventivo privato (`CheckoutTest` – `test_direct_quotation_flow_from_cart_creates_order_and_redirects_to_success`).
+- Test flusso preventivo privato e checkout con metodi di spedizione (`CheckoutTest`).
 
 ---
 
@@ -177,50 +173,17 @@ Creati oltre **172 test** (Pest) che coprono:
 - [x] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
 - [x] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
 
-### 🛠️ Modulo 6: UI/UX Fixes & Improvements (Feedback Utente)
+### 🛠️ Modulo 6: UI/UX Fixes & Improvements (COMPLETATO)
+- [x] **Homepage, Catalogo, Carrello, Auth, Dashboard, Pagine Statiche**: Tutti i fix UI/UX richiesti sono stati applicati.
 
-#### Home Page
-- [x] **Menu**: Fix inconsistent text casing (currently passes between lower/uppercase).
-- [x] **Hero Section**: Redesign the hero section (consider replacing it with a carousel).
-- [x] **Certification Links**: Add/fix certification links.
-- [x] **Newsletter**: Implement/fix newsletter section.
-- [x] **Footer**: Add links to maps in the footer.
+### 🚚 Modulo 7: Spedizioni e Ritiro (COMPLETATO)
+- [x] **Gestione Spedizioni**: Inserite tabelle e resource per gli scaglioni di costo spedizione.
+- [x] **Ritiro in Sede**: Aggiunta opzione di ritiro in negozio gratuito e integrazione col checkout.
 
-#### Catalogo Page
-- [x] **Spacing**: Reduce excessive space around the title and align left to match navigation.
-- [x] **Filter Menu**: Fix inconsistent text casing (passes from uppercase to lowercase).
-- [x] **Padding**: Unify padding of filter menu and catalog grid to match navigation (`px-6`).
-- [x] **Mobile Layout**: Fix title overflow on small screens for long titles (e.g., "Abbigliamento da lavoro").
-
-#### Product Page
-- [x] **UI**: Remove "Carica il tuo design" (not needed).
-- [x] **UI**: Fix overflow issue on the "Aggiungi al carrello" button.
-- [x] **Data Sourcing**: Review static text vs database-driven text for "Certifications", "Specifiche tecniche", "Caratteristiche Costruttive", and "Note per la Personalizzazione".
-- [x] **Sizes**: Improve formatting of sizes for better readability.
-
-#### Cart Page
-- [x] **Mobile Layout**: Reduce excessive padding on mobile view.
-- [x] **Placeholder**: Change/remove the placeholder "Istruzioni speciali per la consegna" as it makes no sense.
-
-#### Login Page
-- [x] **Error Messages**: Fix the `auth.failed` message to be more user-friendly.
-
-#### Order Page
-- [x] **UI**: Fix overflow on "ID SESSIONE:...".
-- [x] **UI**: Improve contrast on the "I tuoi ordini" button.
-
-#### Dashboard
-- [x] **UI/Layout**: Fix overflow and excessive paddings on "Paga ora con stripe" and "Richiedi preventivo" buttons.
-- [x] **UI**: Fix "I miei indirizzi" PLUS button placement.
-- [x] **Navigation**: Re-evaluate the "Torna alla dashboard" button placement (seems out of place).
-- [x] **Forms**: Change "Dati di fatturazione" to a single-column layout instead of two columns.
-- [x] **Forms**: Fix the "Imposta come predefinito" checkbox (currently cannot be checked).
-
-#### Static Pages & General
-- [x] **Cookies Banner**: Implement/fix the Cookies banner.
-- [x] **Copywriting**: Rewrite texts for the "Servizi" and "Contact" static pages.
-- [x] **Legal Pages**: Create missing pages for "Informativa Privacy", "Termini e Condizioni", "Cookie Policy", and "Spedizioni e Resi".
-- [x] **Portfolio**: Implement portfolio pages and an admin section to manage previous works.
+### 📝 Modulo 8: Documentazione Codebase (COMPLETATO)
+- [x] **Modelli Core**: Commentati in maniera esaustiva `Product`, `Order`, ecc.
+- [x] **Controllers**: Commentati `CheckoutController`, `CartController`, `WebhookController`.
+- [x] **Filament**: Documentate le resource complesse (`ProductResource`, `VariationTypeResource`, `OrderResource`).
 
 ---
 
@@ -234,4 +197,4 @@ Creati oltre **172 test** (Pest) che coprono:
 
 ---
 
-🚀 **TARGET LIVE**: Fine Maggio 2026
+🚀 **TARGET LIVE**: Pronto per il rilascio in Produzione!
