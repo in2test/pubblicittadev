@@ -1,33 +1,34 @@
 <?php
 
-use Livewire\Component;
-use App\Services\CartManager;
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductSku;
+use App\Models\VariationOption;
+use App\Services\CartManager;
 use Livewire\Attributes\Computed;
+use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public Product $product;
+
     public Category $category;
-    
+
     // Contiene le opzioni selezionate dall'utente (Key: variation_type_id, Value: variation_option_id)
     public array $selectedOptions = [];
-    
+
     // Identificativo univoco dell'articolo nel carrello (se in fase di modifica)
     public ?string $jobId = null;
-    
+
     // Immagini attualmente mostrate nella galleria
     public array $images = [];
 
     // Quantità selezionate (Key: product_sku_id, Value: quantity)
     public array $quantities = [];
-    
 
-    
-
-    
     // Dimensioni personalizzate (per prodotti venduti ad area)
     public ?float $width = null;
+
     public ?float $height = null;
 
     public ?string $notes = null;
@@ -40,15 +41,16 @@ new class extends Component {
     public function mount(Product $product, $category, array $options = [], ?string $jobId = null): void
     {
         $this->product = $product;
-        
+
         // Eager-loading delle relazioni necessarie per calcolare i prezzi e mostrare le varianti
+        // (variationTypes e skus.options sono già caricati dal controller, loadMissing è no-op)
         $this->product->loadMissing([
             'variationTypes',
-            'skus.options.type', 
-            'pricingTiers'
+            'skus.options',
+            'pricingTiers',
         ]);
 
-        $this->product->variationTypes->each(fn($type) => $type->pivot->loadMissing('options.option'));
+        $this->product->variationTypes->each(fn ($type) => $type->pivot->loadMissing('options.option'));
 
         $this->category = $product->category ?? $category;
         $this->selectedOptions = $options;
@@ -62,13 +64,13 @@ new class extends Component {
 
             if ($item) {
                 $this->selectedOptions = $item['selected_options'] ?? $this->selectedOptions;
-                
+
                 if (isset($item['quantities']) && is_array($item['quantities'])) {
                     $this->quantities = $item['quantities'];
                 } elseif (isset($item['sku_id']) && isset($item['quantity'])) {
                     $this->quantities[$item['sku_id']] = (int) $item['quantity'];
                 }
-                    
+
                 $this->width = $item['width'] ?? null;
                 $this->height = $item['height'] ?? null;
                 $this->notes = $item['notes'] ?? null;
@@ -78,22 +80,22 @@ new class extends Component {
         }
 
         // Seleziona automaticamente le opzioni più economiche (se non già selezionate)
-        // per prodotti standard (escludendo i prodotti di tipo 'newwave')
         if ($this->product->type !== 'newwave') {
             $lowestPriceSku = $this->product->skus
-                ->sortBy(fn($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1))
+                ->sortBy(fn ($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1))
                 ->first();
 
             foreach ($this->product->variationTypes as $type) {
-                if (!isset($this->selectedOptions[$type->id])) {
+                if (! isset($this->selectedOptions[$type->id])) {
                     if ($lowestPriceSku) {
-                        $optionForType = $lowestPriceSku->options->first(fn($opt) => $type->pivot->options->contains('variation_option_id', $opt->id));
+                        $optionForType = $lowestPriceSku->options->first(fn ($opt) => $type->pivot->options->contains('variation_option_id', $opt->id));
                         if ($optionForType) {
                             $this->selectedOptions[$type->id] = $optionForType->id;
+
                             continue;
                         }
                     }
-                    
+
                     $firstOption = $type->pivot->options->map->option->filter()->first();
                     if ($firstOption) {
                         $this->selectedOptions[$type->id] = $firstOption->id;
@@ -108,29 +110,35 @@ new class extends Component {
 
     /**
      * Aggiorna la galleria immagini quando l'utente cambia variante (es. colore).
+     * Usa getImagesForOption() per caricare solo le immagini necessarie,
+     * evitando di caricare l'intera collezione (es. 167 immagini per basic-t).
      */
     public function updateImages(): void
     {
-        $allImages = collect($this->product->getAllImages());
-        
         $visualType = $this->product->variationTypes->firstWhere('pivot.has_images', true);
         $visualOptionId = $visualType ? ($this->selectedOptions[$visualType->id] ?? null) : null;
-        
+
         if ($visualOptionId) {
-            $colorImages = $allImages->filter(
-                fn($img) => $img->variation_option_id == $visualOptionId || 
-                   (isset($img->variation_option_ids) && in_array($visualOptionId, $img->variation_option_ids))
-            );
-            
-            $this->images = $colorImages->isEmpty() 
-                ? $allImages->filter(fn($img) => empty($img->variation_option_id) && empty($img->variation_option_ids))->values()->toArray()
-                : $colorImages->values()->toArray();
+            // Carica solo le immagini per il colore selezionato
+            $colorImages = $this->product->getImagesForOption((int) $visualOptionId);
+
+            if ($colorImages->isEmpty()) {
+                // Fallback: mostra immagini generiche se non ci sono immagini per questo colore
+                $this->images = $this->product->getImagesForOption(null)->values()->toArray();
+            } else {
+                $this->images = $colorImages->values()->toArray();
+            }
         } else {
-            $genericImages = $allImages->filter(fn($img) => empty($img->variation_option_id) && empty($img->variation_option_ids));
-            
-            if ($genericImages->isEmpty() && $allImages->isNotEmpty()) {
-                $firstOptionId = $allImages->firstWhere('variation_option_id', '!=')->variation_option_id ?? null;
-                $this->images = $allImages->filter(fn($img) => $img->variation_option_id == $firstOptionId || (isset($img->variation_option_ids) && in_array($firstOptionId, $img->variation_option_ids)))->values()->toArray();
+            // Nessun colore selezionato: mostra le immagini generiche (senza variation_option_id)
+            $genericImages = $this->product->getImagesForOption(null);
+
+            if ($genericImages->isEmpty()) {
+                // Fallback: prendi le immagini del primo colore disponibile
+                $firstRemoteImage = $this->product->images()->whereNotNull('variation_option_id')->orderBy('order_by')->first();
+                $firstOptionId = $firstRemoteImage?->variation_option_id;
+                $this->images = $firstOptionId
+                    ? $this->product->getImagesForOption((int) $firstOptionId)->values()->toArray()
+                    : [];
             } else {
                 $this->images = $genericImages->values()->toArray();
             }
@@ -147,7 +155,7 @@ new class extends Component {
 
         if ($allowMultiple) {
             $current = $this->selectedOptions[$typeId] ?? [];
-            if (!is_array($current)) {
+            if (! is_array($current)) {
                 $current = $current ? [$current] : [];
             }
             if (in_array($optionId, $current)) {
@@ -167,7 +175,7 @@ new class extends Component {
                 $this->selectedOptions[$typeId] = $optionId;
             }
         }
-        
+
         // Se si seleziona il formato personalizzato, inizializziamo le dimensioni se vuote
         if ($optionId === 999999) {
             if (empty($this->width)) {
@@ -183,11 +191,11 @@ new class extends Component {
             $this->updateImages();
         }
 
-        // Resettiamo le quantità perché il cambio di opzione potrebbe 
+        // Resettiamo le quantità perché il cambio di opzione potrebbe
         // corrispondere ad un nuovo SKU, invalidando la quantità precedente
         // Lo facciamo solo se la variazione modificata non è un modificatore
-        if (!$type || !$type->pivot?->is_modifier) {
-            $this->quantities = []; 
+        if (! $type || ! $type->pivot?->is_modifier) {
+            $this->quantities = [];
         }
     }
 
@@ -195,8 +203,9 @@ new class extends Component {
     public function product(): Product
     {
         // Ricarichiamo le relazioni in caso il componente venga deidratato
-        $this->product->loadMissing(['variationTypes', 'skus.options.type']);
-        $this->product->variationTypes->each(fn($type) => $type->pivot->loadMissing('options.option'));
+        $this->product->loadMissing(['variationTypes', 'skus.options']);
+        $this->product->variationTypes->each(fn ($type) => $type->pivot->loadMissing('options.option'));
+
         return $this->product;
     }
 
@@ -226,7 +235,7 @@ new class extends Component {
             }
         }
 
-        if (!$activeSku instanceof \App\Models\ProductSku) {
+        if (! $activeSku instanceof ProductSku) {
             $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
         }
 
@@ -258,8 +267,8 @@ new class extends Component {
         }
 
         // Per i prodotti standard, la quantità è legata unicamente allo SKU attualmente attivo
-        $activeSku = $product->variationTypes->isNotEmpty() 
-            ? $product->getActiveSku($this->selectedOptions) 
+        $activeSku = $product->variationTypes->isNotEmpty()
+            ? $product->getActiveSku($this->selectedOptions)
             : $product->skus->first();
 
         return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : (int) ($this->quantities[0] ?? 0);
@@ -296,7 +305,7 @@ new class extends Component {
     public function itemsPerSheet(): int
     {
         $product = $this->product();
-        if ($product->pricing_model !== 'quantity' || !$product->allows_custom_size) {
+        if ($product->pricing_model !== 'quantity' || ! $product->allows_custom_size) {
             return 1;
         }
 
@@ -342,7 +351,7 @@ new class extends Component {
                     }
                 }
             }
-            
+
             if ($parsedW > 0 && $parsedH > 0) {
                 $w = $parsedW;
                 $h = $parsedH;
@@ -362,10 +371,11 @@ new class extends Component {
     public function addToCart(CartManager $cart)
     {
         $product = $this->product();
-        
+
         // 1. Validazione Quantità Minime
         if ($this->totalQuantity() === 0) {
             session()->flash('error', 'Seleziona almeno una quantità.');
+
             return;
         }
 
@@ -373,6 +383,7 @@ new class extends Component {
             $minQty = $product->pricingTiers->min('min_quantity');
             if ($this->totalQuantity() < $minQty) {
                 session()->flash('error', "La quantità minima ordinabile per questo prodotto è {$minQty}.");
+
                 return;
             }
         }
@@ -398,16 +409,19 @@ new class extends Component {
         if ($product->pricing_model === 'area' || ($product->pricing_model === 'quantity' && $product->allows_custom_size && $isCustom)) {
             if (empty($this->width) || $this->width <= 0) {
                 session()->flash('error', 'Inserisci una larghezza valida.');
+
                 return;
             }
             if (empty($this->height) || $this->height <= 0) {
                 session()->flash('error', 'Inserisci un\'altezza valida.');
+
                 return;
             }
 
             $this->validateDimensions();
             if ($this->getErrorBag()->hasAny(['width', 'height'])) {
                 session()->flash('error', $this->getErrorBag()->first());
+
                 return;
             }
         }
@@ -416,8 +430,8 @@ new class extends Component {
         // (Rimuove valori stantii di varianti selezionate in precedenza ma poi scartate)
         $quantitiesToStore = $this->quantities;
         if ($product->pricing_model === 'area' || $product->type !== 'newwave') {
-            $activeSku = $product->variationTypes->isNotEmpty() 
-                ? $product->getActiveSku($this->selectedOptions) 
+            $activeSku = $product->variationTypes->isNotEmpty()
+                ? $product->getActiveSku($this->selectedOptions)
                 : $product->skus->first();
 
             $quantitiesToStore = $activeSku ? [$activeSku->id => $this->quantities[$activeSku->id] ?? 0] : [0 => $this->quantities[0] ?? 0];
@@ -489,7 +503,7 @@ new class extends Component {
     public function validateDimensions(): void
     {
         $this->resetErrorBag(['width', 'height']);
-        
+
         $product = $this->product();
         $isCustom = false;
         foreach ($this->selectedOptions as $typeId => $optionId) {
@@ -545,7 +559,7 @@ new class extends Component {
             return;
         }
 
-        $options = \App\Models\VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
+        $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($pvt) {
             $query->where('product_variation_type_id', $pvt->id);
         })->get();
 

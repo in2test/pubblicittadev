@@ -412,6 +412,99 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get images for a specific variation option (e.g. a color), or generic images if no option is given.
+     * Much more efficient than getAllImages() when only one color's images are needed.
+     *
+     * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
+     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
+     */
+    public function getImagesForOption(?int $variationOptionId): Collection
+    {
+        $images = [];
+
+        // 1. Filter local media (Spatie Media Library) by variation_option_id in custom properties
+        $mediaQuery = $this->getMedia('images');
+        $localRemoteUrls = [];
+
+        foreach ($mediaQuery as $media) {
+            $remoteUrl = $media->getCustomProperty('remote_resource_url')['standard'] ?? null;
+            if ($remoteUrl) {
+                $localRemoteUrls[] = $remoteUrl;
+            }
+
+            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
+            if (empty($variationOptionIds)) {
+                $colorIds = $media->getCustomProperty('color_ids');
+                $colorId = $media->getCustomProperty('color_id');
+                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
+            }
+            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
+
+            // Filter: if an option is requested, only include matching media. Otherwise include generic media.
+            if ($variationOptionId !== null) {
+                $matches = $resolvedVariationOptionId == $variationOptionId
+                    || in_array($variationOptionId, $variationOptionIds);
+                if (! $matches) {
+                    continue;
+                }
+            } else {
+                if (! empty($resolvedVariationOptionId) || ! empty($variationOptionIds)) {
+                    continue;
+                }
+            }
+
+            $images[] = (object) [
+                'id' => (string) $media->id,
+                'url' => $media->getUrl(),
+                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
+                'variation_option_id' => $resolvedVariationOptionId,
+                'variation_option_ids' => $variationOptionIds,
+                'order' => $media->order_column,
+                'type' => 'local',
+                'is_remote' => false,
+                'alt' => $media->getCustomProperty('alt'),
+                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+            ];
+        }
+
+        // 2. Filter remote images from the 'images' table
+        $remoteQuery = $this->images()->orderBy('order_by', 'asc');
+
+        if ($variationOptionId !== null) {
+            $remoteQuery->where('variation_option_id', $variationOptionId);
+        } else {
+            $remoteQuery->whereNull('variation_option_id');
+        }
+
+        foreach ($remoteQuery->get() as $remote) {
+            if (in_array($remote->image_url, $localRemoteUrls)) {
+                continue;
+            }
+
+            $images[] = (object) [
+                'id' => (string) $remote->id,
+                'url' => $remote->image_url,
+                'thumb' => $remote->thumbnail_url ?: $remote->image_url,
+                'medium' => $remote->medium_url ?: $remote->image_url,
+                'large' => $remote->large_url ?: $remote->image_url,
+                'variation_option_id' => $remote->variation_option_id,
+                'variation_option_ids' => [],
+                'order' => $remote->order_by,
+                'type' => 'remote',
+                'is_remote' => true,
+                'alt' => $remote->alt,
+                'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
+            ];
+        }
+
+        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
+
+        return collect($images)->values();
+    }
+
+    /**
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *

@@ -70,7 +70,10 @@ class HomePageController extends Controller
             ->where(function ($q) {
                 $q->has('media')->orHas('images');
             })
-            ->with(['media', 'images'])
+            ->with([
+                'media' => fn ($query) => $query->orderBy('order_column')->limit(1),
+                'images' => fn ($query) => $query->orderBy('order_by')->limit(1),
+            ])
             ->orderByDesc('is_featured')
             ->inRandomOrder()
             ->take($productsNeeded)
