@@ -1,7 +1,7 @@
 <x-layout>
 
     <div class="industrial-grid absolute inset-0 pointer-events-none"></div>
-    <div class="max-w-screen-2xl mx-auto px-6 py-16 md:py-24">
+    <div class="mx-auto px-8 3xl:px-32 py-16 md:py-24">
         <!-- Hero Header -->
             <div class="mb-16 md:mb-24">
             <span class="font-mono text-xs uppercase tracking-[0.3em] text-primary mb-4 block">Protocollo di Comunicazione</span>
@@ -123,32 +123,28 @@
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                             <span>Lun - Ven</span>
-                            <span class="font-bold">08:30 — 18:00</span>
+                            <span class="font-bold">09:00 — 13:00 / 14:30 — 18:30</span>
                         </div>
                         <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                             <span>Sabato</span>
                             <span class="font-bold">09:00 — 13:00</span>
                         </div>
-                        <div class="flex justify-between text-secondary/60">
+                        <div class="flex justify-between text-secondary/60 mt-2">
                             <span>Domenica</span>
                             <span>Chiuso</span>
                         </div>
                     </div>
                 </section>
                 <!-- Styled Map Placeholder -->
-                <a href="https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679!16s%2Fg%2F11b6jgf95v?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank"
-                    class="block relative h-64 w-full grayscale contrast-125 border border-outline-variant overflow-hidden group">
-                    <div
-                        class="absolute inset-0 bg-primary/5 group-hover:bg-primary/20 transition-colors z-10 pointer-events-none">
-                    </div>
-                    <img alt="Vista mappa di PubbliCittà 24" class="w-full h-full object-cover"
-                        data-alt="Mappa sede PubbliCittà 24 Trivigliano" data-location="Trivigliano"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYGJrboMpsfLGJC8PqUvDTTnMW2m01J8oDLwwNXIXK4s8o8xAN2P4538k5hdAAtpPVPqo53SX8qBF5NoA8zRNyONy34VOMa6bO-hvcIh8JO0SVzIdXNPDtShYePK9ac6MNlZW2zTbPzKR99QLfV0OvhPrWbw8FapwKqt41-dRzdQBLAh1R-BrRZrj8I5BJBVTLtGK13AcpPfT7ppdFxcXnEJMNvFeINvHfv9JM7cW6l28ptIBgGtsVW7YkEDWTh3H-igy0y4TwQa8" />
-                    <div class="absolute bottom-4 left-4 bg-gray-50 px-4 py-2 shadow-xl z-20">
-                        <span class="font-mono text-[10px] uppercase tracking-tighter">Lat: 41.7723 | Long:
-                            13.2718</span>
-                    </div>
-                </a>
+                <div class="relative h-64 w-full grayscale hover:grayscale-0 contrast-125 border border-outline-variant overflow-hidden transition-all duration-500">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.627914041124!2d13.269293!3d41.7723186!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132558ae53356aa1%3A0xd87cadd6464c2404!2sPubbliCitta&#39;%2024%20srls!5e0!3m2!1sit!2sit!4v1717325988583!5m2!1sit!2sit" 
+                        class="w-full h-full border-0" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
             </div>
         </div>
     </div>

@@ -228,7 +228,7 @@
                     class="px-10 py-4 bg-on-primary text-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-surface active:scale-95 shadow-lg block text-center">
                     Richiedi Preventivo Gratuito
                 </a>
-                <a href="{{ route('catalog.index') }}"
+                <a href="{{ route('catalog') }}"
                     class="px-10 py-4 border-2 border-on-primary text-on-primary font-bold uppercase tracking-widest text-sm transition-all hover:bg-on-primary/10 active:scale-95 block text-center">
                     Sfoglia il Catalogo
                 </a>
