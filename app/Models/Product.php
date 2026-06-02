@@ -416,10 +416,11 @@ class Product extends Model implements HasMedia
      * Much more efficient than getAllImages() when only one color's images are needed.
      *
      * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
-     * @return Collection<int, object{id: string, url: string|null, thumb: string|null, medium: string|null, large: string|null, variation_option_id: mixed, variation_option_ids: mixed, order: int|null, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
+     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
      */
     public function getImagesForOption(?int $variationOptionId): Collection
     {
+        /** @var array<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> $images */
         $images = [];
 
         // 1. Filter local media (Spatie Media Library) by variation_option_id in custom properties
@@ -447,26 +448,30 @@ class Product extends Model implements HasMedia
                 if (! $matches) {
                     continue;
                 }
-            } else {
-                if (! empty($resolvedVariationOptionId) || ! empty($variationOptionIds)) {
-                    continue;
-                }
+            } elseif (! empty($resolvedVariationOptionId) || ! empty($variationOptionIds)) {
+                continue;
             }
 
-            $images[] = (object) [
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $localObj = (object) [
                 'id' => (string) $media->id,
                 'url' => $media->getUrl(),
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
                 'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
                 'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'variation_option_id' => $resolvedVariationOptionId,
-                'variation_option_ids' => $variationOptionIds,
-                'order' => $media->order_column,
+                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
+                'variation_option_ids' => (array) $variationOptionIds,
+                'order' => (int) $media->order_column,
                 'type' => 'local',
                 'is_remote' => false,
-                'alt' => $media->getCustomProperty('alt'),
+                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
                 'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
             ];
+            $images[] = $localObj;
         }
 
         // 2. Filter remote images from the 'images' table
@@ -483,20 +488,26 @@ class Product extends Model implements HasMedia
                 continue;
             }
 
-            $images[] = (object) [
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $remoteObj = (object) [
                 'id' => (string) $remote->id,
-                'url' => $remote->image_url,
-                'thumb' => $remote->thumbnail_url ?: $remote->image_url,
-                'medium' => $remote->medium_url ?: $remote->image_url,
-                'large' => $remote->large_url ?: $remote->image_url,
-                'variation_option_id' => $remote->variation_option_id,
+                'url' => $remote->image_url ?? '',
+                'thumb' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
+                'medium' => $remote->medium_url ?: ($remote->image_url ?? ''),
+                'large' => $remote->large_url ?: ($remote->image_url ?? ''),
+                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
                 'variation_option_ids' => [],
-                'order' => $remote->order_by,
+                'order' => (int) $remote->order_by,
                 'type' => 'remote',
                 'is_remote' => true,
-                'alt' => $remote->alt,
-                'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
+                'alt' => (string) ($remote->alt ?? ''),
+                'thumbnail_url' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
             ];
+            $images[] = $remoteObj;
         }
 
         usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
@@ -508,7 +519,7 @@ class Product extends Model implements HasMedia
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, object{id: string, url: string|null, thumb: string|null, medium: string|null, large: string|null, variation_option_id: mixed, variation_option_ids: mixed, order: int|null, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null}>
+     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
      */
     public function getAllImages(): Collection
     {
@@ -534,7 +545,7 @@ class Product extends Model implements HasMedia
             $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
 
             /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null} $localObj
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
              *
              * @phpstan-ignore varTag.nativeType
              */
@@ -544,12 +555,12 @@ class Product extends Model implements HasMedia
                 'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
                 'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
                 'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'variation_option_id' => $resolvedVariationOptionId,
-                'variation_option_ids' => $variationOptionIds,
-                'order' => $media->order_column,
+                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
+                'variation_option_ids' => (array) $variationOptionIds,
+                'order' => (int) $media->order_column,
                 'type' => 'local',
                 'is_remote' => false,
-                'alt' => $media->getCustomProperty('alt'),
+                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
                 'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
             ];
             $images[] = $localObj;
@@ -569,7 +580,7 @@ class Product extends Model implements HasMedia
             }
 
             /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: mixed, variation_option_ids: mixed, order: int, type: string, is_remote: bool, alt: mixed, thumbnail_url: string|null} $remoteObj
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
              *
              * @phpstan-ignore varTag.nativeType
              */
@@ -579,12 +590,12 @@ class Product extends Model implements HasMedia
                 'thumb' => $remote->thumbnail_url ?: $remote->image_url,
                 'medium' => $remote->medium_url ?: $remote->image_url,
                 'large' => $remote->large_url ?: $remote->image_url,
-                'variation_option_id' => $remote->variation_option_id,
+                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
                 'variation_option_ids' => [],
-                'order' => $remote->order_by,
+                'order' => (int) $remote->order_by,
                 'type' => 'remote',
                 'is_remote' => true,
-                'alt' => $remote->alt,
+                'alt' => (string) ($remote->alt ?? ''),
                 'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
             ];
             $images[] = $remoteObj;

@@ -84,7 +84,7 @@ it('does not return all images for an option request (avoids the 167-images prob
 
     // Should return only 5 blue images, NOT all 12
     expect($images)->toHaveCount(5);
-    expect($images->pluck('url')->every(fn ($url) => str_contains($url, 'blue-')))->toBeTrue();
+    expect($images->pluck('url')->every(fn ($url) => str_contains((string) $url, 'blue-')))->toBeTrue();
 });
 
 it('returns an empty collection for an option with no images', function () {

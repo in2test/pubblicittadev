@@ -107,7 +107,7 @@ class ProductPageTest extends TestCase
         $loadedSku = $productData->skus->first();
         $this->assertTrue($loadedSku->relationLoaded('options'));
 
-        $loadedOption = $loadedSku->options->first();
+        $loadedSku->options->first();
         // The 'type' relationship was removed from eager-loading for performance reasons as it's not used in views.
     }
 
