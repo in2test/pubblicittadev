@@ -15,26 +15,30 @@
             </div>
         </div>
         <div class="flex flex-col space-y-4">
-            <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Chi Siamo</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Esplora</span>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Biglietti da visita</a>
+                href="{{ route('about') }}">Chi Siamo</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">Volantini e brochure</a>
+                href="{{ route('services') }}">Servizi</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('about') }}">T-shirt e abbigliamento</a>
+                href="{{ route('portfolio') }}">Portfolio Lavori</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
                 href="{{ route('contact') }}">Supporto</a>
         </div>
         <div class="flex flex-col space-y-4">
-            <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Servizi</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Lavorazioni & Prodotti</span>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('services') }}">Ricamo Industriale</a>
+                href="{{ route('about') }}">Ricamo Industriale</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('services') }}">Serigrafia</a>
+                href="{{ route('about') }}">Serigrafia</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('services') }}">Allestimenti</a>
+                href="{{ route('about') }}">Allestimenti</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
-                href="{{ route('portfolio') }}">Portfolio Lavori</a>
+                href="{{ route('services') }}">Biglietti da visita</a>
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+                href="{{ route('services') }}">Volantini e brochure</a>
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+                href="{{ route('catalog', 't-shirts') }}">T-shirt e abbigliamento</a>
         </div>
         <div>
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-6 block">Newsletter</span>
