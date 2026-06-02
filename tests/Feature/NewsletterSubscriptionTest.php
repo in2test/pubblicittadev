@@ -11,8 +11,8 @@ it('can subscribe to the newsletter', function () {
         ->set('email', 'test@example.com')
         ->set('consent', true)
         ->call('subscribe')
-        ->assertSet('subscribed', true)
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertSet('subscribed', true);
 
     $this->assertDatabaseHas('newsletter_subscriptions', [
         'email' => 'test@example.com',
