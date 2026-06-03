@@ -1,4 +1,4 @@
-name: Deploy to Production FTP
+name: Deploy to Production SSH
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - production
 
 jobs:
-  deploy-ftp:
+  deploy-ssh:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.5' # Using PHP 8.5 as per Laravel Boost guidelines
+          php-version: '8.5'
 
       - name: Install Composer Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
@@ -31,19 +31,34 @@ jobs:
           npm ci
           npm run build
 
-      - name: Sync files via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Compress Build
+        run: |
+          tar -czf deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='.github' \
+            --exclude='.env.example' \
+            --exclude='phpunit.xml' \
+            --exclude='README.md' \
+            .
+
+      - name: Copy Archive via SCP
+        uses: appleboy/scp-action@master
         with:
-          server: ${{ secrets.FTP_SERVER }}
+          host: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Exclude files that don't need to be on the production server
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/tests/**
-            **/.github/**
-            .env.example
-            phpunit.xml
-            README.md
+          source: "deploy.tar.gz"
+          target: "${{ secrets.SSH_TARGET_DIR }}"
+
+      - name: Extract Archive via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          script: |
+            cd ${{ secrets.SSH_TARGET_DIR }}
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
