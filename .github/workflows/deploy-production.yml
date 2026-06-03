@@ -48,8 +48,8 @@ jobs:
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           source: "deploy.tar.gz"
           target: "${{ secrets.SSH_TARGET_DIR }}"
 
