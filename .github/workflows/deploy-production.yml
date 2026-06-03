@@ -57,8 +57,8 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ${{ secrets.SSH_TARGET_DIR }}
             tar -xzf deploy.tar.gz
