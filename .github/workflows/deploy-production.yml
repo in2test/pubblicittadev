@@ -33,8 +33,7 @@ jobs:
 
       - name: Compress Build
         run: |
-          tar -czf deploy.tar.gz \
-            --exclude='deploy.tar.gz' \
+          tar -czf ../deploy.tar.gz \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='tests' \
@@ -43,6 +42,7 @@ jobs:
             --exclude='phpunit.xml' \
             --exclude='README.md' \
             .
+          mv ../deploy.tar.gz ./deploy.tar.gz
 
       - name: Copy Archive via SCP
         uses: appleboy/scp-action@master
