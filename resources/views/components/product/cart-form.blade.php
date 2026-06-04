@@ -182,8 +182,17 @@
             }
         @endphp
         <div class="space-y-4">
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-                {{ $type->name }}
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4 flex flex-wrap items-center gap-1">
+                <span>{{ $type->name }}</span>
+                @if(isset($selectedOptions[$type->id]))
+                    @php
+                        $selId = is_array($selectedOptions[$type->id]) ? $selectedOptions[$type->id][0] : $selectedOptions[$type->id];
+                        $selectedOpt = $productOptions->map(fn($pvo) => $pvo->option)->filter()->firstWhere('id', $selId);
+                    @endphp
+                    @if($selectedOpt)
+                        <span class="text-gray-900 font-bold normal-case text-xs ml-1">- {{ $selectedOpt->name }}</span>
+                    @endif
+                @endif
             </label>
             @if ($type->allow_multiple)
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -260,16 +269,19 @@
                                         ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
                                         : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
                                 @endphp
-                                <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
-                                    wire:key="option-swatch-{{ $option->id }}"
-                                    @class([
-                                        'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
-                                        'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
-                                        'border-gray-300' => !$isActive
-                                    ])
-                                    @style([$swatchStyle])
-                                    title="{{ $option->name }}"
-                                ></button>
+                                <div class="flex flex-col items-center gap-1">
+                                    <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
+                                        wire:key="option-swatch-{{ $option->id }}"
+                                        @class([
+                                            'w-10 h-10 border transition-all duration-200 flex items-center justify-center relative group shadow-sm rounded overflow-hidden',
+                                            'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                            'border-gray-300' => !$isActive
+                                        ])
+                                        @style([$swatchStyle])
+                                        title="{{ $option->name }}"
+                                    ></button>
+                                    <span class="text-[9px] font-mono text-center leading-tight max-w-[48px] md:hidden opacity-80">{{ $option->name }}</span>
+                                </div>
                             @else
                                 {{-- Rendering come classico pulsante testuale --}}
                                 <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
@@ -498,7 +510,7 @@
                     Seleziona le caratteristiche del prodotto (es. colore) per inserire le quantità.
                 </div>
             @else
-                <div class="{{ $isNewwave ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4' : 'flex' }}">
+                <div class="{{ $isNewwave ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4' : 'flex' }}">
                     @foreach ($displaySkus as $sku)
                     @php
                         if ($isNewwave && $matrixType) {

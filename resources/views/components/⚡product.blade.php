@@ -667,12 +667,21 @@ new class extends Component
                         Sconti per quantità
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        @php
+                            $activeDiscount = $product->getQuantityDiscounts()
+                                ->where('min_quantity', '<=', $this->totalQuantity)
+                                ->sortByDesc('min_quantity')
+                                ->first();
+                        @endphp
                         @foreach ($product->getQuantityDiscounts() as $discount)
-                            <div class="flex flex-col gap-1 rounded border border-outline-variant/20 px-4 py-3 bg-surface-container">
-                                <span class="text-sm font-bold">
+                            @php
+                                $isActiveDiscount = $activeDiscount && $activeDiscount->id === $discount->id;
+                            @endphp
+                            <div class="flex flex-col gap-1 rounded border px-4 py-3 transition-colors {{ $isActiveDiscount ? 'border-accent-600 bg-accent-50 ring-1 ring-accent-600' : 'border-outline-variant/20 bg-surface-container' }}">
+                                <span class="text-sm font-bold {{ $isActiveDiscount ? 'text-accent-900' : '' }}">
                                     {{ $discount->description ?: "Da {$discount->min_quantity} pezzi" }}
                                 </span>
-                                <span class="text-[10px] font-mono text-primary">
+                                <span class="text-[10px] font-mono {{ $isActiveDiscount ? 'text-accent-700 font-bold' : 'text-primary' }}">
                                     -{{ number_format($discount->discount_value, 0) }}{{ $discount->discount_type === 'percent' ? '%' : '€' }}
                                 </span>
                             </div>
@@ -729,25 +738,3 @@ new class extends Component
     @endif
 </div>
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  "name": "{{ $product->name }}",
-  "image": "{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images', 'large') : url('/placeholder.png') }}",
-  "description": "{{ $product->plain_description }}",
-  "sku": "{{ $product->sku }}",
-  "brand": {
-    "@type": "Brand",
-    "name": "{{ $product->brand }}"
-  },
-  "offers": {
-    "@type": "Offer",
-    "url": "{{ $product->url }}",
-    "priceCurrency": "EUR",
-    "price": "{{ number_format((float) $product->calculated_min_price, 2, '.', '') }}",
-    "availability": "https://schema.org/InStock",
-    "itemCondition": "https://schema.org/NewCondition"
-  }
-}
-</script>

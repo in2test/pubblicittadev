@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PortfolioItem;
 use App\Models\Product;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -86,6 +87,8 @@ class HomePageController extends Controller
                 'img' => $item->getFirstMediaUrl('portfolio_images'),
                 'label' => mb_strtoupper((string) $item->title),
                 'sub' => 'PROGETTO PORTFOLIO',
+                'description' => Str::limit(strip_tags((string) $item->description), 100),
+                'status' => 'SYSTEM_STATUS: PORTFOLIO',
             ];
         }
 
@@ -100,16 +103,18 @@ class HomePageController extends Controller
                 'img' => $img,
                 'label' => mb_strtoupper((string) $item->name),
                 'sub' => 'REF: '.($item->sku ?? 'PROD-'.$item->id),
+                'description' => Str::limit(strip_tags((string) $item->description), 100),
+                'status' => 'SYSTEM_STATUS: ACTIVE',
             ];
         }
 
         $defaultSlides = [
-            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'STAMPA ALTA DEFINIZIONE', 'sub' => 'REF: PB-2024'],
-            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'MATERIALI PREMIUM', 'sub' => 'REF: MAT-100'],
-            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'ABBIGLIAMENTO LAVORO', 'sub' => 'REF: WORK-99'],
-            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'QUALITÀ GARANTITA', 'sub' => 'REF: PB-2025'],
-            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'PERSONALIZZAZIONE', 'sub' => 'REF: MAT-101'],
-            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'SUPPORTO UMANO', 'sub' => 'REF: WORK-100'],
+            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'STAMPA ALTA DEFINIZIONE', 'sub' => 'REF: PB-2024', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
+            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'MATERIALI PREMIUM', 'sub' => 'REF: MAT-100', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
+            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'ABBIGLIAMENTO LAVORO', 'sub' => 'REF: WORK-99', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
+            ['img' => 'https://images.nwgmedia.com/standard/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'QUALITÀ GARANTITA', 'sub' => 'REF: PB-2025', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
+            ['img' => 'https://images.nwgmedia.com/standard/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'PERSONALIZZAZIONE', 'sub' => 'REF: MAT-101', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
+            ['img' => 'https://images.nwgmedia.com/standard/740333/028250_99_SoftshellJacket_SS26_4.jpg', 'label' => 'SUPPORTO UMANO', 'sub' => 'REF: WORK-100', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
         ];
 
         $c = count($heroSlides);

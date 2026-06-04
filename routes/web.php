@@ -12,6 +12,7 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
@@ -41,6 +42,7 @@ Route::get('/cart/price', [CartController::class, 'price'])->name('cart.price');
 
 // Google Merchant XML Feed
 Route::get('/feed/google-merchant.xml', [GoogleMerchantFeedController::class, 'index'])->name('feed.google-merchant');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/', [HomePageController::class, 'index'])->name('home');
 

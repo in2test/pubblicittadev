@@ -49,33 +49,35 @@
             }, 5000);
         }
     }">
-        <template x-for="(slide, index) in slides" :key="index">
-            <div x-show="activeSlide === index"
+        @foreach($slides as $index => $slide)
+            <div x-show="activeSlide === {{ $index }}"
                  x-transition:enter="transition-opacity ease-in-out duration-1000"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"
                  x-transition:leave="transition-opacity ease-in-out duration-1000"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="absolute inset-0 w-full h-full">
-                <img :src="slide.img"
+                 class="absolute inset-0 w-full h-full"
+                 style="{{ $index !== 0 ? 'display: none;' : '' }}">
+                <img src="{{ $slide['img'] }}"
                     class="object-cover grayscale brightness-75 dark:brightness-100 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300 w-full h-full"
-                    :alt="slide.label" />
+                    alt="{{ $slide['label'] }}"
+                    @if($index === 0) fetchpriority="high" @else loading="lazy" @endif />
                 <!-- Overlay Elements -->
                 <div class="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent"></div>
                 <div class="absolute bottom-12 right-8 3xl:right-32 text-gray-50 text-right">
-                    <div class="font-mono text-xs mb-2 opacity-60" x-text="slide.sub"></div>
-                    <div class="text-2xl font-black tracking-tight italic" x-text="slide.label"></div>
+                    <div class="font-mono text-xs mb-2 opacity-60">{{ $slide['sub'] }}</div>
+                    <div class="text-2xl font-black tracking-tight italic">{{ $slide['label'] }}</div>
                 </div>
             </div>
-        </template>
+        @endforeach
         <!-- Floating Card (Static on top of carousel) -->
         <div class="absolute top-20 left-12 lg:left-20 bg-gray-50/80 p-6 shadow-2xl max-w-xs hidden md:block backdrop-blur-sm z-20">
-            <div class="font-mono text-[10px] text-accent-500 mb-4">SYSTEM_STATUS: ACTIVE</div>
-            <h3 class="text-xl font-bold mb-2 text-gray-900">Abbigliamento Premium</h3>
-            <p class="text-sm text-gray-700 mb-4 leading-snug">Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.</p>
+            <div class="font-mono text-[10px] text-accent-500 mb-4" x-text="slides[activeSlide].status || 'SYSTEM_STATUS: ACTIVE'">SYSTEM_STATUS: ACTIVE</div>
+            <h3 class="text-xl font-bold mb-2 text-gray-900" x-text="slides[activeSlide].label">Abbigliamento Premium</h3>
+            <p class="text-sm text-gray-700 mb-4 leading-snug" x-text="slides[activeSlide].description || 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.'">Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.</p>
             <div class="flex justify-between items-center border-t border-accent-500 pt-4">
-                <span class="font-mono text-xs text-gray-900">Qualità Certificata</span>
+                <span class="font-mono text-xs text-gray-900" x-text="slides[activeSlide].sub">Qualità Certificata</span>
                 <span class="material-symbols-outlined text-accent-500">verified_user</span>
             </div>
         </div>

@@ -1,10 +1,10 @@
 <div class="flex flex-col-reverse lg:flex-row gap-4 w-full mx-auto h-fit items-start" x-data="{ activeSlide: 0 }"
     wire:key="gallery-{{ md5(json_encode(collect($images)->pluck('large')->toArray())) }}">
     <!-- Thumbnail Sidebar -->
-    <div class="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto shrink-0 no-scrollbar">
+    <div class="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto shrink-0 w-full lg:w-auto snap-x lg:snap-y snap-mandatory pb-2 lg:pb-0 lg:pr-2 lg:max-h-[600px]">
         @foreach ($images as $index => $image)
             <button @click="activeSlide = {{ $index }}"
-                class="shrink-0 w-20 h-20 lg:w-24 lg:h-32 transition-all overflow-hidden bg-white border-2"
+                class="shrink-0 w-20 h-20 lg:w-24 lg:h-32 transition-all overflow-hidden bg-white border-2 snap-start"
                 :class="activeSlide === {{ $index }} ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'">
                 <img src="{{ $image->thumb ?? $image->large }}" class="w-full h-full object-contain object-top"
                     alt="Thumbnail {{ $index + 1 }}" />

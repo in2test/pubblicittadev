@@ -1,2 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /search
+Disallow: /admin
+Disallow: /dashboard
+
+Sitemap: https://www.pubblicitta24.it/sitemap.xml
