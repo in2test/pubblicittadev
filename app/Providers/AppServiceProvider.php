@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Filament\Resources\CategoryQuantityDiscounts\CategoryQuantityDiscountResource;
+use App\Models\NewsletterSubscription;
 use App\Models\PricingTier;
 use App\Models\Product;
 use App\Models\ProductSku;
+use App\Models\User;
 use App\Observers\MediaObserver;
+use App\Observers\NewsletterSubscriptionObserver;
 use App\Observers\PricingTierObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductSkuObserver;
+use App\Observers\UserObserver;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
@@ -53,6 +57,10 @@ class AppServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
         PricingTier::observe(PricingTierObserver::class);
         ProductSku::observe(ProductSkuObserver::class);
+
+        // Register observers for admin notifications
+        User::observe(UserObserver::class);
+        NewsletterSubscription::observe(NewsletterSubscriptionObserver::class);
 
         // Register Filament resources (global menu)
         if (class_exists(Filament::class)) {

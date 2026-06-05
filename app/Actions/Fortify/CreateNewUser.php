@@ -6,6 +6,7 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Models\NewsletterSubscription;
 use App\Models\User;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -23,15 +24,25 @@ class CreateNewUser implements CreatesNewUsers
         validator($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'subscribe_to_newsletter' => ['nullable', 'boolean'],
         ])->validate();
 
         $isFirstUser = User::count() === 0;
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
             'role' => $isFirstUser ? User::ROLE_ADMIN : User::ROLE_CLIENT,
         ]);
+
+        if (! empty($input['subscribe_to_newsletter'])) {
+            NewsletterSubscription::updateOrCreate(
+                ['email' => $input['email']],
+                ['is_active' => true]
+            );
+        }
+
+        return $user;
     }
 }

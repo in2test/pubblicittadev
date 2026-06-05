@@ -8,10 +8,12 @@ use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -82,6 +84,9 @@ class UserResource extends Resource
                         false => 'Disattivato',
                     ])
                     ->required(),
+                DateTimePicker::make('email_verified_at')
+                    ->label('Email Verificata Il')
+                    ->nullable(),
             ]);
     }
 
@@ -94,6 +99,14 @@ class UserResource extends Resource
                     ->searchable(),
                 TextColumn::make('email')
                     ->searchable(),
+                TextColumn::make('email_verified_at')
+                    ->label('Email Verificata')
+                    ->badge()
+                    ->state(fn (User $record): string => $record->hasVerifiedEmail() ? 'Verificato' : 'Non Verificato')
+                    ->colors([
+                        'success' => 'Verificato',
+                        'danger' => 'Non Verificato',
+                    ]),
                 TextColumn::make('role')
                     ->badge()
                     ->colors([
@@ -115,6 +128,13 @@ class UserResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
+                Action::make('verify')
+                    ->label('Verifica Email')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(fn (User $record) => $record->markEmailAsVerified())
+                    ->visible(fn (User $record) => ! $record->hasVerifiedEmail()),
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
                 RestoreAction::make(),

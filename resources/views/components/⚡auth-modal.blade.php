@@ -14,6 +14,7 @@ new class extends Component {
     public string $name = '';
     public string $password_confirmation = '';
     public string $error = '';
+    public bool $subscribe_to_newsletter = false;
 
     #[Computed]
     public function isAuthenticated(): bool
@@ -79,6 +80,7 @@ new class extends Component {
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::default()],
             'password_confirmation' => 'required',
+            'subscribe_to_newsletter' => 'boolean',
         ]);
 
         $isFirstUser = User::count() === 0;
@@ -92,6 +94,13 @@ new class extends Component {
         ]);
 
         event(new \Illuminate\Auth\Events\Registered($user));
+
+        if ($this->subscribe_to_newsletter) {
+            \App\Models\NewsletterSubscription::updateOrCreate(
+                ['email' => $this->email],
+                ['is_active' => true]
+            );
+        }
 
         /** @var StatefulGuard $guard */
         $guard = auth();
@@ -178,7 +187,7 @@ new class extends Component {
                                     <div>
                                         <div class="flex justify-between mb-1">
                                             <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700">Password</label>
-                                            <a href="#" class="text-[10px] font-bold uppercase tracking-widest text-accent-500 hover:text-accent-700">Dimenticata?</a>
+                                            <a href="{{ route('password.request') }}" class="text-[10px] font-bold uppercase tracking-widest text-accent-500 hover:text-accent-700">Dimenticata?</a>
                                         </div>
                                         <input type="password" id="password" wire:model="password" required placeholder="••••••••" 
                                             class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
@@ -248,6 +257,12 @@ new class extends Component {
                                         <input type="password" id="reg_password_confirmation" wire:model="password_confirmation" required placeholder="Ripeti la password" 
                                             class="block w-full border-2 border-gray-950 bg-gray-50 px-4 py-3 text-sm text-gray-950 focus:border-accent-500 focus:ring-0 transition-all">
                                         @error('password_confirmation') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div class="flex items-center gap-2 py-1">
+                                        <input type="checkbox" id="reg_subscribe_to_newsletter" wire:model="subscribe_to_newsletter"
+                                            class="border-2 border-gray-950 text-accent-500 focus:ring-0 transition-all h-4 w-4">
+                                        <label for="reg_subscribe_to_newsletter" class="text-xs font-bold uppercase tracking-wider text-gray-700 select-none cursor-pointer">Iscriviti alla newsletter</label>
                                     </div>
 
                                     <div class="pt-2">

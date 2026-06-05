@@ -28,4 +28,26 @@ test('new users can register', function () {
         ->assertRedirect(route('dashboard', absolute: false));
 
     $this->assertAuthenticated();
+    $this->assertDatabaseMissing('newsletter_subscriptions', [
+        'email' => 'test@example.com',
+    ]);
+});
+
+test('new users can register and subscribe to newsletter', function () {
+    $response = $this->post(route('register.store'), [
+        'name' => 'Jane Doe',
+        'email' => 'jane@example.com',
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
+        'subscribe_to_newsletter' => true,
+    ]);
+
+    $response->assertSessionHasNoErrors()
+        ->assertRedirect(route('dashboard', absolute: false));
+
+    $this->assertAuthenticated();
+    $this->assertDatabaseHas('newsletter_subscriptions', [
+        'email' => 'jane@example.com',
+        'is_active' => true,
+    ]);
 });

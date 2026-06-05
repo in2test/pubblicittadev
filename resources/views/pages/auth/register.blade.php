@@ -81,6 +81,13 @@
                 viewable
             />
 
+            <!-- Subscribe to Newsletter -->
+            <flux:checkbox
+                name="subscribe_to_newsletter"
+                :label="__('Iscriviti alla newsletter')"
+                :checked="old('subscribe_to_newsletter')"
+            />
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
                     {{ __('Create account') }}
