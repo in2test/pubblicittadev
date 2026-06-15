@@ -32,9 +32,7 @@ class GoogleMerchantFeedController extends Controller
             $item->addChild('g:description', htmlspecialchars((string) $product->plain_description), 'http://base.google.com/ns/1.0');
             $item->addChild('g:link', route('product', [$product->category->slug ?? 'uncategorized', $product->slug]), 'http://base.google.com/ns/1.0');
 
-            $imageUrl = $product->hasMedia('images')
-                ? $product->getFirstMediaUrl('images', 'large')
-                : url('/placeholder.png');
+            $imageUrl = $product->getFirstImageUrl('large');
             $item->addChild('g:image_link', $imageUrl, 'http://base.google.com/ns/1.0');
 
             // Prezzo e Disponibilità
