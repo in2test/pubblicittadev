@@ -30,7 +30,7 @@ class GoogleMerchantFeedController extends Controller
             $item->addChild('g:id', $product->sku, 'http://base.google.com/ns/1.0');
             $item->addChild('g:title', htmlspecialchars((string) $product->name), 'http://base.google.com/ns/1.0');
             $item->addChild('g:description', htmlspecialchars((string) $product->plain_description), 'http://base.google.com/ns/1.0');
-            $item->addChild('g:link', route('product', [$product->category->slug ?? 'uncategorized', $product->slug]), 'http://base.google.com/ns/1.0');
+            $item->addChild('g:link', route('product', [$product->category?->slug ?? 'uncategorized', $product->slug]), 'http://base.google.com/ns/1.0');
 
             $imageUrl = $product->getFirstImageUrl('large');
             $item->addChild('g:image_link', $imageUrl, 'http://base.google.com/ns/1.0');
@@ -50,7 +50,7 @@ class GoogleMerchantFeedController extends Controller
             $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
 
             // Categoria (opzionale ma consigliato per abbigliamento)
-            $item->addChild('g:product_type', htmlspecialchars((string) $product->category->name), 'http://base.google.com/ns/1.0');
+            $item->addChild('g:product_type', htmlspecialchars((string) ($product->category?->name ?? 'Uncategorized')), 'http://base.google.com/ns/1.0');
 
             // Update time
             $item->addChild('g:updated_at', Carbon::parse($product->updated_at)->toRfc3339String(), 'http://base.google.com/ns/1.0');
