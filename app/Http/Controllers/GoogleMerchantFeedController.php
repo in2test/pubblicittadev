@@ -13,6 +13,10 @@ class GoogleMerchantFeedController extends Controller
 {
     public function index(): Response
     {
+        if (function_exists('opcache_reset')) {
+            @opcache_reset();
+        }
+
         try {
             $products = Product::where('is_active', true)
                 ->with(['media'])
