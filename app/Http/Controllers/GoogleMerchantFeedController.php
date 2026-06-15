@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -19,8 +20,11 @@ class GoogleMerchantFeedController extends Controller
 
         try {
             $products = Product::where('is_active', true)
-                ->with(['media', 'images', 'category'])
+                ->with(['media', 'images'])
                 ->get();
+
+            /** @var array<int, Category> $categoryMap */
+            $categoryMap = Category::all()->keyBy('id')->all();
 
             $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><rss xmlns:g="http://base.google.com/ns/1.0" version="2.0"></rss>');
             $channel = $xml->addChild('channel');
@@ -31,11 +35,15 @@ class GoogleMerchantFeedController extends Controller
             foreach ($products as $product) {
                 $item = $channel->addChild('item');
 
+                $category = $categoryMap[$product->category_id] ?? null;
+                $categorySlug = $category?->slug ?? 'uncategorized';
+                $categoryName = $category?->name ?? 'Uncategorized';
+
                 // Requisiti Base
                 $item->addChild('g:id', $product->sku, 'http://base.google.com/ns/1.0');
                 $item->addChild('g:title', htmlspecialchars((string) $product->name), 'http://base.google.com/ns/1.0');
                 $item->addChild('g:description', htmlspecialchars((string) $product->plain_description), 'http://base.google.com/ns/1.0');
-                $item->addChild('g:link', route('product', [$product->category?->slug ?? 'uncategorized', $product->slug]), 'http://base.google.com/ns/1.0');
+                $item->addChild('g:link', route('product', [$categorySlug, $product->slug]), 'http://base.google.com/ns/1.0');
 
                 $imageUrl = $product->getFirstImageUrl('large');
                 $item->addChild('g:image_link', $imageUrl, 'http://base.google.com/ns/1.0');
@@ -55,7 +63,7 @@ class GoogleMerchantFeedController extends Controller
                 $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
 
                 // Categoria (opzionale ma consigliato per abbigliamento)
-                $item->addChild('g:product_type', htmlspecialchars((string) ($product->category?->name ?? 'Uncategorized')), 'http://base.google.com/ns/1.0');
+                $item->addChild('g:product_type', htmlspecialchars($categoryName), 'http://base.google.com/ns/1.0');
 
                 // Update time
                 $item->addChild('g:updated_at', Carbon::parse($product->updated_at)->toRfc3339String(), 'http://base.google.com/ns/1.0');
