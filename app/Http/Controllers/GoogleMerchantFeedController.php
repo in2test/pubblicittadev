@@ -19,7 +19,7 @@ class GoogleMerchantFeedController extends Controller
 
         try {
             $products = Product::where('is_active', true)
-                ->with(['media'])
+                ->with(['media', 'images', 'category'])
                 ->get();
 
             $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><rss xmlns:g="http://base.google.com/ns/1.0" version="2.0"></rss>');
