@@ -144,6 +144,7 @@ class GoogleMerchantFeedController extends Controller
                         $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
                         $item->addChild('g:item_group_id', $product->sku, 'http://base.google.com/ns/1.0');
                         $item->addChild('g:product_type', htmlspecialchars($categoryName), 'http://base.google.com/ns/1.0');
+                        $item->addChild('g:google_product_category', htmlspecialchars($this->getGoogleProductCategory($categorySlug)), 'http://base.google.com/ns/1.0');
 
                         // Gender & age group for apparel
                         $nameLower = strtolower((string) $product->name);
@@ -195,6 +196,7 @@ class GoogleMerchantFeedController extends Controller
 
                     $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
                     $item->addChild('g:product_type', htmlspecialchars($categoryName), 'http://base.google.com/ns/1.0');
+                    $item->addChild('g:google_product_category', htmlspecialchars($this->getGoogleProductCategory($categorySlug)), 'http://base.google.com/ns/1.0');
 
                     // Gender & age group for apparel
                     $nameLower = strtolower((string) $product->name);
@@ -223,5 +225,18 @@ class GoogleMerchantFeedController extends Controller
             return response($e->getMessage()."\n".$e->getTraceAsString(), 500)
                 ->header('Content-Type', 'text/plain');
         }
+    }
+
+    /**
+     * Map category slug to official Google Product Category taxonomy.
+     */
+    private function getGoogleProductCategory(string $slug): string
+    {
+        return match ($slug) {
+            't-shirts-and-tops' => 'Apparel & Accessories > Clothing > Shirts & Tops',
+            'giacche' => 'Apparel & Accessories > Clothing > Outerwear > Coats & Jackets',
+            'abbigliamento-da-lavoro' => 'Apparel & Accessories > Clothing > Uniforms',
+            default => 'Apparel & Accessories > Clothing',
+        };
     }
 }
