@@ -154,7 +154,12 @@ class GoogleMerchantFeedController extends Controller
                             $gender = 'male';
                         }
                         $item->addChild('g:gender', $gender, 'http://base.google.com/ns/1.0');
-                        $item->addChild('g:age_group', 'adult', 'http://base.google.com/ns/1.0');
+
+                        $ageGroup = 'adult';
+                        if (str_contains($nameLower, 'junior') || str_contains($nameLower, 'bambin') || str_contains($nameLower, 'kid')) {
+                            $ageGroup = 'kids';
+                        }
+                        $item->addChild('g:age_group', $ageGroup, 'http://base.google.com/ns/1.0');
                     }
                 } else {
                     // Generate a single item for the parent product if it has no variants
@@ -200,7 +205,12 @@ class GoogleMerchantFeedController extends Controller
                         $gender = 'male';
                     }
                     $item->addChild('g:gender', $gender, 'http://base.google.com/ns/1.0');
-                    $item->addChild('g:age_group', 'adult', 'http://base.google.com/ns/1.0');
+
+                    $ageGroup = 'adult';
+                    if (str_contains($nameLower, 'junior') || str_contains($nameLower, 'bambin') || str_contains($nameLower, 'kid')) {
+                        $ageGroup = 'kids';
+                    }
+                    $item->addChild('g:age_group', $ageGroup, 'http://base.google.com/ns/1.0');
                 }
             }
 

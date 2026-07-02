@@ -67,3 +67,22 @@ it('generates variants in google merchant xml feed', function () {
         ->toContain('<g:gender>unisex</g:gender>')
         ->toContain('<g:age_group>adult</g:age_group>');
 });
+
+it('sets kids age group for junior products in feed', function () {
+    Product::factory()->create([
+        'is_active' => true,
+        'sku' => 'KID-123',
+        'name' => 'T-shirt Junior Basic',
+        'description' => 'Junior kids apparel',
+    ]);
+
+    $response = $this->get('/feed/google-merchant.xml');
+
+    $response->assertStatus(200);
+    $xml = $response->getContent();
+
+    expect($xml)
+        ->toContain('<g:id>KID-123</g:id>')
+        ->toContain('<g:title>T-shirt Junior Basic</g:title>')
+        ->toContain('<g:age_group>kids</g:age_group>');
+});
