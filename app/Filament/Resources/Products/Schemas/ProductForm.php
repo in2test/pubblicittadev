@@ -8,7 +8,6 @@ use App\Enums\ModifierType;
 use App\Enums\ProductClass;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use App\Support\SlugGenerator;

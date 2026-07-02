@@ -8,7 +8,6 @@ use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
 
 class QuantityDiscountService
 {

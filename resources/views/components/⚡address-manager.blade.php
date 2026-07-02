@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Address;
-use Livewire\Volt\Component;
 
 new class extends \Livewire\Component
 {

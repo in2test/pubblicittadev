@@ -314,6 +314,39 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get a string of **all** color options for the product, comma‑separated.
+     * This method retrieves every defined colour variation option.
+     */
+    public function getColorOptions(): string
+    {
+        // 1. Retrieve all variation types associated with this product that either:
+        //    - Have a presentation_type of 'color_swatch'
+        //    - Contain the word 'color' in their name
+        //    - Or have the 'has_images' pivot column flag set to true (carrying variation images)
+        $colorVariationTypes = $this->variationTypes()
+            ->where(function ($query) {
+                $query->where('presentation_type', 'color_swatch')
+                    ->orWhere('name', 'like', '%color%');
+            })
+            ->orWherePivot('has_images', true)
+            ->with('options')
+            ->get();
+
+        // 2. Extract the associated variation option records, grab their names,
+        //    filter down to unique names, sort them alphabetically, and format as a comma-separated list.
+        $colorNames = $colorVariationTypes
+            ->pluck('options')
+            // Flatten nested collections of options into a single collection of VariationOption models
+            ->flatten()
+            ->pluck('name')
+            ->unique()
+            ->sort()
+            ->join(', ');
+
+        return $colorNames ?? '';
+    }
+
+    /**
      * Get the brand of the product based on its name.
      *
      * @return string The resolved brand name.
@@ -367,8 +400,50 @@ class Product extends Model implements HasMedia
      * Get the URL of the first available image.
      *
      * @param  string  $conversion  The image conversion to use (e.g., 'medium', 'thumbnail')
-     * @return string The URL to the image, or a placeholder if no image exists.
+     * @return string The URL
      */
+    /**
+     * Get the material attribute value from linked variation option.
+     */
+    public function getMaterialAttribute(): ?string
+    {
+        $type = $this->variationTypes->firstWhere('name', VariationType::MATERIALE);
+        if (! $type) {
+            return null;
+        }
+        $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+        if (! $pvt) {
+            return null;
+        }
+        $option = $pvt->options()->first()?->option;
+        if (! $option) {
+            return null;
+        }
+
+        return $option->value;
+    }
+
+    /**
+     * Get the pattern (motivo) attribute value from linked variation option.
+     */
+    public function getPatternAttribute(): ?string
+    {
+        $type = $this->variationTypes->firstWhere('name', VariationType::MOTIVO);
+        if (! $type) {
+            return null;
+        }
+        $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+        if (! $pvt) {
+            return null;
+        }
+        $option = $pvt->options()->first()?->option;
+        if (! $option) {
+            return null;
+        }
+
+        return $option->value;
+    }
+
     public function getFirstImageUrl(string $conversion = 'medium'): string
     {
         $image = $this->getFirstImage();
@@ -408,7 +483,10 @@ class Product extends Model implements HasMedia
                 return ['display' => collect(), 'remaining' => 0, 'total' => 0];
             }
         } else {
-            $visualType = $this->variationTypes->firstWhere('pivot.has_images', true);
+            // Safely load variation types without triggering lazy loading
+            $visualType = $this->variationTypes()
+                ->wherePivot('has_images', true)
+                ->first();
             if (! $visualType) {
                 return ['display' => collect(), 'remaining' => 0, 'total' => 0];
             }

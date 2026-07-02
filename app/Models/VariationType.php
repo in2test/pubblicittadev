@@ -49,6 +49,10 @@ use Override;
 ])]
 class VariationType extends Model
 {
+    public const MATERIALE = 'Materiale';
+
+    public const MOTIVO = 'Motivo';
+
     /**
      * @use HasFactory<VariationTypeFactory>
      */

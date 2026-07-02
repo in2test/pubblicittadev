@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Address;
 use App\Services\CartManager;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;

@@ -246,6 +246,14 @@ class ProductSynchronizer
                 ['sku'],
                 ['quantity', 'is_available', 'updated_at']
             );
+            $materialType = VariationType::firstOrCreate(
+                ['name' => VariationType::MATERIALE],
+                ['presentation_type' => 'text']
+            );
+            $motivoType = VariationType::firstOrCreate(
+                ['name' => VariationType::MOTIVO],
+                ['presentation_type' => 'text']
+            );
         }
 
         // Fetch back SKUs to map their options

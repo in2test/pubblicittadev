@@ -16,6 +16,7 @@ use App\Observers\PricingTierObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductSkuObserver;
 use App\Observers\UserObserver;
+use App\Services\NwgApiClient;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
@@ -35,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        $this->app->singleton(NwgApiClient::class);
         $this->app->singleton(QuantityDiscountService::class);
     }
 

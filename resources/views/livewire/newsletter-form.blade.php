@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use App\Models\NewsletterSubscription;
-use Illuminate\Validation\Rule;
 
 new class extends Component {
     public string $email = '';

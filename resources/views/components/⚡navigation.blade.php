@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartManager;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
     public string $searchQuery = '';
