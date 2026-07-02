@@ -141,7 +141,7 @@ class GoogleMerchantFeedController extends Controller
                         $item->addChild('g:condition', 'new', 'http://base.google.com/ns/1.0');
 
                         // Brand, item group ID, and product type
-                        $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
+                        $item->addChild('g:brand', 'CLIQUE', 'http://base.google.com/ns/1.0');
                         $item->addChild('g:item_group_id', $product->sku, 'http://base.google.com/ns/1.0');
                         $item->addChild('g:product_type', htmlspecialchars($categoryName), 'http://base.google.com/ns/1.0');
                         $item->addChild('g:google_product_category', htmlspecialchars($this->getGoogleProductCategory($categorySlug)), 'http://base.google.com/ns/1.0');
@@ -194,7 +194,7 @@ class GoogleMerchantFeedController extends Controller
                     $item->addChild('g:availability', 'in_stock', 'http://base.google.com/ns/1.0');
                     $item->addChild('g:condition', 'new', 'http://base.google.com/ns/1.0');
 
-                    $item->addChild('g:brand', htmlspecialchars((string) $product->brand), 'http://base.google.com/ns/1.0');
+                    $item->addChild('g:brand', 'CLIQUE', 'http://base.google.com/ns/1.0');
                     $item->addChild('g:product_type', htmlspecialchars($categoryName), 'http://base.google.com/ns/1.0');
                     $item->addChild('g:google_product_category', htmlspecialchars($this->getGoogleProductCategory($categorySlug)), 'http://base.google.com/ns/1.0');
 

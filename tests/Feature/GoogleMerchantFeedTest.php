@@ -26,6 +26,7 @@ it('generates google merchant xml feed', function () {
         ->toContain('<g:id>TEST-123</g:id>')
         ->toContain('<g:title>Test Product</g:title>')
         ->toContain('<g:price>')
+        ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
 });
 
@@ -67,6 +68,7 @@ it('generates variants in google merchant xml feed', function () {
         ->toContain('<g:item_group_id>PARENT-SKU</g:item_group_id>')
         ->toContain('<g:gender>unisex</g:gender>')
         ->toContain('<g:age_group>adult</g:age_group>')
+        ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
 });
 
@@ -86,5 +88,6 @@ it('sets kids age group for junior products in feed', function () {
     expect($xml)
         ->toContain('<g:id>KID-123</g:id>')
         ->toContain('<g:title>T-shirt Junior Basic</g:title>')
+        ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:age_group>kids</g:age_group>');
 });
