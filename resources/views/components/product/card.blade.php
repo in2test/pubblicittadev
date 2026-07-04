@@ -32,7 +32,7 @@
         {{-- Product Image --}}
         <div class="aspect-5/6 relative bg-white border border-gray-100 overflow-hidden">
             <img class="w-full h-full object-contain grayscale-40 group-hover:grayscale-0 transition-all duration-400 ease-in-out group-hover:scale-90"
-                src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy" />
+                src="{{ $imageUrl }}" alt="{{ $product->name }}" width="350" height="420" loading="lazy" />
         </div>
 
         {{-- Product Info --}}
@@ -63,9 +63,9 @@
                 </div>
             </div>
 
-            <code class="text-[10px] font-mono text-secondary mb-4 opacity-50">{{ $product->sku }}</code>
+            <code class="text-[10px] font-mono text-gray-700 mb-4">{{ $product->sku }}</code>
 
-            <p class="text-xs text-on-surface line-clamp-2 mb-6 opacity-60 leading-relaxed">
+            <p class="text-xs text-gray-700 line-clamp-2 mb-6 leading-relaxed">
                 {{ $product->description }}
             </p>
 

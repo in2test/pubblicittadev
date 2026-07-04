@@ -5,14 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ $title ?? '' }} {{ config('app.name', 'Laravel') }}</title>
+    <title>@isset($title){{ trim($title) }} | @endisset{{ config('app.name', 'Pubblicittà24') }}</title>
 
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <meta name="description" content="{{ $description ?? '' }}">
-    <meta name="robots" content="{{ $robots ?? '' }}">
-    <link rel="canonical" href="{{ $canonical ?? '' }}">
+    <meta name="description" content="{{ !empty($description) ? trim($description) : 'Abbigliamento Personalizzato: stampa e ricamo su t-shirt, polo, felpe e abiti da lavoro. Richiedi un preventivo gratuito online con supporto clienti dedicato.' }}">
+    <meta name="robots" content="{{ !empty($robots) ? trim($robots) : 'index, follow' }}">
+    <link rel="canonical" href="{{ !empty($canonical) ? trim($canonical) : request()->url() }}">
 
     <!-- Google tag (gtag.js) -->
     @production

@@ -124,7 +124,19 @@
                 $itemListElements[] = [
                     '@type' => 'ListItem',
                     'position' => $position++,
-                    'url' => $p->url
+                    'url' => $p->url,
+                    'item' => [
+                        '@type' => 'Product',
+                        'name' => $p->name,
+                        'url' => $p->url,
+                        'image' => $p->getFirstImageUrl('medium'),
+                        'sku' => $p->sku,
+                        'offers' => $p->isOnRequest() ? null : [
+                            '@type' => 'Offer',
+                            'priceCurrency' => 'EUR',
+                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                        ]
+                    ]
                 ];
             }
         }
@@ -133,7 +145,19 @@
                 $itemListElements[] = [
                     '@type' => 'ListItem',
                     'position' => $position++,
-                    'url' => $p->url
+                    'url' => $p->url,
+                    'item' => [
+                        '@type' => 'Product',
+                        'name' => $p->name,
+                        'url' => $p->url,
+                        'image' => $p->getFirstImageUrl('medium'),
+                        'sku' => $p->sku,
+                        'offers' => $p->isOnRequest() ? null : [
+                            '@type' => 'Offer',
+                            'priceCurrency' => 'EUR',
+                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                        ]
+                    ]
                 ];
             }
         }
@@ -142,7 +166,19 @@
             $itemListElements[] = [
                 '@type' => 'ListItem',
                 'position' => $position++,
-                'url' => $p->url
+                'url' => $p->url,
+                'item' => [
+                    '@type' => 'Product',
+                    'name' => $p->name,
+                    'url' => $p->url,
+                    'image' => $p->getFirstImageUrl('medium'),
+                    'sku' => $p->sku,
+                    'offers' => $p->isOnRequest() ? null : [
+                        '@type' => 'Offer',
+                        'priceCurrency' => 'EUR',
+                        'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                    ]
+                ]
             ];
         }
     }

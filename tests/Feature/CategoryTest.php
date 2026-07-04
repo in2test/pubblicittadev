@@ -51,3 +51,24 @@ it('deletes attached image from storage when a category is deleted', function ()
     expect($category->getMedia('images'))->toHaveCount(0);
     expect(Storage::disk($disk)->exists($media->id.'/'.$media->file_name))->toBeFalse();
 });
+
+it('does not show inactive products to guests on category listing', function () {
+    $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
+    $inactiveProduct = Product::factory()->create([
+        'is_active' => false,
+        'name' => 'Hidden Product',
+        'slug' => 'hidden-product',
+        'category_id' => $category->id,
+    ]);
+
+    $response = $this->get(route('category', ['category' => $category->slug]));
+
+    $response->assertOk();
+    $response->assertDontSee($inactiveProduct->name);
+});
+
+it('returns 404 for non-existent category', function () {
+    $response = $this->get(route('category', ['category' => 'non-existent-category-slug']));
+
+    $response->assertNotFound();
+});

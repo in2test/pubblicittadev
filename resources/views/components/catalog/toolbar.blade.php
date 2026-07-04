@@ -27,11 +27,14 @@
             <span class="px-6 material-symbols-outlined text-gray-400 select-none">search</span>
             
             {{-- Search Field --}}
+            <label for="catalog-search-input" class="sr-only">Cerca prodotti o SKU</label>
             <input
+                id="catalog-search-input"
                 name="q"
                 type="text"
                 value="{{ $search }}"
                 placeholder="Cerca prodotti, SKU..."
+                aria-label="Cerca prodotti o SKU"
                 class="w-full py-5 pr-6 text-sm bg-transparent border-none focus:ring-0 font-mono tracking-tight text-on-surface placeholder-gray-400"
             />
             
@@ -44,9 +47,12 @@
 
     {{-- Sorting Section --}}
     <div class="flex items-center gap-6 px-8 py-4 md:py-0 bg-gray-50">
+        <label for="catalog-sort-select" class="sr-only">Ordina prodotti per</label>
         <span class="text-[10px] font-mono uppercase tracking-[0.3em] text-secondary select-none">Ordina:</span>
         <select 
+            id="catalog-sort-select"
             wire:model.live="sort" 
+            aria-label="Ordina prodotti per"
             class="bg-transparent border-none focus:ring-0 text-[10px] uppercase font-bold tracking-tight text-on-surface p-0 cursor-pointer focus:outline-none"
         >
             <option value="name">A-Z</option>

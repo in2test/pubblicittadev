@@ -69,6 +69,8 @@
                                     ])
                                     @style([$swatchStyle])
                                     title="{{ $option->name }}"
+                                    aria-label="Filtra per colore: {{ $option->name }}"
+                                    aria-pressed="{{ $isActive ? 'true' : 'false' }}"
                                     type="button"
                                 >
                                     @if($isActive)
@@ -91,6 +93,8 @@
                                         'bg-primary text-white border-primary scale-105' => $isActive,
                                         'bg-white border-gray-200 text-on-surface hover:border-on-surface hover:scale-105' => !$isActive
                                     ])
+                                    aria-label="Filtra per taglia: {{ $option->name }}"
+                                    aria-pressed="{{ $isActive ? 'true' : 'false' }}"
                                     type="button"
                                 >
                                     {{ $option->name }}

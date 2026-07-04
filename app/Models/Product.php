@@ -381,6 +381,17 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get the public URL for the product.
+     */
+    public function getUrlAttribute(): string
+    {
+        return route('product', [
+            'category' => $this->category->slug ?? 'uncategorized',
+            'product' => $this->slug,
+        ]);
+    }
+
+    /**
      * Helper Methods for Views
      */
 

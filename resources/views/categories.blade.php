@@ -1,4 +1,24 @@
 <x-layout>
+    <x-slot:title>
+        @if ($category instanceof \App\Models\Category)
+            {{ $category->name }}
+        @else
+            Catalogo Prodotti
+        @endif
+    </x-slot:title>
+
+    <x-slot:description>
+        @if ($category instanceof \App\Models\Category)
+            {{ !empty($category->description) ? trim(strip_tags($category->description)) : 'Scopri la nostra gamma di ' . $category->name . ' personalizzabili. Richiedi un preventivo gratuito online.' }}
+        @else
+            Sfoglia il nostro catalogo completo di abbigliamento personalizzabile: t-shirt, polo, felpe e abiti da lavoro con stampa e ricamo personalizzati.
+        @endif
+    </x-slot:description>
+
+    <x-slot:canonical>
+        {{ request()->url() }}
+    </x-slot:canonical>
+
     <section class="mb-0 mt-12 px-6 lg:px-12 3xl:px-24">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>

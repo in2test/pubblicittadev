@@ -37,7 +37,7 @@ new class extends Component {
         }
 
         return Product::search($queryStr)
-            ->query(fn ($query) => $query->active()->with(['category']))
+            ->query(fn ($query) => $query->active()->with(['category'])->orderBy('name', 'asc'))
             ->take(5)
             ->get();
     }
@@ -63,7 +63,7 @@ new class extends Component {
                         <div class="mega-panel-grid">
                             @foreach ($this->categories->where('parent_id', null) as $category)
                             <div>
-                                <h3 class="mega-col-title border-b border-gray-200 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">{{ mb_strtoupper($category->name) }}</h3>
+                                <div class="mega-col-title border-b border-gray-200 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4">{{ mb_strtoupper($category->name) }}</div>
                                 <ul class="mega-link-list space-y-2">
                                     @foreach ($category->children as $categoryChild)
                                     <li>
@@ -292,7 +292,8 @@ new class extends Component {
                 <form action="{{ route('search') }}" method="GET" class="flex w-full items-center">
                     <div class="relative flex w-full items-center border-b border-gray-300 pb-2 focus-within:border-accent-500 transition-colors">
                         <span class="material-symbols-outlined text-gray-400 mr-2">search</span>
-                        <input x-ref="searchInput" wire:model.live.debounce.250ms="searchQuery" name="q" type="search" placeholder="Cerca prodotti, SKU..."
+                        <label for="nav-search-input" class="sr-only">Cerca prodotti o SKU</label>
+                        <input id="nav-search-input" x-ref="searchInput" wire:model.live.debounce.250ms="searchQuery" name="q" type="search" placeholder="Cerca prodotti, SKU..." aria-label="Cerca prodotti o SKU"
                             class="w-full text-xs bg-transparent border-none focus:ring-0 font-mono tracking-widest uppercase text-gray-950 placeholder-gray-400 focus:outline-none">
                     </div>
                 </form>
@@ -301,7 +302,7 @@ new class extends Component {
                 <div class="mt-10">
                     @if (empty(trim($searchQuery)))
                         <div>
-                            <h4 class="font-mono text-[10px] tracking-widest text-gray-400 uppercase mb-4">Link Rapidi</h4>
+                            <div class="font-mono text-[10px] tracking-widest text-gray-400 uppercase mb-4">Link Rapidi</div>
                             <div class="flex flex-col gap-4 font-mono text-[11px] uppercase tracking-widest text-gray-950">
                                 @foreach ($this->categories->where('parent_id', null) as $category)
                                 <a href="{{ route('category', $category->slug) }}" @click="searchOpen = false" class="hover:text-accent-500 transition-colors flex items-center justify-between border-b border-gray-100 pb-2 uppercase">
@@ -326,7 +327,7 @@ new class extends Component {
                     @else
                         <div>
                             <div class="flex items-center justify-between mb-4">
-                                <h4 class="font-mono text-[10px] tracking-widest text-gray-400 uppercase">Risultati di Ricerca</h4>
+                                <div class="font-mono text-[10px] tracking-widest text-gray-400 uppercase">Risultati di Ricerca</div>
                                 <!-- Loading Spinner -->
                                 <div wire:loading wire:target="searchQuery" class="flex items-center gap-1.5 text-[9px] text-gray-400 font-mono uppercase tracking-wider">
                                     <svg class="animate-spin h-3.5 w-3.5 text-accent-500" fill="none" viewBox="0 0 24 24">

@@ -1,4 +1,16 @@
 <x-layout>
+    <x-slot:title>
+        {{ $product->name }}
+    </x-slot:title>
+
+    <x-slot:description>
+        {{ !empty($product->description) ? trim(Str::limit(strip_tags($product->description), 150)) : 'Acquista ' . $product->name . ' personalizzato con il tuo logo. Stampa e ricamo di alta qualità su abbigliamento promozionale. Richiedi preventivo.' }}
+    </x-slot:description>
+
+    <x-slot:canonical>
+        {{ $product->url }}
+    </x-slot:canonical>
+
     <livewire:product :product="$product" :category="$category" :jobId="$jobId" />
     
     <script type="application/ld+json">
