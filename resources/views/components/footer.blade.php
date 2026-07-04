@@ -41,13 +41,13 @@
         class="px-6 lg:px-12 3xl:px-24 py-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <span class="font-mono text-xs uppercase tracking-widest text-gray-700">© {{ date('Y') }} PUBBLICITTÀ24 srls</span>
         <div class="flex flex-wrap gap-x-8 gap-y-2 justify-center md:justify-end">
-            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest underline underline-offset-2 decoration-dotted"
                 href="{{ route('terms') }}">Condizioni di Vendita</a>
-            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest underline underline-offset-2 decoration-dotted"
                 href="{{ route('privacy') }}">Privacy Policy</a>
-            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest underline underline-offset-2 decoration-dotted"
                 href="{{ route('cookie-policy') }}">Cookie Policy</a>
-            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest"
+            <a class="font-mono text-[10px] text-accent-500 hover:text-accent-700 transition-colors uppercase tracking-widest underline underline-offset-2 decoration-dotted"
                 href="{{ route('shipping-returns') }}">Spedizioni e Resi</a>
         </div>
     </div>
