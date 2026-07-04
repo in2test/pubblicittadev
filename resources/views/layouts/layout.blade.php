@@ -17,25 +17,50 @@
     <!-- Google tag (gtag.js) -->
     @production
     @if (!auth()->check() || !auth()->user()->isAdmin())
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGRZSCYNNX"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        
-        // Default consent to denied
-        gtag('consent', 'default', {
-            'analytics_storage': 'denied'
-        });
+        function loadGtag() {
+            if (window.gtagLoaded) return;
+            window.gtagLoaded = true;
 
-        // Update if already accepted
-        if (localStorage.getItem('cookie_consent') === 'all') {
-            gtag('consent', 'update', {
-                'analytics_storage': 'granted'
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = "https://www.googletagmanager.com/gtag/js?id=G-YGRZSCYNNX";
+            document.head.appendChild(script);
+
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            window.gtag = gtag;
+            
+            // Default consent to denied
+            gtag('consent', 'default', {
+                'analytics_storage': 'denied'
+            });
+
+            // Update if already accepted
+            if (localStorage.getItem('cookie_consent') === 'all') {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'granted'
+                });
+            }
+
+            gtag('js', new Date());
+            gtag('config', 'G-YGRZSCYNNX');
+        }
+
+        // Delay GTM loading until first user interaction or after 4 seconds of idle time
+        var gtmTimer = setTimeout(loadGtag, 4000);
+
+        function triggerGtmLoad() {
+            clearTimeout(gtmTimer);
+            loadGtag();
+            ['mousemove', 'scroll', 'keydown', 'touchstart'].forEach(function(e) {
+                window.removeEventListener(e, triggerGtmLoad);
             });
         }
 
-        gtag('js', new Date());
-        gtag('config', 'G-YGRZSCYNNX');
+        ['mousemove', 'scroll', 'keydown', 'touchstart'].forEach(function(e) {
+            window.addEventListener(e, triggerGtmLoad, { passive: true });
+        });
     </script>
     @endif
     @endproduction
