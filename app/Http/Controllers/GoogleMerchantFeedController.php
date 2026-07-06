@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use SimpleXMLElement;
 use Throwable;
 
@@ -58,6 +59,7 @@ class GoogleMerchantFeedController extends Controller
                         $colorOption = null;
                         $sizeOption = null;
 
+                        $queryParams = [];
                         foreach ($sku->options as $option) {
                             $type = $option->variationType;
                             if ($type) {
@@ -71,6 +73,11 @@ class GoogleMerchantFeedController extends Controller
                                     || str_contains($typeName, 'taglia')
                                 ) {
                                     $sizeOption = $option;
+                                }
+
+                                if ($type->expose_in_url) {
+                                    $slug = Str::slug($type->name);
+                                    $queryParams[$slug] = $option->value ?: $option->id;
                                 }
                             }
                         }
@@ -116,7 +123,11 @@ class GoogleMerchantFeedController extends Controller
                         }
 
                         // Link and specific image
-                        $item->addChild('g:link', route('product', [$categorySlug, $product->slug]), 'http://base.google.com/ns/1.0');
+                        $link = route('product', [$categorySlug, $product->slug]);
+                        if ($queryParams !== []) {
+                            $link .= '?'.http_build_query($queryParams);
+                        }
+                        $item->addChild('g:link', htmlspecialchars($link), 'http://base.google.com/ns/1.0');
 
                         $imageUrl = null;
                         if ($colorOption) {

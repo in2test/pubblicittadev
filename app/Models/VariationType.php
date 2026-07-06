@@ -46,6 +46,7 @@ use Override;
     'presentation_type',
     'allow_multiple',
     'default_modifier_type',
+    'expose_in_url',
 ])]
 class VariationType extends Model
 {
@@ -63,6 +64,7 @@ class VariationType extends Model
     {
         return [
             'allow_multiple' => 'boolean',
+            'expose_in_url' => 'boolean',
         ];
     }
 

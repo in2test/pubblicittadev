@@ -50,6 +50,11 @@ class VariationTypeForm
                                     ->label('Consenti Selezione Multipla')
                                     ->helperText('Permette di scegliere più di un\'opzione per questa variante (es. stampa sia sul fronte che sul retro).')
                                     ->default(false),
+
+                                Toggle::make('expose_in_url')
+                                    ->label('Esponi nell\'URL')
+                                    ->helperText('Mostra questa variante nell\'URL del prodotto (es. ?colore=123) per facilitare la condivisione di configurazioni specifiche.')
+                                    ->default(false),
                             ]),
 
                         Tab::make('Opzioni della Variante')

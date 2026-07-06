@@ -1,4 +1,4 @@
-@props(['product', 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null])
+@props(['product', 'displaySku' => null, 'displayTitle' => null, 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null])
 
 @php
     /** @var \App\Models\Product $product */
@@ -15,14 +15,55 @@
     $basePrice = $priceData['base_price'];
 @endphp
 
-<div class="mb-2">
+<div class="mb-2 flex items-center justify-between">
     <flux:badge size="sm" variant="subtle" color="gray">
-        SKU: {{ $product->sku }}
+        SKU: {{ $displaySku ?? $product->sku }}
     </flux:badge>
+
+    <div x-data="{ shared: false }">
+        <flux:button size="sm" variant="subtle" icon="link" 
+            x-on:click="
+                const shareUrl = window.location.href;
+                const shareTitle = {{ \Illuminate\Support\Js::from($displayTitle ?? $product->name) }};
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: shareTitle,
+                        url: shareUrl
+                    }).catch(err => {
+                        console.log('Errore condivisione:', err);
+                        // Fallback temporaneo se l'utente annulla o c'è un errore
+                    });
+                } else {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(shareUrl);
+                    } else {
+                        // Fallback robusto per ambienti di sviluppo HTTP (es. .test senza HTTPS)
+                        let textArea = document.createElement('textarea');
+                        textArea.value = shareUrl;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                        } catch (err) {
+                            console.error('Errore copia:', err);
+                        }
+                        document.body.removeChild(textArea);
+                    }
+                    shared = true;
+                    setTimeout(() => shared = false, 2000);
+                }
+            ">
+            <span x-text="shared ? 'Link Copiato!' : 'Condividi'"></span>
+        </flux:button>
+    </div>
 </div>
 
 <h1 class="text-4xl lg:text-5xl font-black tracking-tighter text-gray-950 mb-4 leading-none uppercase">
-    {{ $product->name }}
+    {{ $displayTitle ?? $product->name }}
 </h1>
 
 @if ($isAdmin)

@@ -53,8 +53,22 @@ new class extends Component
         $this->product->variationTypes->each(fn ($type) => $type->pivot->loadMissing('options.option'));
 
         $this->category = $product->category ?? $category;
-        $this->selectedOptions = $options;
         $this->jobId = $jobId;
+        
+        // Leggi i parametri dall'URL per le varianti esposte
+        foreach ($this->product->variationTypes as $type) {
+            if ($type->expose_in_url) {
+                $slug = \Illuminate\Support\Str::slug($type->name);
+                $val = request()->query($slug);
+                if ($val) {
+                    $option = $type->pivot->options->map->option->filter(fn($opt) => $opt && ($opt->value == $val || $opt->id == $val))->first();
+                    if ($option) {
+                        $options[$type->id] = $option->id;
+                    }
+                }
+            }
+        }
+        $this->selectedOptions = $options;
 
         // Se stiamo modificando un prodotto già nel carrello ($jobId valorizzato),
         // recuperiamo i dati dal CartManager e popoliamo lo stato del componente.
@@ -197,6 +211,32 @@ new class extends Component
         if (! $type || ! $type->pivot?->is_modifier) {
             $this->quantities = [];
         }
+        
+        $this->updateUrl();
+    }
+    
+    public function updateUrl(): void
+    {
+        $params = [];
+        foreach ($this->product()->variationTypes as $type) {
+            if ($type->expose_in_url && isset($this->selectedOptions[$type->id])) {
+                $optionId = $this->selectedOptions[$type->id];
+                if (!is_array($optionId) && $optionId != 999999) {
+                    $slug = \Illuminate\Support\Str::slug($type->name);
+                    $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                    if ($option) {
+                        $params[$slug] = $option->value ?: $option->id;
+                    }
+                }
+            }
+        }
+        
+        $queryString = http_build_query($params);
+        $this->js("
+            const url = new URL(window.location.href);
+            url.search = '{$queryString}';
+            window.history.replaceState(null, '', url.toString());
+        ");
     }
 
     #[Computed]
@@ -210,10 +250,9 @@ new class extends Component
     }
 
     #[Computed]
-    public function currentBasePrice(): float
+    public function activeSku(): ?ProductSku
     {
         $product = $this->product();
-
         $isCustomFormat = false;
         foreach ($this->selectedOptions as $optionId) {
             if ($optionId == 999999) {
@@ -236,8 +275,76 @@ new class extends Component
         }
 
         if (! $activeSku instanceof ProductSku) {
-            $activeSku = $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
+            return $product->getActiveSku($this->selectedOptions) ?? $product->skus->first();
         }
+        
+        return $activeSku;
+    }
+
+    #[Computed]
+    public function displaySku(): string
+    {
+        $skuStr = $this->product()->sku;
+        $appendedSkus = [];
+        
+        foreach ($this->product()->variationTypes as $type) {
+            if ($type->expose_in_url && isset($this->selectedOptions[$type->id])) {
+                $optionId = $this->selectedOptions[$type->id];
+                if (!is_array($optionId) && $optionId != 999999) {
+                    $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                    if ($option && !empty($option->value)) {
+                        $appendedSkus[] = $option->value;
+                    }
+                }
+            }
+        }
+        
+        if ($appendedSkus !== []) {
+            $skuStr .= '-' . implode('-', $appendedSkus);
+        }
+        
+        return strtoupper($skuStr);
+    }
+
+    #[Computed]
+    public function displayTitle(): string
+    {
+        $title = $this->product()->name;
+        $appendedNames = [];
+        
+        foreach ($this->product()->variationTypes as $type) {
+            if ($type->expose_in_url && isset($this->selectedOptions[$type->id])) {
+                $optionId = $this->selectedOptions[$type->id];
+                if (!is_array($optionId) && $optionId != 999999) {
+                    $option = $type->pivot->options->map->option->filter()->firstWhere('id', $optionId);
+                    if ($option) {
+                        $appendedNames[] = $option->name;
+                    }
+                }
+            }
+        }
+        
+        if ($appendedNames !== []) {
+            $title .= ' - ' . implode(', ', $appendedNames);
+        }
+        
+        return mb_strtoupper($title);
+    }
+
+    #[Computed]
+    public function currentBasePrice(): float
+    {
+        $product = $this->product();
+
+        $isCustomFormat = false;
+        foreach ($this->selectedOptions as $optionId) {
+            if ($optionId == 999999) {
+                $isCustomFormat = true;
+                break;
+            }
+        }
+
+        $activeSku = $this->activeSku();
 
         $price = $product->getPriceForQuantity(1, $activeSku);
         if ($activeSku && $activeSku->override_price !== null) {
@@ -622,6 +729,7 @@ new class extends Component
     {
         $this->validateDimensions();
         $this->enforceQuantityStep();
+        $this->updateUrl();
     }
 
     /**
@@ -658,7 +766,7 @@ new class extends Component
         </div>
         <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
-            <x-product.info :product="$this->product()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" />
+            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" />
 
             <!-- Quantity Discounts List -->
             @if ($product->getQuantityDiscounts()->isNotEmpty())
