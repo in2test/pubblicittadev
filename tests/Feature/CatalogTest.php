@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductSku;
+use App\Models\ProductVariationOption;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -65,12 +66,12 @@ it('can filter products by variation option', function () {
     $product1->variationTypes()->attach($colorType->id);
     $product2->variationTypes()->attach($colorType->id);
 
-    \App\Models\ProductVariationOption::create([
+    ProductVariationOption::create([
         'product_variation_type_id' => $product1->productVariationTypes()->first()->id,
         'variation_option_id' => $colorBlue->id,
     ]);
 
-    \App\Models\ProductVariationOption::create([
+    ProductVariationOption::create([
         'product_variation_type_id' => $product2->productVariationTypes()->first()->id,
         'variation_option_id' => $colorRed->id,
     ]);
@@ -116,14 +117,14 @@ it('enforces AND logic across different variation types and OR logic within the 
     $productRedFront->variationTypes()->attach([$colorType->id, $positionType->id]);
 
     // Attach options
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
 
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posBack->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posBack->id]);
 
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorRed->id]);
-    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorRed->id]);
+    ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
 
     // Scenario 1: Select only 'Blue'. Should see Blue Front and Blue Back, but not Red Front.
     Livewire::test('catalog', ['categorySlug' => 'shirts'])
