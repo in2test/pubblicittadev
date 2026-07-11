@@ -126,7 +126,19 @@ new class extends Component {
                 }
             })
             ->when($this->selectedOptions !== [], function ($q) {
-                $q->whereHas('skus.options', fn ($sq) => $sq->whereIn('variation_options.id', $this->selectedOptions));
+                $optionsGroupedByType = \App\Models\VariationOption::whereIn('id', $this->selectedOptions)
+                    ->get()
+                    ->groupBy('variation_type_id');
+
+                foreach ($optionsGroupedByType as $typeId => $options) {
+                    $optionIds = $options->pluck('id')->toArray();
+                    $q->whereHas('productVariationTypes', function ($sq) use ($typeId, $optionIds) {
+                        $sq->where('variation_type_id', $typeId)
+                           ->whereHas('options', function ($ssq) use ($optionIds) {
+                               $ssq->whereIn('variation_option_id', $optionIds);
+                           });
+                    });
+                }
             });
     }
 
