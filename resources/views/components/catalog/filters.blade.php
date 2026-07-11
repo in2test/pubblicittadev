@@ -80,7 +80,7 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="grid grid-cols-7 gap-2">
+                        <div class="flex flex-wrap gap-2">
                             @foreach($variationType->options as $option)
                                 @php 
                                     $isActive = in_array($option->id, $selectedOptions);
@@ -89,11 +89,11 @@
                                     wire:click="toggleOption({{ $option->id }})"
                                     wire:key="filter-option-{{ $option->id }}"
                                     @class([
-                                        'aspect-square border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center',
+                                        'border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center px-3 py-2',
                                         'bg-primary text-white border-primary scale-105' => $isActive,
-                                        'bg-white border-gray-200 text-on-surface hover:border-on-surface hover:scale-105' => !$isActive
+                                        'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface hover:scale-105' => !$isActive
                                     ])
-                                    aria-label="Filtra per taglia: {{ $option->name }}"
+                                    aria-label="Filtra per: {{ $option->name }}"
                                     aria-pressed="{{ $isActive ? 'true' : 'false' }}"
                                     type="button"
                                 >
