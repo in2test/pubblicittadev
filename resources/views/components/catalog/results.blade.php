@@ -131,6 +131,11 @@
                         'url' => $p->url,
                         'image' => $p->getFirstImageUrl('medium'),
                         'sku' => $p->sku,
+                        'brand' => [
+                            '@type' => 'Brand',
+                            'name' => $p->brand
+                        ],
+                        'description' => $p->plain_description,
                         'offers' => $p->isOnRequest() ? null : [
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
@@ -153,6 +158,11 @@
                         'url' => $p->url,
                         'image' => $p->getFirstImageUrl('medium'),
                         'sku' => $p->sku,
+                        'brand' => [
+                            '@type' => 'Brand',
+                            'name' => $p->brand
+                        ],
+                        'description' => $p->plain_description,
                         'offers' => $p->isOnRequest() ? null : [
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
@@ -175,6 +185,11 @@
                     'url' => $p->url,
                     'image' => $p->getFirstImageUrl('medium'),
                     'sku' => $p->sku,
+                    'brand' => [
+                        '@type' => 'Brand',
+                        'name' => $p->brand
+                    ],
+                    'description' => $p->plain_description,
                     'offers' => $p->isOnRequest() ? null : [
                         '@type' => 'Offer',
                         'priceCurrency' => 'EUR',
