@@ -1,8 +1,8 @@
 <x-layout>
     <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div class="mb-12">
-            <h1 class="text-4xl font-headline font-bold text-zinc-900 dark:text-zinc-100">Color Palette</h1>
-            <p class="mt-4 text-lg text-zinc-500">Visualizing the custom theme colors defined in app.css</p>
+            <h1 class="text-4xl font-headline font-bold text-gray-900 dark:text-gray-100">Color Palette</h1>
+            <p class="mt-4 text-lg text-gray-500">Visualizing the custom theme colors defined in app.css</p>
         </div>
 
         @php
@@ -28,15 +28,15 @@
             -->
             @foreach ($palettes as $name => $prefix)
                 <div>
-                    <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6 font-headline">{{ $name }}</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 font-headline">{{ $name }}</h2>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-11 gap-4">
                         @foreach ($shades as $shade)
                             <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
-                                <div class="h-12 w-12 rounded shadow-sm border border-zinc-200 dark:border-zinc-800 bg-{{ $prefix }}-{{ $shade }}"></div>
-                                <div class="mt-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 font-medium">
+                                <div class="h-12 w-12 rounded shadow-sm border border-gray-200 dark:border-gray-800 bg-{{ $prefix }}-{{ $shade }}"></div>
+                                <div class="mt-2 text-xs font-mono text-gray-600 dark:text-gray-400 font-medium">
                                     {{ $shade }}
                                 </div>
-                                <div class="text-[9px] font-mono text-zinc-400 dark:text-zinc-500 truncate w-full" title="bg-{{ $prefix }}-{{ $shade }}">
+                                <div class="text-[9px] font-mono text-gray-400 dark:text-gray-500 truncate w-full" title="bg-{{ $prefix }}-{{ $shade }}">
                                     bg-{{ $prefix }}-{{ $shade }}
                                 </div>
                             </div>

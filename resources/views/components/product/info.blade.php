@@ -69,7 +69,7 @@
 @if ($isAdmin)
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
         <div class="flex flex-wrap gap-2 items-center">
-            <flux:badge size="sm" color="{{ $product->is_active ? 'zinc' : 'red' }}">
+            <flux:badge size="sm" color="{{ $product->is_active ? 'gray' : 'red' }}">
                 {{ $product->is_active ? 'Prodotto attivo' : 'Prodotto non attivo' }}
             </flux:badge>
             
@@ -86,7 +86,7 @@
             
             <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline m-0">
                 @csrf
-                <flux:button type="submit" size="sm" color="zinc">
+                <flux:button type="submit" size="sm" color="gray">
                     Sincronizza
                 </flux:button>
             </form>
