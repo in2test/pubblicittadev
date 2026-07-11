@@ -117,6 +117,33 @@
 @php
     $itemListElements = [];
     $position = 1;
+    $shippingTiers = \App\Models\ShippingTier::orderBy('min_order_total', 'desc')->get();
+    
+    $getShippingDetails = function($price) use ($shippingTiers) {
+        $applicableTier = $shippingTiers->firstWhere('min_order_total', '<=', $price);
+        $shippingCost = $applicableTier ? $applicableTier->shipping_cost : 15.00;
+        return [
+            '@type' => 'OfferShippingDetails',
+            'shippingRate' => [
+                '@type' => 'MonetaryAmount',
+                'value' => number_format((float) $shippingCost, 2, '.', ''),
+                'currency' => 'EUR'
+            ],
+            'shippingDestination' => [
+                '@type' => 'DefinedRegion',
+                'addressCountry' => 'IT'
+            ]
+        ];
+    };
+    
+    $merchantReturnPolicy = [
+        '@type' => 'MerchantReturnPolicy',
+        'applicableCountry' => 'IT',
+        'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        'merchantReturnDays' => 14,
+        'returnMethod' => 'https://schema.org/ReturnByMail',
+        'returnFees' => 'https://schema.org/CustomerResponsibility'
+    ];
 
     if ($catalogData['type'] === 'grouped') {
         foreach ($catalogData['groups'] as $group) {
@@ -140,7 +167,9 @@
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
                             'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
-                            'availability' => 'https://schema.org/InStock'
+                            'availability' => 'https://schema.org/InStock',
+                            'hasMerchantReturnPolicy' => $merchantReturnPolicy,
+                            'shippingDetails' => $getShippingDetails((float) ($p->getStartingPrice() ?: 0))
                         ]
                     ]
                 ];
@@ -167,7 +196,9 @@
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
                             'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
-                            'availability' => 'https://schema.org/InStock'
+                            'availability' => 'https://schema.org/InStock',
+                            'hasMerchantReturnPolicy' => $merchantReturnPolicy,
+                            'shippingDetails' => $getShippingDetails((float) ($p->getStartingPrice() ?: 0))
                         ]
                     ]
                 ];
@@ -194,7 +225,9 @@
                         '@type' => 'Offer',
                         'priceCurrency' => 'EUR',
                         'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
-                        'availability' => 'https://schema.org/InStock'
+                        'availability' => 'https://schema.org/InStock',
+                        'hasMerchantReturnPolicy' => $merchantReturnPolicy,
+                        'shippingDetails' => $getShippingDetails((float) ($p->getStartingPrice() ?: 0))
                     ]
                 ]
             ];

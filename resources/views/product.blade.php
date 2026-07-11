@@ -24,14 +24,39 @@
       "brand": {
         "@@type": "Brand",
         "name": {!! json_encode($product->brand, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!}
-      }@if(!$product->isOnRequest()),
+      }@if(!$product->isOnRequest())
+      @php
+          $schemaPrice = (float) ($product->getStartingPrice() ?: 0);
+          $applicableTier = \App\Models\ShippingTier::where('min_order_total', '<=', $schemaPrice)->orderBy('min_order_total', 'desc')->first();
+          $shippingCost = $applicableTier ? $applicableTier->shipping_cost : 15.00;
+      @endphp,
       "offers": {
         "@@type": "Offer",
         "url": {!! json_encode($product->url, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
         "priceCurrency": "EUR",
-        "price": {!! json_encode(number_format((float) ($product->getStartingPrice() ?: 0), 2, '.', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
+        "price": {!! json_encode(number_format($schemaPrice, 2, '.', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
         "availability": "https://schema.org/InStock",
-        "itemCondition": "https://schema.org/NewCondition"
+        "itemCondition": "https://schema.org/NewCondition",
+        "hasMerchantReturnPolicy": {
+            "@@type": "MerchantReturnPolicy",
+            "applicableCountry": "IT",
+            "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+            "merchantReturnDays": 14,
+            "returnMethod": "https://schema.org/ReturnByMail",
+            "returnFees": "https://schema.org/CustomerResponsibility"
+        },
+        "shippingDetails": {
+            "@@type": "OfferShippingDetails",
+            "shippingRate": {
+                "@@type": "MonetaryAmount",
+                "value": {!! json_encode(number_format((float) $shippingCost, 2, '.', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
+                "currency": "EUR"
+            },
+            "shippingDestination": {
+                "@@type": "DefinedRegion",
+                "addressCountry": "IT"
+            }
+        }
       }
       @endif
     }
