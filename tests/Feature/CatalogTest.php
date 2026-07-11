@@ -65,6 +65,16 @@ it('can filter products by variation option', function () {
     $product1->variationTypes()->attach($colorType->id);
     $product2->variationTypes()->attach($colorType->id);
 
+    \App\Models\ProductVariationOption::create([
+        'product_variation_type_id' => $product1->productVariationTypes()->first()->id,
+        'variation_option_id' => $colorBlue->id,
+    ]);
+
+    \App\Models\ProductVariationOption::create([
+        'product_variation_type_id' => $product2->productVariationTypes()->first()->id,
+        'variation_option_id' => $colorRed->id,
+    ]);
+
     $sku1 = ProductSku::factory()->create([
         'product_id' => $product1->id,
         'is_available' => true,
@@ -83,6 +93,58 @@ it('can filter products by variation option', function () {
         ->set('selectedOptions', [$colorBlue->id])
         ->assertSee('Blue Shirt')
         ->assertDontSee('Red Shirt');
+});
+
+it('enforces AND logic across different variation types and OR logic within the same type', function () {
+    $category = Category::factory()->create(['name' => 'Shirts', 'slug' => 'shirts']);
+
+    $colorType = VariationType::factory()->create(['name' => 'Color']);
+    $colorBlue = VariationOption::factory()->create(['variation_type_id' => $colorType->id, 'name' => 'Blue']);
+    $colorRed = VariationOption::factory()->create(['variation_type_id' => $colorType->id, 'name' => 'Red']);
+
+    $positionType = VariationType::factory()->create(['name' => 'Print Position']);
+    $posFront = VariationOption::factory()->create(['variation_type_id' => $positionType->id, 'name' => 'Front']);
+    $posBack = VariationOption::factory()->create(['variation_type_id' => $positionType->id, 'name' => 'Back']);
+
+    $productBlueFront = Product::factory()->create(['name' => 'Blue Front', 'category_id' => $category->id, 'is_active' => true]);
+    $productBlueBack = Product::factory()->create(['name' => 'Blue Back', 'category_id' => $category->id, 'is_active' => true]);
+    $productRedFront = Product::factory()->create(['name' => 'Red Front', 'category_id' => $category->id, 'is_active' => true]);
+
+    // Attach types
+    $productBlueFront->variationTypes()->attach([$colorType->id, $positionType->id]);
+    $productBlueBack->variationTypes()->attach([$colorType->id, $positionType->id]);
+    $productRedFront->variationTypes()->attach([$colorType->id, $positionType->id]);
+
+    // Attach options
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
+
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorBlue->id]);
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productBlueBack->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posBack->id]);
+
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $colorType->id)->first()->id, 'variation_option_id' => $colorRed->id]);
+    \App\Models\ProductVariationOption::create(['product_variation_type_id' => $productRedFront->productVariationTypes()->where('variation_type_id', $positionType->id)->first()->id, 'variation_option_id' => $posFront->id]);
+
+    // Scenario 1: Select only 'Blue'. Should see Blue Front and Blue Back, but not Red Front.
+    Livewire::test('catalog', ['categorySlug' => 'shirts'])
+        ->set('selectedOptions', [$colorBlue->id])
+        ->assertSee('Blue Front')
+        ->assertSee('Blue Back')
+        ->assertDontSee('Red Front');
+
+    // Scenario 2: Select 'Blue' AND 'Front'. Should ONLY see Blue Front.
+    Livewire::test('catalog', ['categorySlug' => 'shirts'])
+        ->set('selectedOptions', [$colorBlue->id, $posFront->id])
+        ->assertSee('Blue Front')
+        ->assertDontSee('Blue Back')
+        ->assertDontSee('Red Front');
+
+    // Scenario 3: Select 'Blue' OR 'Red' AND 'Front'. Should see Blue Front and Red Front.
+    Livewire::test('catalog', ['categorySlug' => 'shirts'])
+        ->set('selectedOptions', [$colorBlue->id, $colorRed->id, $posFront->id])
+        ->assertSee('Blue Front')
+        ->assertSee('Red Front')
+        ->assertDontSee('Blue Back');
 });
 
 it('can sort products by price ascending', function () {
