@@ -3,9 +3,6 @@
 @php
     /** @var \App\Models\Product $product */
     $imageUrl = $product->getFirstImageUrl('medium');
-    $isAdmin = auth()->check() && auth()->user()->isAdmin();
-    $adminEditUrl = $product->getAdminEditUrl();
-
     // Color Preview Data
     $colorData = $product->getPreviewColors(8);
 
@@ -101,21 +98,7 @@
                     {{ $product->category->name ?? 'Prodotti' }}
                 </span>
 
-                @if ($isAdmin)
-                    <div class="flex items-center gap-2">
-                        <a href="{{ $adminEditUrl }}" class="p-2 border border-gray-100 hover:bg-gray-100 transition-colors"
-                            target="_blank">
-                            <span class="material-symbols-outlined text-sm text-gray-400">edit</span>
-                        </a>
-                        <form method="POST" action="{{ route('admin.products.toggle-active', $product) }}">
-                            @csrf
-                            <button type="submit"
-                                class="border border-gray-100 px-3 py-2 text-[10px] font-bold uppercase tracking-widest {{ $product->is_active ? 'text-rose-600 hover:bg-rose-50' : 'text-emerald-600 hover:bg-emerald-50' }} transition-colors">
-                                {{ $product->is_active ? 'Off' : 'On' }}
-                            </button>
-                        </form>
-                    </div>
-                @endif
+
             </div>
         </div>
     </div>
