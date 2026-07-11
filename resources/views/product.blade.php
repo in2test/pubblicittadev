@@ -24,15 +24,16 @@
       "brand": {
         "@@type": "Brand",
         "name": {!! json_encode($product->brand, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!}
-      },
+      }@if(!$product->isOnRequest()),
       "offers": {
         "@@type": "Offer",
         "url": {!! json_encode($product->url, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
         "priceCurrency": "EUR",
-        "price": {!! json_encode(number_format((float) $product->calculated_min_price, 2, '.', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
+        "price": {!! json_encode(number_format((float) ($product->getStartingPrice() ?: 0), 2, '.', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
         "availability": "https://schema.org/InStock",
         "itemCondition": "https://schema.org/NewCondition"
       }
+      @endif
     }
     </script>
 </x-layout>

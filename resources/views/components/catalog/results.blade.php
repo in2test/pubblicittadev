@@ -134,7 +134,8 @@
                         'offers' => $p->isOnRequest() ? null : [
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
-                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
+                            'availability' => 'https://schema.org/InStock'
                         ]
                     ]
                 ];
@@ -155,7 +156,8 @@
                         'offers' => $p->isOnRequest() ? null : [
                             '@type' => 'Offer',
                             'priceCurrency' => 'EUR',
-                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                            'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
+                            'availability' => 'https://schema.org/InStock'
                         ]
                     ]
                 ];
@@ -176,7 +178,8 @@
                     'offers' => $p->isOnRequest() ? null : [
                         '@type' => 'Offer',
                         'priceCurrency' => 'EUR',
-                        'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', '')
+                        'price' => number_format((float) ($p->getStartingPrice() ?: 0), 2, '.', ''),
+                        'availability' => 'https://schema.org/InStock'
                     ]
                 ]
             ];
