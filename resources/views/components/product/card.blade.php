@@ -15,8 +15,11 @@
 
 <article
     class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-accent-700 transition-all duration-300 bg-gray-50">
+    
     <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug]) }}"
-        class="flex flex-col h-full">
+        class="absolute inset-0 z-10" aria-label="{{ $product->name }}"></a>
+        
+    <div class="flex flex-col h-full relative z-0 pointer-events-none">
 
         {{-- Badges --}}
         <div class="absolute top-4 left-4 z-10 flex items-center gap-1">
@@ -93,13 +96,13 @@
             @endif
 
             {{-- Footer / Admin Actions --}}
-            <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
+            <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-100 relative z-20 pointer-events-auto">
                 <span class="text-[10px] font-mono font-bold text-secondary uppercase tracking-widest">
                     {{ $product->category->name ?? 'Prodotti' }}
                 </span>
 
                 @if ($isAdmin)
-                    <div class="flex items-center gap-2" onclick="event.preventDefault()">
+                    <div class="flex items-center gap-2">
                         <a href="{{ $adminEditUrl }}" class="p-2 border border-gray-100 hover:bg-gray-100 transition-colors"
                             target="_blank">
                             <span class="material-symbols-outlined text-sm text-gray-400">edit</span>
@@ -115,5 +118,5 @@
                 @endif
             </div>
         </div>
-    </a>
+    </div>
 </article>
