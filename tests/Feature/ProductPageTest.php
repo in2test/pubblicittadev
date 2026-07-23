@@ -379,4 +379,29 @@ class ProductPageTest extends TestCase
             ->assertSet('width', null)
             ->assertSet('height', null);
     }
+
+    public function test_product_page_includes_open_graph_meta_tags(): void
+    {
+        $category = Category::create(['name' => 'Shirts', 'slug' => 'camicie', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'name' => 'Cambridge Shirt',
+            'slug' => 'cambridge',
+            'category_id' => $category->id,
+            'description' => 'A fine cotton shirt.',
+        ]);
+
+        $siteName = config('app.name', 'Pubblicittà24');
+
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
+
+        $response->assertOk();
+        $response->assertSee('<meta property="og:type" content="product">', false);
+        $response->assertSee('<meta property="og:site_name" content="'.$siteName.'">', false);
+        $response->assertSee('<meta property="og:title" content="Cambridge Shirt | '.$siteName.'">', false);
+        $response->assertSee('<meta property="og:url" content="'.$product->url.'">', false);
+        $response->assertSee('<meta property="og:image" content="'.$product->getFirstImageUrl('large').'">', false);
+        $response->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+        $response->assertSee('<meta name="twitter:image" content="'.$product->getFirstImageUrl('large').'">', false);
+    }
 }

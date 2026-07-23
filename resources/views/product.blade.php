@@ -11,6 +11,14 @@
         {{ $product->url }}
     </x-slot:canonical>
 
+    <x-slot:ogType>
+        product
+    </x-slot:ogType>
+
+    <x-slot:ogImage>
+        {{ $product->getFirstImageUrl('large') }}
+    </x-slot:ogImage>
+
     <livewire:product :product="$product" :category="$category" :jobId="$jobId" />
     
     <script type="application/ld+json">

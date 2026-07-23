@@ -5,14 +5,53 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>@isset($title){{ trim($title) }} | @endisset{{ config('app.name', 'Pubblicittà24') }}</title>
+    @php
+        $siteName = config('app.name', 'Pubblicittà24');
+        $rawTitle = !empty($title) ? trim((string) $title) : null;
+        $rawDescription = !empty($description) ? trim((string) $description) : null;
+        $rawOgTitle = !empty($ogTitle) ? trim((string) $ogTitle) : null;
+        $rawOgDescription = !empty($ogDescription) ? trim((string) $ogDescription) : null;
+        $rawOgImage = !empty($ogImage) ? trim((string) $ogImage) : null;
+        $rawOgType = !empty($ogType) ? trim((string) $ogType) : 'website';
+        $rawCanonical = !empty($canonical) ? trim((string) $canonical) : request()->url();
+
+        $metaTitle = $rawOgTitle ?? ($rawTitle ? $rawTitle . ' | ' . $siteName : $siteName);
+        $metaDescription = $rawOgDescription ?? ($rawDescription ?? 'Abbigliamento Personalizzato: stampa e ricamo su t-shirt, polo, felpe e abiti da lavoro. Richiedi un preventivo gratuito online con supporto clienti dedicato.');
+
+        $metaImage = $rawOgImage ?: url('/apple-touch-icon.png');
+        if ($metaImage && !\Illuminate\Support\Str::startsWith($metaImage, ['http://', 'https://'])) {
+            $metaImage = url($metaImage);
+        }
+    @endphp
+
+    <title>{{ $rawTitle ? $rawTitle . ' | ' . $siteName : $siteName }}</title>
 
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <meta name="description" content="{{ !empty($description) ? trim($description) : 'Abbigliamento Personalizzato: stampa e ricamo su t-shirt, polo, felpe e abiti da lavoro. Richiedi un preventivo gratuito online con supporto clienti dedicato.' }}">
-    <meta name="robots" content="{{ !empty($robots) ? trim($robots) : 'index, follow' }}">
-    <link rel="canonical" href="{{ !empty($canonical) ? trim($canonical) : request()->url() }}">
+    <meta name="description" content="{{ $metaDescription }}">
+    <meta name="robots" content="{{ !empty($robots) ? trim((string) $robots) : 'index, follow' }}">
+    <link rel="canonical" href="{{ $rawCanonical }}">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="{{ $rawOgType }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:url" content="{{ $rawCanonical }}">
+    <meta property="og:title" content="{{ $metaTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    @if(!empty($metaImage))
+    <meta property="og:image" content="{{ $metaImage }}">
+    <meta property="og:image:secure_url" content="{{ $metaImage }}">
+    @endif
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ $rawCanonical }}">
+    <meta name="twitter:title" content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    @if(!empty($metaImage))
+    <meta name="twitter:image" content="{{ $metaImage }}">
+    @endif
 
     <!-- Google tag (gtag.js) -->
     @production
