@@ -123,7 +123,7 @@
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                             <span>Lun - Ven</span>
-                            <span class="font-bold">09:00 — 13:00 / 14:30 — 18:30</span>
+                            <span class="font-bold">09:00 — 13:00 / 15:00 — 18:30</span>
                         </div>
                         <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                             <span>Sabato</span>

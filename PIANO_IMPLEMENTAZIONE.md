@@ -1,25 +1,24 @@
-# 📋 Piano di Implementazione - Abbigliamento Personalizzato
+# 📋 Piano di Implementazione - Pubblicittà24 E-commerce & Local SEO
 
-**Status**: ✅ COMPLETATO (Pronto per il Go-Live)
-**Scadenza MVP**: Raggiunta
-**Ultimo aggiornamento**: 2 Giugno 2026
+**Status**: ✅ COMPLETATO (Pronto per il Go-Live & Ottimizzazione Continua)  
+**Focus**: E-commerce Completo con Pagamenti Online, Preventivi Privati & Local SEO (Fiuggi e Dintorni)  
+**Ultimo aggiornamento**: 24 Luglio 2026  
 
 ---
 
 ## 📊 Panoramica Progetto
 
-**Nome**: Piattaforma di E-commerce per stampe personalizzate su abbigliamento e prodotti standard (es. Forex, Biglietti da Visita)
-**Focus**: E-commerce Completo con Preventivi Privati
-**Flusso**: Acquisto nel Carrello → Pagamento Stripe **oppure** Richiesta Preventivo Privato → Gestione Ordini (Lavorazioni)
-**Lingua**: Italiano
-**Team**: 1 developer
-**Timeline**: Completata
+**Nome**: Piattaforma E-commerce Pubblicittà24 per stampe personalizzate, prodotti standard (Biglietti da visita, Stampa Grande Formato, Forex, Banner, Volantini) e abbigliamento promozionale/lavoro.  
+**Focus**: E-commerce Completo con Pagamenti Online (Stripe) e Preventivi Privati.  
+**Target Geografico**: Fiuggi, provincia di Frosinone e comuni limitrofi (Anagni, Alatri, Ferentino, Sora, Paliano, Acuto, Piglio, Guarcino, ecc.).  
+**Flusso**: Acquisto nel Carrello → Pagamento Stripe **oppure** Richiesta Preventivo Privato → Gestione Ordini.  
+**Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.  
 
 ---
 
 ## 🗄️ Struttura Database (Unificata & Pulita)
 
-Il database è stato ottimizzato e le migrazioni sono state **unificate** (una per ogni modello base), con rimozione completa del vecchio sistema a preventivi (quotes).
+Il database è ottimizzato e le migrazioni sono unificate, con gestione avanzata di varianti, pricing tiers, scaglioni spedizione e lavorazioni.
 
 ### Tabelle Principali
 
@@ -81,120 +80,98 @@ Il database è stato ottimizzato e le migrazioni sono state **unificate** (una p
 ### 🚀 SETTIMANA 3-4: Advanced Sync & Gallery Management (COMPLETATA)
 
 #### 🌐 Integrazione API NewWave Avanzata
-- [x] **Authenticated GraphQL**: Integrazione sicura con il gateway NewWave (SSL bypassato per dev).
-- [x] **Lazy-Sync**: Controllo automatico ogni 12 ore della freschezza dei dati via middleware/controller.
-- [x] **Fast Availability Sync**: Metodo dedicato per aggiornare solo le giacenze senza re-importare l'intero prodotto.
-- [x] **Inventory Scaling**: Logica di protezione inventario (`floor(availability / 2)`) per mappare stock reale.
-- [x] **CDN-Mode**: Sincronizzazione automatizzata delle immagini remote (lifestyle e varianti).
+- [x] **Authenticated GraphQL**: Integrazione sicura con gateway NewWave.
+- [x] **Lazy-Sync**: Controllo automatico ogni 12 ore della freschezza dati.
+- [x] **Fast Availability Sync**: Aggiornamento rapido delle giacenze stock senza re-importare l'intero prodotto.
+- [x] **CDN-Mode**: Sincronizzazione automatizzata delle immagini remote.
 
 #### 🖼️ Gestione Media & Gallery
-- [x] **Hybrid Gallery Engine**: Sistema che unifica immagini locali (Spatie MediaLibrary) e remote (Images table).
-- [x] **Filtro Colore Intelligente**: La gallery mostra solo le immagini associate al colore selezionato (o le lifestyle).
-- [x] **Admin Gallery Control**: Interfaccia per reordering manuale e override delle associazioni colore per immagini API.
-- [x] **Thumbnails on Hover**: Visualizzazione anteprima prodotto nelle tabelle admin di Filament.
+- [x] **Hybrid Gallery Engine**: Unificazione immagini locali (Spatie MediaLibrary) e remote (Images table).
+- [x] **Filtro Colore Intelligente**: La gallery mostra solo le immagini associate al colore selezionato.
+- [x] **Admin Gallery Control**: Interfaccia per reordering manuale e override associazioni colore per immagini API.
 
 #### 🛒 Lavorazioni (Job-Based Cart) e Prodotti Standard
-- [x] **Job UUID**: Ogni aggiunta al carrello è trattata come una "Lavorazione" (Job) unica con UUID.
-- [x] **Configuratore Prodotti Standard**: Sviluppo form avanzato in Livewire per i prodotti standard (configurazione varianti e pricing tiers, dimensioni personalizzate e calcolo ritaglio fogli ottimali - `itemsPerSheet`).
-- [x] **Recalculation logic**: Sconti quantità applicati alla singola lavorazione per garantire precisione sui prezzi personalizzati.
-- [x] **Size Selector UI**: Interfaccia avanzata per selezione quantità multi-taglia con feedback "Total Articles".
-
-#### 🧩 Variazioni Prodotto Avanzate (NewWave)
-- [x] **Tipo variazione "Quantità/Input"**: Gestione varianti multi-valore (es. 2XS: 1, L: 2) distinte dalle varianti select.
-- [x] **Posizioni di Stampa**: Aggiunta selezione posizione stampa (es. petto, schiena) come variante modificatore indipendente.
-- [x] **Consolidamento varianti obsolete**: Grammatura, materiale, spessore, colore tazza/braccialetto ora usano le varianti base esistenti (colore, spessore, ecc.).
-
-### 👤 Modulo 2: User Lifecycle & Sicurezza (COMPLETATO)
-- [x] **User Management**: Ruoli (admin/client) e is_active.
-- [x] **Fortify Email Verification**: Obbligatoria per accedere alla dashboard.
-- [x] **Auth UI**: Modal Login/Register moderno (Refactored to Minimal Alpine/Livewire).
-- [x] **Codebase Stability**: Risolti errori Facade instantiation (new Storage, etc.) e bug static analysis.
-- [x] **Dashboard Cliente**: Visualizzazione cronologia ordini e configuratore completato.
-- [x] **Address Manager**: CRUD indirizzi in Livewire Volt + Flux UI (inclusa fatturazione elettronica e IVA).
+- [x] **Job UUID**: Ogni aggiunta al carrello è una lavorazione unica con UUID.
+- [x] **Configuratore Prodotti Standard**: Form Livewire per prodotti ad area o quantitativi (Forex, Biglietti da visita, Banners, con calcolo `itemsPerSheet`).
 
 ---
 
 ### 🧾 Modulo 3: Pagamenti & Preventivi (COMPLETATO)
-- [x] **Stripe Checkout**: Pagamento diretto con redirect a Stripe.
-- [x] **Stripe Webhooks**: Aggiornamento automatico stato ordine al pagamento.
-- [x] **Inventory Decrement**: Decremento automatico giacenze al pagamento confermato.
-- [x] **Richiesta Preventivo Privato**: Bottone "Richiedi Preventivo" nel carrello per utenti autenticati (salta il checkout, crea ordine con `payment_status = quotation`).
-- [x] **Pagina Successo Contestuale**: Messaggio differenziato tra "Ordine Confermato" (pagamento Stripe) e "Richiesta Inviata" (preventivo), con icone diverse.
-- [x] **Email Notifiche**: Notifica automatica al cliente e all'admin sia per ordini pagati che per preventivi.
+- [x] **Stripe Checkout**: Pagamento diretto con redirect a Stripe e gestione Webhooks.
+- [x] **Richiesta Preventivo Privato**: Pulsante per richiedere preventivi riservati dal carrello.
+
+---
+
+### 🔍 Modulo 4: SEO, Feed & Social Sharing v2.0 (COMPLETATO - Luglio 2026)
+- [x] **Meta Tags & Social Open Graph**: Meta tag dinamici (`og:title`, `og:description`, `og:image`, `og:url`, `twitter:*`) su prodotti, categorie e homepage.
+- [x] **Gestione Anteprime Varianti in OG & Canonical**: Rilevamento automatico delle varianti esposte nella query string (es. `?colore=96`), con cambio dinamico dell'immagine Open Graph, dell'URL canonico e dei dati strutturati Schema.org.
+- [x] **Google Merchant XML Feed**: Generatore automatizzato in `/feed/google-merchant.xml` per Google Shopping con dettaglio varianti (colore, taglia, immagine specifica, link con query param).
+- [x] **Sitemap XML**: Mappa del sito dinamica in `/sitemap.xml` per prodotti attivi, categorie e pagine istituzionali.
+- [x] **Laravel Scout v11**: Integrazione ricerca full-text per catalogo prodotti.
+
+---
+
+## 📍 Strategia Local SEO (Fiuggi e Dintorni)
+
+Per dominare i risultati di ricerca locali a **Fiuggi e nei comuni limitrofi** (Anagni, Alatri, Ferentino, Sora, Frosinone, Paliano, Acuto, Piglio, Guarcino, Subiaco), senza limitarsi all'abbigliamento ma coprendo **tutti i prodotti di stampa e comunicazione visiva**, è prevista la seguente tabella di marcia SEO:
+
+### 1. Tagging Meta & Titoli Geolocalizzati (Global & Categorie)
+- **Titolo Homepage**: `Pubblicittà24 | Stampa Digitale, Grande Formato e Abbigliamento a Fiuggi`
+- **Description Homepage**: `Stampa digitale professionale a Fiuggi e provincia di Frosinone: biglietti da visita, volantini, striscioni, pannelli Forex, gadget e abbigliamento personalizzato. Preventivi gratuiti online.`
+- **Pagine Categoria**:
+  - *Biglietti da Visita*: "Stampa Biglietti da Visita a Fiuggi e Dintorni | Pubblicittà24"
+  - *Grande Formato & Pannelli*: "Stampa Grande Formato, Forex e Striscioni Fiuggi | Pubblicittà24"
+  - *Volantini & Pieghevoli*: "Stampa Volantini e Pieghevoli a Fiuggi e Frosinone | Pubblicittà24"
+  - *Abbigliamento da Lavoro*: "Abbigliamento da Lavoro Personalizzato Fiuggi e Ciociaria | Pubblicittà24"
+
+### 2. Dati Strutturati Schema.org LocalBusiness / PrintShop
+Integrazione in `resources/views/layouts/layout.blade.php` dello schema `LocalBusiness` / `PrintShop`:
+- **Nome**: Pubblicittà24
+- **Indirizzo**: Fiuggi (FR), Italia
+- **Area Servita (`areaServed`)**: `["Fiuggi", "Anagni", "Alatri", "Ferentino", "Frosinone", "Sora", "Paliano", "Acuto", "Piglio", "Guarcino", "Ciociaria"]`
+- **Servizi Offerti**: Stampa Digitale, Biglietti da Visita, Stampa Grande Formato, Insegne, Pannelli Rigidi, Abbigliamento Promozionale e da Lavoro.
+
+### 3. Pagine dedicate "Servizi per Zona" (Local Landing Pages)
+Creazione di pagine/sezioni target dedicate per intercettare intenti locali ad alta conversione:
+- `/stampa-digitale-fiuggi`: Stampa di biglietti da visita, brochure, volantini e cataloghi per aziende ed eventi di Fiuggi e provincia.
+- `/stampa-grande-formato-fiuggi`: Striscioni in PVC, banner microforati, pannelli Forex/Plexiglas, roll-up ed espositori per negozi e fiere in Ciociaria.
+- `/abbigliamento-lavoro-fiuggi`: Abiti da lavoro, divise per hotel, ristoranti, centri termali e attività commerciali a Fiuggi.
+
+### 4. Footer & Chi Siamo Geolocalizzati
+- Inserimento nel footer del sito di una sezione *"Servizio di Stampa e Personalizzazione a Fiuggi e in Provincia di Frosinone"*, con elenco dei principali comuni serviti (con consegna rapida o ritiro in sede).
+
+### 5. Integrazione Google Business Profile (Scheda Google Maps)
+- Sincronizzazione del profilo Google Business di Pubblicittà24 con il sito web.
+- Link diretto per recensioni clienti e mappe per rafforzare la presenza nel **Local Pack** di Google per ricerche "vicino a me".
 
 ---
 
 ## 📅 Checkpoint Aggiornati
 
 ```
-GIUGNO 2026 (Stato Attuale: Completato)
-├─ ✅ Rimozione logica preventiva (Quote-based flow abolito, sostituito da Preventivo Privato semplificato)
-├─ ✅ Unificazione Migrations (1 migration = 1 schema)
-├─ ✅ Laravel Code Simplification (Codice commentato in ITA su modelli e carrello)
-├─ ✅ NewWave Sync v2.0 (Lazy-sync + Availability)
-├─ ✅ Product Gallery v2.0 (Color mapping + Reordering)
-├─ ✅ Job-Based Cart (Lavorazioni differenziate + formati custom)
-├─ ✅ User Dashboard & Address Manager (Flux UI)
-├─ ✅ Stripe Checkout & Webhooks
-├─ ✅ Inventory Management (Auto-decrement on payment)
-├─ ✅ Admin Order Management (Filament Resource)
-├─ ✅ Pricing Models (Fixed, Quantity, Area-based)
-├─ ✅ Refactoring Prodotti Standard (Filament 2-Column Form, Prod. Table)
-├─ ✅ Consolidamento varianti obsolete (incorporate in varianti base)
-├─ ✅ Risoluzione errori PHPStan (0 errori)
-├─ ✅ Flusso Preventivo Privato dal Carrello (senza checkout)
-├─ ✅ Pagina successo contestuale (preventivo vs pagamento)
-├─ ✅ Test Suite (173 test Pest completati e passanti)
-├─ ✅ UI/UX Fixes completati
-├─ ✅ Implementazione Spese di Spedizione (Shipping Tiers & Ritiro Sede)
-└─ ✅ Documentazione Codebase (PHPDocs, inline comments, pulizia codice)
+LUGLIO 2026 (Stato Attuale: Completato & Local SEO Attiva)
+├─ ✅ Open Graph & Meta Tags v2.0 (og:image, og:url, twitter cards)
+├─ ✅ Risoluzione Varianti Esposte nei Social (Immagine specifica per ?colore=XX)
+├─ ✅ Google Merchant XML Feed v1.0 (/feed/google-merchant.xml)
+├─ ✅ Sitemap XML Dinamica (/sitemap.xml)
+├─ ✅ Laravel Scout v11 Integration (Ricerca full-text database)
+├─ ✅ Test Suite Ampliata (190+ test Pest/PHPUnit passanti)
+├─ ✅ Implementazione Schema.org LocalBusiness / PrintShop (orari reali + areaServed Italia e Roma-Napoli)
+├─ ✅ Meta Tag & Titoli Geolocalizzati (Fiuggi, Frosinone, Roma-Napoli e Italia)
+├─ ✅ Footer Geolocalizzato con aree servite e mappa
+└─ ⏳ Creazione Pagine Landing Locali dedicate (es. /stampa-grande-formato-fiuggi)
 ```
 
 ---
 
 ## 🧪 Test Suite
 
-Creati oltre **173 test** (Pest) passanti con successo che coprono:
+Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
 - `CartTest`, `SearchTest`, `ProductPageTest`, `OrderTest`, `QuantityDiscountServiceTest`.
-- Nuovi test per `ProductSynchronizer` e `NwgApiClient`.
-- Copertura formati custom e calcoli di ridimensionamento (`StandardProductResourceTest`).
+- Nuovi test per Open Graph, varianti esposte nei meta tag, Sitemap XML e Google Merchant Feed.
+- Test formati custom e calcoli di ridimensionamento (`StandardProductResourceTest`).
 - Test flusso preventivo privato e checkout con metodi di spedizione (`CheckoutTest`).
 
 ---
 
-## ⏭️ PHASE 3: Completamento & Go-Live
-
-### 📦 Modulo 4: Admin Order Management (COMPLETATO)
-- [x] `OrderResource` in Filament.
-- [x] Sistema Notifiche Email automatiche (ordine pagato + richiesta preventivo).
-- [x] Gestione Fatture & Tracking Spedizioni.
-
-### 📐 Modulo 5: Verifica Tipologie di Prodotto Avanzate (COMPLETATO)
-- [x] **Stampe a Superficie (Pannelli Rigidi)**: Verificare il corretto calcolo del prezzo al mq basato sulle dimensioni (larghezza x altezza in cm), rispetto dell'area minima fatturabile per pezzo e integrazione con la tabella degli sconti quantità.
-- [x] **Prodotti Unitari / Fissi (Roll-Ups, Espositori)**: Verificare il comportamento del form con prezzi fissi o a scaglioni di quantità senza la selezione di taglie/colori, garantendo che le opzioni/accessori aggiuntivi vengano calcolati correttamente.
-
-### 🛠️ Modulo 6: UI/UX Fixes & Improvements (COMPLETATO)
-- [x] **Homepage, Catalogo, Carrello, Auth, Dashboard, Pagine Statiche**: Tutti i fix UI/UX richiesti sono stati applicati.
-
-### 🚚 Modulo 7: Spedizioni e Ritiro (COMPLETATO)
-- [x] **Gestione Spedizioni**: Inserite tabelle e resource per gli scaglioni di costo spedizione.
-- [x] **Ritiro in Sede**: Aggiunta opzione di ritiro in negozio gratuito e integrazione col checkout.
-
-### 📝 Modulo 8: Documentazione Codebase (COMPLETATO)
-- [x] **Modelli Core**: Commentati in maniera esaustiva `Product`, `Order`, ecc.
-- [x] **Controllers**: Commentati `CheckoutController`, `CartController`, `WebhookController`.
-- [x] **Filament**: Documentate le resource complesse (`ProductResource`, `VariationTypeResource`, `OrderResource`).
-
----
-
-## 🚨 Rischi & Mitigation
-
-| Rischio                     | Mitigation                                                   |
-| --------------------------- | ------------------------------------------------------------ |
-| API Rate Limiting (NewWave) | Implementato caching aggressivo e Fast Availability Sync     |
-| Integrità Dati Immagini     | Validazione URL e fallback automatico a placeholder          |
-| Performance Carrello        | Ottimizzazione query `getPriceForQuantity` con eager loading |
-
----
-
-🚀 **TARGET LIVE**: Pronto per il rilascio in Produzione!
+## 🚀 TARGET LIVE & LOCAL GROWTH: Pronto per il Rilascio e Posizionamento Locale!

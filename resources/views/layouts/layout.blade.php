@@ -53,6 +53,93 @@
     <meta name="twitter:image" content="{{ $metaImage }}">
     @endif
 
+    <!-- LocalBusiness & PrintShop Structured Data -->
+    @verbatim
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": ["PrintShop", "LocalBusiness"],
+      "name": "Pubblicittà24",
+      "url": "https://www.pubblicitta24.it",
+      "logo": "https://www.pubblicitta24.it/apple-touch-icon.png",
+      "image": "https://www.pubblicitta24.it/apple-touch-icon.png",
+      "description": "Stampa digitale professionale, grande formato (Forex, striscioni, banner), biglietti da visita e abbigliamento personalizzato a Fiuggi, provincia di Frosinone, asse Roma-Napoli e in tutta Italia.",
+      "telephone": "+39 0775 520 273",
+      "priceRange": "€€",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "SS 155 per Fiuggi, 128",
+        "addressLocality": "Trivigliano",
+        "addressRegion": "FR",
+        "postalCode": "03010",
+        "addressCountry": "IT"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 41.7723186,
+        "longitude": 13.2718679
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "09:00",
+          "closes": "13:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "15:00",
+          "closes": "18:30"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Saturday",
+          "opens": "09:00",
+          "closes": "13:00"
+        }
+      ],
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "Italia"
+        },
+        {
+          "@type": "AdministrativeArea",
+          "name": "Roma - Napoli"
+        },
+        {
+          "@type": "AdministrativeArea",
+          "name": "Provincia di Frosinone"
+        },
+        {
+          "@type": "City",
+          "name": "Fiuggi"
+        },
+        {
+          "@type": "City",
+          "name": "Trivigliano"
+        },
+        {
+          "@type": "City",
+          "name": "Anagni"
+        },
+        {
+          "@type": "City",
+          "name": "Alatri"
+        },
+        {
+          "@type": "City",
+          "name": "Frosinone"
+        }
+      ],
+      "sameAs": [
+        "https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679"
+      ]
+    }
+    </script>
+    @endverbatim
+
     <!-- Google tag (gtag.js) -->
     @production
     @if (!auth()->check() || !auth()->user()->isAdmin())

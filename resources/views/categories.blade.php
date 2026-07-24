@@ -1,17 +1,17 @@
 <x-layout>
     <x-slot:title>
         @if ($category instanceof \App\Models\Category)
-            {{ $category->name }}
+            {{ $category->name }} | Stampa e Personalizzazione a Fiuggi e Frosinone
         @else
-            Catalogo Prodotti
+            Catalogo Prodotti Stampa e Abbigliamento | Fiuggi e Dintorni
         @endif
     </x-slot:title>
 
     <x-slot:description>
         @if ($category instanceof \App\Models\Category)
-            {{ !empty($category->description) ? trim(strip_tags($category->description)) : 'Scopri la nostra gamma di ' . $category->name . ' personalizzabili. Richiedi un preventivo gratuito online.' }}
+            {{ !empty($category->description) ? trim(strip_tags($category->description)) : 'Scopri la nostra gamma di ' . $category->name . ' personalizzabili a Fiuggi, provincia di Frosinone e in tutta Italia. Richiedi un preventivo gratuito online.' }}
         @else
-            Sfoglia il nostro catalogo completo di abbigliamento personalizzabile: t-shirt, polo, felpe e abiti da lavoro con stampa e ricamo personalizzati.
+            Sfoglia il nostro catalogo completo di stampa digitale, grande formato, biglietti da visita, prodotti promozionali e abbigliamento da lavoro a Fiuggi e in tutta Italia.
         @endif
     </x-slot:description>
 

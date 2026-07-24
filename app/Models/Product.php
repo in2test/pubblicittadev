@@ -408,7 +408,7 @@ class Product extends Model implements HasMedia
     {
         $request ??= request();
 
-        if (! $request || empty($request->query())) {
+        if (empty($request->query())) {
             return null;
         }
 
@@ -420,8 +420,10 @@ class Product extends Model implements HasMedia
         foreach ($this->variationTypes as $type) {
             $slug = Str::slug($type->name);
             $val = $request->query($slug) ?? $request->query($type->name) ?? $request->query(strtolower($type->name));
-
-            if ($val === null || $val === '') {
+            if ($val === null) {
+                continue;
+            }
+            if ($val === '') {
                 continue;
             }
 
@@ -436,13 +438,11 @@ class Product extends Model implements HasMedia
                 ->filter();
 
             $valStr = (string) $val;
-            $matchedOption = $options->first(function (VariationOption $opt) use ($valStr) {
-                return (string) $opt->id === $valStr
-                    || (string) $opt->value === $valStr
-                    || (string) $opt->name === $valStr
-                    || Str::slug((string) $opt->name) === Str::slug($valStr)
-                    || Str::slug((string) $opt->value) === Str::slug($valStr);
-            });
+            $matchedOption = $options->first(fn (VariationOption $opt) => (string) $opt->id === $valStr
+                || (string) $opt->value === $valStr
+                || (string) $opt->name === $valStr
+                || Str::slug((string) $opt->name) === Str::slug($valStr)
+                || Str::slug((string) $opt->value) === Str::slug($valStr));
 
             if ($matchedOption) {
                 $images = $this->getImagesForOption($matchedOption->id);
@@ -470,7 +470,7 @@ class Product extends Model implements HasMedia
         }
 
         $requestOption = $this->getVariationOptionFromRequest();
-        if ($requestOption) {
+        if ($requestOption instanceof VariationOption) {
             $optionImages = $this->getImagesForOption($requestOption->id);
             if ($optionImages->isNotEmpty()) {
                 return $optionImages->first();

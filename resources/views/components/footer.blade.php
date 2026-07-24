@@ -13,6 +13,10 @@
                     <span class="material-symbols-outlined text-[14px]">map</span> Vedi sulla Mappa
                 </a>
             </div>
+            <div class="mt-4 pt-3 border-t border-gray-200 text-gray-600 font-mono text-[10px] leading-normal">
+                <strong class="text-gray-900 block mb-1 uppercase tracking-wider text-[10px]">Stampa a Fiuggi e Dintorni:</strong>
+                Servizio e-commerce attivo in <strong>tutta Italia</strong>. Consulenza e incontri in presenza nell'asse <strong>Roma - Napoli</strong> (Fiuggi, Anagni, Alatri, Ferentino, Frosinone, Sora).
+            </div>
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Esplora</span>
