@@ -18,8 +18,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
@@ -396,12 +398,85 @@ class Product extends Model implements HasMedia
      */
 
     /**
-     * Get the first available image (thumbnail)
+     * Resolve selected variation option from HTTP request query parameters.
+     * Checks variation types matching query parameters (e.g. ?colore=96 or ?colore=blu-navy).
+     *
+     * @param  Request|null  $request  Optional HTTP request object (defaults to current request)
+     * @return VariationOption|null The matched variation option with images, or null if none found.
+     */
+    public function getVariationOptionFromRequest(?Request $request = null): ?VariationOption
+    {
+        $request ??= request();
+
+        if (! $request || empty($request->query())) {
+            return null;
+        }
+
+        $this->loadMissing([
+            'variationTypes',
+            'productVariationTypes.options.option',
+        ]);
+
+        foreach ($this->variationTypes as $type) {
+            $slug = Str::slug($type->name);
+            $val = $request->query($slug) ?? $request->query($type->name) ?? $request->query(strtolower($type->name));
+
+            if ($val === null || $val === '') {
+                continue;
+            }
+
+            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+
+            if (! $pvt) {
+                continue;
+            }
+
+            $options = $pvt->options
+                ->map(fn (ProductVariationOption $pvo) => $pvo->relationLoaded('option') ? $pvo->option : $pvo->option()->first())
+                ->filter();
+
+            $valStr = (string) $val;
+            $matchedOption = $options->first(function (VariationOption $opt) use ($valStr) {
+                return (string) $opt->id === $valStr
+                    || (string) $opt->value === $valStr
+                    || (string) $opt->name === $valStr
+                    || Str::slug((string) $opt->name) === Str::slug($valStr)
+                    || Str::slug((string) $opt->value) === Str::slug($valStr);
+            });
+
+            if ($matchedOption) {
+                $images = $this->getImagesForOption($matchedOption->id);
+                if ($images->isNotEmpty()) {
+                    return $matchedOption;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the first available image (thumbnail), optionally taking a variation option ID or request into account.
      *
      * @return object{url: string, thumb: string, medium: string, large: string, thumbnail_url: string|null}|null
      */
-    public function getFirstImage(): ?object
+    public function getFirstImage(?int $variationOptionId = null): ?object
     {
+        if ($variationOptionId !== null) {
+            $optionImages = $this->getImagesForOption($variationOptionId);
+            if ($optionImages->isNotEmpty()) {
+                return $optionImages->first();
+            }
+        }
+
+        $requestOption = $this->getVariationOptionFromRequest();
+        if ($requestOption) {
+            $optionImages = $this->getImagesForOption($requestOption->id);
+            if ($optionImages->isNotEmpty()) {
+                return $optionImages->first();
+            }
+        }
+
         $all = $this->getAllImages();
 
         return $all->first();
@@ -410,9 +485,24 @@ class Product extends Model implements HasMedia
     /**
      * Get the URL of the first available image.
      *
-     * @param  string  $conversion  The image conversion to use (e.g., 'medium', 'thumbnail')
+     * @param  string  $conversion  The image conversion to use (e.g., 'medium', 'thumbnail', 'large')
+     * @param  int|null  $variationOptionId  Optional variation option ID override
      * @return string The URL
      */
+    public function getFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
+    {
+        $image = $this->getFirstImage($variationOptionId);
+        if (! $image) {
+            return 'https://placehold.co/600x800?text='.urlencode($this->name);
+        }
+
+        if ($conversion === 'thumbnail') {
+            $conversion = 'thumb';
+        }
+
+        return $image->{$conversion} ?? $image->url;
+    }
+
     /**
      * Get the material attribute value from linked variation option.
      */
@@ -453,20 +543,6 @@ class Product extends Model implements HasMedia
         }
 
         return $option->value;
-    }
-
-    public function getFirstImageUrl(string $conversion = 'medium'): string
-    {
-        $image = $this->getFirstImage();
-        if (! $image) {
-            return 'https://placehold.co/600x800?text='.urlencode($this->name);
-        }
-
-        if ($conversion === 'thumbnail') {
-            $conversion = 'thumb';
-        }
-
-        return $image->{$conversion} ?? $image->url;
     }
 
     /**

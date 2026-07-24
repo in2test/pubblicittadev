@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Image;
 use App\Models\Product;
 use App\Models\ProductSku;
+use App\Models\ProductVariationOption;
+use App\Models\ProductVariationType;
 use App\Models\User;
 use App\Models\VariationOption;
 use App\Models\VariationType;
@@ -403,5 +406,61 @@ class ProductPageTest extends TestCase
         $response->assertSee('<meta property="og:image" content="'.$product->getFirstImageUrl('large').'">', false);
         $response->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
         $response->assertSee('<meta name="twitter:image" content="'.$product->getFirstImageUrl('large').'">', false);
+    }
+
+    public function test_product_page_with_exposed_variation_uses_variation_image_for_open_graph(): void
+    {
+        $category = Category::create(['name' => 'Polos', 'slug' => 'polos', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'name' => 'Basic Active Polo',
+            'slug' => 'basic-active-polo',
+            'category_id' => $category->id,
+        ]);
+
+        $colorType = VariationType::create([
+            'name' => 'Colore',
+            'presentation_type' => 'color_swatch',
+            'expose_in_url' => true,
+        ]);
+
+        $colorOptionYellow = VariationOption::create([
+            'variation_type_id' => $colorType->id,
+            'name' => 'Giallo',
+            'value' => '96',
+        ]);
+
+        $pvt = ProductVariationType::create([
+            'product_id' => $product->id,
+            'variation_type_id' => $colorType->id,
+            'has_images' => true,
+            'is_modifier' => false,
+            'sort_order' => 1,
+        ]);
+
+        ProductVariationOption::create([
+            'product_variation_type_id' => $pvt->id,
+            'variation_option_id' => $colorOptionYellow->id,
+        ]);
+
+        Image::create([
+            'product_id' => $product->id,
+            'image_url' => 'https://example.com/yellow-polo.jpg',
+            'large_url' => 'https://example.com/yellow-polo-large.jpg',
+            'variation_option_id' => $colorOptionYellow->id,
+            'order_by' => 1,
+        ]);
+
+        // Request with exposed variation parameter ?colore=96
+        $response = $this->get(route('product', [
+            'category' => $category->slug,
+            'product' => $product->slug,
+            'colore' => '96',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('<meta property="og:image" content="https://example.com/yellow-polo-large.jpg">', false);
+        $response->assertSee('<meta name="twitter:image" content="https://example.com/yellow-polo-large.jpg">', false);
+        $response->assertSee('<meta property="og:url" content="'.route('product', ['category' => $category->slug, 'product' => $product->slug]).'?colore=96">', false);
     }
 }

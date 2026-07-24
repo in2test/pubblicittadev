@@ -8,7 +8,7 @@
     </x-slot:description>
 
     <x-slot:canonical>
-        {{ $product->url }}
+        {{ request()->query() ? request()->fullUrl() : $product->url }}
     </x-slot:canonical>
 
     <x-slot:ogType>
@@ -26,7 +26,7 @@
       "@@context": "https://schema.org/",
       "@@type": "Product",
       "name": {!! json_encode($product->name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
-      "image": {!! json_encode($product->hasMedia('images') ? $product->getFirstMediaUrl('images', 'large') : url('/placeholder.png'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
+      "image": {!! json_encode($product->getFirstImageUrl('large'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
       "description": {!! json_encode($product->plain_description, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
       "sku": {!! json_encode($product->sku, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!},
       "brand": {
