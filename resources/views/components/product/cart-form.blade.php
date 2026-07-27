@@ -655,7 +655,7 @@
             <span class="block sm:inline sm:ml-1 mt-1 sm:mt-0 opacity-80">({{ $totalQuantity }} pezzi - €{{ number_format($totalPrice, 2, ',', '.') }})</span>
         </flux:button>
 
-        <flux:button href="mailto:info@example.com?subject=Richiesta%20informazioni%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
+        <flux:button href="mailto:info@pubblicitta24.it?subject=Richiesta%20informazioni%20{{ urlencode($product->name) }}" variant="outline" class="w-full h-12 uppercase tracking-widest font-mono text-xs">
             Contattaci via email
         </flux:button>
     </div>

@@ -113,7 +113,7 @@
                             <div>
                                 <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Supporto Clienti</h3>
                                 <p class="text-xl font-bold tracking-tight">+39 0775 520 273</p>
-                                <p class="text-sm text-secondary">assistenza@pubblicitta24.it</p>
+                                <p class="text-sm text-secondary">info@pubblicitta24.it</p>
                             </div>
                         </div>
                     </div>
