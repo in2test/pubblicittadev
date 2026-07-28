@@ -15,9 +15,9 @@
         "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
-    --font-headline: "Inter", "sans-serif";
-    --font-body: "Inter", "sans-serif";
-    --font-label: "Inter", "sans-serif";
+    --font-headline: "Inter", sans-serif;
+    --font-body: "Inter", sans-serif;
+    --font-label: "Inter", sans-serif;
     --font-mono: "Roboto Mono", "monospace";
 
     /*Highstyle*/

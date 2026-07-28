@@ -4,7 +4,7 @@
 <section class="relative min-h-[600px] flex flex-col lg:flex-row overflow-hidden lg:h-[calc(100vh-80px)] mt-20 lg:mt-0">
     <!-- Left Side: Typography Content -->
     <div class="w-full lg:w-1/2 bg-gray-50 flex items-center px-8 3xl:px-32 py-14 relative z-10">
-        <div class="max-w-4xl">
+        <div class="max-w-4xl min-h-[160px] lg:min-h-[200px]">
             <div class="flex items-center gap-4 mb-8">
                 <span class="font-mono text-xs tracking-[0.3em] uppercase text-accent-500 font-bold">Stampa, grafica e personalizzazione dal 1990</span>
                 <div class="h-px w-12 bg-accent-500/30"></div>
