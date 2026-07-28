@@ -66,9 +66,11 @@
 
             <code class="text-[10px] font-mono text-gray-700 mb-4">{{ $product->sku }}</code>
 
-            <p class="text-xs text-gray-700 line-clamp-2 mb-6 leading-relaxed">
-                {{ $product->description }}
-            </p>
+            @if (filled($product->plain_description) && filled($product->description))
+                <p class="text-xs text-gray-700 line-clamp-2 mb-6 leading-relaxed">
+                    {{ $product->plain_description }}
+                </p>
+            @endif
 
             {{-- Color Preview --}}
             @if ($colorData['total'] > 0)

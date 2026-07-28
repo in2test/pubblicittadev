@@ -379,7 +379,15 @@ class Product extends Model implements HasMedia
      */
     public function getPlainDescriptionAttribute(): string
     {
-        return trim(strip_tags($this->description ?? ''));
+        $plain = trim(strip_tags($this->description ?? ''));
+
+        if ($plain !== '') {
+            return $plain;
+        }
+
+        $brandName = $this->brand ? " {$this->brand}" : '';
+
+        return "{$this->name}{$brandName} - Abbigliamento promozionale e da lavoro personalizzato.";
     }
 
     /**
