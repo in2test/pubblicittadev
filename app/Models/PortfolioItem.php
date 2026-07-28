@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable([
     'title',
@@ -24,4 +25,21 @@ class PortfolioItem extends Model implements HasMedia
     use HasFactory;
 
     use InteractsWithMedia;
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('large')
+            ->width(1200)
+            ->height(900)
+            ->format('webp')
+            ->quality(80)
+            ->nonQueued();
+
+        $this->addMediaConversion('medium')
+            ->width(600)
+            ->height(450)
+            ->format('webp')
+            ->quality(80)
+            ->nonQueued();
+    }
 }
