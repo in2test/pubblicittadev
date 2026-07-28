@@ -53,7 +53,7 @@ new class extends Component {
             <ul class="mega-menu-root">
                 <!-- Dropdown item for Catalog -->
                 <li class="mega-item" @click.away="megaMenuOpen = false">
-                    <button class="mega-trigger" type="button" @click="megaMenuOpen = !megaMenuOpen; searchOpen = false" :class="megaMenuOpen ? 'border-b-accent-500 text-gray-950' : ''">
+                    <button class="mega-trigger" type="button" aria-label="Menu Catalogo" :aria-expanded="megaMenuOpen ? 'true' : 'false'" @click="megaMenuOpen = !megaMenuOpen; searchOpen = false" :class="megaMenuOpen ? 'border-b-accent-500 text-gray-950' : ''">
                         CATALOGO
                         <span class="mega-trigger-icon material-symbols-outlined transition-transform duration-300" :class="megaMenuOpen ? 'rotate-180 text-accent-500' : ''">expand_more</span>
                     </button>
@@ -101,7 +101,7 @@ new class extends Component {
                 </button>
 
                 <!-- Cart button -->
-                <a href="{{ route('cart') }}"
+                <a href="{{ route('cart') }}" aria-label="Carrello"
                     class="relative p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full">
                     <span class="material-symbols-outlined">shopping_cart</span>
                     @if ($this->cartCount > 0)
