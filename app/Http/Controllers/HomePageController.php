@@ -93,10 +93,9 @@ class HomePageController extends Controller
         }
 
         foreach ($carouselProducts as $item) {
-            $img = $item->getFirstMediaUrl('product_images');
-            if (! $img && $item->images->first()) {
-                $firstImg = $item->images->first();
-                $img = $firstImg->image_url ?: ($firstImg->image_path ? asset('storage/'.$firstImg->image_path) : '');
+            $img = $item->getFirstMediaUrl('product_images', 'large');
+            if (! $img) {
+                $img = $item->getFirstImageUrl('large');
             }
 
             $heroSlides[] = [
