@@ -11,6 +11,11 @@
     <x-slot:canonical>
         {{ route('home') }}
     </x-slot:canonical>
+    @if(!empty($heroSlides[0]['img']))
+        <x-slot:heroLcpImage>
+            {{ $heroSlides[0]['img'] }}
+        </x-slot:heroLcpImage>
+    @endif
                     <!-- Hero Section -->
                     <x-hero :slides="$heroSlides" />
                     <!-- Services Section: Bento Grid -->

@@ -31,7 +31,10 @@
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Lavorazioni & Prodotti</span>
-            @foreach(\App\Models\Category::whereNull('parent_id')->get() as $category)
+            @php
+                $footerCategories = \Illuminate\Support\Facades\Cache::remember('footer_root_categories', 3600, fn () => \App\Models\Category::whereNull('parent_id')->get(['id', 'name', 'slug']));
+            @endphp
+            @foreach($footerCategories as $category)
                 <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
                     href="{{ route('category', $category->slug) }}">{{ $category->name }}</a>
             @endforeach
