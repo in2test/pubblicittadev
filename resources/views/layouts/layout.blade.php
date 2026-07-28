@@ -14,6 +14,7 @@
         $rawOgImage = !empty($ogImage) ? trim((string) $ogImage) : null;
         $rawOgType = !empty($ogType) ? trim((string) $ogType) : 'website';
         $rawCanonical = !empty($canonical) ? trim((string) $canonical) : request()->url();
+        $rawOgUrl = !empty($ogUrl) ? trim((string) $ogUrl) : (request()->query() ? request()->fullUrl() : $rawCanonical);
 
         $metaTitle = $rawOgTitle ?? ($rawTitle ? $rawTitle . ' | ' . $siteName : $siteName);
         $metaDescription = $rawOgDescription ?? ($rawDescription ?? 'Abbigliamento Personalizzato: stampa e ricamo su t-shirt, polo, felpe e abiti da lavoro. Richiedi un preventivo gratuito online con supporto clienti dedicato.');
@@ -36,7 +37,7 @@
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="{{ $rawOgType }}">
     <meta property="og:site_name" content="{{ $siteName }}">
-    <meta property="og:url" content="{{ $rawCanonical }}">
+    <meta property="og:url" content="{{ $rawOgUrl }}">
     <meta property="og:title" content="{{ $metaTitle }}">
     <meta property="og:description" content="{{ $metaDescription }}">
     @if(!empty($metaImage))
@@ -46,7 +47,7 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="{{ $rawCanonical }}">
+    <meta name="twitter:url" content="{{ $rawOgUrl }}">
     <meta name="twitter:title" content="{{ $metaTitle }}">
     <meta name="twitter:description" content="{{ $metaDescription }}">
     @if(!empty($metaImage))

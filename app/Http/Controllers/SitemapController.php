@@ -13,7 +13,9 @@ class SitemapController extends Controller
     public function index(): Response
     {
         $products = Product::where('is_active', true)->with('category')->get();
-        $categories = Category::all();
+        $categories = Category::whereHas('products', fn ($q) => $q->where('is_active', true))
+            ->orWhereHas('children.products', fn ($q) => $q->where('is_active', true))
+            ->get();
 
         return response()->view('sitemap', [
             'products' => $products,

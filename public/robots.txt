@@ -2,5 +2,7 @@ User-agent: *
 Disallow: /search
 Disallow: /admin
 Disallow: /dashboard
+Disallow: /cart
+Disallow: /checkout
 
 Sitemap: https://www.pubblicitta24.it/sitemap.xml

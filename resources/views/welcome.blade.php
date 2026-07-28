@@ -8,9 +8,9 @@
             <x-slot:robots>
                 index, follow
                 </x-slot>
-                <x-slot:canonical>
-                    https://www.pubblicitta24.it/
-                    </x-slot>
+    <x-slot:canonical>
+        {{ route('home') }}
+    </x-slot:canonical>
                     <!-- Hero Section -->
                     <x-hero :slides="$heroSlides" />
                     <!-- Services Section: Bento Grid -->

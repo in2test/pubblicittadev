@@ -8,8 +8,12 @@
     </x-slot:description>
 
     <x-slot:canonical>
-        {{ request()->query() ? request()->fullUrl() : $product->url }}
+        {{ $product->url }}
     </x-slot:canonical>
+
+    <x-slot:ogUrl>
+        {{ request()->query() ? request()->fullUrl() : $product->url }}
+    </x-slot:ogUrl>
 
     <x-slot:ogType>
         product

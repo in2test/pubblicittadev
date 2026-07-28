@@ -52,7 +52,7 @@
     @foreach ($products as $product)
         @if ($product->category)
             <url>
-                <loc>{{ route('product', ['category' => $product->category, 'product' => $product]) }}</loc>
+                <loc>{{ $product->url }}</loc>
                 <lastmod>{{ $product->updated_at->toAtomString() }}</lastmod>
                 <changefreq>weekly</changefreq>
                 <priority>0.8</priority>

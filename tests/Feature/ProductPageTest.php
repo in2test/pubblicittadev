@@ -462,5 +462,28 @@ class ProductPageTest extends TestCase
         $response->assertSee('<meta property="og:image" content="https://example.com/yellow-polo-large.jpg">', false);
         $response->assertSee('<meta name="twitter:image" content="https://example.com/yellow-polo-large.jpg">', false);
         $response->assertSee('<meta property="og:url" content="'.route('product', ['category' => $category->slug, 'product' => $product->slug]).'?colore=96">', false);
+        $response->assertSee('<link rel="canonical" href="'.$product->url.'">', false);
+    }
+
+    public function test_product_page_canonical_remains_clean_with_query_params(): void
+    {
+        $category = Category::create(['name' => 'T-Shirts', 'slug' => 't-shirts', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'name' => 'Arden',
+            'slug' => 'arden',
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->get(route('product', [
+            'category' => $category->slug,
+            'product' => $product->slug,
+            'colore' => '99',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('<link rel="canonical" href="'.$product->url.'">', false);
+        $response->assertDontSee('<link rel="canonical" href="'.$product->url.'?colore=99">', false);
+        $response->assertSee('<meta property="og:url" content="'.$product->url.'?colore=99">', false);
     }
 }
