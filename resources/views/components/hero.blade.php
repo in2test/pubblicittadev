@@ -9,7 +9,7 @@
                 <span class="font-mono text-xs tracking-[0.3em] uppercase text-accent-500 font-bold">Stampa, grafica e personalizzazione dal 1990</span>
                 <div class="h-px w-12 bg-accent-500/30"></div>
             </div>
-            <h1 class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-gray-950 leading-[0.9] mb-10">
+            <h1 class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tighter text-gray-950 leading-[0.95] mb-10">
                 STAMPA PERFETTA, FILE O NO <span class="text-accent-700">TI GUIDIAMO NOI.</span>
             </h1>
             <p class="text-lg lg:text-xl text-gray-900 mb-12 font-light leading-relaxed">
