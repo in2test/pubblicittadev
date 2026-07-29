@@ -83,8 +83,13 @@ class HomePageController extends Controller
         $heroSlides = [];
 
         foreach ($portfolioItems as $item) {
+            $img = $item->getFirstMediaUrl('portfolio_images', 'large') ?: $item->getFirstMediaUrl('portfolio_images');
+            if ($img) {
+                $img = str_replace('/standard/', '/largethumbnail/', $img);
+            }
+
             $heroSlides[] = [
-                'img' => $item->getFirstMediaUrl('portfolio_images', 'large') ?: $item->getFirstMediaUrl('portfolio_images'),
+                'img' => $img,
                 'label' => mb_strtoupper((string) $item->title),
                 'sub' => 'PROGETTO PORTFOLIO',
                 'description' => Str::limit(strip_tags((string) $item->description), 100),
@@ -96,6 +101,9 @@ class HomePageController extends Controller
             $img = $item->getFirstMediaUrl('product_images', 'large');
             if (! $img) {
                 $img = $item->getFirstImageUrl('large');
+            }
+            if ($img) {
+                $img = str_replace('/standard/', '/largethumbnail/', $img);
             }
 
             $heroSlides[] = [

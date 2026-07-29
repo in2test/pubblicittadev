@@ -142,7 +142,9 @@ class Image extends Model
             return asset('storage/'.$this->thumbnail_path);
         }
 
-        return $this->attributes['thumbnail_url'] ?? $this->image_url;
+        $url = $this->attributes['thumbnail_url'] ?? $this->image_url;
+
+        return $url ? str_replace('/standard/', '/thumbnail/', $url) : null;
     }
 
     public function getMediumUrlAttribute(): ?string
@@ -151,7 +153,9 @@ class Image extends Model
             return asset('storage/'.$this->medium_path);
         }
 
-        return $this->attributes['medium_url'] ?? $this->image_url;
+        $url = $this->attributes['medium_url'] ?? $this->image_url;
+
+        return $url ? str_replace('/standard/', '/largethumbnail/', $url) : null;
     }
 
     public function getLargeUrlAttribute(): ?string
@@ -160,7 +164,9 @@ class Image extends Model
             return asset('storage/'.$this->large_path);
         }
 
-        return $this->attributes['large_url'] ?? $this->image_url;
+        $url = $this->attributes['large_url'] ?? $this->image_url;
+
+        return $url ? str_replace('/standard/', '/largethumbnail/', $url) : null;
     }
 
     public function downloadToMediaLibrary(): ?Media
