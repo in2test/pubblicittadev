@@ -144,7 +144,7 @@ class Image extends Model
 
         $url = $this->attributes['thumbnail_url'] ?? $this->image_url;
 
-        return $url ? str_replace('/standard/', '/thumbnail/', $url) : null;
+        return is_string($url) ? str_replace('/standard/', '/thumbnail/', $url) : null;
     }
 
     public function getMediumUrlAttribute(): ?string
@@ -155,7 +155,7 @@ class Image extends Model
 
         $url = $this->attributes['medium_url'] ?? $this->image_url;
 
-        return $url ? str_replace('/standard/', '/largethumbnail/', $url) : null;
+        return is_string($url) ? str_replace('/standard/', '/largethumbnail/', $url) : null;
     }
 
     public function getLargeUrlAttribute(): ?string
@@ -166,7 +166,7 @@ class Image extends Model
 
         $url = $this->attributes['large_url'] ?? $this->image_url;
 
-        return $url ? str_replace('/standard/', '/largethumbnail/', $url) : null;
+        return is_string($url) ? str_replace('/standard/', '/largethumbnail/', $url) : null;
     }
 
     public function downloadToMediaLibrary(): ?Media

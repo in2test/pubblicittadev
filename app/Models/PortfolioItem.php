@@ -29,17 +29,17 @@ class PortfolioItem extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('large')
+            ->nonQueued()
             ->width(1200)
             ->height(900)
             ->format('webp')
-            ->quality(80)
-            ->nonQueued();
+            ->quality(80);
 
         $this->addMediaConversion('medium')
+            ->nonQueued()
             ->width(600)
             ->height(450)
             ->format('webp')
-            ->quality(80)
-            ->nonQueued();
+            ->quality(80);
     }
 }
