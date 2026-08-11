@@ -24,6 +24,7 @@
         "stripe/stripe-php": "^20.1"
     },
     "require-dev": {
+        "albertoarena/laravel-truss": "^1.8",
         "barryvdh/laravel-ide-helper": "*",
         "driftingly/rector-laravel": "^2.2",
         "fakerphp/faker": "^1.24",
