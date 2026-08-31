@@ -7,23 +7,20 @@
     "mcp": true,
     "nightwatch": false,
     "packages": [
-        "filament/filament",
-        "spatie/laravel-medialibrary",
-        "fruitcake/laravel-debugbar"
+        "albertoarena/laravel-truss"
     ],
     "sail": false,
     "skills": [
         "infer-conventions",
         "fortify-development",
         "laravel-best-practices",
+        "testing-best-practices",
         "scout-development",
         "fluxui-development",
         "livewire-development",
         "volt-development",
-        "pest-testing",
         "tailwindcss-development",
-        "medialibrary-development",
-        "debug-using-debugbar",
+        "truss-schema",
         "deploying-laravel-cloud"
     ]
 }

@@ -94,7 +94,7 @@ class Image extends Model
                 ]);
 
                 if ($oldPaths !== []) {
-                    (new Storage)->disk('public')->delete($oldPaths);
+                    Storage::disk('public')->delete($oldPaths);
                 }
 
                 $image->generateImageVariants();
@@ -166,7 +166,7 @@ class Image extends Model
 
         $url = $this->attributes['large_url'] ?? $this->image_url;
 
-        return is_string($url) ? str_replace('/standard/', '/largethumbnail/', $url) : null;
+        return is_string($url) ? str_replace(['/thumbnail/', '/largethumbnail/'], '/standard/', $url) : null;
     }
 
     public function downloadToMediaLibrary(): ?Media
