@@ -64,12 +64,6 @@ class OrderItem extends Model
      */
     use HasFactory;
 
-    protected $casts = [
-        'customization_json' => 'array',
-        'unit_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
-    ];
-
     /**
      * Relationship: OrderItem -> Order.
      * Get the parent order associated with this item.
@@ -123,5 +117,14 @@ class OrderItem extends Model
             $order = $item->order;
             $order->updateWorkStatusFromItems();
         });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'customization_json' => 'array',
+            'unit_price' => 'decimal:2',
+            'subtotal' => 'decimal:2',
+        ];
     }
 }

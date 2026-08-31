@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\ProductSkuFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -59,10 +60,6 @@ class ProductSku extends Model
      */
     use HasFactory;
 
-    protected $casts = [
-        'is_available' => 'boolean',
-    ];
-
     /**
      * @return BelongsTo<Product, $this>
      */
@@ -87,8 +84,16 @@ class ProductSku extends Model
         return $this->hasMany(PricingTier::class);
     }
 
-    public function setQuantityAttribute(mixed $value): void
+    /** @return Attribute<never, mixed> */
+    protected function quantity(): Attribute
     {
-        $this->attributes['quantity'] = $value === null ? -1 : (int) $value;
+        return Attribute::make(set: fn (mixed $value) => ['quantity' => $value === null ? -1 : (int) $value]);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_available' => 'boolean',
+        ];
     }
 }

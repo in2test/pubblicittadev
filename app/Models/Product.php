@@ -12,7 +12,9 @@ use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +25,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
-use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
@@ -92,6 +93,11 @@ use Throwable;
  * @property float|null $cached_base_price Cached base price
  * @property float|null $cached_starting_price Cached minimum starting price
  * @property float|null $cached_starting_unit_price Cached minimum starting unit price
+ * @property-read string $brand Resolved brand name derived from product name
+ * @property-read string $plain_description Plain-text version of the description
+ * @property-read string $url Public URL for this product
+ * @property-read string|null $material Material attribute from linked variation option
+ * @property-read string|null $pattern Pattern (motivo) attribute from linked variation option
  *
  * @method static Builder<static>|Product active()
  * @method static ProductFactory factory($count = null, $state = [])
@@ -159,6 +165,7 @@ use Throwable;
     'construction_features',
     'customization_notes',
 ])]
+#[RouteKey('slug')]
 class Product extends Model implements HasMedia
 {
     /**
@@ -181,30 +188,6 @@ class Product extends Model implements HasMedia
     public const TYPE_STANDARD = 'standard';
 
     public const TYPE_NEWWAVE = 'newwave';
-
-    protected $casts = [
-        'price' => 'decimal:2',
-        'offer_price' => 'decimal:2',
-        'cached_base_price' => 'decimal:2',
-        'cached_starting_price' => 'decimal:2',
-        'cached_starting_unit_price' => 'decimal:2',
-        'is_featured' => 'boolean',
-        'synced_at' => 'datetime',
-        'is_active' => 'boolean',
-        'sync_status' => SyncStatus::class,
-        'override_price' => 'boolean',
-        'override_description' => 'boolean',
-        'remote_images' => 'array',
-        'min_area' => 'float',
-        'sheet_width' => 'float',
-        'sheet_height' => 'float',
-        'allows_custom_size' => 'boolean',
-        'min_custom_width' => 'float',
-        'max_custom_width' => 'float',
-        'min_custom_height' => 'float',
-        'max_custom_height' => 'float',
-        'product_class' => ProductClass::class,
-    ];
 
     /**
      * Relationships
@@ -297,15 +280,6 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get the route key for the model.
-     */
-    #[Override]
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
-    }
-
-    /**
      * Check if the product requires a custom quote (on request).
      *
      * @return bool True if both price and offer_price are <= 0.
@@ -351,54 +325,58 @@ class Product extends Model implements HasMedia
     /**
      * Get the brand of the product based on its name.
      *
-     * @return string The resolved brand name.
+     * @return Attribute<string, never>
      */
-    public function getBrandAttribute(): string
+    protected function brand(): Attribute
     {
-        $nameLower = strtolower($this->name);
-        if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
-            return 'NewWave';
-        }
-        if (str_contains($nameLower, 'projob')) {
-            return 'ProJob';
-        }
-        if (str_contains($nameLower, 'clique')) {
-            return 'Clique';
-        }
-        if (str_contains($nameLower, 'craft')) {
-            return 'Craft';
-        }
+        return Attribute::make(get: function (): string {
+            $nameLower = strtolower($this->name);
+            if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
+                return 'NewWave';
+            }
+            if (str_contains($nameLower, 'projob')) {
+                return 'ProJob';
+            }
+            if (str_contains($nameLower, 'clique')) {
+                return 'Clique';
+            }
+            if (str_contains($nameLower, 'craft')) {
+                return 'Craft';
+            }
 
-        return 'Pubblicittà24';
+            return 'Pubblicittà24';
+        });
     }
 
     /**
      * Get the plain text version of the description.
      *
-     * @return string The description without HTML tags.
+     * @return Attribute<string, never>
      */
-    public function getPlainDescriptionAttribute(): string
+    protected function plainDescription(): Attribute
     {
-        $plain = trim(strip_tags($this->description ?? ''));
+        return Attribute::make(get: function (): string {
+            $plain = trim(strip_tags($this->description ?? ''));
+            if ($plain !== '') {
+                return $plain;
+            }
+            $brandName = $this->brand ? " {$this->brand}" : '';
 
-        if ($plain !== '') {
-            return $plain;
-        }
-
-        $brandName = $this->brand ? " {$this->brand}" : '';
-
-        return "{$this->name}{$brandName} - Abbigliamento promozionale e da lavoro personalizzato.";
+            return "{$this->name}{$brandName} - Abbigliamento promozionale e da lavoro personalizzato.";
+        });
     }
 
     /**
      * Get the public URL for the product.
+     *
+     * @return Attribute<string, never>
      */
-    public function getUrlAttribute(): string
+    protected function url(): Attribute
     {
-        return route('product', [
+        return Attribute::make(get: fn () => route('product', [
             'category' => $this->category->slug ?? 'uncategorized',
             'product' => $this->slug,
-        ]);
+        ]));
     }
 
     /**
@@ -513,44 +491,52 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the material attribute value from linked variation option.
+     *
+     * @return Attribute<string|null, never>
      */
-    public function getMaterialAttribute(): ?string
+    protected function material(): Attribute
     {
-        $type = $this->variationTypes->firstWhere('name', VariationType::MATERIALE);
-        if (! $type) {
-            return null;
-        }
-        $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-        if (! $pvt) {
-            return null;
-        }
-        $option = $pvt->options()->first()?->option;
-        if (! $option) {
-            return null;
-        }
+        return Attribute::make(get: function () {
+            $type = $this->variationTypes->firstWhere('name', VariationType::MATERIALE);
+            if (! $type) {
+                return null;
+            }
+            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+            if (! $pvt) {
+                return null;
+            }
+            $option = $pvt->options()->first()?->option;
+            if (! $option) {
+                return null;
+            }
 
-        return $option->value;
+            return $option->value;
+        });
     }
 
     /**
      * Get the pattern (motivo) attribute value from linked variation option.
+     *
+     * @return Attribute<string|null, never>
      */
-    public function getPatternAttribute(): ?string
+    protected function pattern(): Attribute
     {
-        $type = $this->variationTypes->firstWhere('name', VariationType::MOTIVO);
-        if (! $type) {
-            return null;
-        }
-        $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-        if (! $pvt) {
-            return null;
-        }
-        $option = $pvt->options()->first()?->option;
-        if (! $option) {
-            return null;
-        }
+        return Attribute::make(get: function () {
+            $type = $this->variationTypes->firstWhere('name', VariationType::MOTIVO);
+            if (! $type) {
+                return null;
+            }
+            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+            if (! $pvt) {
+                return null;
+            }
+            $option = $pvt->options()->first()?->option;
+            if (! $option) {
+                return null;
+            }
 
-        return $option->value;
+            return $option->value;
+        });
     }
 
     /**
@@ -1230,7 +1216,7 @@ class Product extends Model implements HasMedia
                 $sku = $this->skus->firstWhere('id', $skuId);
 
                 // For custom formats, we fall back to the nearest SKU's pricing tier structure
-                if ($isCustomFormat && $nearestSku) {
+                if ($isCustomFormat && $nearestSku instanceof ProductSku) {
                     $sku = $nearestSku;
                 }
 
@@ -1253,13 +1239,13 @@ class Product extends Model implements HasMedia
         // If we don't have a SKU breakdown, calculate the total quantity on the base product
         if ($skuQuantities === []) {
             $sku = null;
-            if ($isCustomFormat && $nearestSku) {
+            if ($isCustomFormat && $nearestSku instanceof ProductSku) {
                 $sku = $nearestSku;
             }
 
             $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, null, null, $sku);
 
-            if ($sku && $sku->override_price !== null) {
+            if ($sku instanceof ProductSku && $sku->override_price !== null) {
                 $unitPrice = (float) $sku->override_price;
             }
 
@@ -1735,5 +1721,32 @@ class Product extends Model implements HasMedia
         $this->cached_starting_unit_price = $this->getStartingUnitPrice(true);
 
         $this->saveQuietly();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'offer_price' => 'decimal:2',
+            'cached_base_price' => 'decimal:2',
+            'cached_starting_price' => 'decimal:2',
+            'cached_starting_unit_price' => 'decimal:2',
+            'is_featured' => 'boolean',
+            'synced_at' => 'datetime',
+            'is_active' => 'boolean',
+            'sync_status' => SyncStatus::class,
+            'override_price' => 'boolean',
+            'override_description' => 'boolean',
+            'remote_images' => 'array',
+            'min_area' => 'float',
+            'sheet_width' => 'float',
+            'sheet_height' => 'float',
+            'allows_custom_size' => 'boolean',
+            'min_custom_width' => 'float',
+            'max_custom_width' => 'float',
+            'min_custom_height' => 'float',
+            'max_custom_height' => 'float',
+            'product_class' => ProductClass::class,
+        ];
     }
 }

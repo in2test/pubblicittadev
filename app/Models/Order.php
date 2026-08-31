@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -120,18 +121,6 @@ class Order extends Model implements HasMedia
     use InteractsWithMedia;
 
     /**
-     * The attributes that should be cast to native types.
-     *
-     * Ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'paid_at' => 'datetime',
-        'total_price' => 'decimal:2',
-    ];
-
-    /**
      * Relationship: Order -> User.
      * Get the customer who placed this order.
      *
@@ -191,24 +180,24 @@ class Order extends Model implements HasMedia
      * Replaces the '{tracking_code}' placeholder in the transporter's URL template
      * with the actual tracking code for this order.
      *
-     * @return string|null The computed tracking URL, or null if missing required data.
+     * @return Attribute<string|null, never>
      */
-    public function getTrackingUrlAttribute(): ?string
+    protected function trackingUrl(): Attribute
     {
-        if (! empty($this->tracking_url)) {
-            return $this->tracking_url;
-        }
+        return Attribute::make(get: function () {
+            if (! empty($this->tracking_url)) {
+                return $this->tracking_url;
+            }
+            if (! $this->transporter_id || ! $this->tracking_code || ! $this->transporter) {
+                return null;
+            }
+            $template = $this->transporter->tracking_url_template;
+            if (! $template) {
+                return null;
+            }
 
-        if (! $this->transporter_id || ! $this->tracking_code || ! $this->transporter) {
-            return null;
-        }
-
-        $template = $this->transporter->tracking_url_template;
-        if (! $template) {
-            return null;
-        }
-
-        return str_replace('{tracking_code}', $this->tracking_code, $template);
+            return str_replace('{tracking_code}', $this->tracking_code, $template);
+        });
     }
 
     /**
@@ -400,5 +389,20 @@ class Order extends Model implements HasMedia
                 ProductSku::find((int) $skuId)?->decrement('quantity', (int) $qty);
             }
         }
+    }
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * Ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'paid_at' => 'datetime',
+            'total_price' => 'decimal:2',
+        ];
     }
 }

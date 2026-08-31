@@ -126,7 +126,7 @@ class QuantityDiscountService
 
         $path = [];
         $current = $this->getCategoryById($startCategoryId);
-        while ($current && $current->parent_id) {
+        while ($current instanceof Category && $current->parent_id) {
             $path[] = $current->parent_id;
             $current = $this->getCategoryById($current->parent_id);
         }

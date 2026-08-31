@@ -56,12 +56,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CategoryQuantityDiscount extends Model
 {
-    protected $casts = [
-        'min_quantity' => 'integer',
-        'max_quantity' => 'integer',
-        'discount_value' => 'decimal:4',
-    ];
-
     /**
      * Get the category associated with this discount tier.
      *
@@ -70,5 +64,14 @@ class CategoryQuantityDiscount extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'min_quantity' => 'integer',
+            'max_quantity' => 'integer',
+            'discount_value' => 'decimal:4',
+        ];
     }
 }

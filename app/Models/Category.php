@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonImmutable;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -56,6 +57,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'parent_id'])]
+#[RouteKey('slug')]
 /**
  * @use HasFactory<CategoryFactory>
  */
@@ -70,17 +72,6 @@ class Category extends Model implements HasMedia
     protected static function booted(): void
     {
         // Media library handles cleanup automatically
-    }
-
-    /**
-     * Get the route key name used by the application to resolve the model.
-     *
-     * @return string The attribute used for routing (slug).
-     */
-    #[Override]
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
     }
 
     /**

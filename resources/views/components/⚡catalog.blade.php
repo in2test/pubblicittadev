@@ -13,15 +13,12 @@ new class extends Component {
     use WithPagination;
 
     public ?string $categorySlug = null;
+    #[\Livewire\Attributes\Url(except: '')]
     public string $search = '';
     public array $selectedOptions = [];
+    #[\Livewire\Attributes\Url(except: 'name')]
     public string $sort = 'name';
     public bool $isFiltering = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'sort' => ['except' => 'name'],
-    ];
 
     public function mount(?string $categorySlug = null): void
     {

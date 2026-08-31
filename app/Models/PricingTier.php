@@ -52,10 +52,6 @@ use Override;
  */
 class PricingTier extends Model
 {
-    protected $casts = [
-        'is_custom_price' => 'boolean',
-    ];
-
     #[Override]
     protected static function booted(): void
     {
@@ -83,5 +79,12 @@ class PricingTier extends Model
     public function productSku(): BelongsTo
     {
         return $this->belongsTo(ProductSku::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_custom_price' => 'boolean',
+        ];
     }
 }

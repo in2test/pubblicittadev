@@ -399,13 +399,13 @@ class ProductPageTest extends TestCase
         $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk();
-        $response->assertSee('<meta property="og:type" content="product">', false);
-        $response->assertSee('<meta property="og:site_name" content="'.$siteName.'">', false);
-        $response->assertSee('<meta property="og:title" content="Cambridge Shirt | '.$siteName.'">', false);
-        $response->assertSee('<meta property="og:url" content="'.$product->url.'">', false);
-        $response->assertSee('<meta property="og:image" content="'.$product->getFirstImageUrl('large').'">', false);
-        $response->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
-        $response->assertSee('<meta name="twitter:image" content="'.$product->getFirstImageUrl('large').'">', false);
+        $response->assertSeeHtml('<meta property="og:type" content="product">');
+        $response->assertSeeHtml('<meta property="og:site_name" content="'.$siteName.'">');
+        $response->assertSeeHtml('<meta property="og:title" content="Cambridge Shirt | '.$siteName.'">');
+        $response->assertSeeHtml('<meta property="og:url" content="'.$product->url.'">');
+        $response->assertSeeHtml('<meta property="og:image" content="'.$product->getFirstImageUrl('large').'">');
+        $response->assertSeeHtml('<meta name="twitter:card" content="summary_large_image">');
+        $response->assertSeeHtml('<meta name="twitter:image" content="'.$product->getFirstImageUrl('large').'">');
     }
 
     public function test_product_page_with_exposed_variation_uses_variation_image_for_open_graph(): void
@@ -459,10 +459,10 @@ class ProductPageTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('<meta property="og:image" content="https://example.com/yellow-polo-large.jpg">', false);
-        $response->assertSee('<meta name="twitter:image" content="https://example.com/yellow-polo-large.jpg">', false);
-        $response->assertSee('<meta property="og:url" content="'.route('product', ['category' => $category->slug, 'product' => $product->slug]).'?colore=96">', false);
-        $response->assertSee('<link rel="canonical" href="'.$product->url.'">', false);
+        $response->assertSeeHtml('<meta property="og:image" content="https://example.com/yellow-polo-large.jpg">');
+        $response->assertSeeHtml('<meta name="twitter:image" content="https://example.com/yellow-polo-large.jpg">');
+        $response->assertSeeHtml('<meta property="og:url" content="'.route('product', ['category' => $category->slug, 'product' => $product->slug]).'?colore=96">');
+        $response->assertSeeHtml('<link rel="canonical" href="'.$product->url.'">');
     }
 
     public function test_product_page_canonical_remains_clean_with_query_params(): void
@@ -482,8 +482,8 @@ class ProductPageTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('<link rel="canonical" href="'.$product->url.'">', false);
-        $response->assertDontSee('<link rel="canonical" href="'.$product->url.'?colore=99">', false);
-        $response->assertSee('<meta property="og:url" content="'.$product->url.'?colore=99">', false);
+        $response->assertSeeHtml('<link rel="canonical" href="'.$product->url.'">');
+        $response->assertDontSeeHtml('<link rel="canonical" href="'.$product->url.'?colore=99">');
+        $response->assertSeeHtml('<meta property="og:url" content="'.$product->url.'?colore=99">');
     }
 }

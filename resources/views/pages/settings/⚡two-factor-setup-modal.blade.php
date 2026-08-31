@@ -124,7 +124,8 @@ new class extends Component {
     /**
      * Get the current modal configuration state.
      */
-    public function getModalConfigProperty(): array
+    #[\Livewire\Attributes\Computed]
+    public function modalConfig(): array
     {
         if ($this->setupComplete) {
             return [

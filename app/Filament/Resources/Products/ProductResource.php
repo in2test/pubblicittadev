@@ -530,7 +530,7 @@ class ProductResource extends Resource
                                 }
 
                                 $modifierType = $option->default_modifier_type;
-                                $symbol = $modifierType->value === 'percentage' ? '%' : '€';
+                                $symbol = $modifierType === 'percentage' ? '%' : '€';
 
                                 return "Default globale: {$option->default_price_modifier}{$symbol}";
                             })

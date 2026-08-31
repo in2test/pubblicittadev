@@ -67,11 +67,6 @@ class ProductVariationType extends Pivot implements HasMedia
 
     public $incrementing = true;
 
-    protected $casts = [
-        'has_images' => 'boolean',
-        'is_modifier' => 'boolean',
-    ];
-
     /**
      * @return BelongsTo<VariationType, $this>
      */
@@ -113,5 +108,13 @@ class ProductVariationType extends Pivot implements HasMedia
             ->height(600)
             ->sharpen(10)
             ->format('png');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'has_images' => 'boolean',
+            'is_modifier' => 'boolean',
+        ];
     }
 }

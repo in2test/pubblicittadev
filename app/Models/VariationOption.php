@@ -64,11 +64,6 @@ class VariationOption extends Model
      */
     use HasFactory;
 
-    protected $casts = [
-        'default_modifier_type' => ModifierType::class,
-        'default_price_modifier' => 'decimal:2',
-    ];
-
     /**
      * @return BelongsTo<VariationType, $this>
      */
@@ -291,5 +286,13 @@ class VariationOption extends Model
         }
 
         return $bestHex;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'default_modifier_type' => ModifierType::class,
+            'default_price_modifier' => 'decimal:2',
+        ];
     }
 }

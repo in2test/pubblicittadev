@@ -9,6 +9,7 @@ use Database\Factories\ImageFactory;
 use Exception;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read VariationOption|null $variationOption
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read string|null $thumbnailUrl Computed thumbnail URL (local storage or remote)
+ * @property-read string|null $mediumUrl Computed medium-size URL (local storage or remote)
+ * @property-read string|null $largeUrl Computed large-size URL (local storage or remote)
  *
  * @method static ImageFactory factory($count = null, $state = [])
  * @method static Builder<static>|Image newModelQuery()
@@ -136,37 +140,43 @@ class Image extends Model
         return $this->belongsTo(VariationOption::class, 'variation_option_id');
     }
 
-    public function getThumbnailUrlAttribute(): ?string
+    /** @return Attribute<string|null, never> */
+    protected function thumbnailUrl(): Attribute
     {
-        if ($this->thumbnail_path) {
-            return asset('storage/'.$this->thumbnail_path);
-        }
+        return Attribute::make(get: function (): ?string {
+            if ($this->thumbnail_path) {
+                return asset('storage/'.$this->thumbnail_path);
+            }
+            $url = $this->attributes['thumbnail_url'] ?? $this->image_url;
 
-        $url = $this->attributes['thumbnail_url'] ?? $this->image_url;
-
-        return is_string($url) ? str_replace('/standard/', '/thumbnail/', $url) : null;
+            return is_string($url) ? str_replace('/standard/', '/thumbnail/', $url) : null;
+        });
     }
 
-    public function getMediumUrlAttribute(): ?string
+    /** @return Attribute<string|null, never> */
+    protected function mediumUrl(): Attribute
     {
-        if ($this->medium_path) {
-            return asset('storage/'.$this->medium_path);
-        }
+        return Attribute::make(get: function (): ?string {
+            if ($this->medium_path) {
+                return asset('storage/'.$this->medium_path);
+            }
+            $url = $this->attributes['medium_url'] ?? $this->image_url;
 
-        $url = $this->attributes['medium_url'] ?? $this->image_url;
-
-        return is_string($url) ? str_replace('/standard/', '/largethumbnail/', $url) : null;
+            return is_string($url) ? str_replace('/standard/', '/largethumbnail/', $url) : null;
+        });
     }
 
-    public function getLargeUrlAttribute(): ?string
+    /** @return Attribute<string|null, never> */
+    protected function largeUrl(): Attribute
     {
-        if ($this->large_path) {
-            return asset('storage/'.$this->large_path);
-        }
+        return Attribute::make(get: function (): ?string {
+            if ($this->large_path) {
+                return asset('storage/'.$this->large_path);
+            }
+            $url = $this->attributes['large_url'] ?? $this->image_url;
 
-        $url = $this->attributes['large_url'] ?? $this->image_url;
-
-        return is_string($url) ? str_replace(['/thumbnail/', '/largethumbnail/'], '/standard/', $url) : null;
+            return is_string($url) ? str_replace(['/thumbnail/', '/largethumbnail/'], '/standard/', $url) : null;
+        });
     }
 
     public function downloadToMediaLibrary(): ?Media

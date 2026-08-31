@@ -53,12 +53,6 @@ class ProductVariationOption extends Model
 {
     public $incrementing = true;
 
-    protected $casts = [
-        'modifier_type' => ModifierType::class,
-        'price_modifier' => 'decimal:2',
-        'sort_order' => 'integer',
-    ];
-
     /**
      * @return BelongsTo<VariationOption, $this>
      */
@@ -101,6 +95,15 @@ class ProductVariationOption extends Model
 
         $this->loadMissing('option');
 
-        return $this->option->default_modifier_type ?? ModifierType::Flat;
+        return ModifierType::tryFrom($this->option->default_modifier_type) ?? ModifierType::Flat;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'modifier_type' => ModifierType::class,
+            'price_modifier' => 'decimal:2',
+            'sort_order' => 'integer',
+        ];
     }
 }

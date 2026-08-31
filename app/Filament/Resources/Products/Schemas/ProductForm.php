@@ -387,7 +387,9 @@ class ProductForm
                                     return 'Nessun default globale impostato.';
                                 }
 
-                                return "Default globale: {$option->default_price_modifier} ({$option->default_modifier_type->getLabel()})";
+                                $modifierType = ModifierType::tryFrom($option->default_modifier_type);
+
+                                return "Default globale: {$option->default_price_modifier} ({$modifierType?->getLabel()})";
                             })
                             ->numeric()
                             ->placeholder('Lascia vuoto per usare il default globale')

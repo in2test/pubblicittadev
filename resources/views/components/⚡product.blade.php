@@ -347,7 +347,7 @@ new class extends Component
         $activeSku = $this->activeSku();
 
         $price = $product->getPriceForQuantity(1, $activeSku);
-        if ($activeSku && $activeSku->override_price !== null) {
+        if ($activeSku instanceof \App\Models\ProductSku && $activeSku->override_price !== null) {
             $price = (float) $activeSku->override_price;
         }
 
