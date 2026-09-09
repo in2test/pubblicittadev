@@ -243,6 +243,7 @@
     </script>
     <livewire:auth-modal />
     <x-cookie-banner />
+    <x-google-customer-reviews-badge />
 </body>
 
 </html>

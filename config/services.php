@@ -42,4 +42,11 @@ return [
         'token' => env('NWG_GATEWAY_TOKEN'),
     ],
 
+    'google' => [
+        'merchant_id' => (int) env('GOOGLE_MERCHANT_ID', 5807637378),
+        'badge_position' => env('GOOGLE_REVIEWS_BADGE_POSITION', 'BOTTOM_RIGHT'),
+        'badge_region' => env('GOOGLE_REVIEWS_BADGE_REGION', 'IT'),
+        'delivery_days' => (int) env('GOOGLE_REVIEWS_DELIVERY_DAYS', 7),
+    ],
+
 ];

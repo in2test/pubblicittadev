@@ -10,12 +10,18 @@
         @else
             <h1 class="text-4xl font-black uppercase tracking-tighter mb-4">Ordine Confermato!</h1>
             <p class="text-xl text-secondary mb-8">Grazie per il tuo ordine. Stiamo elaborando la tua richiesta e riceverai una conferma via email a breve.</p>
-            @if (request('session_id'))
+            @if (isset($order) && $order)
+                <div class="bg-surface-container p-6 rounded-lg mb-8 inline-block">
+                    <p class="font-mono text-sm uppercase text-secondary">Numero Ordine: <span class="text-primary font-bold">{{ $order->order_number }}</span></p>
+                </div>
+            @elseif (request('session_id'))
                 <div class="bg-surface-container p-6 rounded-lg mb-8 inline-block">
                     <p class="font-mono text-sm uppercase text-secondary">ID Sessione: <span class="text-primary break-all">{{ request('session_id') }}</span></p>
                 </div>
             @endif
         @endif
+
+        <x-google-customer-reviews-optin :order="$order ?? null" />
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <a href="{{ route('dashboard.orders') }}" class="bg-gray-900 text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">

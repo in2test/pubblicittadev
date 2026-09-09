@@ -65,6 +65,13 @@ class VariationOption extends Model
     use HasFactory;
 
     /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'default_modifier_type' => ModifierType::class,
+    ];
+
+    /**
      * @return BelongsTo<VariationType, $this>
      */
     public function type(): BelongsTo

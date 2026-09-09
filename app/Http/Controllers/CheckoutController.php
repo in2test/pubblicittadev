@@ -94,7 +94,9 @@ class CheckoutController extends Controller
         if ($order->payment_status === 'quotation') {
             $this->cartManager->clear();
 
-            return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
+            return redirect()->route('checkout.success')
+                ->with('success', 'La tua richiesta di preventivo è stata inviata con successo.')
+                ->with('order_id', $order->id);
         }
 
         // Set up Stripe API keys
@@ -188,7 +190,9 @@ class CheckoutController extends Controller
 
         $this->cartManager->clear();
 
-        return redirect()->route('checkout.success')->with('success', 'La tua richiesta di preventivo è stata inviata con successo.');
+        return redirect()->route('checkout.success')
+            ->with('success', 'La tua richiesta di preventivo è stata inviata con successo.')
+            ->with('order_id', $order->id);
     }
 
     /**
@@ -209,7 +213,25 @@ class CheckoutController extends Controller
             'preventivo'
         );
 
-        return view('checkout.success', ['isQuotation' => $isQuotation]);
+        $order = null;
+        if ($request->filled('session_id')) {
+            $order = Order::with(['items.product', 'shippingAddress', 'user'])
+                ->where('stripe_session_id', $request->query('session_id'))
+                ->first();
+        } elseif (session()->has('order_id')) {
+            $order = Order::with(['items.product', 'shippingAddress', 'user'])
+                ->find(session('order_id'));
+        } elseif ($request->user()) {
+            $order = $request->user()->orders()
+                ->with(['items.product', 'shippingAddress', 'user'])
+                ->latest('id')
+                ->first();
+        }
+
+        return view('checkout.success', [
+            'isQuotation' => $isQuotation,
+            'order' => $order,
+        ]);
     }
 
     /**

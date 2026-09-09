@@ -81,7 +81,7 @@ class ProductVariationOption extends Model
 
         $this->loadMissing('option');
 
-        return (float) ($this->option->default_price_modifier ?? 0.0);
+        return (float) $this->option->default_price_modifier;
     }
 
     /**
@@ -95,7 +95,7 @@ class ProductVariationOption extends Model
 
         $this->loadMissing('option');
 
-        return ModifierType::tryFrom($this->option->default_modifier_type) ?? ModifierType::Flat;
+        return $this->option->default_modifier_type;
     }
 
     protected function casts(): array
