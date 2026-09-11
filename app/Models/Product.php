@@ -9,6 +9,7 @@ use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\ProductResource;
 use App\Services\ProductPricingService;
+use App\Services\ProductVariantResolver;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
@@ -1009,26 +1010,7 @@ class Product extends Model implements HasMedia
      */
     public function getActiveSku(array $selectedOptions): ?ProductSku
     {
-        $this->loadMissing(['skus.options', 'variationTypes']);
-
-        return $this->skus->first(function ($sku) use ($selectedOptions): bool {
-            foreach ($this->variationTypes as $type) {
-                /** @var ProductVariationType|null $pivot */
-                $pivot = $type->pivot;
-                // Modifiers don't affect the base SKU resolution
-                if ($pivot && $pivot->is_modifier) {
-                    continue;
-                }
-
-                $selectedId = $selectedOptions[$type->id] ?? null;
-                // 999999 is a special ID for "Custom Format", ignore it for exact SKU matching
-                if ($selectedId && $selectedId != 999999 && ! $sku->options->contains('id', $selectedId)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
+        return app(ProductVariantResolver::class)->getActiveSku($this, $selectedOptions);
     }
 
     /**
@@ -1176,60 +1158,7 @@ class Product extends Model implements HasMedia
      */
     public function getNearestFormatOptionId(float $width, float $height): ?int
     {
-        $formatType = $this->variationTypes->firstWhere('name', 'Formato');
-        if (! $formatType) {
-            return null;
-        }
-
-        /** @var ProductVariationType|null $pvt */
-        $pvt = $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
-        if (! $pvt) {
-            return null;
-        }
-
-        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
-            $query->where('product_variation_type_id', $pvt->id);
-        })->get();
-
-        $nearestOptionId = null;
-        $minDistance = null;
-
-        $customMin = min($width, $height);
-        $customMax = max($width, $height);
-
-        foreach ($options as $opt) {
-            if ($opt->id == 999999) {
-                continue;
-            }
-            $name = strtolower((string) $opt->name);
-            if (str_contains($name, 'personalizzato')) {
-                continue;
-            }
-            if (str_contains($name, 'custom')) {
-                continue;
-            }
-
-            if (preg_match('/(\d+(?:[.,]\d+)?)\s*[xX]\s*(\d+(?:[.,]\d+)?)/', $name, $matches)) {
-                $parsedW = (float) str_replace(',', '.', $matches[1]);
-                $parsedH = (float) str_replace(',', '.', $matches[2]);
-                if (str_contains(strtolower($name), 'cm')) {
-                    $parsedW *= 10;
-                    $parsedH *= 10;
-                }
-
-                $optMin = min($parsedW, $parsedH);
-                $optMax = max($parsedW, $parsedH);
-
-                $distance = sqrt(($customMin - $optMin) ** 2 + ($customMax - $optMax) ** 2);
-
-                if ($minDistance === null || $distance < $minDistance) {
-                    $minDistance = $distance;
-                    $nearestOptionId = $opt->id;
-                }
-            }
-        }
-
-        return $nearestOptionId;
+        return app(ProductVariantResolver::class)->getNearestFormatOptionId($this, $width, $height);
     }
 
     /**
