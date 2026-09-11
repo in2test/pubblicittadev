@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -44,7 +45,11 @@ class ProductController extends Controller
         if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at?->diffInHours(now()) >= 12) {
             defer(function () use ($product): void {
                 try {
-                    app(ProductAvailabilityService::class)->syncAvailability($product);
+                    Cache::lock('nwg-availability-'.$product->id, 60)->get(
+                        function () use ($product): void {
+                            app(ProductAvailabilityService::class)->syncAvailability($product);
+                        },
+                    );
                 } catch (Exception $e) {
                     Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
                 }
