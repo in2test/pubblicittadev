@@ -10,6 +10,7 @@ use App\Services\ProductAdminUrlService;
 use App\Services\ProductMediaSyncService;
 use App\Services\ProductPriceCalculator;
 use App\Services\ProductPricingService;
+use App\Services\ProductStartingPriceService;
 use App\Services\ProductVariantResolver;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
@@ -1070,21 +1071,7 @@ class Product extends Model implements HasMedia
      */
     public function getMinimumOrderQuantity(): int
     {
-        if ($this->product_class !== ProductClass::AreaBased) {
-            if (array_key_exists('pricing_tiers_min_quantity', $this->attributes)) {
-                $minTierQty = $this->pricing_tiers_min_quantity;
-            } elseif ($this->relationLoaded('pricingTiers')) {
-                $minTierQty = $this->pricingTiers->min('min_quantity');
-            } else {
-                $minTierQty = $this->pricingTiers()->min('min_quantity');
-            }
-
-            if ($minTierQty !== null) {
-                return (int) $minTierQty;
-            }
-        }
-
-        return 1;
+        return app(ProductStartingPriceService::class)->getMinimumOrderQuantity($this);
     }
 
     /**
@@ -1094,7 +1081,7 @@ class Product extends Model implements HasMedia
      */
     public function getStartingPrice(): float
     {
-        return $this->getAbsoluteMinimumPrice();
+        return app(ProductStartingPriceService::class)->getStartingPrice($this);
     }
 
     /**
@@ -1106,88 +1093,7 @@ class Product extends Model implements HasMedia
      */
     public function getAbsoluteMinimumPrice(bool $skipCache = false): float
     {
-        if (! $skipCache && $this->cached_starting_price !== null) {
-            return (float) $this->cached_starting_price;
-        }
-
-        $minQty = $this->getMinimumOrderQuantity();
-
-        // Per il calcolo ad area, potrebbe esserci un vincolo di area minima (min_area).
-        if ($this->product_class === ProductClass::AreaBased) {
-            $billedArea = $this->calculateTotalBilledArea($minQty, 1.0, 1.0);
-
-            return $this->getPriceForQuantity($minQty) * $billedArea;
-        }
-
-        // Per i prezzi a quantità, controlliamo se il prodotto supporta formati personalizzati,
-        // che potrebbero influenzare l'ottimizzazione sul foglio di stampa.
-        if ($this->allows_custom_size) {
-            $formatType = $this->relationLoaded('variationTypes')
-                ? $this->variationTypes->firstWhere('name', 'Formato')
-                : $this->variationTypes()->where('name', 'Formato')->first();
-
-            $minPriceFound = null;
-
-            if ($formatType) {
-                // Recupera le opzioni di formato per questo prodotto
-                /** @var ProductVariationType|null $pvt */
-                $pvt = $this->relationLoaded('productVariationTypes')
-                    ? $this->productVariationTypes->where('variation_type_id', $formatType->id)->first()
-                    : $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
-
-                if ($pvt) {
-                    if ($pvt->relationLoaded('options')) {
-                        $options = $pvt->options->map(fn ($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())->filter();
-                    } else {
-                        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
-                            $query->where('product_variation_type_id', $pvt->id);
-                        })->get();
-                    }
-
-                    foreach ($options as $format) {
-                        $w = null;
-                        $h = null;
-                        $name = strtolower((string) $format->name);
-
-                        // Determina le dimensioni in base al nome dell'opzione (es. "Personalizzato" o "10x15")
-                        if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
-                            $w = $this->min_custom_width ?? 10.0;
-                            $h = $this->min_custom_height ?? 10.0;
-                        } elseif (preg_match('/(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)/i', $name, $matches)) {
-                            $w = (float) str_replace(',', '.', $matches[1]);
-                            $h = (float) str_replace(',', '.', $matches[2]);
-                            if (str_contains(strtolower($name), 'cm')) {
-                                $w *= 10; // Converti in mm internamente
-                                $h *= 10;
-                            }
-                        }
-
-                        // Ottimizza il prezzo in base a quanti pezzi entrano nel foglio
-                        if ($w && $h) {
-                            $itemsPerSheet = $this->calculateItemsPerSheet($w, $h);
-                            if ($itemsPerSheet > 0) {
-                                // Arrotonda la quantità al multiplo dei pezzi per foglio
-                                $qty = (int) ceil($minQty / $itemsPerSheet) * $itemsPerSheet;
-                                if ($qty < $itemsPerSheet) {
-                                    $qty = $itemsPerSheet;
-                                }
-
-                                $price = $this->calculateFinalUnitPrice($qty) * $qty;
-                                if ($minPriceFound === null || $price < $minPriceFound) {
-                                    $minPriceFound = $price;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ($minPriceFound !== null) {
-                return $minPriceFound;
-            }
-        }
-
-        return $this->getPriceForQuantity($minQty) * $minQty;
+        return app(ProductStartingPriceService::class)->getAbsoluteMinimumPrice($this, $skipCache);
     }
 
     /**
@@ -1199,54 +1105,7 @@ class Product extends Model implements HasMedia
      */
     public function getStartingUnitPrice(bool $skipCache = false): float
     {
-        if (! $skipCache && $this->cached_starting_unit_price !== null) {
-            return (float) $this->cached_starting_unit_price;
-        }
-
-        $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
-
-        if ($this->product_class === ProductClass::Apparel || $this->product_class === ProductClass::AreaBased) {
-            if (array_key_exists('pricing_tiers_min_price_per_unit', $this->attributes)) {
-                $minTierPrice = $this->pricing_tiers_min_price_per_unit;
-            } elseif ($this->relationLoaded('pricingTiers')) {
-                $minTierPrice = $this->pricingTiers->min('price_per_unit');
-            } else {
-                $minTierPrice = $this->pricingTiers()->min('price_per_unit');
-            }
-
-            if ($minTierPrice !== null) {
-                $baseFallback = (float) $minTierPrice;
-            }
-        }
-
-        // Controlla se ci sono SKU (varianti) che sovrascrivono questo prezzo base
-        if (array_key_exists('skus_min_override_price', $this->attributes)) {
-            $minSkuOverride = $this->skus_min_override_price;
-            $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
-            $hasSkuWithoutOverride = $this->has_sku_without_override ?? false;
-        } elseif ($this->relationLoaded('skus')) {
-            $skuPrices = $this->skus
-                ->filter(fn ($sku) => $sku->override_price !== null)
-                ->pluck('override_price')
-                ->map(fn ($p) => (float) $p);
-            $hasSkuWithoutOverride = $this->skus->filter(fn ($sku) => $sku->override_price === null)->isNotEmpty();
-        } else {
-            $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
-            $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
-        }
-
-        if ($skuPrices->isNotEmpty()) {
-            // Il prezzo di partenza è il minimo tra le SKU con override,
-            // E potenzialmente il baseFallback se qualche SKU NON ha un override.
-            $minSkuPrice = (float) $skuPrices->min();
-            if ($hasSkuWithoutOverride) {
-                return min($baseFallback, $minSkuPrice);
-            }
-
-            return $minSkuPrice;
-        }
-
-        return $baseFallback;
+        return app(ProductStartingPriceService::class)->getStartingUnitPrice($this, $skipCache);
     }
 
     /**
@@ -1360,11 +1219,7 @@ class Product extends Model implements HasMedia
      */
     public function updateCachedPrices(): void
     {
-        // Skip cache per forzare il ricalcolo reale
-        $this->cached_starting_price = $this->getAbsoluteMinimumPrice(true);
-        $this->cached_starting_unit_price = $this->getStartingUnitPrice(true);
-
-        $this->saveQuietly();
+        app(ProductStartingPriceService::class)->updateCachedPrices($this);
     }
 
     protected function casts(): array
