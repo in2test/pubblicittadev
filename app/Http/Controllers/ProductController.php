@@ -38,11 +38,13 @@ class ProductController extends Controller
 
         // If NewWave product and last update > 12 hours ago, fast sync availability
         if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at?->diffInHours(now()) >= 12) {
-            try {
-                app(ProductAvailabilityService::class)->syncAvailability($product);
-            } catch (Exception $e) {
-                Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
-            }
+            defer(function () use ($product): void {
+                try {
+                    app(ProductAvailabilityService::class)->syncAvailability($product);
+                } catch (Exception $e) {
+                    Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
+                }
+            });
         }
 
         return view('product', [
