@@ -57,6 +57,12 @@ test('stripe webhook handles checkout.session.completed and marks order as paid'
     $response->assertStatus(200);
     $response->assertJson(['status' => 'success']);
 
+    $secondResponse = $this->postJson('/webhooks/stripe', $payloadData, [
+        'Stripe-Signature' => $sigHeader,
+    ]);
+
+    $secondResponse->assertSuccessful();
+
     $order->refresh();
     expect($order->payment_status)->toBe('paid');
     expect($order->stripe_payment_intent_id)->toBe('pi_test_123');
