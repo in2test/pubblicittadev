@@ -24,6 +24,8 @@ use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+use function Illuminate\Support\defer;
+
 /**
  * Class Order
  *
@@ -311,14 +313,16 @@ class Order extends Model implements HasMedia
 
                 $order->loadMissing('items.product');
 
-                // Send email to customer
-                Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
+                defer(function () use ($order) {
+                    // Send email to customer
+                    Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
 
-                // Send email to all administrators
-                $admins = User::where('role', 'admin')->get();
-                foreach ($admins as $admin) {
-                    Mail::to($admin)->send(new OrderStatusChangedNotification($order));
-                }
+                    // Send email to all administrators
+                    $admins = User::where('role', 'admin')->get();
+                    foreach ($admins as $admin) {
+                        Mail::to($admin)->send(new OrderStatusChangedNotification($order));
+                    }
+                });
             }
         });
     }
@@ -369,13 +373,15 @@ class Order extends Model implements HasMedia
         // Send notifications only after the payment transaction has committed.
         $paidOrder->loadMissing('items.product');
 
-        Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
+        defer(function () use ($paidOrder) {
+            Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
 
-        // Notifica tutti gli amministratori del nuovo ordine pagato
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
-        }
+            // Notifica tutti gli amministratori del nuovo ordine pagato
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
+            }
+        });
     }
 
     /**
