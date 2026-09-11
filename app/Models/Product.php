@@ -8,6 +8,7 @@ use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\ProductResource;
+use App\Services\ProductPriceCalculator;
 use App\Services\ProductPricingService;
 use App\Services\ProductVariantResolver;
 use App\Services\QuantityDiscountService;
@@ -1038,114 +1039,14 @@ class Product extends Model implements HasMedia
         ?float $height = null,
         array $selectedOptions = []
     ): float {
-        if ($totalQuantity === 0) {
-            return 0.0;
-        }
-
-        $this->loadMissing(['skus.options', 'variationTypes']);
-
-        // --- Area-based Pricing Model (e.g., banners, large format stickers) ---
-        if ($this->product_class === ProductClass::AreaBased) {
-            if (empty($width) || empty($height)) {
-                return 0.0;
-            }
-
-            $billedArea = $this->calculateTotalBilledArea($totalQuantity, $width, $height);
-            $pricePerSqm = $this->getPriceForQuantity($totalQuantity);
-
-            $activeSku = $this->getActiveSku($selectedOptions) ?? $this->skus->first();
-
-            // If the active SKU has a custom price override, use it as the price per sqm
-            if ($activeSku && $activeSku->override_price !== null) {
-                $pricePerSqm = (float) $activeSku->override_price;
-            }
-
-            $total = $pricePerSqm * $billedArea;
-
-            $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
-
-            return (float) number_format($total, 2, '.', '');
-        }
-
-        // --- Fixed or Quantity-based (tiers) Pricing Model ---
-        $total = 0.0;
-
-        // Determine if a custom format was chosen
-        $isCustomFormat = false;
-        if ($this->allows_custom_size && $width && $height) {
-            foreach ($selectedOptions as $optionId) {
-                if ($optionId == 999999) { // 999999 represents the custom format option ID
-                    $isCustomFormat = true;
-                    break;
-                }
-            }
-        }
-
-        $nearestSku = null;
-        if ($isCustomFormat && $width !== null && $height !== null) {
-            $nearestFormatId = $this->getNearestFormatOptionId($width, $height);
-            if ($nearestFormatId) {
-                $targetOptions = $selectedOptions;
-                $formatType = $this->variationTypes->firstWhere('name', 'Formato');
-                if ($formatType && isset($targetOptions[$formatType->id])) {
-                    $targetOptions[$formatType->id] = $nearestFormatId;
-                }
-                $nearestSku = $this->getActiveSku($targetOptions);
-            }
-        }
-
-        // If quantities were specified for each individual SKU (variants)
-        foreach ($skuQuantities as $skuId => $rawQty) {
-            $skuQty = (int) $rawQty;
-            if ($skuQty > 0) {
-                $sku = $this->skus->firstWhere('id', $skuId);
-
-                // For custom formats, we fall back to the nearest SKU's pricing tier structure
-                if ($isCustomFormat && $nearestSku instanceof ProductSku) {
-                    $sku = $nearestSku;
-                }
-
-                $unitPrice = $this->calculateFinalUnitPrice($skuQty, null, null, $sku);
-
-                // Apply SKU price override if present
-                if ($sku && $sku->override_price !== null) {
-                    $unitPrice = (float) $sku->override_price;
-                }
-
-                // Apply a 20% surcharge for custom formats
-                if ($isCustomFormat) {
-                    $unitPrice *= 1.20;
-                }
-
-                $total += $unitPrice * $skuQty;
-            }
-        }
-
-        // If we don't have a SKU breakdown, calculate the total quantity on the base product
-        if ($skuQuantities === []) {
-            $sku = null;
-            if ($isCustomFormat && $nearestSku instanceof ProductSku) {
-                $sku = $nearestSku;
-            }
-
-            $unitPrice = $this->calculateFinalUnitPrice($totalQuantity, null, null, $sku);
-
-            if ($sku instanceof ProductSku && $sku->override_price !== null) {
-                $unitPrice = (float) $sku->override_price;
-            }
-
-            // Apply a 20% surcharge for custom formats
-            if ($isCustomFormat) {
-                $unitPrice *= 1.20;
-            }
-
-            $total += $unitPrice * $totalQuantity;
-        }
-
-        // Add additional modifier costs (like front/back printing) to the total
-        $total = $this->applyModifiersToTotal($total, $totalQuantity, $selectedOptions);
-
-        return (float) number_format($total, 2, '.', '');
+        return app(ProductPriceCalculator::class)->calculateTotalPrice(
+            $this,
+            $totalQuantity,
+            $skuQuantities,
+            $width,
+            $height,
+            $selectedOptions,
+        );
     }
 
     /**
@@ -1169,62 +1070,7 @@ class Product extends Model implements HasMedia
      */
     public function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
     {
-        if ($selectedOptions === []) {
-            return $total;
-        }
-
-        $this->loadMissing('variationTypes');
-
-        $flatModifiers = 0.0;
-        $percentageModifiers = 0.0;
-
-        foreach ($this->variationTypes as $type) {
-            /** @var ProductVariationType|null $pivot */
-            $pivot = $type->pivot;
-            if (! $pivot) {
-                continue;
-            }
-            if (! $pivot->is_modifier) {
-                continue;
-            }
-
-            $selectedOptionIds = $selectedOptions[$type->id] ?? [];
-            if (! is_array($selectedOptionIds)) {
-                $selectedOptionIds = [$selectedOptionIds];
-            }
-            $selectedOptionIds = array_filter($selectedOptionIds);
-
-            foreach ($selectedOptionIds as $selectedOptionId) {
-                $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
-                    ->where('variation_option_id', $selectedOptionId)
-                    ->with('option')
-                    ->first();
-
-                if ($productVariationOption) {
-                    $modifier = $productVariationOption->getEffectivePriceModifier();
-                    $modifierType = $productVariationOption->getEffectiveModifierType();
-
-                    if ($modifier > 0) {
-                        if ($modifierType->value === 'percentage') {
-                            $percentageModifiers += $modifier;
-                        } else {
-                            // Flat modifier is a per-unit surcharge
-                            $flatModifiers += $modifier;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Apply flat modifiers first (per unit)
-        $total += $flatModifiers * $totalQuantity;
-
-        // Then apply percentage on the updated total
-        if ($percentageModifiers > 0) {
-            $total += $total * ($percentageModifiers / 100.0);
-        }
-
-        return $total;
+        return app(ProductPriceCalculator::class)->applyModifiersToTotal($this, $total, $totalQuantity, $selectedOptions);
     }
 
     /**
@@ -1239,15 +1085,7 @@ class Product extends Model implements HasMedia
      */
     public function calculateFinalUnitPrice(int $quantity, ?float $width = null, ?float $height = null, ?ProductSku $sku = null): float
     {
-        if ($this->product_class === ProductClass::AreaBased && $width !== null && $height !== null) {
-            // Per il modello area, calcoliamo l'area fatturata per 1 singolo pezzo e la moltiplichiamo per il prezzo al mq
-            $billedArea = $this->calculateTotalBilledArea(1, $width, $height);
-
-            return $this->getPriceForQuantity($quantity, $sku) * $billedArea;
-        }
-
-        // Per i modelli a quantità e fissi, otteniamo semplicemente il prezzo unitario della fascia corrispondente
-        return $this->getPriceForQuantity($quantity, $sku);
+        return app(ProductPriceCalculator::class)->calculateFinalUnitPrice($this, $quantity, $width, $height, $sku);
     }
 
     /**
