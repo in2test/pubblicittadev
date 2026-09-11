@@ -24,6 +24,10 @@ class ProductController extends Controller
      */
     public function show(Category $category, Product $product, Request $request): View
     {
+        if ($product->category_id !== $category->id) {
+            abort(404);
+        }
+
         $product->load([
             'category.parent',
             'pricingTiers',

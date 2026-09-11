@@ -146,6 +146,23 @@ class ProductPageTest extends TestCase
         $response->assertNotFound();
     }
 
+    public function test_product_page_returns_404_when_category_does_not_own_product(): void
+    {
+        $productCategory = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
+        $otherCategory = Category::create(['name' => 'Other', 'slug' => 'other', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'category_id' => $productCategory->id,
+        ]);
+
+        $response = $this->get(route('product', [
+            'category' => $otherCategory->slug,
+            'product' => $product->slug,
+        ]));
+
+        $response->assertNotFound();
+    }
+
     public function test_admin_can_view_inactive_product_page(): void
     {
         $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
