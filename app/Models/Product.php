@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
+use App\Services\ProductGalleryService;
 use App\Services\ProductMediaSyncService;
 use App\Services\ProductPriceCalculator;
 use App\Services\ProductPricingService;
@@ -446,29 +447,15 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the first available image (thumbnail), optionally taking a variation option ID or request into account.
-     *
-     * @return object{url: string, thumb: string, medium: string, large: string, thumbnail_url: string|null}|null
      */
     public function getFirstImage(?int $variationOptionId = null): ?object
     {
-        if ($variationOptionId !== null) {
-            $optionImages = $this->getImagesForOption($variationOptionId);
-            if ($optionImages->isNotEmpty()) {
-                return $optionImages->first();
-            }
-        }
+        return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
+    }
 
-        $requestOption = $this->getVariationOptionFromRequest();
-        if ($requestOption instanceof VariationOption) {
-            $optionImages = $this->getImagesForOption($requestOption->id);
-            if ($optionImages->isNotEmpty()) {
-                return $optionImages->first();
-            }
-        }
-
-        $all = $this->getAllImages();
-
-        return $all->first();
+    protected function legacyGetFirstImage(?int $variationOptionId = null): ?object
+    {
+        return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
     }
 
     /**
@@ -480,16 +467,12 @@ class Product extends Model implements HasMedia
      */
     public function getFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
     {
-        $image = $this->getFirstImage($variationOptionId);
-        if (! $image) {
-            return 'https://placehold.co/600x800?text='.urlencode($this->name);
-        }
+        return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
+    }
 
-        if ($conversion === 'thumbnail') {
-            $conversion = 'thumb';
-        }
-
-        return $image->{$conversion} ?? $image->url;
+    protected function legacyGetFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
+    {
+        return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
     }
 
     /**
@@ -549,9 +532,12 @@ class Product extends Model implements HasMedia
      */
     public function getThumbnailUrl(): ?string
     {
-        $image = $this->getFirstImage();
+        return app(ProductGalleryService::class)->getThumbnailUrl($this);
+    }
 
-        return $image->thumb ?? $image->url ?? null;
+    protected function legacyGetThumbnailUrl(): ?string
+    {
+        return app(ProductGalleryService::class)->getThumbnailUrl($this);
     }
 
     /**
@@ -628,9 +614,15 @@ class Product extends Model implements HasMedia
      * Much more efficient than getAllImages() when only one color's images are needed.
      *
      * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
+     * @return Collection<int, object>
      */
     public function getImagesForOption(?int $variationOptionId): Collection
+    {
+        return app(ProductGalleryService::class)->getImagesForOption($this, $variationOptionId);
+    }
+
+    /** @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> */
+    protected function legacyGetImagesForOption(?int $variationOptionId): Collection
     {
         /** @var array<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> $images */
         $images = [];
@@ -731,9 +723,15 @@ class Product extends Model implements HasMedia
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
+     * @return Collection<int, object>
      */
     public function getAllImages(): Collection
+    {
+        return app(ProductGalleryService::class)->getAllImages($this);
+    }
+
+    /** @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> */
+    protected function legacyGetAllImages(): Collection
     {
         $images = [];
 
