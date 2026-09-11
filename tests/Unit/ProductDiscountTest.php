@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
 use App\Models\ProductSku;
+use App\Services\ProductPricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -217,5 +218,26 @@ class ProductDiscountTest extends TestCase
 
         // SKU B lookup
         $this->assertEquals(52.00, $product->getPriceForQuantity(10, $skuB));
+    }
+
+    public function test_pricing_service_returns_discounted_quantity_price(): void
+    {
+        $root = Category::create(['name' => 'Root', 'slug' => 'root']);
+        $child = Category::create(['name' => 'Child', 'slug' => 'child', 'parent_id' => $root->id]);
+
+        CategoryQuantityDiscount::create([
+            'category_id' => $child->id,
+            'min_quantity' => 10,
+            'max_quantity' => null,
+            'discount_type' => 'percent',
+            'discount_value' => 10,
+            'description' => '10% at 10+',
+        ]);
+
+        $product = Product::factory()->create(['price' => 100, 'category_id' => $child->id]);
+
+        $service = app(ProductPricingService::class);
+
+        $this->assertEquals(90.0, $service->getPriceForQuantity($product, 10));
     }
 }
