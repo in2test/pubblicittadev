@@ -8,6 +8,7 @@ use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\ProductResource;
+use App\Services\ProductPricingService;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
@@ -874,20 +875,9 @@ class Product extends Model implements HasMedia
             return (float) $this->priceCache[$cacheKey];
         }
 
-        // Se c'è un'offerta attiva, usa l'offerta.
-        if ($this->offer_price > 0) {
-            return $this->priceCache[$cacheKey] = (float) $this->offer_price;
-        }
+        $price = app(ProductPricingService::class)->getPriceForQuantity($this, $quantity, $sku);
 
-        // Priorità 1: Cerca un prezzo a scaglioni (tier) specifico per questo prodotto e/o SKU
-        if ($tierPrice = $this->getTierPrice($quantity, $sku)) {
-            return $this->priceCache[$cacheKey] = $tierPrice;
-        }
-
-        // Priorità 2: Sconti per quantità basati sulla categoria
-        $service = app(QuantityDiscountService::class);
-
-        return $this->priceCache[$cacheKey] = max(0.0, $service->calculatePrice($this, $quantity));
+        return $this->priceCache[$cacheKey] = $price;
     }
 
     /**
@@ -910,96 +900,9 @@ class Product extends Model implements HasMedia
             return $this->tierPriceCache[$cacheKey];
         }
 
-        $findTier = function (?int $skuId) use ($quantity): ?PricingTier {
-            if ($this->relationLoaded('pricingTiers')) {
-                $tiers = $this->pricingTiers
-                    ->filter(fn (PricingTier $t) => $t->product_sku_id === $skuId);
+        $tierPrice = app(ProductPricingService::class)->getTierPrice($this, $quantity, $sku);
 
-                $match = $tiers
-                    ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
-                        ($t->max_quantity >= $quantity || is_null($t->max_quantity))
-                    )
-                    ->sortByDesc('min_quantity')
-                    ->first();
-
-                if (! $match && ($this->price <= 0 || $this->allows_custom_size)) {
-                    return $tiers->sortBy('min_quantity')->first();
-                }
-
-                return $match;
-            }
-
-            $query = $this->pricingTiers()->where('product_sku_id', $skuId);
-
-            /** @var PricingTier|null $tier */
-            $tier = (clone $query)
-                ->where('min_quantity', '<=', $quantity)
-                ->where(function (Builder $query) use ($quantity) {
-                    $query->where('max_quantity', '>=', $quantity)
-                        ->orWhereNull('max_quantity');
-                })
-                ->orderByDesc('min_quantity')
-                ->first();
-
-            if (! $tier && ($this->price <= 0 || $this->allows_custom_size)) {
-                /** @var PricingTier|null $fallbackTier */
-                $fallbackTier = $query->orderBy('min_quantity')->first();
-
-                return $fallbackTier;
-            }
-
-            return $tier;
-        };
-
-        $skuId = $sku?->id;
-
-        // Cerca prima il tier specifico per SKU
-        if ($skuId) {
-            $tier = $findTier($skuId);
-            if ($tier instanceof PricingTier) {
-                return $this->tierPriceCache[$cacheKey] = (float) $tier->price_per_unit;
-            }
-        }
-
-        // Fallback: SKU null (tier globale prodotto)
-        $tier = $findTier(null);
-        if ($tier instanceof PricingTier) {
-            return $this->tierPriceCache[$cacheKey] = (float) $tier->price_per_unit;
-        }
-
-        // Se non c'è un tier globale, ma ci sono tier specifici per SKU per questa quantità,
-        // restituiamo il prezzo unitario minimo tra tutti i tier specifici della SKU.
-        if ($this->relationLoaded('pricingTiers')) {
-            $matchedTiers = $this->pricingTiers
-                ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
-                    ($t->max_quantity >= $quantity || is_null($t->max_quantity))
-                );
-
-            if ($matchedTiers->isEmpty()) {
-                if ($this->price <= 0 || $this->allows_custom_size) {
-                    $minPrice = $this->pricingTiers->sortBy('min_quantity')->first()?->price_per_unit;
-                } else {
-                    $minPrice = null;
-                }
-            } else {
-                $minPrice = $matchedTiers->min('price_per_unit');
-            }
-
-            return $this->tierPriceCache[$cacheKey] = $minPrice !== null ? (float) $minPrice : null;
-        }
-
-        $minPrice = $this->pricingTiers()
-            ->where('min_quantity', '<=', $quantity)
-            ->where(function (Builder $query) use ($quantity) {
-                $query->where('max_quantity', '>=', $quantity)
-                    ->orWhereNull('max_quantity');
-            })->min('price_per_unit');
-
-        if ($minPrice === null && ($this->price <= 0 || $this->allows_custom_size)) {
-            $minPrice = $this->pricingTiers()->orderBy('min_quantity')->value('price_per_unit');
-        }
-
-        return $this->tierPriceCache[$cacheKey] = $minPrice !== null ? (float) $minPrice : null;
+        return $this->tierPriceCache[$cacheKey] = $tierPrice;
     }
 
     /**
