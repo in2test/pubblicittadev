@@ -26,21 +26,48 @@ class ProductAvailabilitySynchronizer
             return;
         }
 
+        /** @var array<string, int> $availabilityBySku */
+        $availabilityBySku = [];
+
         foreach ($data['variations'] as $variationData) {
             if (empty($variationData['skus'])) {
                 continue;
             }
 
             foreach ($variationData['skus'] as $item) {
-                $quantity = (int) floor(((int) $item['availability']) / 2);
+                $availabilityBySku[(string) $item['sku']] = (int) floor(((int) $item['availability']) / 2);
+            }
+        }
 
-                ProductSku::where('product_id', $product->id)
-                    ->where('sku', $item['sku'])
-                    ->update([
-                        'quantity' => $quantity,
-                        'is_available' => $quantity > 0,
-                        'updated_at' => now(),
-                    ]);
+        if ($availabilityBySku !== []) {
+            $existingSkus = ProductSku::query()
+                ->where('product_id', $product->id)
+                ->whereIn('sku', array_keys($availabilityBySku))
+                ->get(['id', 'product_id', 'sku'])
+                ->keyBy('sku');
+
+            $updates = [];
+            $updatedAt = now();
+
+            foreach ($availabilityBySku as $sku => $quantity) {
+                $existingSku = $existingSkus->get($sku);
+
+                if (! $existingSku) {
+                    continue;
+                }
+
+                $updates[] = [
+                    'id' => $existingSku->id,
+                    'product_id' => $existingSku->product_id,
+                    'sku' => $existingSku->sku,
+                    'quantity' => $quantity,
+                    'is_available' => $quantity > 0,
+                    'updated_at' => $updatedAt,
+                ];
+            }
+
+            if ($updates !== []) {
+                ProductSku::upsert($updates, ['id'], ['quantity', 'is_available', 'updated_at']);
             }
         }
 
