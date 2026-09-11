@@ -12,7 +12,7 @@ class AdminProductController extends Controller
 {
     public function toggleActive(Product $product): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->authorize('toggleActive', $product);
 
         $product->update(['is_active' => ! $product->is_active]);
 
@@ -21,19 +21,10 @@ class AdminProductController extends Controller
 
     public function sync(Product $product): RedirectResponse
     {
-        $this->ensureAdmin();
+        $this->authorize('sync', $product);
 
         SyncNewWaveProductJob::dispatch($product->id);
 
         return redirect()->back();
-    }
-
-    private function ensureAdmin(): void
-    {
-        $user = auth()->user();
-
-        if (! $user || ! $user->canAccessFilament()) {
-            abort(403);
-        }
     }
 }
