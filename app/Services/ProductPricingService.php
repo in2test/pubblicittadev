@@ -25,6 +25,7 @@ class ProductPricingService
             return (float) $product->offer_price;
         }
 
+        // An explicit offer price takes precedence over every quantity-based rule.
         if ($tierPrice = $this->getTierPrice($product, $quantity, $sku)) {
             return $tierPrice;
         }
@@ -49,6 +50,7 @@ class ProductPricingService
                     ->first();
 
                 if (! $match && ($product->price <= 0 || $product->allows_custom_size)) {
+                    // Custom or on-request products may use their first tier as a starting price.
                     return $tiers->sortBy('min_quantity')->first();
                 }
 
@@ -71,6 +73,7 @@ class ProductPricingService
                 /** @var PricingTier|null $fallbackTier */
                 $fallbackTier = $query->orderBy('min_quantity')->first();
 
+                // Mirror the eager-loaded fallback when no tier covers the requested quantity.
                 return $fallbackTier;
             }
 
@@ -119,6 +122,7 @@ class ProductPricingService
 
         if ($minPrice === null && ($product->price <= 0 || $product->allows_custom_size)) {
             $minPrice = $product->pricingTiers()->orderBy('min_quantity')->value('price_per_unit');
+            // Preserve the starting-price behavior for custom and on-request products.
         }
 
         return $minPrice !== null ? (float) $minPrice : null;

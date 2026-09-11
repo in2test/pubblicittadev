@@ -6,8 +6,8 @@ namespace App\Models;
 
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
-use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
-use App\Filament\Resources\Products\ProductResource;
+use App\Services\ProductAdminUrlService;
+use App\Services\ProductMediaSyncService;
 use App\Services\ProductPriceCalculator;
 use App\Services\ProductPricingService;
 use App\Services\ProductVariantResolver;
@@ -32,7 +32,6 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Throwable;
 
 /**
  * Product Model
@@ -824,23 +823,8 @@ class Product extends Model implements HasMedia
      */
     public function syncLocalMediaToImageRecords(): void
     {
-        // 1. Sync from remote_images JSON to images table
-        $remoteImages = $this->remote_images ?? [];
-        foreach ($remoteImages as $remote) {
-            $url = $remote['url'] ?? $remote['image_url'] ?? null;
-            if ($url) {
-                Image::updateOrCreate(
-                    [
-                        'product_id' => $this->id,
-                        'image_url' => $url,
-                    ],
-                    [
-                        'image_description' => $remote['image_description'] ?? null,
-                        'variation_option_id' => $remote['variation_option_id'] ?? null,
-                    ]
-                );
-            }
-        }
+        // Keep this legacy model API as a compatibility wrapper while the workflow lives in a service.
+        app(ProductMediaSyncService::class)->syncLocalMediaToImageRecords($this);
     }
 
     /**
@@ -848,18 +832,8 @@ class Product extends Model implements HasMedia
      */
     public function getAdminEditUrl(): string
     {
-        try {
-            if ($this->type === self::TYPE_NEWWAVE) {
-                return NewWaveProductResource::getUrl('edit', ['record' => $this]);
-            }
-
-            return match ($this->product_class) {
-                ProductClass::Apparel, ProductClass::AreaBased, ProductClass::ItemBased => ProductResource::getUrl('edit', ['record' => $this]),
-                default => '#',
-            };
-        } catch (Throwable) {
-            return '#';
-        }
+        // Keep URL generation outside the model so Filament routing does not become a model concern.
+        return app(ProductAdminUrlService::class)->resolve($this);
     }
 
     /**

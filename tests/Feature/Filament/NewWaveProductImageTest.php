@@ -5,6 +5,7 @@ use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
 use App\Models\Image;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ProductMediaSyncService;
 use App\Services\ProductSynchronizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -61,6 +62,24 @@ it('assigns a remote variation image to its color when syncing NewWave data', fu
     expect($image)->not->toBeNull();
     expect($image->variation_option_id)->not->toBeNull();
     expect($image->variationOption->value)->toBe('99');
+});
+
+it('syncs remote image urls through the dedicated product media sync service', function () {
+    $product = Product::factory()->create([
+        'type' => Product::TYPE_NEWWAVE,
+        'remote_images' => [
+            [
+                'url' => 'https://example.com/service-image.jpg',
+                'image_description' => 'Service synced image',
+            ],
+        ],
+    ]);
+
+    app(ProductMediaSyncService::class)->syncLocalMediaToImageRecords($product);
+
+    expect(Image::where('product_id', $product->id)
+        ->where('image_url', 'https://example.com/service-image.jpg')
+        ->exists())->toBeTrue();
 });
 
 it('can download a remote image url into the product media library', function () {

@@ -1,13 +1,17 @@
 {
     "agents": [
-        "antigravity"
+        "antigravity",
+        "copilot"
     ],
     "cloud": false,
     "guidelines": true,
     "mcp": true,
     "nightwatch": false,
     "packages": [
-        "albertoarena/laravel-truss"
+        "spatie/laravel-medialibrary",
+        "albertoarena/laravel-truss",
+        "filament/filament",
+        "fruitcake/laravel-debugbar"
     ],
     "sail": false,
     "skills": [
@@ -20,7 +24,10 @@
         "livewire-development",
         "volt-development",
         "tailwindcss-development",
+        "filament-development",
+        "medialibrary-development",
         "truss-schema",
+        "debug-using-debugbar",
         "deploying-laravel-cloud"
     ]
 }

@@ -14,11 +14,14 @@ class ProductVariantResolver
 {
     /**
      * Get the active SKU based on the provided selected options.
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     public function getActiveSku(Product $product, array $selectedOptions): ?ProductSku
     {
         $product->loadMissing(['skus.options', 'variationTypes']);
 
+        // Load the complete variant graph once so SKU matching does not issue a query per option.
         return $product->skus->first(function ($sku) use ($product, $selectedOptions): bool {
             foreach ($product->variationTypes as $type) {
                 /** @var ProductVariationType|null $pivot */
@@ -30,6 +33,7 @@ class ProductVariantResolver
 
                 $selectedId = $selectedOptions[$type->id] ?? null;
 
+                // 999999 represents a custom format and is resolved separately by the calculator.
                 if ($selectedId && $selectedId != 999999 && ! $sku->options->contains('id', $selectedId)) {
                     return false;
                 }
@@ -90,6 +94,7 @@ class ProductVariantResolver
                 $optMax = max($parsedW, $parsedH);
                 $distance = sqrt(($customMin - $optMin) ** 2 + ($customMax - $optMax) ** 2);
 
+                // Compare sorted dimensions so 40x60 and 60x40 are treated identically.
                 if ($minDistance === null || $distance < $minDistance) {
                     $minDistance = $distance;
                     $nearestOptionId = $opt->id;

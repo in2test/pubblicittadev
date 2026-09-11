@@ -19,6 +19,9 @@ class ProductPriceCalculator
 
     /**
      * Calculates the total price for an entire job (cart item or product configuration).
+     *
+     * @param  array<int|string, int|float|string>  $skuQuantities
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     public function calculateTotalPrice(
         Product $product,
@@ -51,6 +54,7 @@ class ProductPriceCalculator
             $total = $pricePerSqm * $billedArea;
             $total = $this->applyModifiersToTotal($product, $total, $totalQuantity, $selectedOptions);
 
+            // Keep prices stable for display, quotes, and downstream persistence.
             return (float) number_format($total, 2, '.', '');
         }
 
@@ -142,6 +146,8 @@ class ProductPriceCalculator
 
     /**
      * Applies the surcharge from price modifiers.
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     public function applyModifiersToTotal(Product $product, float $total, int $totalQuantity, array $selectedOptions): float
     {
