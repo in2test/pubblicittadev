@@ -453,6 +453,11 @@ class Product extends Model implements HasMedia
         return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
     }
 
+    protected function legacyGetFirstImage(?int $variationOptionId = null): ?object
+    {
+        return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
+    }
+
     /**
      * Get the URL of the first available image.
      *
@@ -461,6 +466,11 @@ class Product extends Model implements HasMedia
      * @return string The URL
      */
     public function getFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
+    {
+        return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
+    }
+
+    protected function legacyGetFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
     {
         return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
     }
@@ -521,6 +531,11 @@ class Product extends Model implements HasMedia
      * @return string|null The thumbnail URL, or null if no image exists.
      */
     public function getThumbnailUrl(): ?string
+    {
+        return app(ProductGalleryService::class)->getThumbnailUrl($this);
+    }
+
+    protected function legacyGetThumbnailUrl(): ?string
     {
         return app(ProductGalleryService::class)->getThumbnailUrl($this);
     }
@@ -606,6 +621,104 @@ class Product extends Model implements HasMedia
         return app(ProductGalleryService::class)->getImagesForOption($this, $variationOptionId);
     }
 
+    /** @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> */
+    protected function legacyGetImagesForOption(?int $variationOptionId): Collection
+    {
+        /** @var array<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> $images */
+        $images = [];
+
+        // 1. Filter local media (Spatie Media Library) by variation_option_id in custom properties
+        $mediaQuery = $this->getMedia('images');
+        $localRemoteUrls = [];
+
+        foreach ($mediaQuery as $media) {
+            $remoteUrl = $media->getCustomProperty('remote_resource_url')['standard'] ?? null;
+            if ($remoteUrl) {
+                $localRemoteUrls[] = $remoteUrl;
+            }
+
+            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
+            if (empty($variationOptionIds)) {
+                $colorIds = $media->getCustomProperty('color_ids');
+                $colorId = $media->getCustomProperty('color_id');
+                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
+            }
+            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
+
+            // Filter: if an option is requested, only include matching media. Otherwise include generic media.
+            if ($variationOptionId !== null) {
+                $matches = $resolvedVariationOptionId == $variationOptionId
+                    || in_array($variationOptionId, $variationOptionIds);
+                if (! $matches) {
+                    continue;
+                }
+            } elseif (! empty($resolvedVariationOptionId) || ! empty($variationOptionIds)) {
+                continue;
+            }
+
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $localObj = (object) [
+                'id' => (string) $media->id,
+                'url' => $media->getUrl(),
+                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
+                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
+                'variation_option_ids' => (array) $variationOptionIds,
+                'order' => (int) $media->order_column,
+                'type' => 'local',
+                'is_remote' => false,
+                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
+                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+            ];
+            $images[] = $localObj;
+        }
+
+        // 2. Filter remote images from the 'images' table
+        $remoteQuery = $this->images()->orderBy('order_by', 'asc');
+
+        if ($variationOptionId !== null) {
+            $remoteQuery->where('variation_option_id', $variationOptionId);
+        } else {
+            $remoteQuery->whereNull('variation_option_id');
+        }
+
+        foreach ($remoteQuery->get() as $remote) {
+            if (in_array($remote->image_url, $localRemoteUrls)) {
+                continue;
+            }
+
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $remoteObj = (object) [
+                'id' => (string) $remote->id,
+                'url' => $remote->image_url ?? '',
+                'thumb' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
+                'medium' => $remote->medium_url ?: ($remote->image_url ?? ''),
+                'large' => $remote->large_url ?: ($remote->image_url ?? ''),
+                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
+                'variation_option_ids' => [],
+                'order' => (int) $remote->order_by,
+                'type' => 'remote',
+                'is_remote' => true,
+                'alt' => (string) ($remote->alt ?? ''),
+                'thumbnail_url' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
+            ];
+            $images[] = $remoteObj;
+        }
+
+        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
+
+        return collect($images)->values();
+    }
+
     /**
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
@@ -615,6 +728,93 @@ class Product extends Model implements HasMedia
     public function getAllImages(): Collection
     {
         return app(ProductGalleryService::class)->getAllImages($this);
+    }
+
+    /** @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> */
+    protected function legacyGetAllImages(): Collection
+    {
+        $images = [];
+
+        // 1. Add local media (Spatie Media Library)
+        $mediaItems = $this->getMedia('images');
+        $localRemoteUrls = [];
+
+        foreach ($mediaItems as $media) {
+            $remoteUrl = $media->getCustomProperty('remote_resource_url')['standard'] ?? null;
+            if ($remoteUrl) {
+                $localRemoteUrls[] = $remoteUrl;
+            }
+
+            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
+            // Support legacy color_ids/color_id custom properties
+            if (empty($variationOptionIds)) {
+                $colorIds = $media->getCustomProperty('color_ids');
+                $colorId = $media->getCustomProperty('color_id');
+                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
+            }
+            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
+
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $localObj = (object) [
+                'id' => (string) $media->id,
+                'url' => $media->getUrl(),
+                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
+                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
+                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
+                'variation_option_ids' => (array) $variationOptionIds,
+                'order' => (int) $media->order_column,
+                'type' => 'local',
+                'is_remote' => false,
+                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
+                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
+            ];
+            $images[] = $localObj;
+        }
+
+        // 2. Add remote images from the dedicated 'images' table
+        if ($this->relationLoaded('images')) {
+            $remoteImages = $this->images->sortBy('order_by');
+        } else {
+            $remoteImages = $this->images()->orderBy('order_by', 'asc')->get();
+        }
+        foreach ($remoteImages as $remote) {
+            /** @var Image $remote */
+            // Skip remote images that have already been downloaded locally
+            if (in_array($remote->image_url, $localRemoteUrls)) {
+                continue;
+            }
+
+            /**
+             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
+             *
+             * @phpstan-ignore varTag.nativeType
+             */
+            $remoteObj = (object) [
+                'id' => (string) $remote->id,
+                'url' => $remote->image_url,
+                'thumb' => $remote->thumbnail_url ?: $remote->image_url,
+                'medium' => $remote->medium_url ?: $remote->image_url,
+                'large' => $remote->large_url ?: $remote->image_url,
+                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
+                'variation_option_ids' => [],
+                'order' => (int) $remote->order_by,
+                'type' => 'remote',
+                'is_remote' => true,
+                'alt' => (string) ($remote->alt ?? ''),
+                'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
+            ];
+            $images[] = $remoteObj;
+        }
+
+        // Sort by order
+        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
+
+        return collect($images)->sortBy('order')->values();
     }
 
     /**
