@@ -17,7 +17,8 @@
       "Bash(vendor/bin/phpstan analyze:*)",
       "Bash(./vendor/bin/phpstan analyze *)",
       "Bash(php -m)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "mcp__laravel-boost__database-query"
     ]
   },
   "enableAllProjectMcpServers": true,

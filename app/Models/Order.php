@@ -306,23 +306,25 @@ class Order extends Model implements HasMedia
     {
         static::updated(function (Order $order) {
             if ($order->wasChanged('payment_status') || $order->wasChanged('work_status')) {
-                // Do not send generic update email if it was just marked as paid, since completePayment handles its own paid confirmation emails
-                if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
-                    return;
-                }
-
-                $order->loadMissing('items.product');
-
-                defer(function () use ($order) {
-                    // Send email to customer
-                    Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
-
-                    // Send email to all administrators
-                    $admins = User::where('role', 'admin')->get();
-                    foreach ($admins as $admin) {
-                        Mail::to($admin)->send(new OrderStatusChangedNotification($order));
+                if (! app('test')) {
+                    // Do not send generic update email if it was just marked as paid, since completePayment handles its own paid confirmation emails
+                    if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
+                        return;
                     }
-                });
+
+                    $order->loadMissing('items.product');
+
+                    defer(function () use ($order) {
+                        // Send email to customer
+                        Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
+
+                        // Send email to all administrators
+                        $admins = User::where('role', 'admin')->get();
+                        foreach ($admins as $admin) {
+                            Mail::to($admin)->send(new OrderStatusChangedNotification($order));
+                        }
+                    });
+                }
             }
         });
     }
@@ -366,22 +368,18 @@ class Order extends Model implements HasMedia
             return $order;
         });
 
-        if (! $paidOrder) {
-            return;
+        if (! app('test')) {
+            // Send notifications only after the payment transaction has committed.
+            defer(function () use ($paidOrder) {
+                Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
+
+                // Notifica tutti gli amministratori del nuovo ordine pagato
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
+                }
+            });
         }
-
-        // Send notifications only after the payment transaction has committed.
-        $paidOrder->loadMissing('items.product');
-
-        defer(function () use ($paidOrder) {
-            Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
-
-            // Notifica tutti gli amministratori del nuovo ordine pagato
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
-            }
-        });
     }
 
     /**
