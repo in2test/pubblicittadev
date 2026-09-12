@@ -16,12 +16,15 @@ class ProductAvailabilityService
 
     private readonly ProductSynchronizer $synchronizer;
 
+    private readonly ProductAvailabilitySynchronizer $availabilitySynchronizer;
+
     public function __construct()
     {
         $this->apiClient = app(NwgApiClient::class);
         $this->dataMapper = app(ProductDataMapper::class);
         $this->validator = app(ProductValidator::class);
         $this->synchronizer = app(ProductSynchronizer::class);
+        $this->availabilitySynchronizer = app(ProductAvailabilitySynchronizer::class);
     }
 
     /**
@@ -111,6 +114,6 @@ class ProductAvailabilityService
      */
     public function syncAvailability(Product $product): void
     {
-        $this->synchronizer->syncAvailability($product);
+        $this->availabilitySynchronizer->sync($product);
     }
 }

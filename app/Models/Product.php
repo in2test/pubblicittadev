@@ -7,9 +7,11 @@ namespace App\Models;
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
+use App\Services\ProductGalleryService;
 use App\Services\ProductMediaSyncService;
 use App\Services\ProductPriceCalculator;
 use App\Services\ProductPricingService;
+use App\Services\ProductStartingPriceService;
 use App\Services\ProductVariantResolver;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
@@ -445,29 +447,10 @@ class Product extends Model implements HasMedia
 
     /**
      * Get the first available image (thumbnail), optionally taking a variation option ID or request into account.
-     *
-     * @return object{url: string, thumb: string, medium: string, large: string, thumbnail_url: string|null}|null
      */
     public function getFirstImage(?int $variationOptionId = null): ?object
     {
-        if ($variationOptionId !== null) {
-            $optionImages = $this->getImagesForOption($variationOptionId);
-            if ($optionImages->isNotEmpty()) {
-                return $optionImages->first();
-            }
-        }
-
-        $requestOption = $this->getVariationOptionFromRequest();
-        if ($requestOption instanceof VariationOption) {
-            $optionImages = $this->getImagesForOption($requestOption->id);
-            if ($optionImages->isNotEmpty()) {
-                return $optionImages->first();
-            }
-        }
-
-        $all = $this->getAllImages();
-
-        return $all->first();
+        return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
     }
 
     /**
@@ -479,16 +462,7 @@ class Product extends Model implements HasMedia
      */
     public function getFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
     {
-        $image = $this->getFirstImage($variationOptionId);
-        if (! $image) {
-            return 'https://placehold.co/600x800?text='.urlencode($this->name);
-        }
-
-        if ($conversion === 'thumbnail') {
-            $conversion = 'thumb';
-        }
-
-        return $image->{$conversion} ?? $image->url;
+        return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
     }
 
     /**
@@ -548,9 +522,7 @@ class Product extends Model implements HasMedia
      */
     public function getThumbnailUrl(): ?string
     {
-        $image = $this->getFirstImage();
-
-        return $image->thumb ?? $image->url ?? null;
+        return app(ProductGalleryService::class)->getThumbnailUrl($this);
     }
 
     /**
@@ -627,195 +599,22 @@ class Product extends Model implements HasMedia
      * Much more efficient than getAllImages() when only one color's images are needed.
      *
      * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
+     * @return Collection<int, object>
      */
     public function getImagesForOption(?int $variationOptionId): Collection
     {
-        /** @var array<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}> $images */
-        $images = [];
-
-        // 1. Filter local media (Spatie Media Library) by variation_option_id in custom properties
-        $mediaQuery = $this->getMedia('images');
-        $localRemoteUrls = [];
-
-        foreach ($mediaQuery as $media) {
-            $remoteUrl = $media->getCustomProperty('remote_resource_url')['standard'] ?? null;
-            if ($remoteUrl) {
-                $localRemoteUrls[] = $remoteUrl;
-            }
-
-            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
-            if (empty($variationOptionIds)) {
-                $colorIds = $media->getCustomProperty('color_ids');
-                $colorId = $media->getCustomProperty('color_id');
-                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
-            }
-            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
-
-            // Filter: if an option is requested, only include matching media. Otherwise include generic media.
-            if ($variationOptionId !== null) {
-                $matches = $resolvedVariationOptionId == $variationOptionId
-                    || in_array($variationOptionId, $variationOptionIds);
-                if (! $matches) {
-                    continue;
-                }
-            } elseif (! empty($resolvedVariationOptionId) || ! empty($variationOptionIds)) {
-                continue;
-            }
-
-            /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
-             *
-             * @phpstan-ignore varTag.nativeType
-             */
-            $localObj = (object) [
-                'id' => (string) $media->id,
-                'url' => $media->getUrl(),
-                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
-                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
-                'variation_option_ids' => (array) $variationOptionIds,
-                'order' => (int) $media->order_column,
-                'type' => 'local',
-                'is_remote' => false,
-                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
-                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-            ];
-            $images[] = $localObj;
-        }
-
-        // 2. Filter remote images from the 'images' table
-        $remoteQuery = $this->images()->orderBy('order_by', 'asc');
-
-        if ($variationOptionId !== null) {
-            $remoteQuery->where('variation_option_id', $variationOptionId);
-        } else {
-            $remoteQuery->whereNull('variation_option_id');
-        }
-
-        foreach ($remoteQuery->get() as $remote) {
-            if (in_array($remote->image_url, $localRemoteUrls)) {
-                continue;
-            }
-
-            /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
-             *
-             * @phpstan-ignore varTag.nativeType
-             */
-            $remoteObj = (object) [
-                'id' => (string) $remote->id,
-                'url' => $remote->image_url ?? '',
-                'thumb' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
-                'medium' => $remote->medium_url ?: ($remote->image_url ?? ''),
-                'large' => $remote->large_url ?: ($remote->image_url ?? ''),
-                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
-                'variation_option_ids' => [],
-                'order' => (int) $remote->order_by,
-                'type' => 'remote',
-                'is_remote' => true,
-                'alt' => (string) ($remote->alt ?? ''),
-                'thumbnail_url' => $remote->thumbnail_url ?: ($remote->image_url ?? ''),
-            ];
-            $images[] = $remoteObj;
-        }
-
-        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
-
-        return collect($images)->values();
+        return app(ProductGalleryService::class)->getImagesForOption($this, $variationOptionId);
     }
 
     /**
      * Get all images for the product, both local and remote.
      * Prioritizes local images, then remote images from the 'images' table.
      *
-     * @return Collection<int, object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null}>
+     * @return Collection<int, object>
      */
     public function getAllImages(): Collection
     {
-        $images = [];
-
-        // 1. Add local media (Spatie Media Library)
-        $mediaItems = $this->getMedia('images');
-        $localRemoteUrls = [];
-
-        foreach ($mediaItems as $media) {
-            $remoteUrl = $media->getCustomProperty('remote_resource_url')['standard'] ?? null;
-            if ($remoteUrl) {
-                $localRemoteUrls[] = $remoteUrl;
-            }
-
-            $variationOptionIds = $media->getCustomProperty('variation_option_ids');
-            // Support legacy color_ids/color_id custom properties
-            if (empty($variationOptionIds)) {
-                $colorIds = $media->getCustomProperty('color_ids');
-                $colorId = $media->getCustomProperty('color_id');
-                $variationOptionIds = is_array($colorIds) && count($colorIds) > 0 ? $colorIds : ($colorId ? [$colorId] : []);
-            }
-            $resolvedVariationOptionId = $variationOptionIds[0] ?? null;
-
-            /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $localObj
-             *
-             * @phpstan-ignore varTag.nativeType
-             */
-            $localObj = (object) [
-                'id' => (string) $media->id,
-                'url' => $media->getUrl(),
-                'thumb' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-                'medium' => $media->hasGeneratedConversion('medium') ? $media->getUrl('medium') : $media->getUrl(),
-                'large' => $media->hasGeneratedConversion('large') ? $media->getUrl('large') : $media->getUrl(),
-                'variation_option_id' => $resolvedVariationOptionId ? (int) $resolvedVariationOptionId : null,
-                'variation_option_ids' => (array) $variationOptionIds,
-                'order' => (int) $media->order_column,
-                'type' => 'local',
-                'is_remote' => false,
-                'alt' => (string) ($media->getCustomProperty('alt') ?? ''),
-                'thumbnail_url' => $media->hasGeneratedConversion('thumbnail') ? $media->getUrl('thumbnail') : $media->getUrl(),
-            ];
-            $images[] = $localObj;
-        }
-
-        // 2. Add remote images from the dedicated 'images' table
-        if ($this->relationLoaded('images')) {
-            $remoteImages = $this->images->sortBy('order_by');
-        } else {
-            $remoteImages = $this->images()->orderBy('order_by', 'asc')->get();
-        }
-        foreach ($remoteImages as $remote) {
-            /** @var Image $remote */
-            // Skip remote images that have already been downloaded locally
-            if (in_array($remote->image_url, $localRemoteUrls)) {
-                continue;
-            }
-
-            /**
-             * @var object{id: string, url: string, thumb: string, medium: string, large: string, variation_option_id: int|null, variation_option_ids: array<int|string>, order: int, type: string, is_remote: bool, alt: string, thumbnail_url: string|null} $remoteObj
-             *
-             * @phpstan-ignore varTag.nativeType
-             */
-            $remoteObj = (object) [
-                'id' => (string) $remote->id,
-                'url' => $remote->image_url,
-                'thumb' => $remote->thumbnail_url ?: $remote->image_url,
-                'medium' => $remote->medium_url ?: $remote->image_url,
-                'large' => $remote->large_url ?: $remote->image_url,
-                'variation_option_id' => $remote->variation_option_id ? (int) $remote->variation_option_id : null,
-                'variation_option_ids' => [],
-                'order' => (int) $remote->order_by,
-                'type' => 'remote',
-                'is_remote' => true,
-                'alt' => (string) ($remote->alt ?? ''),
-                'thumbnail_url' => $remote->thumbnail_url ?: $remote->image_url,
-            ];
-            $images[] = $remoteObj;
-        }
-
-        // Sort by order
-        usort($images, fn ($a, $b) => ($a->order ?? 99) <=> ($b->order ?? 99));
-
-        return collect($images)->sortBy('order')->values();
+        return app(ProductGalleryService::class)->getAllImages($this);
     }
 
     /**
@@ -1070,21 +869,7 @@ class Product extends Model implements HasMedia
      */
     public function getMinimumOrderQuantity(): int
     {
-        if ($this->product_class !== ProductClass::AreaBased) {
-            if (array_key_exists('pricing_tiers_min_quantity', $this->attributes)) {
-                $minTierQty = $this->pricing_tiers_min_quantity;
-            } elseif ($this->relationLoaded('pricingTiers')) {
-                $minTierQty = $this->pricingTiers->min('min_quantity');
-            } else {
-                $minTierQty = $this->pricingTiers()->min('min_quantity');
-            }
-
-            if ($minTierQty !== null) {
-                return (int) $minTierQty;
-            }
-        }
-
-        return 1;
+        return app(ProductStartingPriceService::class)->getMinimumOrderQuantity($this);
     }
 
     /**
@@ -1094,7 +879,7 @@ class Product extends Model implements HasMedia
      */
     public function getStartingPrice(): float
     {
-        return $this->getAbsoluteMinimumPrice();
+        return app(ProductStartingPriceService::class)->getStartingPrice($this);
     }
 
     /**
@@ -1106,88 +891,7 @@ class Product extends Model implements HasMedia
      */
     public function getAbsoluteMinimumPrice(bool $skipCache = false): float
     {
-        if (! $skipCache && $this->cached_starting_price !== null) {
-            return (float) $this->cached_starting_price;
-        }
-
-        $minQty = $this->getMinimumOrderQuantity();
-
-        // Per il calcolo ad area, potrebbe esserci un vincolo di area minima (min_area).
-        if ($this->product_class === ProductClass::AreaBased) {
-            $billedArea = $this->calculateTotalBilledArea($minQty, 1.0, 1.0);
-
-            return $this->getPriceForQuantity($minQty) * $billedArea;
-        }
-
-        // Per i prezzi a quantità, controlliamo se il prodotto supporta formati personalizzati,
-        // che potrebbero influenzare l'ottimizzazione sul foglio di stampa.
-        if ($this->allows_custom_size) {
-            $formatType = $this->relationLoaded('variationTypes')
-                ? $this->variationTypes->firstWhere('name', 'Formato')
-                : $this->variationTypes()->where('name', 'Formato')->first();
-
-            $minPriceFound = null;
-
-            if ($formatType) {
-                // Recupera le opzioni di formato per questo prodotto
-                /** @var ProductVariationType|null $pvt */
-                $pvt = $this->relationLoaded('productVariationTypes')
-                    ? $this->productVariationTypes->where('variation_type_id', $formatType->id)->first()
-                    : $this->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
-
-                if ($pvt) {
-                    if ($pvt->relationLoaded('options')) {
-                        $options = $pvt->options->map(fn ($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())->filter();
-                    } else {
-                        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
-                            $query->where('product_variation_type_id', $pvt->id);
-                        })->get();
-                    }
-
-                    foreach ($options as $format) {
-                        $w = null;
-                        $h = null;
-                        $name = strtolower((string) $format->name);
-
-                        // Determina le dimensioni in base al nome dell'opzione (es. "Personalizzato" o "10x15")
-                        if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
-                            $w = $this->min_custom_width ?? 10.0;
-                            $h = $this->min_custom_height ?? 10.0;
-                        } elseif (preg_match('/(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)/i', $name, $matches)) {
-                            $w = (float) str_replace(',', '.', $matches[1]);
-                            $h = (float) str_replace(',', '.', $matches[2]);
-                            if (str_contains(strtolower($name), 'cm')) {
-                                $w *= 10; // Converti in mm internamente
-                                $h *= 10;
-                            }
-                        }
-
-                        // Ottimizza il prezzo in base a quanti pezzi entrano nel foglio
-                        if ($w && $h) {
-                            $itemsPerSheet = $this->calculateItemsPerSheet($w, $h);
-                            if ($itemsPerSheet > 0) {
-                                // Arrotonda la quantità al multiplo dei pezzi per foglio
-                                $qty = (int) ceil($minQty / $itemsPerSheet) * $itemsPerSheet;
-                                if ($qty < $itemsPerSheet) {
-                                    $qty = $itemsPerSheet;
-                                }
-
-                                $price = $this->calculateFinalUnitPrice($qty) * $qty;
-                                if ($minPriceFound === null || $price < $minPriceFound) {
-                                    $minPriceFound = $price;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ($minPriceFound !== null) {
-                return $minPriceFound;
-            }
-        }
-
-        return $this->getPriceForQuantity($minQty) * $minQty;
+        return app(ProductStartingPriceService::class)->getAbsoluteMinimumPrice($this, $skipCache);
     }
 
     /**
@@ -1199,54 +903,7 @@ class Product extends Model implements HasMedia
      */
     public function getStartingUnitPrice(bool $skipCache = false): float
     {
-        if (! $skipCache && $this->cached_starting_unit_price !== null) {
-            return (float) $this->cached_starting_unit_price;
-        }
-
-        $baseFallback = $this->offer_price > 0 ? (float) $this->offer_price : (float) $this->price;
-
-        if ($this->product_class === ProductClass::Apparel || $this->product_class === ProductClass::AreaBased) {
-            if (array_key_exists('pricing_tiers_min_price_per_unit', $this->attributes)) {
-                $minTierPrice = $this->pricing_tiers_min_price_per_unit;
-            } elseif ($this->relationLoaded('pricingTiers')) {
-                $minTierPrice = $this->pricingTiers->min('price_per_unit');
-            } else {
-                $minTierPrice = $this->pricingTiers()->min('price_per_unit');
-            }
-
-            if ($minTierPrice !== null) {
-                $baseFallback = (float) $minTierPrice;
-            }
-        }
-
-        // Controlla se ci sono SKU (varianti) che sovrascrivono questo prezzo base
-        if (array_key_exists('skus_min_override_price', $this->attributes)) {
-            $minSkuOverride = $this->skus_min_override_price;
-            $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
-            $hasSkuWithoutOverride = $this->has_sku_without_override ?? false;
-        } elseif ($this->relationLoaded('skus')) {
-            $skuPrices = $this->skus
-                ->filter(fn ($sku) => $sku->override_price !== null)
-                ->pluck('override_price')
-                ->map(fn ($p) => (float) $p);
-            $hasSkuWithoutOverride = $this->skus->filter(fn ($sku) => $sku->override_price === null)->isNotEmpty();
-        } else {
-            $skuPrices = $this->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($p) => (float) $p);
-            $hasSkuWithoutOverride = $this->skus()->whereNull('override_price')->exists();
-        }
-
-        if ($skuPrices->isNotEmpty()) {
-            // Il prezzo di partenza è il minimo tra le SKU con override,
-            // E potenzialmente il baseFallback se qualche SKU NON ha un override.
-            $minSkuPrice = (float) $skuPrices->min();
-            if ($hasSkuWithoutOverride) {
-                return min($baseFallback, $minSkuPrice);
-            }
-
-            return $minSkuPrice;
-        }
-
-        return $baseFallback;
+        return app(ProductStartingPriceService::class)->getStartingUnitPrice($this, $skipCache);
     }
 
     /**
@@ -1360,11 +1017,7 @@ class Product extends Model implements HasMedia
      */
     public function updateCachedPrices(): void
     {
-        // Skip cache per forzare il ricalcolo reale
-        $this->cached_starting_price = $this->getAbsoluteMinimumPrice(true);
-        $this->cached_starting_unit_price = $this->getStartingUnitPrice(true);
-
-        $this->saveQuietly();
+        app(ProductStartingPriceService::class)->updateCachedPrices($this);
     }
 
     protected function casts(): array

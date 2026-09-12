@@ -36,12 +36,7 @@ class DashboardController extends Controller
 
     public function showOrder(Request $request, Order $order): View
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        if ($order->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $order);
 
         $order->load(['items.product', 'shippingAddress', 'billingAddress']);
 

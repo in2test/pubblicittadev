@@ -326,37 +326,6 @@ class ProductSynchronizer
      */
     public function syncAvailability(Product $product): void
     {
-        if ($product->type !== Product::TYPE_NEWWAVE || ! $product->sku) {
-            return;
-        }
-
-        $data = $this->apiClient->getProductAvailability($product->sku);
-
-        if (empty($data['variations'])) {
-            return;
-        }
-
-        foreach ($data['variations'] as $variationData) {
-            if (empty($variationData['skus'])) {
-                continue;
-            }
-
-            foreach ($variationData['skus'] as $item) {
-                $actualAvailability = (int) $item['availability'];
-                $halvedQuantity = (int) floor($actualAvailability / 2);
-
-                $sku = $item['sku'];
-
-                ProductSku::where('product_id', $product->id)
-                    ->where('sku', $sku)
-                    ->update([
-                        'quantity' => $halvedQuantity,
-                        'is_available' => $halvedQuantity > 0,
-                        'updated_at' => now(),
-                    ]);
-            }
-        }
-
-        $product->touch();
+        app(ProductAvailabilitySynchronizer::class)->sync($product);
     }
 }

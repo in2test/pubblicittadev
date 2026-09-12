@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Exception;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -68,8 +69,7 @@ class NwgApiClient
         GRAPHQL;
 
         try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
+            $response = $this->client()
                 ->post($this->endpoint, [
                     'query' => $query,
                     'variables' => [
@@ -115,8 +115,7 @@ class NwgApiClient
         GRAPHQL;
 
         try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
+            $response = $this->client()
                 ->post($this->endpoint, [
                     'query' => $query,
                     'variables' => [
@@ -158,8 +157,7 @@ class NwgApiClient
         GRAPHQL;
 
         try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
+            $response = $this->client()
                 ->post($this->endpoint, [
                     'query' => $query,
                     'variables' => [
@@ -228,8 +226,7 @@ query Query($productNumber: String!, $language: String!) {
 GQL;
 
         try {
-            $response = Http::withoutVerifying()
-                ->withToken($this->token)
+            $response = $this->client()
                 ->post($this->endpoint, [
                     'query' => $query,
                     'variables' => [
@@ -249,5 +246,22 @@ GQL;
 
             return null;
         }
+    }
+
+    /**
+     * Build the HTTP client used for NewWave requests.
+     *
+     * Certificate verification is enabled by default. Disabling it is an explicit
+     * local-development escape hatch for environments with an untrusted certificate.
+     */
+    private function client(): PendingRequest
+    {
+        $client = Http::withToken($this->token);
+
+        if (! config('services.nwg.verify_ssl', true)) {
+            $client->withoutVerifying();
+        }
+
+        return $client;
     }
 }

@@ -40,6 +40,7 @@ return [
     'nwg' => [
         'endpoint' => env('NWG_GATEWAY_GRAPHQL_ENDPOINT'),
         'token' => env('NWG_GATEWAY_TOKEN'),
+        'verify_ssl' => env('NWG_VERIFY_SSL', true),
     ],
 
     'google' => [

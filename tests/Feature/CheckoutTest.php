@@ -104,6 +104,32 @@ class CheckoutTest extends TestCase
             ->assertSessionHas('error', 'Il tuo carrello è vuoto.');
     }
 
+    public function test_rejects_addresses_owned_by_another_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $product = Product::factory()->create(['price' => 10.00]);
+        $foreignAddress = Address::factory()->create(['user_id' => $otherUser->id]);
+
+        $this->cartManager->add([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'product_slug' => $product->slug,
+            'quantity' => 1,
+            'price' => 10.00,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('checkout.session'), [
+                'shipping_method' => 'delivery',
+                'shipping_address_id' => $foreignAddress->id,
+                'billing_address_id' => $foreignAddress->id,
+            ])
+            ->assertSessionHasErrors(['shipping_address_id', 'billing_address_id']);
+
+        $this->assertDatabaseMissing('orders', ['user_id' => $user->id]);
+    }
+
     public function test_clears_cart_on_success_page(): void
     {
         $user = User::factory()->create();

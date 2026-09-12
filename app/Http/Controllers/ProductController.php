@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -24,6 +25,10 @@ class ProductController extends Controller
      */
     public function show(Category $category, Product $product, Request $request): View
     {
+        if ($product->category_id !== $category->id) {
+            abort(404);
+        }
+
         $product->load([
             'category.parent',
             'pricingTiers',
@@ -38,11 +43,17 @@ class ProductController extends Controller
 
         // If NewWave product and last update > 12 hours ago, fast sync availability
         if ($product->type === Product::TYPE_NEWWAVE && $product->updated_at?->diffInHours(now()) >= 12) {
-            try {
-                app(ProductAvailabilityService::class)->syncAvailability($product);
-            } catch (Exception $e) {
-                Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
-            }
+            defer(function () use ($product): void {
+                try {
+                    Cache::lock('nwg-availability-'.$product->id, 60)->get(
+                        function () use ($product): void {
+                            app(ProductAvailabilityService::class)->syncAvailability($product);
+                        },
+                    );
+                } catch (Exception $e) {
+                    Log::warning("Failed to fast sync availability for product {$product->slug}: ".$e->getMessage());
+                }
+            });
         }
 
         return view('product', [

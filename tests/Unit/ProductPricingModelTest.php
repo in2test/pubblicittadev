@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\ProductClass;
 use App\Models\Product;
+use App\Services\ProductStartingPriceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,6 +45,20 @@ test('it gets correct starting unit price for fixed pricing model', function () 
 
     $product->update(['offer_price' => 45.00]);
     expect($product->getStartingUnitPrice())->toBe(45.00);
+});
+
+test('the starting price service resolves the lowest unit price', function () {
+    $product = Product::factory()->create([
+        'product_class' => ProductClass::Apparel,
+        'price' => 50.00,
+    ]);
+
+    $product->pricingTiers()->create([
+        'min_quantity' => 10,
+        'price_per_unit' => 40.00,
+    ]);
+
+    expect(app(ProductStartingPriceService::class)->getStartingUnitPrice($product->fresh()))->toBe(40.00);
 });
 
 test('it gets correct starting unit price for quantity pricing model', function () {

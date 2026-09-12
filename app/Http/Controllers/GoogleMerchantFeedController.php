@@ -133,7 +133,8 @@ class GoogleMerchantFeedController extends Controller
                         if ($colorOption) {
                             $skuImage = $product->getImagesForOption($colorOption->id)->first();
                             if ($skuImage) {
-                                $imageUrl = $skuImage->large ?? $skuImage->url;
+                                $imageAttributes = (array) $skuImage;
+                                $imageUrl = $imageAttributes['large'] ?? $imageAttributes['url'] ?? null;
                             }
                         }
                         if (! $imageUrl) {

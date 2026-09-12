@@ -2,7 +2,7 @@
 
 **Status**: ✅ COMPLETATO (Pronto per il Go-Live & Ottimizzazione Continua)  
 **Focus**: E-commerce Completo con Pagamenti Online, Preventivi Privati & Local SEO (Fiuggi e Dintorni)  
-**Ultimo aggiornamento**: 24 Luglio 2026  
+**Ultimo aggiornamento**: 24 Luglio 2026
 
 ---
 
@@ -12,7 +12,7 @@
 **Focus**: E-commerce Completo con Pagamenti Online (Stripe) e Preventivi Privati.  
 **Target Geografico**: Fiuggi, provincia di Frosinone e comuni limitrofi (Anagni, Alatri, Ferentino, Sora, Paliano, Acuto, Piglio, Guarcino, ecc.).  
 **Flusso**: Acquisto nel Carrello → Pagamento Stripe **oppure** Richiesta Preventivo Privato → Gestione Ordini.  
-**Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.  
+**Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.
 
 ---
 
@@ -70,6 +70,7 @@ Il database è ottimizzato e le migrazioni sono unificate, con gestione avanzata
 ## 🎯 Funzionalità Implementate
 
 ### ✅ SETTIMANA 1-2: Fondamenta & MVP (COMPLETATA)
+
 - [x] **Core Backend**: Migrazioni, Models, Relazioni e Seeders.
 - [x] **Catalogo**: Vista prodotti, categorie e dettaglio prodotto.
 - [x] **Carrello Base**: Logica di aggiunta, calcolo prezzi e sconti quantità.
@@ -80,29 +81,34 @@ Il database è ottimizzato e le migrazioni sono unificate, con gestione avanzata
 ### 🚀 SETTIMANA 3-4: Advanced Sync & Gallery Management (COMPLETATA)
 
 #### 🌐 Integrazione API NewWave Avanzata
+
 - [x] **Authenticated GraphQL**: Integrazione sicura con gateway NewWave.
 - [x] **Lazy-Sync**: Controllo automatico ogni 12 ore della freschezza dati.
 - [x] **Fast Availability Sync**: Aggiornamento rapido delle giacenze stock senza re-importare l'intero prodotto.
 - [x] **CDN-Mode**: Sincronizzazione automatizzata delle immagini remote.
 
 #### 🖼️ Gestione Media & Gallery
+
 - [x] **Hybrid Gallery Engine**: Unificazione immagini locali (Spatie MediaLibrary) e remote (Images table).
 - [x] **Filtro Colore Intelligente**: La gallery mostra solo le immagini associate al colore selezionato.
 - [x] **Admin Gallery Control**: Interfaccia per reordering manuale e override associazioni colore per immagini API.
 
 #### 🛒 Lavorazioni (Job-Based Cart) e Prodotti Standard
+
 - [x] **Job UUID**: Ogni aggiunta al carrello è una lavorazione unica con UUID.
 - [x] **Configuratore Prodotti Standard**: Form Livewire per prodotti ad area o quantitativi (Forex, Biglietti da visita, Banners, con calcolo `itemsPerSheet`).
 
 ---
 
 ### 🧾 Modulo 3: Pagamenti & Preventivi (COMPLETATO)
+
 - [x] **Stripe Checkout**: Pagamento diretto con redirect a Stripe e gestione Webhooks.
 - [x] **Richiesta Preventivo Privato**: Pulsante per richiedere preventivi riservati dal carrello.
 
 ---
 
 ### 🔍 Modulo 4: SEO, Feed & Social Sharing v2.0 (COMPLETATO - Luglio 2026)
+
 - [x] **Meta Tags & Social Open Graph**: Meta tag dinamici (`og:title`, `og:description`, `og:image`, `og:url`, `twitter:*`) su prodotti, categorie e homepage.
 - [x] **Gestione Anteprime Varianti in OG & Canonical**: Rilevamento automatico delle varianti esposte nella query string (es. `?colore=96`), con cambio dinamico dell'immagine Open Graph, dell'URL canonico e dei dati strutturati Schema.org.
 - [x] **Google Merchant XML Feed**: Generatore automatizzato in `/feed/google-merchant.xml` per Google Shopping con dettaglio varianti (colore, taglia, immagine specifica, link con query param).
@@ -116,31 +122,38 @@ Il database è ottimizzato e le migrazioni sono unificate, con gestione avanzata
 Per dominare i risultati di ricerca locali a **Fiuggi e nei comuni limitrofi** (Anagni, Alatri, Ferentino, Sora, Frosinone, Paliano, Acuto, Piglio, Guarcino, Subiaco), senza limitarsi all'abbigliamento ma coprendo **tutti i prodotti di stampa e comunicazione visiva**, è prevista la seguente tabella di marcia SEO:
 
 ### 1. Tagging Meta & Titoli Geolocalizzati (Global & Categorie)
+
 - **Titolo Homepage**: `Pubblicittà24 | Stampa Digitale, Grande Formato e Abbigliamento a Fiuggi`
 - **Description Homepage**: `Stampa digitale professionale a Fiuggi e provincia di Frosinone: biglietti da visita, volantini, striscioni, pannelli Forex, gadget e abbigliamento personalizzato. Preventivi gratuiti online.`
 - **Pagine Categoria**:
-  - *Biglietti da Visita*: "Stampa Biglietti da Visita a Fiuggi e Dintorni | Pubblicittà24"
-  - *Grande Formato & Pannelli*: "Stampa Grande Formato, Forex e Striscioni Fiuggi | Pubblicittà24"
-  - *Volantini & Pieghevoli*: "Stampa Volantini e Pieghevoli a Fiuggi e Frosinone | Pubblicittà24"
-  - *Abbigliamento da Lavoro*: "Abbigliamento da Lavoro Personalizzato Fiuggi e Ciociaria | Pubblicittà24"
+    - _Biglietti da Visita_: "Stampa Biglietti da Visita a Fiuggi e Dintorni | Pubblicittà24"
+    - _Grande Formato & Pannelli_: "Stampa Grande Formato, Forex e Striscioni Fiuggi | Pubblicittà24"
+    - _Volantini & Pieghevoli_: "Stampa Volantini e Pieghevoli a Fiuggi e Frosinone | Pubblicittà24"
+    - _Abbigliamento da Lavoro_: "Abbigliamento da Lavoro Personalizzato Fiuggi e Ciociaria | Pubblicittà24"
 
 ### 2. Dati Strutturati Schema.org LocalBusiness / PrintShop
+
 Integrazione in `resources/views/layouts/layout.blade.php` dello schema `LocalBusiness` / `PrintShop`:
+
 - **Nome**: Pubblicittà24
 - **Indirizzo**: Fiuggi (FR), Italia
 - **Area Servita (`areaServed`)**: `["Fiuggi", "Anagni", "Alatri", "Ferentino", "Frosinone", "Sora", "Paliano", "Acuto", "Piglio", "Guarcino", "Ciociaria"]`
 - **Servizi Offerti**: Stampa Digitale, Biglietti da Visita, Stampa Grande Formato, Insegne, Pannelli Rigidi, Abbigliamento Promozionale e da Lavoro.
 
 ### 3. Pagine dedicate "Servizi per Zona" (Local Landing Pages)
+
 Creazione di pagine/sezioni target dedicate per intercettare intenti locali ad alta conversione:
+
 - `/stampa-digitale-fiuggi`: Stampa di biglietti da visita, brochure, volantini e cataloghi per aziende ed eventi di Fiuggi e provincia.
 - `/stampa-grande-formato-fiuggi`: Striscioni in PVC, banner microforati, pannelli Forex/Plexiglas, roll-up ed espositori per negozi e fiere in Ciociaria.
 - `/abbigliamento-lavoro-fiuggi`: Abiti da lavoro, divise per hotel, ristoranti, centri termali e attività commerciali a Fiuggi.
 
 ### 4. Footer & Chi Siamo Geolocalizzati
-- Inserimento nel footer del sito di una sezione *"Servizio di Stampa e Personalizzazione a Fiuggi e in Provincia di Frosinone"*, con elenco dei principali comuni serviti (con consegna rapida o ritiro in sede).
+
+- Inserimento nel footer del sito di una sezione _"Servizio di Stampa e Personalizzazione a Fiuggi e in Provincia di Frosinone"_, con elenco dei principali comuni serviti (con consegna rapida o ritiro in sede).
 
 ### 5. Integrazione Google Business Profile (Scheda Google Maps)
+
 - Sincronizzazione del profilo Google Business di Pubblicittà24 con il sito web.
 - Link diretto per recensioni clienti e mappe per rafforzare la presenza nel **Local Pack** di Google per ricerche "vicino a me".
 
@@ -167,6 +180,7 @@ LUGLIO 2026 (Stato Attuale: Completato & Local SEO Attiva)
 ## 🧪 Test Suite
 
 Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
+
 - `CartTest`, `SearchTest`, `ProductPageTest`, `OrderTest`, `QuantityDiscountServiceTest`.
 - Nuovi test per Open Graph, varianti esposte nei meta tag, Sitemap XML e Google Merchant Feed.
 - Test formati custom e calcoli di ridimensionamento (`StandardProductResourceTest`).
@@ -175,3 +189,51 @@ Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
 ---
 
 ## 🚀 TARGET LIVE & LOCAL GROWTH: Pronto per il Rilascio e Posizionamento Locale!
+
+# TO DO
+
+## Optimize For Laravel Best Practices, CRUDdy by design and SOLID Best Practices
+
+Yes. The highest-value remaining optimizations are:
+
+1. **Extract `ProductGalleryService`**
+   Move image aggregation methods out of `Product`:
+    - `getAllImages()`
+    - `getImagesForOption()`
+    - `getFirstImage()`
+    - `getFirstImageUrl()`
+
+2. **Split `ProductSynchronizer`**
+   Separate:
+    - Metadata synchronization
+    - Image synchronization
+    - SKU/variation synchronization
+    - Availability synchronization
+
+3. **Reduce N+1 queries in cart rendering**
+   `CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
+
+4. **Move email side effects out of `Order`**
+   Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
+
+5. **Add missing indexes after confirming query plans**
+   Candidate indexes:
+    - `images(product_id, variation_option_id)`
+    - `orders(user_id, created_at)`
+    - `product_skus(product_id, sku)`
+    - `products(category_id, is_active)`
+
+6. **Replace remaining `app()` service resolution**
+   Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
+
+7. **Add order status enums**
+   Replace string statuses such as `pending`, `paid`, `quotation`, and `processing` with `PaymentStatus` and `WorkStatus` enums.
+
+8. **Add architecture tests**
+   Enforce that:
+    - Controllers do not send mail directly.
+    - Models do not depend on Stripe or mail.
+    - External API calls live in services.
+    - Policies protect admin and user-owned resources.
+
+The next best implementation is `ProductGalleryService`, followed by splitting `ProductSynchronizer`. Both are queue-independent and can be committed as separate steps.

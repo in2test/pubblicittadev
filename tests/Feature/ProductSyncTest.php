@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\NwgApiClient;
+use App\Services\ProductAvailabilityService;
 use App\Services\ProductSynchronizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -95,4 +96,35 @@ it('does not update price if override_price is set', function () {
 
     $product->refresh();
     expect((float) $product->price)->toBe(150.00);
+});
+
+it('synchronizes NewWave SKU availability through the dedicated synchronizer', function () {
+    $product = Product::factory()->create([
+        'sku' => 'AVAILABILITY-SKU',
+        'type' => Product::TYPE_NEWWAVE,
+    ]);
+
+    $product->skus()->create([
+        'sku' => 'AVAILABILITY-SKU-M',
+        'quantity' => 1,
+        'is_available' => true,
+    ]);
+
+    $mockClient = Mockery::mock(NwgApiClient::class);
+    $mockClient->shouldReceive('getProductAvailability')
+        ->once()
+        ->with('AVAILABILITY-SKU')
+        ->andReturn([
+            'variations' => [[
+                'skus' => [[
+                    'sku' => 'AVAILABILITY-SKU-M',
+                    'availability' => 8,
+                ]],
+            ]],
+        ]);
+    $this->app->instance(NwgApiClient::class, $mockClient);
+
+    app(ProductAvailabilityService::class)->syncAvailability($product);
+
+    expect($product->skus()->first()->quantity)->toBe(4);
 });

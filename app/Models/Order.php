@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
@@ -331,35 +332,49 @@ class Order extends Model implements HasMedia
      */
     public function completePayment(string $paymentIntentId): void
     {
-        if ($this->payment_status === 'paid') {
+        /** @var Order|null $paidOrder */
+        $paidOrder = DB::transaction(function () use ($paymentIntentId): ?Order {
+            /** @var Order|null $order */
+            $order = self::query()
+                ->with('items')
+                ->lockForUpdate()
+                ->find($this->getKey());
+
+            if (! $order || $order->payment_status === 'paid') {
+                return null;
+            }
+
+            $order->update([
+                'payment_status' => 'paid',
+                'stripe_payment_intent_id' => $paymentIntentId,
+                'paid_at' => now(),
+            ]);
+
+            // Advance non-personalized items while preserving items waiting for customer files.
+            foreach ($order->items as $item) {
+                if ($item->work_status === 'pending') {
+                    $item->update(['work_status' => 'processing']);
+                }
+            }
+
+            $order->decrementInventory();
+
+            return $order;
+        });
+
+        if (! $paidOrder) {
             return;
         }
 
-        $this->update([
-            'payment_status' => 'paid',
-            'stripe_payment_intent_id' => $paymentIntentId,
-            'paid_at' => now(),
-        ]);
+        // Send notifications only after the payment transaction has committed.
+        $paidOrder->loadMissing('items.product');
 
-        // Aggiorna lo stato lavorazione degli articoli.
-        // Gli articoli "neutri" che erano "in attesa" (pending) passano in lavorazione (processing).
-        // Gli articoli personalizzati ("awaiting_file") rimangono tali in attesa dei file del cliente.
-        foreach ($this->items as $item) {
-            if ($item->work_status === 'pending') {
-                $item->update(['work_status' => 'processing']);
-            }
-        }
-
-        $this->decrementInventory();
-
-        $this->loadMissing('items.product');
-
-        Mail::to($this->user)->send(new OrderPaidConfirmation($this));
+        Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
 
         // Notifica tutti gli amministratori del nuovo ordine pagato
         $admins = User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
-            Mail::to($admin)->send(new AdminOrderPaidNotification($this));
+            Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
         }
     }
 

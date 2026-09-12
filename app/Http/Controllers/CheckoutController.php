@@ -13,7 +13,11 @@ use App\Models\User;
 use App\Services\CartManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -68,10 +72,20 @@ class CheckoutController extends Controller
                 return redirect()->route('cart')->with('error', 'Il tuo carrello è vuoto.');
             }
 
+            /** @var User $user */
+            $user = $request->user();
+
             $request->validate([
                 'shipping_method' => 'required|in:delivery,pickup',
-                'shipping_address_id' => 'required_if:shipping_method,delivery|nullable|exists:addresses,id',
-                'billing_address_id' => 'required|exists:addresses,id',
+                'shipping_address_id' => [
+                    'required_if:shipping_method,delivery',
+                    'nullable',
+                    Rule::exists('addresses', 'id')->where('user_id', $user->id),
+                ],
+                'billing_address_id' => [
+                    'required',
+                    Rule::exists('addresses', 'id')->where('user_id', $user->id),
+                ],
             ]);
 
             // Determine if the user has requested a quotation instead of an immediate payment
@@ -79,9 +93,6 @@ class CheckoutController extends Controller
             $order = $this->createOrderFromCart($request, $items, null, null, $isQuotation);
 
             $order->load('items.product');
-
-            /** @var User $user */
-            $user = $request->user();
 
             // Notify the customer and admin about the new order/quotation via email
             Mail::to($user)->send(new OrderPlacedNotification($order));
@@ -266,6 +277,33 @@ class CheckoutController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        return DB::transaction(fn (): Order => $this->persistOrderFromCart(
+            $request,
+            $items,
+            $shippingId,
+            $billingId,
+            $isQuotation,
+            $products,
+            $user,
+        ));
+    }
+
+    /**
+     * Persist an order and all of its items as one atomic database operation.
+     *
+     * @param  array<string, array<string, mixed>>  $items
+     * @param  Collection<int, Product>  $products
+     */
+    private function persistOrderFromCart(
+        Request $request,
+        array $items,
+        ?int $shippingId,
+        ?int $billingId,
+        bool $isQuotation,
+        Collection $products,
+        User $user,
+    ): Order {
+
         // Calculate the total item cost and determine shipping method
         $itemsTotal = $this->cartManager->total();
         $shippingMethod = $request->input('shipping_method', 'delivery');
@@ -287,7 +325,7 @@ class CheckoutController extends Controller
         // Create the primary order record
         $order = Order::create([
             'user_id' => $user->id,
-            'order_number' => 'ORD-'.strtoupper(str_replace('.', '', uniqid('', true))),
+            'order_number' => 'ORD-'.strtoupper((string) Str::ulid()),
             'payment_status' => $isQuotation ? 'quotation' : 'pending',
             'work_status' => 'pending',
             'items_total' => $itemsTotal,
