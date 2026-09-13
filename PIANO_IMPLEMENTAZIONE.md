@@ -190,6 +190,12 @@ Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
 
 ## 🚀 TARGET LIVE & LOCAL GROWTH: Pronto per il Rilascio e Posizionamento Locale!
 
+## Errors noticed
+
+### Resolved
+
+### To Be resolved
+None at the Moment
 
 ## Optimize For Laravel Best Practices, CRUDdy by design and SOLID Best Practices
 
