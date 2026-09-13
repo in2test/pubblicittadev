@@ -192,54 +192,34 @@ Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
 
 ## Errors noticed
 
-### Resolved
-
-### To Be resolved
-None at the Moment
+### TODO
 
 ## Optimize For Laravel Best Practices, CRUDdy by design and SOLID Best Practices
 
-### DONE
-1. **Extract `ProductGalleryService`**
-   Move image aggregation methods out of `Product`:
-    - `getAllImages()`
-    - `getImagesForOption()`
-    - `getFirstImage()`
-    - `getFirstImageUrl()`
+### TODO
 
-### TO DO
+[x] **Extract `ProductGalleryService`**
+Move image aggregation methods out of `Product`: - `getAllImages()` - `getImagesForOption()` - `getFirstImage()` - `getFirstImageUrl()`
 
-2. **Split `ProductSynchronizer`**
-   Separate:
-    - Metadata synchronization
-    - Image synchronization
-    - SKU/variation synchronization
-    - Availability synchronization
+[ ] **Split `ProductSynchronizer`**
+Separate: - Metadata synchronization - Image synchronization - SKU/variation synchronization - Availability synchronization
 
-3. **Reduce N+1 queries in cart rendering**
-   `CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
+[ ] **Reduce N+1 queries in cart rendering**
+`CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
 
-4. **Move email side effects out of `Order`**
-   Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
+[ ] **Move email side effects out of `Order`**
+Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
 
-5. **Add missing indexes after confirming query plans**
-   Candidate indexes:
-    - `images(product_id, variation_option_id)`
-    - `orders(user_id, created_at)`
-    - `product_skus(product_id, sku)`
-    - `products(category_id, is_active)`
+[ ] **Add missing indexes after confirming query plans**
+Candidate indexes: - `images(product_id, variation_option_id)` - `orders(user_id, created_at)` - `product_skus(product_id, sku)` - `products(category_id, is_active)`
 
-6. **Replace remaining `app()` service resolution**
-   Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
+[ ] **Replace remaining `app()` service resolution**
+Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
 
-7. **Add order status enums**
-   Replace string statuses such as `pending`, `paid`, `quotation`, and `processing` with `PaymentStatus` and `WorkStatus` enums.
+[ ] **Add order status enums**
+Replace string statuses such as `pending`, `paid`, `quotation`, and `processing` with `PaymentStatus` and `WorkStatus` enums.
 
-8. **Add architecture tests**
-   Enforce that:
-    - Controllers do not send mail directly.
-    - Models do not depend on Stripe or mail.
-    - External API calls live in services.
-    - Policies protect admin and user-owned resources.
+[ ] **Add architecture tests**
+Enforce that: - Controllers do not send mail directly. - Models do not depend on Stripe or mail. - External API calls live in services. - Policies protect admin and user-owned resources.
 
 The next best implementation is `ProductGalleryService`, followed by splitting `ProductSynchronizer`. Both are queue-independent and can be committed as separate steps.
