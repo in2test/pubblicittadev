@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Image;
 use App\Models\Product;
+use App\Models\VariationOption;
 use Illuminate\Support\Collection;
 
 class ProductGalleryService
@@ -185,7 +186,7 @@ class ProductGalleryService
         }
 
         $requestOption = $product->getVariationOptionFromRequest();
-        if ($requestOption) {
+        if ($requestOption instanceof VariationOption) {
             $optionImages = $this->getImagesForOption($product, $requestOption->id);
             if ($optionImages->isNotEmpty()) {
                 return $optionImages->first();
