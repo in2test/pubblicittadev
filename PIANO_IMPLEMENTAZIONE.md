@@ -190,18 +190,18 @@ Creati oltre **180 test** (Pest/PHPUnit) passanti con successo che coprono:
 
 ## 🚀 TARGET LIVE & LOCAL GROWTH: Pronto per il Rilascio e Posizionamento Locale!
 
-# TO DO
 
 ## Optimize For Laravel Best Practices, CRUDdy by design and SOLID Best Practices
 
-Yes. The highest-value remaining optimizations are:
-
+### DONE
 1. **Extract `ProductGalleryService`**
    Move image aggregation methods out of `Product`:
     - `getAllImages()`
     - `getImagesForOption()`
     - `getFirstImage()`
     - `getFirstImageUrl()`
+
+### TO DO
 
 2. **Split `ProductSynchronizer`**
    Separate:
