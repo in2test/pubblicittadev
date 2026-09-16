@@ -174,10 +174,23 @@ class ProductPriceCalculator
             $selectedOptionIds = array_filter($selectedOptionIds);
 
             foreach ($selectedOptionIds as $selectedOptionId) {
-                $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
-                    ->where('variation_option_id', $selectedOptionId)
-                    ->with('option')
-                    ->first();
+                $productVariationOption = null;
+
+                if ($product->relationLoaded('productVariationTypes')) {
+                    $pvt = $product->productVariationTypes->firstWhere('id', $pivot->id)
+                        ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
+
+                    if ($pvt && $pvt->relationLoaded('options')) {
+                        $productVariationOption = $pvt->options->firstWhere('variation_option_id', $selectedOptionId);
+                    }
+                }
+
+                if (! $productVariationOption) {
+                    $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
+                        ->where('variation_option_id', $selectedOptionId)
+                        ->with('option')
+                        ->first();
+                }
 
                 if ($productVariationOption) {
                     $modifier = $productVariationOption->getEffectivePriceModifier();

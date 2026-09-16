@@ -255,9 +255,10 @@ class CartManager
 
         return $this->products = Product::with([
             'images',
-            'category',
+            'category.quantityDiscounts',
             'skus.options',
             'variationTypes',
+            'productVariationTypes.options.option',
             'pricingTiers',
             'media',
         ])->whereIn('id', $productIds)->get()->keyBy('id');
