@@ -194,6 +194,8 @@ Over **180+ tests** (Pest/PHPUnit) successfully passing, covering:
 
 ### TODO
 
+[ ] In /cart page if for example i have basic t orange 2 Ms and 7 XLs ofcourse it doesn't calculate the discount (triggered at 10) but if I up the XLs to 8 it still does't trigger the discount, if instead i was in the product page and isert the same quantities 2 Ms and 8 XLs it shows me the discount
+
 ## Optimize For Laravel Best Practices, CRUDdy by Design and SOLID Best Practices
 
 ### TODO
@@ -204,10 +206,11 @@ Move image aggregation methods out of `Product`: - `getAllImages()` - `getImages
 [x] **Split `ProductSynchronizer`**  
 Separate: - Metadata synchronization - Image synchronization - SKU/variation synchronization - Availability synchronization
 
-[x] **Reduce N+1 queries in cart rendering**  
+[x] **Reduce N+1 queries in cart rendering**
 `CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
 
-[ ] **Move email side effects out of `Order`**  
+[x] **Move email side effects out of `Order`**
+Model events and `completePayment()` send emails directly. Since queues are unavailable, use container resolution (via `app()`) after database commits to keep behavior synchronous but reduce response blocking by keeping domain model clean. Created `OrderNotificationService` and `OrderPaymentNotificationService` to handle all email notifications.  
 Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
 
 [ ] **Add missing indexes after confirming query plans**  

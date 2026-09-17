@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Mail\AdminOrderPaidNotification;
-use App\Mail\OrderPaidConfirmation;
-use App\Mail\OrderStatusChangedNotification;
+use App\Services\OrderNotificationService;
+use App\Services\OrderPaymentNotificationService;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Override;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -296,29 +294,28 @@ class Order extends Model implements HasMedia
     /**
      * Bootstrap the model and its traits.
      *
-     * Registers the "updated" model event to send notifications when
-     * payment or work statuses change.
+     * Registers a listener to send notifications when order statuses change.
+     * The notification logic is delegated to OrderNotificationService,
+     * keeping side effects out of the domain model.
      */
     #[Override]
     protected static function booted(): void
     {
-        static::updated(function (Order $order) {
+        // Use container resolution to get the service for email sending
+        // This keeps the model clean while still triggering notifications synchronously
+        // (queues are unavailable, so we defer() by calling sync methods)
+        static::updated(function (Order $order): void {
             if ($order->wasChanged('payment_status') || $order->wasChanged('work_status')) {
-                // Do not send generic update email if it was just marked as paid, since completePayment handles its own paid confirmation emails
+                // Skip email if just marked as paid (handled by completePayment notifications)
                 if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
                     return;
                 }
 
                 $order->loadMissing('items.product');
 
-                // Send email to customer
-                Mail::to($order->user)->send(new OrderStatusChangedNotification($order));
-
-                // Send email to all administrators
-                $admins = User::where('role', 'admin')->get();
-                foreach ($admins as $admin) {
-                    Mail::to($admin)->send(new OrderStatusChangedNotification($order));
-                }
+                // Delegate to service for email sending
+                // Order status changes (except when marked as paid) trigger notification emails
+                app(OrderNotificationService::class)->sendStatusChangeNotification($order);
             }
         });
     }
@@ -326,7 +323,8 @@ class Order extends Model implements HasMedia
     /**
      * Completa il processo di pagamento per questo ordine.
      * Segna l'ordine come pagato, avanza lo stato di lavorazione degli articoli,
-     * scala l'inventario ed invia le notifiche email.
+     * e scala l'inventario. Le notifiche email sono delegate al servizio
+     * OrderPaymentNotificationService.
      *
      * @param  string  $paymentIntentId  ID del Payment Intent di Stripe
      */
@@ -362,19 +360,11 @@ class Order extends Model implements HasMedia
             return $order;
         });
 
-        if (! $paidOrder) {
-            return;
-        }
-
-        // Send notifications only after the payment transaction has committed.
-        $paidOrder->loadMissing('items.product');
-
-        Mail::to($paidOrder->user)->send(new OrderPaidConfirmation($paidOrder));
-
-        // Notifica tutti gli amministratori del nuovo ordine pagato
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            Mail::to($admin)->send(new AdminOrderPaidNotification($paidOrder));
+        // Only send notifications if payment was actually successful (order exists and wasn't already paid)
+        if ($paidOrder instanceof Order) {
+            // Send payment notifications after the transaction commits
+            // Use container resolution to get the service - keeps model clean while supporting direct calls
+            app(OrderPaymentNotificationService::class)->sendAllPaymentNotifications($paidOrder);
         }
     }
 

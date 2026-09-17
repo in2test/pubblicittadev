@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\OrderPaymentNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,10 @@ use UnexpectedValueException;
 
 class WebhookController extends Controller
 {
+    public function __construct(
+        private readonly OrderPaymentNotificationService $paymentNotificationService,
+    ) {}
+
     /**
      * Handle incoming Stripe webhook events.
      *
@@ -54,9 +59,9 @@ class WebhookController extends Controller
     }
 
     /**
-     * Update the order status to 'paid' when the checkout session is completed.
+     * Handle webhook event for checkout session completion (payment).
      *
-     * @param  mixed  $session  The Stripe session object (typically Stripe\Checkout\Session).
+     * @param  mixed  $session  The Stripe session object.
      */
     protected function handleCheckoutSessionCompleted($session): void
     {
@@ -86,8 +91,9 @@ class WebhookController extends Controller
         $paymentIntent = $session->payment_intent;
         $order->completePayment($paymentIntent);
 
-        Log::info('Stripe Webhook: Order marked as paid and inventory decremented', ['order_id' => $orderId, 'stripe_session' => $session->id]);
+        // Send payment notifications after the transaction commits
+        $this->paymentNotificationService->sendAllPaymentNotifications($order);
 
-        // Here you can trigger order confirmation emails or other post-payment logic
+        Log::info('Stripe Webhook: Order marked as paid and inventory decremented', ['order_id' => $orderId, 'stripe_session' => $session->id]);
     }
 }
