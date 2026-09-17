@@ -125,6 +125,16 @@ class Category extends Model implements HasMedia
     }
 
     /**
+     * Get all discounts associated with this category.
+     *
+     * @return HasMany<CategoryQuantityDiscount, $this> The relationship with Discounts.
+     */
+    public function quantityDiscounts(): HasMany
+    {
+        return $this->hasMany(CategoryQuantityDiscount::class, 'category_id');
+    }
+
+    /**
      * Register media conversions for category image variants.
      *
      * Configures thumbnail and medium size conversions to optimize
