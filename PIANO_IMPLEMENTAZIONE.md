@@ -204,52 +204,8 @@ Move image aggregation methods out of `Product`: - `getAllImages()` - `getImages
 [x] **Split `ProductSynchronizer`**  
 Separate: - Metadata synchronization - Image synchronization - SKU/variation synchronization - Availability synchronization
 
-[ ] **Reduce N+1 queries in cart rendering**  
+[x] **Reduce N+1 queries in cart rendering**  
 `CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
-
-Implementation Plan: Reduce N+1 Queries in Cart Rendering
-Goal Description
-In CartController::index(), several queries still occur inside the loop over cart items:
-
-ProductPriceCalculator::applyModifiersToTotal() runs queries for each selected option:
-ProductVariationOption::where('product_variation_type_id', $pivot->id)->where('variation_option_id', $selectedOptionId)->with('option')->first()
-CartController::index() contains heavy presentation logic (enriching cart items, resolving swatch colors, sizing rows, display images, discounts, placements).
-The cart items enrichment logic belongs in a dedicated presenter/query service: CartPresenter (or CartViewService).
-Preloading:
-When loading products in CartManager::getProducts(), eager-load variationTypes.options (with pivot options) and category discounts so calculating modifiers and tiered prices does not issue ad-hoc database queries per item.
-In ProductPriceCalculator::applyModifiersToTotal(), check if options/modifiers are already loaded on the product/pivot to avoid repetitive SQL queries for every modifier in the cart.
-Proposed Changes
-[NEW] app/Services/CartPresenter.php
-Extracts the presentation & enrichment loop from CartController::index().
-Method present(Collection $rawItems, Collection $products, CartManager $cart): array:
-Returns structured array with items, total, count, totalSavings, totalQty.
-Batch resolves skus, options, types.
-Enriches items cleanly.
-[MODIFY] app/Services/CartManager.php
-Update getProducts() eager loading:
-Add 'category.quantityDiscounts', 'productVariationTypes.options.option'.
-[MODIFY] app/Services/ProductPriceCalculator.php
-In applyModifiersToTotal(), optimize modifier resolution:
-Check if $pivot->relationLoaded('options') before executing ProductVariationOption::where(...). If loaded, filter from the in-memory collection. This eliminates the per-modifier database queries during cart rendering and checkout price calculations!
-[MODIFY] app/Http/Controllers/CartController.php
-Inject CartPresenter $cartPresenter.
-Simplify index() to:
-php
-
-public function index(CartPresenter $presenter): View
-{
-    $data = $presenter->present();
-    return view('cart', $data);
-}
-Verification Plan
-Automated Tests
-Run php artisan test --filter=CartTest
-Run php artisan test --filter=CheckoutTest
-Run full test suite: php artisan test --compact
-Code Quality & Formatting
-Run composer run format (Rector + Pint + PHPStan)
-Commit and push to origin master upon completion
-
 
 [ ] **Move email side effects out of `Order`**  
 Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
@@ -265,4 +221,3 @@ Replace string statuses such as `pending`, `paid`, `quotation`, and `processing`
 
 [ ] **Add architecture tests**  
 Enforce that: - Controllers do not send mail directly. - Models do not depend on Stripe or mail. - External API calls live in services. - Policies protect admin and user-owned resources.
-

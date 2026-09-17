@@ -17,7 +17,8 @@
       "Bash(vendor/bin/phpstan analyze:*)",
       "Bash(./vendor/bin/phpstan analyze *)",
       "Bash(php -m)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(git commit:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
