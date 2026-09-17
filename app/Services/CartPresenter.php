@@ -34,7 +34,7 @@ class CartPresenter
         /** @var Collection<string, array<string, mixed>> $rawItems */
         $rawItems = collect($this->cart->getItems());
 
-        // Batch-load all related data up front
+        // Batch-load all related data up front using eager-loaded relations from getProducts()
         $products = $this->cart->getProducts();
 
         $allSkuIds = $rawItems->pluck('quantities')
@@ -47,19 +47,59 @@ class CartPresenter
             ->get()
             ->keyBy('id');
 
-        $allOptionIds = $rawItems->pluck('selected_options')
+        // Extract all option IDs from selected_options and eager-loaded relations
+        // Convert all Collections to arrays first to avoid PHPStan type errors
+        $optionIdsFromItems = collect($rawItems)
+            ->pluck('selected_options')
             ->filter(fn ($item) => is_array($item))
-            ->flatMap(fn ($o) => Arr::flatten($o))
-            ->unique();
+            ->flatMap(fn ($opts) => Arr::flatten($opts));
 
-        $options = VariationOption::whereIn('id', $allOptionIds)
-            ->get()
-            ->keyBy('id');
+        // Extract option IDs from productVariationTypes.pivot.options relations that are eager-loaded
+        $optionIdsFromRelations = collect($products)->map(function ($product): array {
+            $ids = [];
+            foreach ($product->productVariationTypes as $pivot) {
+                foreach ($pivot->options as $option) {
+                    $ids[] = (int) $option->variation_option_id;
+                }
+            }
 
-        $typeIds = $options->pluck('variation_type_id')->unique();
-        $types = VariationType::whereIn('id', $typeIds)
-            ->get()
-            ->keyBy('id');
+            return $ids;
+        })->flatten();
+
+        // Merge and deduplicate option IDs
+        $allOptionIds = array_unique(array_merge($optionIdsFromItems->all(), $optionIdsFromRelations->all()));
+
+        if ($allOptionIds !== []) {
+            $options = VariationOption::whereIn('id', $allOptionIds)
+                ->get()
+                ->keyBy('id');
+        } else {
+            $options = new Collection;
+        }
+
+        // Extract type IDs from loaded options and eager-loaded relations
+        $typeIdsFromOptions = collect($options)->pluck('variation_type_id')->all();
+
+        // Extract type IDs from productVariationTypes that are eager-loaded
+        $typeIdsFromRelations = collect($products)->map(function ($product): array {
+            $ids = [];
+            foreach ($product->productVariationTypes as $pivot) {
+                $ids[] = (int) $pivot->variation_type_id;
+            }
+
+            return $ids;
+        })->flatten();
+
+        // Merge and deduplicate type IDs
+        $typeIds = array_unique(array_merge($typeIdsFromOptions, $typeIdsFromRelations->all()));
+
+        if ($typeIds !== []) {
+            $types = VariationType::whereIn('id', $typeIds)
+                ->get()
+                ->keyBy('id');
+        } else {
+            $types = new Collection;
+        }
 
         // Build enriched item list
         $items = [];

@@ -259,6 +259,7 @@ class CartManager
             'skus.options',
             'variationTypes',
             'productVariationTypes.options.option',
+            'productVariationTypes.options.option.variation_option',
             'pricingTiers',
             'media',
         ])->whereIn('id', $productIds)->get()->keyBy('id');

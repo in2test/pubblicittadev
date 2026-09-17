@@ -35,7 +35,11 @@ class ProductPriceCalculator
             return 0.0;
         }
 
-        $product->loadMissing(['skus.options', 'variationTypes']);
+        // Product is already eager-loaded with required relations from getProducts() or other contexts
+        // Only load missing relations if called directly without eager loading
+        if (! $product->relationLoaded('skus')) {
+            $product->loadMissing('skus.options', 'variationTypes');
+        }
 
         if ($product->product_class === ProductClass::AreaBased) {
             if (empty($width) || empty($height)) {
@@ -155,11 +159,13 @@ class ProductPriceCalculator
             return $total;
         }
 
-        $product->loadMissing('variationTypes');
+        // Eager-load variationTypes and their options/pivots up front to avoid N+1 queries
+        $product->loadMissing(['variationTypes', 'productVariationTypes']);
 
         $flatModifiers = 0.0;
         $percentageModifiers = 0.0;
 
+        // variationTypes and productVariationTypes are already eager-loaded from getProducts()
         foreach ($product->variationTypes as $type) {
             /** @var ProductVariationType|null $pivot */
             $pivot = $type->pivot;
@@ -173,24 +179,41 @@ class ProductPriceCalculator
             }
             $selectedOptionIds = array_filter($selectedOptionIds);
 
-            foreach ($selectedOptionIds as $selectedOptionId) {
-                $productVariationOption = null;
+            // Check if options are already loaded on the pivot (from eager load in getProducts)
+            // If loaded, filter from the in-memory collection to avoid DB queries
+            if ($product->relationLoaded('productVariationTypes')) {
+                $pvt = $product->productVariationTypes->firstWhere('id', $pivot->id)
+                    ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
 
-                if ($product->relationLoaded('productVariationTypes')) {
-                    $pvt = $product->productVariationTypes->firstWhere('id', $pivot->id)
-                        ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
-
-                    if ($pvt && $pvt->relationLoaded('options')) {
+                // If options are already loaded, use the in-memory collection directly
+                if ($pvt && $pvt->relationLoaded('options')) {
+                    foreach ($selectedOptionIds as $selectedOptionId) {
                         $productVariationOption = $pvt->options->firstWhere('variation_option_id', $selectedOptionId);
-                    }
-                }
 
-                if (! $productVariationOption) {
-                    $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
-                        ->where('variation_option_id', $selectedOptionId)
-                        ->with('option')
-                        ->first();
+                        if ($productVariationOption) {
+                            $modifier = $productVariationOption->getEffectivePriceModifier();
+                            $modifierType = $productVariationOption->getEffectiveModifierType();
+
+                            if ($modifier > 0) {
+                                if ($modifierType->value === 'percentage') {
+                                    $percentageModifiers += $modifier;
+                                } else {
+                                    $flatModifiers += $modifier;
+                                }
+                            }
+                        }
+                    }
+
+                    continue; // All option lookups for this modifier type are done from memory
                 }
+            }
+
+            // Fallback: query the database only if options were not already loaded
+            foreach ($selectedOptionIds as $selectedOptionId) {
+                $productVariationOption = ProductVariationOption::where('product_variation_type_id', $pivot->id)
+                    ->where('variation_option_id', $selectedOptionId)
+                    ->with('option')
+                    ->first();
 
                 if ($productVariationOption) {
                     $modifier = $productVariationOption->getEffectivePriceModifier();
