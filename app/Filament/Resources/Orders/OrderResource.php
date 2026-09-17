@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Orders;
 
+use App\Enums\WorkStatus;
 use App\Filament\Resources\Orders\Pages\CreateOrder;
 use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
@@ -122,7 +123,7 @@ class OrderResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         // Count all orders where the work status is pending
-        return (string) static::getModel()::where('work_status', '=', 'pending')->count();
+        return (string) static::getModel()::where('work_status', '=', WorkStatus::Pending->value)->count();
     }
 
     /**
@@ -136,6 +137,6 @@ class OrderResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         // Check if there are any pending orders to determine the badge color
-        return static::getModel()::where('work_status', '=', 'pending')->count() > 0 ? 'warning' : 'gray';
+        return static::getModel()::where('work_status', '=', WorkStatus::Pending->value)->count() > 0 ? 'warning' : 'gray';
     }
 }

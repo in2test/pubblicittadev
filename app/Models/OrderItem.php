@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\WorkStatus;
 use Database\Factories\OrderItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +20,7 @@ use Override;
     'subtotal',
     'customization_json',
     'design_file_path',
-    'work_status',
+    WorkStatus::class,
 ])]
 /**
  * @property int $id
@@ -31,10 +32,7 @@ use Override;
  * @property array $customization_json
  * @property-read Product $product
  * @property-read Order $order
- * @property string|null $design_file_path
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property string $work_status
+ * @property WorkStatus $work_status
  *
  * @method static \Database\Factories\OrderItemFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newModelQuery()
@@ -86,24 +84,47 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function workStatusLabel(): string
+    {
+        $status = $this->work_status;
+
+        // Handle string values for backward compatibility with legacy data
+        if (is_string($status)) {
+            return match ($status) {
+                'pending' => 'In Attesa',
+                'awaiting_file' => 'Attendiamo File',
+                'processing' => 'In Lavorazione',
+                'ready' => 'Pronto per Spedizione',
+                'shipped' => 'Spedito',
+                'completed' => 'Completato',
+                default => $status,
+            };
+        }
+
+        return match ($status) {
+            WorkStatus::Pending => 'In Attesa',
+            WorkStatus::AwaitingFile => 'Attendiamo File',
+            WorkStatus::Processing => 'In Lavorazione',
+            WorkStatus::Ready => 'Pronto per Spedizione',
+            WorkStatus::Shipped => 'Spedito',
+            WorkStatus::Completed => 'Completato',
+            default => $status->value,
+        };
+    }
+
+    /**
+     * @deprecated Use workStatusLabel() instead.
+     */
     public function getWorkStatusLabel(): string
     {
-        return match ($this->work_status) {
-            'pending' => 'In Attesa',
-            'awaiting_file' => 'Attendiamo File',
-            'processing' => 'In Lavorazione',
-            'ready' => 'Pronto per Spedizione',
-            'shipped' => 'Spedito',
-            'completed' => 'Completato',
-            default => $this->work_status,
-        };
+        return $this->workStatusLabel();
     }
 
     #[Override]
     protected static function booted(): void
     {
         static::saved(function (OrderItem $item) {
-            if ($item->wasChanged('work_status')) {
+            if ($item->wasChanged(WorkStatus::class)) {
                 $item->loadMissing('order');
                 /** @var Order $order */
                 $order = $item->order;

@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Mail\OrderStatusChangedNotification;
 use App\Models\Order;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
-
 /**
  * OrderNotificationService handles email notifications for order status changes.
  *
  * This service encapsulates the logic for sending emails when order statuses change,
  * separating side effects from model events and domain logic.
  */
+use Illuminate\Support\Facades\Mail;
+
 class OrderNotificationService
 {
     /**
@@ -28,7 +29,7 @@ class OrderNotificationService
     public function sendStatusChangeNotification(Order $order): void
     {
         // Skip generic update email if just marked as paid (handled by completePayment)
-        if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
+        if ($order->wasChanged('payment_status') && $order->payment_status === PaymentStatus::Paid) {
             return;
         }
 

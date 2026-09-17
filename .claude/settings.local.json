@@ -20,7 +20,11 @@
       "Bash(dir *)",
       "Bash(git commit:*)",
       "mcp__laravel-boost__database-query",
-      "Bash(vendor/bin/pint --dirty --format agent)"
+      "Bash(vendor/bin/pint --dirty --format agent)",
+      "Bash(vendor/bin/pint --test)",
+      "Bash(vendor/bin/pint --format agent app/Models/*.php app/Http/Controllers/CheckoutController.php)",
+      "Bash(vendor/bin/pest --filter=OrderItemTest --compact)",
+      "Bash(vendor/bin/pest --compact)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Orders\Schemas;
 
-use App\Enums\ProductClass;
+use App\Enums\PaymentStatus;
+use App\Enums\WorkStatus;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
@@ -38,22 +39,11 @@ class OrderForm
                                 ->required(),
                             Select::make('payment_status')
                                 ->label('Stato Pagamento')
-                                ->options([
-                                    'pending' => 'In Attesa',
-                                    'paid' => 'Pagato',
-                                    'cancelled' => 'Annullato',
-                                ])
+                                ->options(PaymentStatus::class)
                                 ->required(),
                             Select::make('work_status')
                                 ->label('Stato Lavorazione (Automatico)')
-                                ->options([
-                                    'pending' => 'In Attesa',
-                                    'awaiting_file' => 'Attendiamo File',
-                                    'processing' => 'In Lavorazione',
-                                    'ready' => 'Pronto per Spedizione',
-                                    'shipped' => 'Spedito',
-                                    'completed' => 'Completato',
-                                ])
+                                ->options(WorkStatus::class)
                                 ->disabled()
                                 ->required(),
                         ]),
@@ -189,14 +179,7 @@ class OrderForm
                                         }),
                                     Select::make('work_status')
                                         ->label('Stato Lavorazione')
-                                        ->options([
-                                            'pending' => 'In Attesa',
-                                            'awaiting_file' => 'Attendiamo File',
-                                            'processing' => 'In Lavorazione',
-                                            'ready' => 'Pronto per Spedizione',
-                                            'shipped' => 'Spedito',
-                                            'completed' => 'Completato',
-                                        ])
+                                        ->options(WorkStatus::class)
                                         ->required(),
                                     Placeholder::make('customization_details')
                                         ->label('Dettagli Lavorazione / Note')

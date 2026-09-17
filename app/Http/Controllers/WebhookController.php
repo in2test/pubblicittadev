@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Services\OrderPaymentNotificationService;
 use Illuminate\Http\JsonResponse;
@@ -83,7 +84,7 @@ class WebhookController extends Controller
             return;
         }
 
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status === PaymentStatus::Paid) {
             return;
         }
 

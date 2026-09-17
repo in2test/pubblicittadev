@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
+use App\Enums\WorkStatus;
 use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -61,7 +63,7 @@ class CheckoutController extends Controller
             }
 
             // Only pending orders can be paid for
-            if ($order->payment_status !== 'pending') {
+            if ($order->payment_status !== PaymentStatus::Pending) {
                 return redirect()->route('dashboard.orders')->with('error', 'Questo ordine è già stato elaborato.');
             }
         } else {
@@ -89,7 +91,7 @@ class CheckoutController extends Controller
             ]);
 
             // Determine if the user has requested a quotation instead of an immediate payment
-            $isQuotation = $request->input('payment_method') === 'quotation';
+            $isQuotation = $request->input('payment_method') === PaymentStatus::Quotation->value;
             $order = $this->createOrderFromCart($request, $items, null, null, $isQuotation);
 
             $order->load('items.product');
@@ -102,7 +104,7 @@ class CheckoutController extends Controller
         $order->loadMissing('items.product');
 
         // If it's a quotation, clear the cart and immediately redirect to success without involving Stripe
-        if ($order->payment_status === 'quotation') {
+        if ($order->payment_status === PaymentStatus::Quotation) {
             $this->cartManager->clear();
 
             return redirect()->route('checkout.success')
@@ -326,8 +328,8 @@ class CheckoutController extends Controller
         $order = Order::create([
             'user_id' => $user->id,
             'order_number' => 'ORD-'.strtoupper((string) Str::ulid()),
-            'payment_status' => $isQuotation ? 'quotation' : 'pending',
-            'work_status' => 'pending',
+            'payment_status' => $isQuotation ? PaymentStatus::Quotation : PaymentStatus::Pending,
+            'work_status' => WorkStatus::Pending,
             'items_total' => $itemsTotal,
             'shipping_cost' => $shippingCost,
             'shipping_method' => $shippingMethod,
@@ -373,7 +375,7 @@ class CheckoutController extends Controller
                 }
             }
             $hasPersonalization = $hasModifierOption || ! empty($item['design_file_path']);
-            $initialWorkStatus = $hasPersonalization ? 'awaiting_file' : 'pending';
+            $initialWorkStatus = $hasPersonalization ? WorkStatus::AwaitingFile : WorkStatus::Pending;
 
             // Create the corresponding OrderItem
             $order->items()->create([
