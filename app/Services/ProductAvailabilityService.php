@@ -8,24 +8,13 @@ use App\Models\Product;
 
 class ProductAvailabilityService
 {
-    private readonly NwgApiClient $apiClient;
-
-    private readonly ProductDataMapper $dataMapper;
-
-    private readonly ProductValidator $validator;
-
-    private readonly ProductSynchronizer $synchronizer;
-
-    private readonly ProductAvailabilitySynchronizer $availabilitySynchronizer;
-
-    public function __construct()
-    {
-        $this->apiClient = app(NwgApiClient::class);
-        $this->dataMapper = app(ProductDataMapper::class);
-        $this->validator = app(ProductValidator::class);
-        $this->synchronizer = app(ProductSynchronizer::class);
-        $this->availabilitySynchronizer = app(ProductAvailabilitySynchronizer::class);
-    }
+    public function __construct(
+        private readonly NwgApiClient $apiClient,
+        private readonly ProductDataMapper $dataMapper,
+        private readonly ProductValidator $validator,
+        private readonly ProductSynchronizer $synchronizer,
+        private readonly ProductAvailabilitySynchronizer $availabilitySynchronizer,
+    ) {}
 
     /**
      * Get full product data including metadata and variations.

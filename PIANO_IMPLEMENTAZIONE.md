@@ -213,10 +213,10 @@ Separate: - Metadata synchronization - Image synchronization - SKU/variation syn
 Model events and `completePayment()` send emails directly. Since queues are unavailable, use container resolution (via `app()`) after database commits to keep behavior synchronous but reduce response blocking by keeping domain model clean. Created `OrderNotificationService` and `OrderPaymentNotificationService` to handle all email notifications.  
 Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
 
-[ ] **Add missing indexes after confirming query plans**  
+[x] **Add missing indexes after confirming query plans**  
 Candidate indexes: - `images(product_id, variation_option_id)` - `orders(user_id, created_at)` - `product_skus(product_id, sku)` - `products(category_id, is_active)`
 
-[ ] **Replace remaining `app()` service resolution**  
+[x] **Replace remaining `app()` service resolution**  
 Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
 
 [ ] **Add order status enums**  

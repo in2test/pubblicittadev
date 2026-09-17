@@ -36,8 +36,15 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        // External API clients
         $this->app->singleton(NwgApiClient::class);
+
+        // Infrastructure services with external dependencies
         $this->app->singleton(QuantityDiscountService::class);
+        /** @phpstan-ignore-next-line */
+        $this->app->singleton(ProductAvailabilityService::class);
+        /** @phpstan-ignore-next-line */
+        $this->app->singleton(ProductSynchronizer::class);
     }
 
     /**
