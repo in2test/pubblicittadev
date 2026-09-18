@@ -219,8 +219,12 @@ Candidate indexes: - `images(product_id, variation_option_id)` - `orders(user_id
 [x] **Replace remaining `app()` service resolution**  
 Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
 
-[ ] **Add order status enums**  
-Replace string statuses such as `pending`, `paid`, `quotation`, and `processing` with `PaymentStatus` and `WorkStatus` enums.
+[x] **Add order status enums**
+Replace string statuses with `PaymentStatus` and `WorkStatus` backed enums:
+- Added `weight()` method for ordering states
+- Added `label()` for Italian labels
+- Removed custom `from()` methods (automatically provided by PHP 8.1+ BackedEnum interface)
+- Updated model methods to use `->value` for DB string casts
 
-[ ] **Add architecture tests**  
+[ ] **Add architecture tests**
 Enforce that: - Controllers do not send mail directly. - Models do not depend on Stripe or mail. - External API calls live in services. - Policies protect admin and user-owned resources.

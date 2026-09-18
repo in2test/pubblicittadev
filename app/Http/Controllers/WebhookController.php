@@ -84,7 +84,7 @@ class WebhookController extends Controller
             return;
         }
 
-        if ($order->payment_status === PaymentStatus::Paid) {
+        if (PaymentStatus::from($order->payment_status) === PaymentStatus::Paid) {
             return;
         }
 

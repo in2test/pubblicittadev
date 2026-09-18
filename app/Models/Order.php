@@ -46,8 +46,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int $id
  * @property int $user_id
  * @property string $order_number
- * @property PaymentStatus $payment_status
- * @property WorkStatus $work_status
+ * @property string $payment_status
+ * @property string|null $work_status
  * @property float $total_price
  * @property int $total_items
  * @property int $shipping_address_id
@@ -92,8 +92,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
     'user_id',
 
     'order_number',
-    PaymentStatus::class,
-    WorkStatus::class,
+    'payment_status',
+    'work_status',
     'total_price',
     'items_total',
     'shipping_cost',
@@ -185,7 +185,7 @@ class Order extends Model implements HasMedia
      */
     protected function trackingUrl(): Attribute
     {
-        return Attribute::make(get: function () {
+        return Attribute::make(get: function (): ?string {
             if (! empty($this->tracking_url)) {
                 return $this->tracking_url;
             }
@@ -202,65 +202,35 @@ class Order extends Model implements HasMedia
     }
 
     /**
-     * @property PaymentStatus $payment_status
+     * Get the Italian label for this order's payment status.
+     *
+     * @return string The Italian label (e.g., 'In Attesa', 'Pagato')
      */
-    public function paymentStatusLabel(): string
+    public function getPaymentStatusLabel(): string
     {
-        // Handle both enum instances and raw string values (for backward compatibility)
-        if ($this->payment_status instanceof UnitEnum) {
-            return match ($this->payment_status) {
-                PaymentStatus::Pending => 'In Attesa',
-                PaymentStatus::Paid => 'Pagato',
-                PaymentStatus::Cancelled => 'Annullato',
-                PaymentStatus::Quotation => 'Preventivo',
-            };
-        }
-
-        // Fallback for raw string values (old data or migrations)
-        return match ($this->payment_status) {
-            'pending' => 'In Attesa',
-            'paid' => 'Pagato',
-            'cancelled' => 'Annullato',
-            'quotation' => 'Preventivo',
-            default => (string) $this->payment_status,
-        };
+        return PaymentStatus::from($this->payment_status)->label();
     }
 
     /**
      * @deprecated Use paymentStatusLabel() instead.
      */
-    public function getPaymentStatusLabel(): string
+    public function paymentStatusLabel(): string
     {
-        return $this->paymentStatusLabel();
+        return $this->getPaymentStatusLabel();
     }
 
     /**
-     * @property WorkStatus $work_status
+     * Get the Italian label for this order's work status.
+     *
+     * @return string The Italian label (e.g., 'In Attesa', 'Completato')
      */
     public function workStatusLabel(): string
     {
-        // Handle both enum instances and raw string values (for backward compatibility)
-        if ($this->work_status instanceof UnitEnum) {
-            return match ($this->work_status) {
-                WorkStatus::Pending => 'In Attesa',
-                WorkStatus::AwaitingFile => 'Attendiamo File',
-                WorkStatus::Processing => 'In Lavorazione',
-                WorkStatus::Ready => 'Pronto per Spedizione',
-                WorkStatus::Shipped => 'Spedito',
-                WorkStatus::Completed => 'Completato',
-            };
+        if ($this->work_status === null) {
+            return '';
         }
 
-        // Fallback for raw string values (old data or migrations)
-        return match ($this->work_status) {
-            'pending' => 'In Attesa',
-            'awaiting_file' => 'Attendiamo File',
-            'processing' => 'In Lavorazione',
-            'ready' => 'Pronto per Spedizione',
-            'shipped' => 'Spedito',
-            'completed' => 'Completato',
-            default => (string) $this->work_status,
-        };
+        return WorkStatus::from($this->work_status)->label();
     }
 
     /**
@@ -271,12 +241,6 @@ class Order extends Model implements HasMedia
         return $this->workStatusLabel();
     }
 
-    /**
-     * Ricalcola e aggiorna automaticamente lo stato lavorazione globale dell'ordine
-     * in base allo stato dei singoli articoli.
-     * Lo stato dell'ordine sarà sempre uguale allo stato di livello "più basso" tra i suoi articoli,
-     * garantendo che l'ordine non risulti completato se c'è ancora un lavoro in sospeso.
-     */
     public function updateWorkStatusFromItems(): void
     {
         // Se non ci sono articoli, interrompe l'esecuzione.
@@ -284,35 +248,21 @@ class Order extends Model implements HasMedia
             return;
         }
 
-        // Assegniamo un "peso" numerico ad ogni stato per poterli confrontare.
-        // I numeri più bassi indicano stati precedenti nel flusso di lavoro.
-        // Usiamo i valori delle stringhe come chiave dell'array.
-        $weights = [
-            WorkStatus::Pending->value => 0,
-            WorkStatus::AwaitingFile->value => 1,
-            WorkStatus::Processing->value => 2,
-            WorkStatus::Ready->value => 3,
-            WorkStatus::Shipped->value => 4,
-            WorkStatus::Completed->value => 5,
-        ];
-
         $lowestWeight = 999;
-        $lowestStatus = WorkStatus::Pending;
 
-        // Troviamo lo stato con il peso più basso tra tutti gli articoli.
         foreach ($this->items as $item) {
-            $weight = $weights[$item->work_status->value] ?? 0;
+            /** @var int $weight */
+            $weight = WorkStatus::from($item->work_status)->weight();
             if ($weight < $lowestWeight) {
                 $lowestWeight = $weight;
-                $lowestStatus = $item->work_status;
             }
         }
 
         // Aggiorna lo stato solo se è diverso da quello attuale, per evitare query inutili.
-        if ($this->work_status !== $lowestStatus) {
+        if ($this->work_status !== (string) $lowestWeight) {
             // Utilizziamo updateQuietly per evitare di lanciare l'evento "updated"
             // che scatenerebbe l'invio di email o cicli infiniti.
-            $this->updateQuietly(['work_status' => $lowestStatus]);
+            $this->updateQuietly(['work_status' => (string) $lowestWeight]);
         }
     }
 
@@ -332,7 +282,7 @@ class Order extends Model implements HasMedia
         static::updated(function (Order $order): void {
             if ($order->wasChanged('payment_status') || $order->wasChanged('work_status')) {
                 // Skip email if just marked as paid (handled by completePayment notifications)
-                if ($order->wasChanged('payment_status') && $order->payment_status === PaymentStatus::Paid) {
+                if ($order->wasChanged('payment_status') && PaymentStatus::from($order->payment_status) === PaymentStatus::Paid) {
                     return;
                 }
 
@@ -363,20 +313,20 @@ class Order extends Model implements HasMedia
                 ->lockForUpdate()
                 ->find($this->getKey());
 
-            if (! $order || $order->payment_status === PaymentStatus::Paid) {
+            if (! $order || PaymentStatus::from($order->payment_status) === PaymentStatus::Paid) {
                 return null;
             }
 
             $order->update([
-                'payment_status' => PaymentStatus::Paid,
+                'payment_status' => PaymentStatus::Paid->value,
                 'stripe_payment_intent_id' => $paymentIntentId,
                 'paid_at' => now(),
             ]);
 
             // Advance non-personalized items while preserving items waiting for customer files.
             foreach ($order->items as $item) {
-                if ($item->work_status === WorkStatus::Pending) {
-                    $item->update(['work_status' => WorkStatus::Processing]);
+                if (WorkStatus::from($item->work_status) === WorkStatus::Pending) {
+                    $item->update(['work_status' => WorkStatus::Processing->value]);
                 }
             }
 
@@ -425,6 +375,8 @@ class Order extends Model implements HasMedia
      * The attributes that should be cast to native types.
      *
      * Ensures total_price is always treated as a decimal and paid_at as a Carbon instance.
+     * Status fields are kept as strings for database storage since enums don't have
+     * built-in DB mapping.
      *
      * @return array<string, string>
      */
@@ -433,6 +385,9 @@ class Order extends Model implements HasMedia
         return [
             'paid_at' => 'datetime',
             'total_price' => 'decimal:2',
+            // Cast status fields to string for DB storage after enum conversion
+            'payment_status' => 'string',
+            'work_status' => 'string',
         ];
     }
 }

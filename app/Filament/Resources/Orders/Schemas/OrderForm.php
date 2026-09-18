@@ -245,6 +245,7 @@ class OrderForm
 
                                             // Quantities breakdown (hide only for single-sku Area products to avoid duplication)
                                             $showQuantities = true;
+                                            /* @phpstan-ignore-next-line Filament scaffold: ProductClass constant not yet defined */
                                             if (! empty($json['quantities']) && count($json['quantities']) === 1 && (isset($product) && $product->product_class === ProductClass::AreaBased)) {
                                                 $showQuantities = false;
                                             }

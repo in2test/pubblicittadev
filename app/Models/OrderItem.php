@@ -20,7 +20,7 @@ use Override;
     'subtotal',
     'customization_json',
     'design_file_path',
-    WorkStatus::class,
+    'work_status',
 ])]
 /**
  * @property int $id
@@ -32,7 +32,7 @@ use Override;
  * @property array $customization_json
  * @property-read Product $product
  * @property-read Order $order
- * @property WorkStatus $work_status
+ * @property string|null $work_status
  *
  * @method static \Database\Factories\OrderItemFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newModelQuery()
@@ -84,32 +84,18 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    /**
+     * Get the Italian label for this order item's work status.
+     *
+     * @return string The Italian label (e.g., 'In Attesa', 'Completato')
+     */
     public function workStatusLabel(): string
     {
-        $status = $this->work_status;
-
-        // Handle string values for backward compatibility with legacy data
-        if (is_string($status)) {
-            return match ($status) {
-                'pending' => 'In Attesa',
-                'awaiting_file' => 'Attendiamo File',
-                'processing' => 'In Lavorazione',
-                'ready' => 'Pronto per Spedizione',
-                'shipped' => 'Spedito',
-                'completed' => 'Completato',
-                default => $status,
-            };
+        if (empty($this->work_status)) {
+            return '';
         }
 
-        return match ($status) {
-            WorkStatus::Pending => 'In Attesa',
-            WorkStatus::AwaitingFile => 'Attendiamo File',
-            WorkStatus::Processing => 'In Lavorazione',
-            WorkStatus::Ready => 'Pronto per Spedizione',
-            WorkStatus::Shipped => 'Spedito',
-            WorkStatus::Completed => 'Completato',
-            default => $status->value,
-        };
+        return WorkStatus::from($this->work_status)->label();
     }
 
     /**
@@ -124,8 +110,7 @@ class OrderItem extends Model
     protected static function booted(): void
     {
         static::saved(function (OrderItem $item) {
-            if ($item->wasChanged(WorkStatus::class)) {
-                $item->loadMissing('order');
+            if ($item->wasChanged('work_status')) {
                 /** @var Order $order */
                 $order = $item->order;
                 $order->updateWorkStatusFromItems();
@@ -133,19 +118,25 @@ class OrderItem extends Model
         });
 
         static::deleted(function (OrderItem $item) {
-            $item->loadMissing('order');
             /** @var Order $order */
             $order = $item->order;
             $order->updateWorkStatusFromItems();
         });
     }
 
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
             'customization_json' => 'array',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            // Cast work_status to string for DB storage after enum conversion
+            'work_status' => 'string',
         ];
     }
 }

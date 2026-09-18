@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\PaymentStatus;
 use App\Mail\OrderStatusChangedNotification;
 use App\Models\Order;
 use App\Models\User;
@@ -29,7 +28,7 @@ class OrderNotificationService
     public function sendStatusChangeNotification(Order $order): void
     {
         // Skip generic update email if just marked as paid (handled by completePayment)
-        if ($order->wasChanged('payment_status') && $order->payment_status === PaymentStatus::Paid) {
+        if ($order->wasChanged('payment_status') && $order->payment_status === 'paid') {
             return;
         }
 

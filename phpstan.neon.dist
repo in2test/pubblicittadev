@@ -11,6 +11,8 @@ parameters:
     level: 8
 #    ignoreErrors:
 #        - '#PHPDoc tag @var#'
+- '#return type has no value type specified in iterable type array#'
+- '#Access to constant .* on an unknown class#'
 #
 #    excludePaths:
 #        - ./*/*/FileToBeExcluded.php
