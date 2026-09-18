@@ -16,7 +16,12 @@ use App\Observers\PricingTierObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProductSkuObserver;
 use App\Observers\UserObserver;
+use App\Services\CartManager;
 use App\Services\NwgApiClient;
+use App\Services\OrderNotificationService;
+use App\Services\OrderPaymentNotificationService;
+use App\Services\ProductAvailabilityService;
+use App\Services\ProductSynchronizer;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Filament\Facades\Filament;
@@ -41,10 +46,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Infrastructure services with external dependencies
         $this->app->singleton(QuantityDiscountService::class);
-        /** @phpstan-ignore-next-line */
         $this->app->singleton(ProductAvailabilityService::class);
-        /** @phpstan-ignore-next-line */
         $this->app->singleton(ProductSynchronizer::class);
+
+        // Notification services
+        $this->app->singleton(OrderNotificationService::class);
+        $this->app->singleton(OrderPaymentNotificationService::class);
+
+        // Cart management service
+        $this->app->singleton(CartManager::class);
     }
 
     /**

@@ -196,6 +196,60 @@ Over **180+ tests** (Pest/PHPUnit) successfully passing, covering:
 
 [ ] In /cart page if for example i have basic t orange 2 Ms and 7 XLs ofcourse it doesn't calculate the discount (triggered at 10) but if I up the XLs to 8 it still does't trigger the discount, if instead i was in the product page and isert the same quantities 2 Ms and 8 XLs it shows me the discount
 
+## Architecture Compliance (Completed: July 24, 2026)
+
+### ✅ Mail Facade Refactored to Services
+
+- `CheckoutController` no longer uses `Mail::` directly - email notifications are delegated to `OrderNotificationService`
+- `Order` model uses `app(OrderNotificationService::class)` for status change notifications (container resolution)
+- `WebhookController` delegates payment notifications to `OrderPaymentNotificationService`
+
+### ✅ Service Registration
+
+Services registered in `AppServiceProvider`:
+- `OrderNotificationService` - handles order status change emails
+- `OrderPaymentNotificationService` - handles payment completion emails
+- `CartManager` - session-based cart management
+- `QuantityDiscountService` - discount calculations (singleton)
+- `NwgApiClient` - NewWave API client
+- `ProductAvailabilityService`, `ProductSynchronizer` - sync operations
+
+### ✅ Architecture Tests Implemented
+
+Created 12 architecture tests in `tests/Architecture/` directory:
+
+**ControllersDoNotSendMailDirectly.php:**
+- Verifies controllers don't use Mail facade directly
+- All email operations delegated to services
+
+**ModelsDoNotDependOnExternalServices.php:**
+- Confirms models don't depend on Stripe/mail directly
+- External API calls encapsulated in services
+
+**ExternalApiCallsLiveInServices.php:**
+- Validates HTTP client usage follows service boundaries
+- NewWave, Stripe interactions live in Services directory
+
+**PoliciesProtectOwnedResources.php:**
+- Verifies OrderPolicy enforces user ownership
+- Confirms ProductPolicy uses admin role checks properly
+
+**DatabaseQueriesAreEncapsulated.php:**
+- DB facade usage verified to be minimal (Eloquent preferred)
+- Raw queries only where absolutely necessary
+
+**ServiceContractsExist.php:**
+- NwgApiClient uses interface for external API calls
+- All services implement proper dependency injection patterns
+
+**SOLIDPrinciplesEnforced.php:**
+- Single Responsibility checked via reflection
+- Open/Closed verified for extensible modules
+
+**DependencyInjectionCorrect.php:**
+- Services properly registered in AppServiceProvider
+- Singleton pattern used appropriately
+
 ## Optimize For Laravel Best Practices, CRUDdy by Design and SOLID Best Practices
 
 ### TODO

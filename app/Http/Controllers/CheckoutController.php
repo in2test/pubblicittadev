@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Mail\OrderPlacedNotification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ShippingTier;
 use App\Models\User;
 use App\Services\CartManager;
+use App\Services\OrderNotificationService as OrderNotificationServiceAlias;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -33,7 +32,10 @@ class CheckoutController extends Controller
      *
      * @param  CartManager  $cartManager  The cart manager to retrieve cart items.
      */
-    public function __construct(protected CartManager $cartManager) {}
+    public function __construct(
+        protected CartManager $cartManager,
+        protected OrderNotificationServiceAlias $notificationService,
+    ) {}
 
     /**
      * Create a Stripe Checkout session for a new or existing order.
@@ -94,20 +96,20 @@ class CheckoutController extends Controller
 
             $order->load('items.product');
 
-            // Notify the customer and admin about the new order/quotation via email
-            Mail::to($user)->send(new OrderPlacedNotification($order));
-            Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
-        }
+            // Delegate email notifications to the service class
+            // This keeps the controller clean and follows architectural boundaries
+            $this->notificationService->sendStatusChangeNotification($order);
 
-        $order->loadMissing('items.product');
+            $order->loadMissing('items.product');
 
-        // If it's a quotation, clear the cart and immediately redirect to success without involving Stripe
-        if ($order->payment_status === 'quotation') {
-            $this->cartManager->clear();
+            // If it's a quotation, clear the cart and immediately redirect to success without involving Stripe
+            if ($order->payment_status === 'quotation') {
+                $this->cartManager->clear();
 
-            return redirect()->route('checkout.success')
-                ->with('success', 'La tua richiesta di preventivo è stata inviata con successo.')
-                ->with('order_id', $order->id);
+                return redirect()->route('checkout.success')
+                    ->with('success', 'La tua richiesta di preventivo è stata inviata con successo.')
+                    ->with('order_id', $order->id);
+            }
         }
 
         // Set up Stripe API keys
@@ -196,8 +198,8 @@ class CheckoutController extends Controller
         $order = $this->createOrderFromCart($request, $items, $defaultShipping?->id, $defaultBilling?->id, true);
         $order->load('items.product');
 
-        Mail::to($user)->send(new OrderPlacedNotification($order));
-        Mail::to(User::where('role', 'admin')->get())->send(new OrderPlacedNotification($order));
+        // Delegate email notifications to the service class
+        $this->notificationService->sendStatusChangeNotification($order);
 
         $this->cartManager->clear();
 
