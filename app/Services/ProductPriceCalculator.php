@@ -96,7 +96,9 @@ class ProductPriceCalculator
                     $sku = $nearestSku;
                 }
 
-                $unitPrice = $this->calculateFinalUnitPrice($product, $skuQty, null, null, $sku);
+                // Use $totalQuantity for the discount-tier lookup so that volume thresholds
+                // are evaluated against the grand total across all sizes, not the per-SKU qty.
+                $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
 
                 if ($sku && $sku->override_price !== null) {
                     $unitPrice = (float) $sku->override_price;

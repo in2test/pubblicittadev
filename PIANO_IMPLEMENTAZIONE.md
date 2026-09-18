@@ -1,284 +1,262 @@
-# 📋 Implementation Plan - Pubblicittà24 E-commerce & Local SEO
+# 📋 Implementation Plan & System Architecture — Pubblicittà24
 
-**Status**: ✅ COMPLETED (Ready for Go-Live & Ongoing Optimization)  
-**Focus**: Complete E-commerce with Online Payments, Private Quotes & Local SEO (Fiuggi and surroundings)  
-**Last updated**: July 24, 2026
-
----
-
-## 📊 Project Overview
-
-**Name**: Pubblicittà24 E-commerce platform for custom prints, standard products (Business Cards, Large Format Printing, Forex, Banners, Flyers), and promotional/workwear apparel.  
-**Focus**: Complete E-commerce with Online Payments (Stripe) and Private Quotes.  
-**Geographic Target**: Fiuggi, province of Frosinone, and neighboring municipalities (Anagni, Alatri, Ferentino, Sora, Paliano, Acuto, Piglio, Guarcino, etc.).  
-**Flow**: Cart Checkout → Stripe Payment **or** Request Private Quote → Order Management.  
-**Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.
+**Current Status**: 🚀 PRODUCTION READY (Completed & Local SEO Active)  
+**System Date**: September 18, 2026  
+**Core Scope**: E-commerce platform with automated Stripe payments, B2B manual quotation flows, NewWave API automated inventory sync, and hyper-targeted Local SEO for the Ciociaria region.
 
 ---
 
-## 🗄️ Database Structure (Unified & Clean)
+## 🚨 ACTIVE ISSUES & OPEN TICKETS
 
-The database is optimized with unified migrations, featuring advanced management of variants, pricing tiers, shipping brackets, and custom print jobs.
+### 🔴 [BUG] Cross-Item Cart Quantity Tier Discount Failure
+*   **Symptom**: When a user adds different variants of the same base product to the cart (e.g., 8 Orange T-Shirts in size M and 7 in size XL), the volume discount (triggered at ≥ 10 units) fails to apply upon cart updating. However, adding 8 Ms and 10 XLs simultaneously from the product detail page correctly displays the discounted price.
+*   **Impact**: Breaks pricing logic on multi-variant mixed item orders inside `CartController` or `QuantityDiscountService`.
+*   **Task**: Refactor the item group accumulation loop in the cart pricing pre-loader to aggregate base product IDs or categories before checking tier thresholds.
 
-### Main Tables
+### Solution to be implemented
+*Bug Fix: Quantity Discount Highlighting & Application for Multi-SKU Products
+Background
+For products like "Basic T" (type: newwave), users can select quantities across multiple sizes (SKUs): e.g., 8×XS, 4×S, 5×M = 17 total units. The 5% discount should activate at ≥10 units.
 
+The UI correctly highlights the discount tier badge when the total crosses the threshold, but the price shown and applied is wrong — it uses the per-SKU quantity (e.g., 5 for M) to look up the discount instead of the grand total. The discount is only actually applied when a single size reaches the threshold alone.
+
+The same fault exists in the cart (CartPresenter) when calculating savings, and in the addToCart payload which stores an incorrect per-unit price.
+
+Root Causes
+Bug 1 — totalQuantity() Computed Property (Product Page, ⚡product.blade.php)
+php
+
+// Lines 367–382
+public function totalQuantity(): int
+{
+    $product = $this->product();
+    if ($product->type === 'newwave') {
+        return array_sum(array_map(intval(...), $this->quantities));  // ✅ correct for newwave
+    }
+    // For standard products: returns only the active SKU's qty — misses other sizes
+    $activeSku = ...
+    return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : 0;
+}
+newwave products correctly sum all sizes in $this->quantities. ✅
+
+However, ProductPriceCalculator::calculateTotalPrice() receives $totalQuantity as the aggregate, but also receives $skuQuantities (all individual sizes). Inside the calculator, each SKU is priced using calculateFinalUnitPrice($product, $skuQty, ...) — meaning discount lookup uses the per-SKU qty, not the grand total.
+
+Bug 2 — ProductPriceCalculator::calculateTotalPrice() — Per-SKU Discount Lookup
+php
+
+// Lines 90–111 — the loop that builds the total
+foreach ($skuQuantities as $skuId => $rawQty) {
+    $skuQty = (int) $rawQty;
+    if ($skuQty > 0) {
+        $sku = ...;
+        // ❌ BUG: passes $skuQty (e.g. 5 for M), not $totalQuantity (17)
+        $unitPrice = $this->calculateFinalUnitPrice($product, $skuQty, null, null, $sku);
+        ...
+        $total += $unitPrice * $skuQty;
+    }
+}
+calculateFinalUnitPrice calls getPriceForQuantity($product, $quantity) which then calls QuantityDiscountService::calculatePrice($product, $quantity) — using the wrong quantity (5 instead of 17).
+
+Fix: Pass $totalQuantity to calculateFinalUnitPrice for the discount lookup, while still multiplying by $skuQty for the line total.
+
+Bug 3 — ⚡product.blade.php Discount Highlighting vs. Actual Price
+The highlighting at line 779–782 correctly uses $this->totalQuantity (the grand total). ✅
+
+But as shown in Bug 2, the price calculation uses per-SKU qty for discount lookup. So the badge appears active but the price charged is undiscounted. This is fixed by Bug 2.
+
+Bug 4 — Cart CartPresenter::present() — basePrice for Multi-SKU Items
+In CartPresenter::present() (line 130–133), $basePrice is derived from the active SKU or product price. But is_discounted (line 198) and totalSavings (line 216) compare $discPrice < $basePrice. Since $discPrice is already incorrectly calculated (Bug 2), even after fixing Bug 2 the basePrice comparison needs to be consistent with a "no discount" reference price, not the already-discounted price.
+
+NOTE
+
+After fixing Bug 2, CartPresenter should work correctly because disc_price will properly reflect the discounted unit price. The is_discounted and totalSavings comparisons are logically sound already — they just need the upstream price to be fixed.
+
+Bug 5 — addToCart Stores Wrong Unit Price
+In ⚡product.blade.php line 584:
+
+php
+
+'price' => ($this->totalPrice() / $this->totalQuantity()),
+This stores the calculated (potentially wrong) unit price in the session. Once Bug 2 is fixed, this will naturally store the correct discounted unit price.
+
+Proposed Changes
+1. app/Services/ProductPriceCalculator.php
+[MODIFY] 
+ProductPriceCalculator.php
+Change the foreach ($skuQuantities ...) loop so that the discount is looked up using $totalQuantity (grand total across all sizes), while the line total is still multiplied by $skuQty:
+
+diff
+
+ foreach ($skuQuantities as $skuId => $rawQty) {
+     $skuQty = (int) $rawQty;
+     if ($skuQty > 0) {
+         $sku = $product->skus->firstWhere('id', $skuId);
+         if ($isCustomFormat && $nearestSku instanceof ProductSku) {
+             $sku = $nearestSku;
+         }
+-        $unitPrice = $this->calculateFinalUnitPrice($product, $skuQty, null, null, $sku);
++        // Use $totalQuantity for discount tier lookup; $skuQty is only used for line subtotal
++        $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
+         if ($sku && $sku->override_price !== null) {
+             $unitPrice = (float) $sku->override_price;
+         }
+         if ($isCustomFormat) {
+             $unitPrice *= 1.20;
+         }
+         $total += $unitPrice * $skuQty;
+     }
+ }
+This is the core fix. One line change with clear intent.
+
+Verification Plan
+Scenario: 8 XS + 4 S + 5 M (total 17, above the 10-unit threshold)
+Before fix	After fix
+Badge highlighted ✅, price still at full rate ❌	Badge highlighted ✅, price discounted ✅
+XS priced at qty=8 → no discount	XS priced at qty=17 → 5% discount
+S priced at qty=4 → no discount	S priced at qty=17 → 5% discount
+M priced at qty=5 → no discount	M priced at qty=17 → 5% discount
+Scenario: 10 XS only
+Before & after
+No change — already worked correctly (single SKU = skuQty == totalQuantity)
+Automated Tests
+bash
+
+php artisan test --compact --filter=ProductPriceCalculator
+php artisan test --compact --filter=CartPresenter
+php artisan test --compact --filter=QuantityDiscount
+After the fix, run the full suite:
+
+bash
+
+php artisan test --compact
+Manual Verification
+Navigate to Basic-T product page
+Set 8 XS + 4 S + 5 M (total = 17)
+Verify price shows discounted rate (5% off) — previously showed full price €6.90, should now show ~€6.55
+Add to cart
+In cart, verify is_discounted flag is true and savings are displayed
+Test boundary: reduce M from 5 to 2 (total = 14) → still discounted. Reduce XS to 1 (total = 7) → discount removed
+Impact Assessment
+Scope: Single method, single line change in ProductPriceCalculator
+Risk: Low — totalQuantity is already passed into calculateTotalPrice and is correct for both single-SKU and multi-SKU scenarios
+No schema changes needed
+No new files needed
+IMPORTANT
+
+After fixing, check whether existing Pest tests for ProductPriceCalculator cover multi-SKU discount scenarios. If not, add a test that asserts the discount is applied using the total qty across all SKUs.*
+
+---
+
+## 📊 Project Overview & Architecture
+
+### 🧬 Core Ecosystem
+*   **Name**: Pubblicittà24 Platform (Custom & Standard Prints, Rigid Media, Promotional Apparel).
+*   **Fulfillment Vectors**: Instant Checkout (Stripe Webhooks) **OR** Private Corporate B2B Quote Workflow.
+*   **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.
+
+### 📐 SOLID Design & Architectural Refactor Rules
+To maintain code health, the system strictly enforces the following design rules verified by a PEST/PHPUnit architecture suite:
+1.  **Zero-Fat Controllers**: Controllers are banned from calling the `Mail` facade directly; operations are entirely delegated to dedicated Domain Services via Container Resolution.
+2.  **Clean Domain Models**: Models do not interact with Stripe or Mail infrastructure. Outbound calls are fully encapsulated.
+3.  **Encapsulated Queries**: Database queries prioritize Eloquent relationships. Raw DB queries are restricted to performance-critical calculation boundaries.
+
+---
+
+## 🗄️ Normalized Database Schema
+
+### 📦 Core Catalog & Taxonomy
+*   `categories`: `id`, `name`, `slug`, `parent_id`, `description`, `is_active`, `display_mode`
+*   `products`: `id`, `name`, `slug`, `sku`, `description`, `category_id`, `is_featured`, `type` (`standard`|`newwave`), `pricing_model` (`fixed`|`quantity`|`area`), `min_area`, `max_width`, `max_height`, `sheet_width`, `sheet_height`, `allows_custom_size`, `min_custom_width`, `max_custom_width`, `min_custom_height`, `max_custom_height`, `sync_status`, `sync_progress`, `synced_at`, `is_active`, `override_price`, `override_description`, `remote_images` (JSON), `price`, `offer_price`, `created_at`, `updated_at`
+
+### 📦 Pricing Matrices & Logic Rules
+*   `pricing_tiers`: (Granular price-per-unit variation mapping table)  
+    `id`, `product_id`, `product_sku_id`, `is_custom_price`, `min_quantity`, `max_quantity`, `price_per_unit`
+*   `category_quantity_discounts`: (Fallback cascading category discounts)  
+    `id`, `category_id`, `min_quantity`, `max_quantity`, `discount_type` (`percent`|`fixed`), `discount_value`, `description`
+*   `shipping_tiers`: `id`, `name`, `min_order_total`, `cost`, `is_active`
+
+### 📦 Sales, Actions, & Operations
+*   `addresses`: (Unified corporate/consumer identities)  
+    `id`, `user_id` (FK), `type` (`shipping`|`billing`), `name`, `street`, `city`, `state`, `zip`, `country`, `phone`, `vat_number` (Partita IVA), `fiscal_code` (Codice Fiscale), `sdi_code`, `pec_email`, `is_default`
+*   `orders`: `id`, `user_id` (FK), `order_number`, `payment_status` (Backed Enum), `work_status` (Backed Enum), `total_price`, `total_items`, `shipping_cost`, `shipping_method`, `shipping_address_id`, `billing_address_id`, `stripe_session_id`, `stripe_payment_intent_id`, `paid_at`, `notes`
+*   `order_items`: (Represents distinct structural print jobs tied to a UUID)  
+    `id`, `order_id`, `product_id`, `quantity`, `unit_price`, `subtotal`, `customization_json` (JSON features), `design_file_path`, `work_status`
+
+---
+
+## 🛠️ Implemented Systems Log
+
+### Core Core Engine Redesign
+*   **Decoupled Model Behaviors**: Extracted image processing actions from the core `Product` model into an independent, testable `ProductGalleryService`.
+*   **Deconstructed Sync Routines**: Split the monolithic `ProductSynchronizer` engine into four single-responsibility sub-services: Metadata, Images, SKU/Variations, and Real-Time Availability.
+*   **Query Optimization**: Eradicated N+1 query loops inside `CartController::index()` via a structural Cart Presenter Query Service that preloads variations, matrix scales, and prices in a single batch.
+*   **Asynchronous-like Side-Effects**: Shifted email dispatches out of raw Eloquent saving states. Uses Laravel's native `defer()` container wrapper post-database transaction, bypassing thread blocks without an active Redis queue layout.
+*   **Enums Integration**: Replaced string states with native PHP Backed Enums (`PaymentStatus`, `WorkStatus`) built with weight matrices for status sorting and localized Italian descriptive strings (`->label()`).
+*   **Performance Indexes Applied**:
+    *   `images(product_id, variation_option_id)`
+    *   `orders(user_id, created_at)`
+    *   `product_skus(product_id, sku)`
+    *   `products(category_id, is_active)`
+
+### Integration Modules
+*   **Authenticated GraphQL Gateway (NewWave API)**: Complete lazy-sync connection handling matching remote inventory balances every 12 hours. Fast stock polling is configured to bypass massive dataset recalculations.
+*   **Hybrid Media Asset Pipeline**: Merged local uploads handled by Spatie MediaLibrary with remote layout images using selective color queries (`?colore=XX`) to change variants dynamically.
+*   **B2C/B2B Financial Funnel**: Standard Stripe Checkout processing with secure webhook receivers, running parallel with an optional alternative custom checkout request loop for custom quotes.
+*   **Marketing & Discovery Endpoints**: Real-time generation of Google Merchant XML Feed at `/feed/google-merchant.xml` alongside dynamic, un-cached sitemap files at `/sitemap.xml`.
+
+---
+
+## 📍 Local SEO Strategy (Fiuggi & Ciociaria Dominance)
+
+### 1. Geolocated Header Structures
+*   **Home Target Hook**: `Pubblicittà24 | Stampa Digitale, Grande Formato e Abbigliamento a Fiuggi`
+*   **Home Snippet**: `Stampa digitale professionale a Fiuggi e provincia di Frosinone: biglietti da visita, volantini, striscioni, pannelli Forex, gadget e abbigliamento personalizzato. Preventivi gratuiti online.`
+*   **Targeted Landing Directories**:
+    *   `/stampa-digitale-fiuggi`: Business stationaries, cards, flyers, and event brochures.
+    *   `/stampa-grande-formato-fiuggi`: Structural PVC banners, mesh partitions, Forex/Plexiglas sheets, and custom rollups.
+    *   `/abbigliamento-lavoro-fiuggi`: Corporate wear, safety apparel, and custom uniforms for thermal spas, medical centers, and hospitality sectors.
+
+### 2. Semantic Graph Implementation (`Schema.org`)
+Configured globally inside `resources/views/layouts/layout.blade.php`:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "PrintShop",
+  "name": "Pubblicittà24",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Fiuggi",
+    "addressRegion": "FR",
+    "addressCountry": "IT"
+  },
+  "areaServed": [
+    "Fiuggi", "Anagni", "Alatri", "Ferentino", "Frosinone", 
+    "Sora", "Paliano", "Acuto", "Piglio", "Guarcino", "Ciociaria"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Servizi di Stampa e Personalizzazione",
+    "itemListElement": [
+      "Stampa Digitale",
+      "Biglietti da Visita",
+      "Stampa Grande Formato",
+      "Insegne",
+      "Pannelli Rigidi",
+      "Abbigliamento Promozionale",
+      "Abbigliamento da Lavoro"
+    ]
+  }
+}
 ```
-📦 products
-├── id, name, slug, sku, description, category_id, is_featured
-├── type (standard|newwave), pricing_model (fixed|quantity|area), min_area
-├── max_width, max_height, sheet_width, sheet_height, allows_custom_size
-├── min_custom_width, max_custom_width, min_custom_height, max_custom_height
-├── sync_status, sync_progress, synced_at, is_active
-├── override_price, override_description, remote_images (JSON)
-├── price, offer_price, created_at, updated_at
 
-📦 categories
-├── id, name, slug, parent_id, description, is_active, display_mode
-
-📦 media (Spatie Media Library)
-├── id, model_type, model_id, file_name, mime_type, custom_properties, responsive_images, etc.
-
-📦 pricing_tiers (Price and quantity matrix)
-├── id, product_id, product_sku_id, is_custom_price, min_quantity, max_quantity, price_per_unit
-
-📦 category_quantity_discounts (Quantity discounts per category)
-├── id, category_id, min_quantity, max_quantity
-├── discount_type (percent|fixed), discount_value, description
-
-📦 addresses (User Address Management)
-├── id, user_id (FK), type (shipping|billing), name, street, city, state, zip, country, phone
-├── vat_number, fiscal_code, sdi_code, pec_email, is_default
-
-📦 orders (Ecommerce Orders)
-├── id, user_id (FK), order_number, payment_status, work_status
-├── total_price, total_items, shipping_cost, shipping_method, shipping_address_id, billing_address_id
-├── stripe_session_id, stripe_payment_intent_id, paid_at, notes
-├── payment_status: pending | paid | quotation | failed | refunded
-
-📦 order_items (Individual order line items / Jobs)
-├── id, order_id, product_id, quantity, unit_price, subtotal
-├── customization_json (JSON with selected options)
-├── design_file_path (Uploaded file path)
-├── work_status
-
-📦 shipping_tiers (Shipping brackets)
-├── id, name, min_order_total, cost, is_active
-```
+### 3. Footprint Aggregations
+*   **Footer Block**: Static contextual map references, localized microcopy (*"Servizio di Stampa e Personalizzazione a Fiuggi e in Provincia di Frosinone"*), and direct shortcuts linking back to our Google Business Profile page to maximize local map pack authority.
 
 ---
 
-## 🎯 Implemented Features
-
-### ✅ WEEKS 1-2: Foundations & MVP (COMPLETED)
-
-- [x] **Core Backend**: Migrations, Models, Relationships, and Seeders.
-- [x] **Catalog**: Product listing, category view, and product detail page.
-- [x] **Basic Cart**: Add to cart logic, dynamic price calculation, and quantity discounts.
-- [x] **Admin Panel**: Filament resources for products, categories, and discounts.
-
----
-
-### 🚀 WEEKS 3-4: Advanced Sync & Gallery Management (COMPLETED)
-
-#### 🌐 Advanced NewWave API Integration
-
-- [x] **Authenticated GraphQL**: Secure integration with NewWave gateway.
-- [x] **Lazy-Sync**: Automatic data freshness verification every 12 hours.
-- [x] **Fast Availability Sync**: Rapid stock/inventory updates without re-importing full products.
-- [x] **CDN-Mode**: Automated synchronization of remote images.
-
-#### 🖼️ Media & Gallery Management
-
-- [x] **Hybrid Gallery Engine**: Unified local images (Spatie MediaLibrary) and remote images (`images` table).
-- [x] **Smart Color Filtering**: Gallery displays only images associated with the selected color.
-- [x] **Admin Gallery Control**: Interface for manual reordering and color association overrides for API images.
-
-#### 🛒 Job-Based Cart & Standard Products
-
-- [x] **Job UUID**: Each cart item addition represents a distinct job with a unique UUID.
-- [x] **Standard Product Configurator**: Livewire forms for area-based or quantity-based products (Forex, Business Cards, Banners with `itemsPerSheet` calculation).
-
----
-
-### 🧾 Module 3: Payments & Quotes (COMPLETED)
-
-- [x] **Stripe Checkout**: Direct checkout with Stripe redirect and Webhook handling.
-- [x] **Private Quote Request**: Button and workflow to request custom private quotes directly from the cart.
-
----
-
-### 🔍 Module 4: SEO, Feed & Social Sharing v2.0 (COMPLETED - July 2026)
-
-- [x] **Meta Tags & Social Open Graph**: Dynamic meta tags (`og:title`, `og:description`, `og:image`, `og:url`, `twitter:*`) across products, categories, and homepage.
-- [x] **Variant Preview Handling in OG & Canonical**: Automatic detection of query-string exposed variants (e.g. `?colore=96`), dynamically switching Open Graph image, canonical URL, and Schema.org structured data.
-- [x] **Google Merchant XML Feed**: Automated generator at `/feed/google-merchant.xml` for Google Shopping with variant details (color, size, specific image, link with query params).
-- [x] **XML Sitemap**: Dynamic sitemap at `/sitemap.xml` for active products, categories, and institutional pages.
-- [x] **Laravel Scout v11**: Full-text search integration for the product catalog.
-
----
-
-## 📍 Local SEO Strategy (Fiuggi and Surroundings)
-
-To dominate local search results in **Fiuggi and neighboring municipalities** (Anagni, Alatri, Ferentino, Sora, Frosinone, Paliano, Acuto, Piglio, Guarcino, Subiaco), covering **all print and visual communication products** in addition to apparel:
-
-### 1. Geolocated Titles & Meta Tags (Global & Categories)
-
-- **Homepage Title**: `Pubblicittà24 | Stampa Digitale, Grande Formato e Abbigliamento a Fiuggi`
-- **Homepage Description**: `Stampa digitale professionale a Fiuggi e provincia di Frosinone: biglietti da visita, volantini, striscioni, pannelli Forex, gadget e abbigliamento personalizzato. Preventivi gratuiti online.`
-- **Category Pages**:
-    - _Business Cards_: "Stampa Biglietti da Visita a Fiuggi e Dintorni | Pubblicittà24"
-    - _Large Format & Rigid Panels_: "Stampa Grande Formato, Forex e Striscioni Fiuggi | Pubblicittà24"
-    - _Flyers & Folded Leaflets_: "Stampa Volantini e Pieghevoli a Fiuggi e Frosinone | Pubblicittà24"
-    - _Workwear_: "Abbigliamento da Lavoro Personalizzato Fiuggi e Ciociaria | Pubblicittà24"
-
-### 2. Schema.org LocalBusiness / PrintShop Structured Data
-
-Integration of `LocalBusiness` / `PrintShop` schema inside `resources/views/layouts/layout.blade.php`:
-
-- **Name**: Pubblicittà24
-- **Address**: Fiuggi (FR), Italy
-- **Served Area (`areaServed`)**: `["Fiuggi", "Anagni", "Alatri", "Ferentino", "Frosinone", "Sora", "Paliano", "Acuto", "Piglio", "Guarcino", "Ciociaria"]`
-- **Offered Services**: Digital Printing, Business Cards, Large Format Printing, Signs, Rigid Panels, Promotional and Workwear Apparel.
-
-### 3. Dedicated Local Landing Pages ("Services by Area")
-
-Creation of dedicated landing pages targeting high-intent local queries:
-
-- `/stampa-digitale-fiuggi`: Digital print for business cards, brochures, flyers, and catalogs for businesses and events in Fiuggi and province.
-- `/stampa-grande-formato-fiuggi`: PVC banners, mesh banners, Forex/Plexiglas panels, roll-ups, and trade show displays in Ciociaria.
-- `/abbigliamento-lavoro-fiuggi`: Work clothes and uniforms for hotels, restaurants, spas, and retail businesses in Fiuggi.
-
-### 4. Geolocated Footer & About Us
-
-- Footer section: _"Servizio di Stampa e Personalizzazione a Fiuggi e in Provincia di Frosinone"_, listing key served municipalities (with fast delivery or in-store pickup).
-
-### 5. Google Business Profile Integration (Google Maps)
-
-- Synchronization of the Pubblicittà24 Google Business Profile with the website.
-- Direct links for customer reviews and maps to strengthen presence in Google's **Local Pack** for "near me" searches.
-
----
-
-## 📅 Updated Milestones
-
-```
-JULY 2026 (Current Status: Completed & Local SEO Active)
-├─ ✅ Open Graph & Meta Tags v2.0 (og:image, og:url, twitter cards)
-├─ ✅ Variant Resolution Exposed in Social Shares (Specific image for ?colore=XX)
-├─ ✅ Google Merchant XML Feed v1.0 (/feed/google-merchant.xml)
-├─ ✅ Dynamic XML Sitemap (/sitemap.xml)
-├─ ✅ Laravel Scout v11 Integration (Database full-text search)
-├─ ✅ Expanded Test Suite (190+ passing Pest/PHPUnit tests)
-├─ ✅ Schema.org LocalBusiness / PrintShop Implementation (real opening hours + areaServed Italy and Rome-Naples)
-├─ ✅ Geolocated Meta Tags & Titles (Fiuggi, Frosinone, Rome-Naples, and Italy)
-├─ ✅ Geolocated Footer with served areas and map
-└─ ⏳ Creation of Dedicated Local Landing Pages (e.g., /stampa-grande-formato-fiuggi)
-```
-
----
-
-## 🧪 Test Suite
-
-Over **180+ tests** (Pest/PHPUnit) successfully passing, covering:
-
-- `CartTest`, `SearchTest`, `ProductPageTest`, `OrderTest`, `QuantityDiscountServiceTest`.
-- Tests for Open Graph, variant preview meta tags, XML Sitemap, and Google Merchant Feed.
-- Custom format and scaling calculation tests (`StandardProductResourceTest`).
-- Private quote request flow and shipping method checkout tests (`CheckoutTest`).
-
----
-
-## 🚀 TARGET LIVE & LOCAL GROWTH: Ready for Release and Local Positioning!
-
-## Errors Noticed
-
-### TODO
-
-[ ] In /cart page if for example i have basic t orange 2 Ms and 7 XLs ofcourse it doesn't calculate the discount (triggered at 10) but if I up the XLs to 8 it still does't trigger the discount, if instead i was in the product page and isert the same quantities 2 Ms and 8 XLs it shows me the discount
-
-## Architecture Compliance (Completed: July 24, 2026)
-
-### ✅ Mail Facade Refactored to Services
-
-- `CheckoutController` no longer uses `Mail::` directly - email notifications are delegated to `OrderNotificationService`
-- `Order` model uses `app(OrderNotificationService::class)` for status change notifications (container resolution)
-- `WebhookController` delegates payment notifications to `OrderPaymentNotificationService`
-
-### ✅ Service Registration
-
-Services registered in `AppServiceProvider`:
-- `OrderNotificationService` - handles order status change emails
-- `OrderPaymentNotificationService` - handles payment completion emails
-- `CartManager` - session-based cart management
-- `QuantityDiscountService` - discount calculations (singleton)
-- `NwgApiClient` - NewWave API client
-- `ProductAvailabilityService`, `ProductSynchronizer` - sync operations
-
-### ✅ Architecture Tests Implemented
-
-Created 12 architecture tests in `tests/Architecture/` directory:
-
-**ControllersDoNotSendMailDirectly.php:**
-- Verifies controllers don't use Mail facade directly
-- All email operations delegated to services
-
-**ModelsDoNotDependOnExternalServices.php:**
-- Confirms models don't depend on Stripe/mail directly
-- External API calls encapsulated in services
-
-**ExternalApiCallsLiveInServices.php:**
-- Validates HTTP client usage follows service boundaries
-- NewWave, Stripe interactions live in Services directory
-
-**PoliciesProtectOwnedResources.php:**
-- Verifies OrderPolicy enforces user ownership
-- Confirms ProductPolicy uses admin role checks properly
-
-**DatabaseQueriesAreEncapsulated.php:**
-- DB facade usage verified to be minimal (Eloquent preferred)
-- Raw queries only where absolutely necessary
-
-**ServiceContractsExist.php:**
-- NwgApiClient uses interface for external API calls
-- All services implement proper dependency injection patterns
-
-**SOLIDPrinciplesEnforced.php:**
-- Single Responsibility checked via reflection
-- Open/Closed verified for extensible modules
-
-**DependencyInjectionCorrect.php:**
-- Services properly registered in AppServiceProvider
-- Singleton pattern used appropriately
-
-## Optimize For Laravel Best Practices, CRUDdy by Design and SOLID Best Practices
-
-### TODO
-
-[x] **Extract `ProductGalleryService`**  
-Move image aggregation methods out of `Product`: - `getAllImages()` - `getImagesForOption()` - `getFirstImage()` - `getFirstImageUrl()`
-
-[x] **Split `ProductSynchronizer`**  
-Separate: - Metadata synchronization - Image synchronization - SKU/variation synchronization - Availability synchronization
-
-[x] **Reduce N+1 queries in cart rendering**
-`CartController::index()` still performs product pricing and variation queries while enriching each cart item. This should move into a dedicated cart presenter/query service with all required data preloaded.
-
-[x] **Move email side effects out of `Order`**
-Model events and `completePayment()` send emails directly. Since queues are unavailable, use container resolution (via `app()`) after database commits to keep behavior synchronous but reduce response blocking by keeping domain model clean. Created `OrderNotificationService` and `OrderPaymentNotificationService` to handle all email notifications.  
-Model events and `completePayment()` send emails directly. Since queues are unavailable, use `defer()` after database commits to keep behavior synchronous but reduce response blocking.
-
-[x] **Add missing indexes after confirming query plans**  
-Candidate indexes: - `images(product_id, variation_option_id)` - `orders(user_id, created_at)` - `product_skus(product_id, sku)` - `products(category_id, is_active)`
-
-[x] **Replace remaining `app()` service resolution**  
-Constructor injection would improve testability in `ProductAvailabilityService`, `ProductSynchronizer`, and the remaining `Product` compatibility wrappers.
-
-[x] **Add order status enums**
-Replace string statuses with `PaymentStatus` and `WorkStatus` backed enums:
-- Added `weight()` method for ordering states
-- Added `label()` for Italian labels
-- Removed custom `from()` methods (automatically provided by PHP 8.1+ BackedEnum interface)
-- Updated model methods to use `->value` for DB string casts
-
-[ ] **Add architecture tests**
-Enforce that: - Controllers do not send mail directly. - Models do not depend on Stripe or mail. - External API calls live in services. - Policies protect admin and user-owned resources.
+## 🧪 Quality Assurance & Test Coverage
+
+The platform runs a PEST test suite featuring **190+ automated unit and architecture assertions**:
+*   **Functional Cover**: Complete cart item mutations, variant queries, discount engine bounds, automated XML schema validation for Google Merchant feeds, and localized SEO query parameters.
+*   **Architecture Isolation Enforcements**: Asserts strict compliance with project rules (e.g., `ControllersDoNotSendMailDirectly.php`, `ModelsDoNotDependOnExternalServices.php`, and `ExternalApiCallsLiveInServices.php`).
