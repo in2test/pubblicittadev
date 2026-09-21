@@ -83,6 +83,7 @@ new class extends Component {
                 </li>
 
                 <li><a href="{{ route('portfolio') }}" class="mega-simple-link">PORTFOLIO</a></li>
+                <li><a href="{{ route('outlet') }}" class="mega-simple-link text-red-600 font-bold">OUTLET</a></li>
                 <li><a href="{{ route('about') }}" class="mega-simple-link">CHI SIAMO</a></li>
                 <li><a href="{{ route('services') }}" class="mega-simple-link">SERVIZI</a></li>
                 <li><a href="{{ route('contact') }}" class="mega-simple-link">CONTATTI</a></li>

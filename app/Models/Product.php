@@ -18,6 +18,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -1009,6 +1010,20 @@ class Product extends Model implements HasMedia
         }
 
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to only include products that have at least one outlet SKU.
+     *
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
+    #[Scope]
+    protected function hasOutletSkus(Builder $query): Builder
+    {
+        return $query->whereHas('skus', function (Builder $q) {
+            $q->where('is_outlet', true);
+        });
     }
 
     /**

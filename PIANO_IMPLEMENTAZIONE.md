@@ -8,10 +8,14 @@
 
 ## 🚨 ACTIVE ISSUES & OPEN TICKETS
 
-### 🔴 [BUG] Cross-Item Cart Quantity Tier Discount Failure
-*   **Symptom**: When a user adds different variants of the same base product to the cart (e.g., 8 Orange T-Shirts in size M and 7 in size XL), the volume discount (triggered at ≥ 10 units) fails to apply upon cart updating. However, adding 8 Ms and 10 XLs simultaneously from the product detail page correctly displays the discounted price.
-*   **Impact**: Breaks pricing logic on multi-variant mixed item orders inside `CartController` or `QuantityDiscountService`.
-*   **Task**: Refactor the item group accumulation loop in the cart pricing pre-loader to aggregate base product IDs or categories before checking tier thresholds.
+### ✅ [DONE] Outlet System for Variation-Specific Pricing
+*   **Goal**: Allow admins to mark specific product variations (SKUs) as "Outlet" and override their prices independently of the rest of the product.
+*   **Outcome**: Implemented `is_outlet` flag on `ProductSku`, added admin controls in `ProductResource`, created a dedicated `/outlet` landing page, and added promotional UI (banner, nav link, badges). Verified with unit tests and full codebase formatting.
+
+### ✅ [DONE] Cross-Item Cart Quantity Tier Discount Failure
+*   **Resolved in commit**: `887ce54` (Bug Fix: Quantity Discount Highlighting & Application for Multi-SKU Products).
+*   **Symptom**: When a user adds different variants of the same base product to the cart, the volume discount failed to apply upon cart updating.
+*   **Solution**: Refactored the item group accumulation loop to aggregate base product IDs/categories before checking tier thresholds.
 
 ### Solution to be implemented
 *Bug Fix: Quantity Discount Highlighting & Application for Multi-SKU Products

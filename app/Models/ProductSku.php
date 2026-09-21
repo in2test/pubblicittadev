@@ -51,6 +51,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'sku',
     'quantity',
     'is_available',
+    'is_outlet',
     'override_price',
 ])]
 class ProductSku extends Model
@@ -90,10 +91,19 @@ class ProductSku extends Model
         return Attribute::make(set: fn (mixed $value) => ['quantity' => $value === null ? -1 : (int) $value]);
     }
 
+    /**
+     * Check if this SKU is marked as an outlet item.
+     */
+    public function isOutlet(): bool
+    {
+        return (bool) $this->is_outlet;
+    }
+
     protected function casts(): array
     {
         return [
             'is_available' => 'boolean',
+            'is_outlet' => 'boolean',
         ];
     }
 }

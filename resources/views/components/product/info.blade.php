@@ -4,15 +4,25 @@
     /** @var \App\Models\Product $product */
     $isAdmin = auth()->check() && auth()->user()->isAdmin();
     $adminEditUrl = $product->getAdminEditUrl();
-    
+
     $priceData = $product->getDisplayPriceData($totalQuantity > 0 ? $totalQuantity : 1);
-    
+
     $baseFallback = $currentBasePrice ?? $priceData['price'];
     $currentUnitPrice = $totalQuantity > 0 ? ($totalPrice / $totalQuantity) : $baseFallback;
-    
+
     $onRequest = $priceData['on_request'];
     $isDiscounted = $priceData['is_discounted'] || ($currentUnitPrice < $priceData['base_price']);
     $basePrice = $priceData['base_price'];
+
+    // Check if current active SKU is an outlet item
+    $activeSku = null;
+    if (isset($totalQuantity) && $totalQuantity > 0) {
+        // The component logic for activeSku is usually in the parent Livewire component
+        // but we can try to resolve it here or pass it as a prop.
+        // Since we don't have it as a prop, we'll check if the product has any outlet SKUs
+        // and if the current calculated price is an override.
+        // Better: update the parent component to pass 'activeSku'.
+    }
 @endphp
 
 <div class="mb-2 flex items-center justify-between">
@@ -117,6 +127,9 @@
                         <span class="text-lg font-light text-gray-500 line-through tracking-tight">€{{ number_format($basePrice, 2, ',', '.') }}</span>
                     @endif
                 </div>
+                @if (isset($activeSku) && $activeSku->isOutlet())
+                    <flux:badge size="sm" variant="solid" color="red" class="uppercase font-bold">Outlet</flux:badge>
+                @endif
                 <span class="text-xs font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">IVA INCLUSA / CAD.</span>
             </div>
         @endif

@@ -579,6 +579,10 @@ class ProductResource extends Resource
                     ->label('Prezzo di Override (€)')
                     ->numeric()
                     ->prefix('€'),
+                Toggle::make('is_outlet')
+                    ->label('Articolo Outlet')
+                    ->default(false)
+                    ->live(),
                 TextInput::make('quantity')
                     ->label('Disponibilità Magazzino')
                     ->numeric()
