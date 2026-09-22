@@ -190,6 +190,17 @@ class Product extends Model implements HasMedia
     /** @var array<string, float|null> */
     private array $tierPriceCache = [];
 
+    /** @var array<string, float> */
+    private array $outletPriceCache = []; // Grouped by variation type:option_id -> price
+
+    /**
+     * Flush outlet price cache - called when product pricing changes.
+     */
+    public function flushOutletPriceCache(): void
+    {
+        $this->outletPriceCache = [];
+    }
+
     public const TYPE_STANDARD = 'standard';
 
     public const TYPE_NEWWAVE = 'newwave';
@@ -789,6 +800,83 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get outlet prices grouped by variation option (e.g., each color/size combination).
+     * Only returns options that have at least one outlet SKU with a valid price.
+     *
+     * @return array<string, float> Maps variation_type_id => min outlet price for that option type
+     */
+    public function getOutletPricesPerOption(): array
+    {
+        $outletSkuWithPrice = $this->skus()
+            ->where('is_outlet', true)
+            ->whereNotNull('override_price')
+            ->where('override_price', '>', 0)
+            ->with('options')
+            ->get();
+
+        if ($outletSkuWithPrice->isEmpty()) {
+            return [];
+        }
+
+        /** @var ProductSku $sku */
+        foreach ($outletSkuWithPrice as $sku) {
+            // For each outlet SKU, find its primary variation option (usually the visual one like Color)
+            // and use that as the key. We only care about options that have images (the main selectors).
+            foreach ($sku->options as $optionRelation) {
+                /** @var VariationOption|null $option */
+                $option = $optionRelation?->option;
+
+                if (! $option) {
+                    continue;
+                }
+
+                // Key by the option type name and ID for unique grouping
+                // This groups prices by variation type (e.g., Color: Rosso, Size: XL)
+                $key = $option->type.':'.$option->id;
+
+                // Return minimum outlet price for each option group
+                if (! isset($this->outletPriceCache[$key]) ||
+                    $sku->override_price < $this->outletPriceCache[$key]) {
+                    $this->outletPriceCache[$key] = (float) $sku->override_price;
+                }
+            }
+        }
+
+        return $this->outletPriceCache ?? [];
+    }
+
+    /**
+     * Get the minimum outlet price among all available outlet variations.
+     * Used for displaying "a partire da" on product cards.
+     *
+     * @return float The minimum outlet unit price, or 0 if no outlet SKUs exist.
+     */
+    public function getMinimumOutletPrice(): float
+    {
+        $minPrice = $this->skus()
+            ->where('is_outlet', true)
+            ->whereNotNull('override_price')
+            ->where('override_price', '>', 0)
+            ->min('override_price');
+
+        return $minPrice > 0 ? (float) $minPrice : 0.0;
+    }
+
+    /**
+     * Check if the product has at least one outlet SKU with a valid price.
+     *
+     * @return bool True if there are outlet SKUs with positive override_price.
+     */
+    public function hasValidOutletPrice(): bool
+    {
+        return $this->skus()
+            ->where('is_outlet', true)
+            ->whereNotNull('override_price')
+            ->where('override_price', '>', 0)
+            ->exists();
+    }
+
+    /**
      * Calculates the total price for an entire job (cart item or product configuration).
      *
      * This is the main pricing engine of the platform. It handles all 3 pricing models:
@@ -878,9 +966,9 @@ class Product extends Model implements HasMedia
      *
      * @return float The starting absolute price
      */
-    public function getStartingPrice(): float
+    public function getStartingPrice(bool $isOutlet = false): float
     {
-        return app(ProductStartingPriceService::class)->getStartingPrice($this);
+        return app(ProductStartingPriceService::class)->getStartingPrice($this, $isOutlet);
     }
 
     /**
@@ -890,9 +978,9 @@ class Product extends Model implements HasMedia
      * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
      * @return float The absolute minimum total price
      */
-    public function getAbsoluteMinimumPrice(bool $skipCache = false): float
+    public function getAbsoluteMinimumPrice(bool $skipCache = false, bool $isOutlet = false): float
     {
-        return app(ProductStartingPriceService::class)->getAbsoluteMinimumPrice($this, $skipCache);
+        return app(ProductStartingPriceService::class)->getAbsoluteMinimumPrice($this, $skipCache, $isOutlet);
     }
 
     /**
@@ -902,9 +990,9 @@ class Product extends Model implements HasMedia
      * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
      * @return float The starting unit price
      */
-    public function getStartingUnitPrice(bool $skipCache = false): float
+    public function getStartingUnitPrice(bool $skipCache = false, bool $isOutlet = false): float
     {
-        return app(ProductStartingPriceService::class)->getStartingUnitPrice($this, $skipCache);
+        return app(ProductStartingPriceService::class)->getStartingUnitPrice($this, $skipCache, $isOutlet);
     }
 
     /**

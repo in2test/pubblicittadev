@@ -15,12 +15,10 @@ class OutletProducts extends Component
 
     public function render(): View
     {
-        $products = Product::hasOutletSkus()
-            ->active()
-            ->paginate(12);
-
         return view('livewire.outlet-products', [
-            'products' => $products,
-        ]);
+            'products' => Product::hasOutletSkus()
+                ->active()
+                ->paginate(12),
+        ])->layout('layouts.layout');
     }
 }

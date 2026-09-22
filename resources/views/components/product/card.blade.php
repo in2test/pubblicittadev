@@ -1,4 +1,8 @@
-@props(['product', 'index' => 0])
+@props([
+    'product',
+    'index' => 0,
+    'isOutlet' => false,  // When true, show outlet badge and pricing (for OutletProducts page)
+])
 
 @php
     /** @var \App\Models\Product $product */
@@ -8,6 +12,9 @@
 
     // Pricing Data
     $startingPrice = $product->getStartingPrice();
+
+    /** @var bool|null */
+    $minOutletPrice = $isOutlet && $product->hasValidOutletPrice() ? $product->getStartingUnitPrice(true) : null;
 @endphp
 
 <article
@@ -49,17 +56,26 @@
                         <span class="font-mono text-[10px] text-primary font-bold uppercase tracking-widest leading-none">
                             Su Richiesta
                         </span>
-                    @else
-                        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">A partire da</span>
-                        <div class="flex items-baseline gap-1">
-                            <span class="font-mono text-sm font-bold text-primary">
-                                @if ($product->pricing_model === 'area')
-                                    €{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}<span class="text-[10px] font-bold"> / mq</span>
-                                @else
-                                    €{{ number_format($startingPrice, 2, ',', '.') }}
-                                @endif
-                            </span>
+                    @elseif($minOutletPrice !== null)
+                        {{-- Outlet pricing (shown only when isOutlet=true) --}}
+                        <div class="flex flex-col items-end gap-0.5">
+                            <span class="bg-orange-600 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded-sm tracking-wide leading-none">Outlet</span>
+                            <span class="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">A partire da</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="font-mono text-sm font-bold text-primary">
+                                    @if ($product->pricing_model === 'area')
+                                        €{{ number_format($minOutletPrice, 2, ',', '.') }}<span class="text-[10px] font-bold"> / mq</span>
+                                    @else
+                                        €{{ number_format($minOutletPrice, 2, ',', '.') }}
+                                    @endif
+                                </span>
+                            </div>
                         </div>
+                    @elseif($product->offer_price > 0)
+                        {{-- Promo/Regular pricing --}}
+                        <span class="font-mono text-[10px] text-gray-700 font-bold">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
+                    @else
+                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Da definire</span>
                     @endif
                 </div>
             </div>

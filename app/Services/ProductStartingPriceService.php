@@ -31,14 +31,14 @@ class ProductStartingPriceService
         return 1;
     }
 
-    public function getStartingPrice(Product $product): float
+    public function getStartingPrice(Product $product, bool $isOutlet = false): float
     {
-        return $this->getAbsoluteMinimumPrice($product);
+        return $this->getAbsoluteMinimumPrice($product, false, $isOutlet);
     }
 
-    public function getAbsoluteMinimumPrice(Product $product, bool $skipCache = false): float
+    public function getAbsoluteMinimumPrice(Product $product, bool $skipCache = false, bool $isOutlet = false): float
     {
-        if (! $skipCache && $product->cached_starting_price !== null) {
+        if (! $skipCache && ! $isOutlet && $product->cached_starting_price !== null) {
             return (float) $product->cached_starting_price;
         }
 
@@ -47,7 +47,11 @@ class ProductStartingPriceService
         if ($product->product_class === ProductClass::AreaBased) {
             $billedArea = $product->calculateTotalBilledArea($minQty, 1.0, 1.0);
 
-            return $product->getPriceForQuantity($minQty) * $billedArea;
+            $price = $isOutlet
+                ? $this->getMinimumValidOutletPrice($product) ?? $product->getPriceForQuantity($minQty)
+                : $product->getPriceForQuantity($minQty);
+
+            return $price * $billedArea;
         }
 
         if ($product->allows_custom_size) {
@@ -99,9 +103,19 @@ class ProductStartingPriceService
                                     $quantity = $itemsPerSheet;
                                 }
 
-                                $price = $product->calculateFinalUnitPrice($quantity) * $quantity;
-                                if ($minPriceFound === null || $price < $minPriceFound) {
-                                    $minPriceFound = $price;
+                                // For outlet, we try to find the minimum price among outlet SKUs that match this format
+                                if ($isOutlet) {
+                                    $price = $product->skus()
+                                        ->where('is_outlet', true)
+                                        ->whereHas('options', fn ($q) => $q->where('id', $format->id))
+                                        ->min('override_price') ?? $product->calculateFinalUnitPrice($quantity);
+                                } else {
+                                    $price = $product->calculateFinalUnitPrice($quantity);
+                                }
+
+                                $totalPrice = $price * $quantity;
+                                if ($minPriceFound === null || $totalPrice < $minPriceFound) {
+                                    $minPriceFound = $totalPrice;
                                 }
                             }
                         }
@@ -114,12 +128,16 @@ class ProductStartingPriceService
             }
         }
 
-        return $product->getPriceForQuantity($minQty) * $minQty;
+        $unitPrice = $isOutlet
+            ? $product->skus()->where('is_outlet', true)->min('override_price') ?? $product->getPriceForQuantity($minQty)
+            : $product->getPriceForQuantity($minQty);
+
+        return $unitPrice * $minQty;
     }
 
-    public function getStartingUnitPrice(Product $product, bool $skipCache = false): float
+    public function getStartingUnitPrice(Product $product, bool $skipCache = false, bool $isOutlet = false): float
     {
-        if (! $skipCache && $product->cached_starting_unit_price !== null) {
+        if (! $skipCache && ! $isOutlet && $product->cached_starting_unit_price !== null) {
             return (float) $product->cached_starting_unit_price;
         }
 
@@ -137,6 +155,15 @@ class ProductStartingPriceService
             if ($minTierPrice !== null) {
                 $baseFallback = (float) $minTierPrice;
             }
+        }
+
+        if ($isOutlet) {
+            $minSkuPrice = (float) $product->skus()->where('is_outlet', true)->min('override_price');
+            if ($minSkuPrice > 0) {
+                return $minSkuPrice;
+            }
+
+            return $baseFallback;
         }
 
         if (array_key_exists('skus_min_override_price', $product->getAttributes())) {
@@ -164,6 +191,23 @@ class ProductStartingPriceService
         }
 
         return $baseFallback;
+    }
+
+    /**
+     * Get the minimum valid outlet price among all outlet SKUs.
+     * Only considers SKUs that are marked as outlets and have a positive override_price.
+     *
+     * @return float|null The minimum outlet price, or null if no valid outlet SKU exists.
+     */
+    private function getMinimumValidOutletPrice(Product $product): ?float
+    {
+        $minPrice = $product->skus()
+            ->where('is_outlet', true)
+            ->whereNotNull('override_price')
+            ->where('override_price', '>', 0)
+            ->min('override_price');
+
+        return $minPrice > 0 ? (float) $minPrice : null;
     }
 
     public function updateCachedPrices(Product $product): void

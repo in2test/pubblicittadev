@@ -19,6 +19,7 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -115,6 +116,12 @@ class ProductsTable
                     ->placeholder('Tutti')
                     ->trueLabel('Solo Attivi')
                     ->falseLabel('Solo Inattivi'),
+                TernaryFilter::make('has_outlet_skus')
+                    ->label('Articoli Outlet')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Solo con Outlet')
+                    ->falseLabel('Senza Outlet')
+                    ->query(fn (EloquentBuilder $query) => $query->hasOutletSkus()),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 // Action to view the product in the frontend catalog

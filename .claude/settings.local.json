@@ -24,7 +24,13 @@
       "Bash(vendor/bin/pint --test)",
       "Bash(vendor/bin/pint --format agent app/Models/*.php app/Http/Controllers/CheckoutController.php)",
       "Bash(vendor/bin/pest --filter=OrderItemTest --compact)",
-      "Bash(vendor/bin/pest --compact)"
+      "Bash(vendor/bin/pest --compact)",
+      "Bash(git checkout:*)",
+      "mcp__laravel-boost__application-info",
+      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Models\\\\Product.php\")",
+      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Services\\\\ProductStartingPriceService.php\")",
+      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Livewire\\\\OutletProducts.php\")",
+      "Bash(vendor/bin/pint)"
     ]
   },
   "enableAllProjectMcpServers": true,
