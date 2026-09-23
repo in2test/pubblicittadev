@@ -823,8 +823,8 @@ class Product extends Model implements HasMedia
             // For each outlet SKU, find its primary variation option (usually the visual one like Color)
             // and use that as the key. We only care about options that have images (the main selectors).
             foreach ($sku->options as $optionRelation) {
-                /** @var VariationOption|null $option */
-                $option = $optionRelation?->option;
+                /** @var ProductVariationOption|null $optionRelation */
+                $option = $optionRelation->option ?? null;
 
                 if (! $option) {
                     continue;
@@ -842,7 +842,7 @@ class Product extends Model implements HasMedia
             }
         }
 
-        return $this->outletPriceCache ?? [];
+        return $this->outletPriceCache;
     }
 
     /**

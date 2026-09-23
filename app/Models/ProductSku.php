@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use ReturnTypeWillChange;
 
 /**
  * @property int $id
@@ -64,9 +65,19 @@ class ProductSku extends Model
     /**
      * @return BelongsTo<Product, $this>
      */
+    #[ReturnTypeWillChange]
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the product ID.
+     */
+    #[ReturnTypeWillChange]
+    public function getProductId(): int
+    {
+        return (int) $this->product_id;
     }
 
     /**

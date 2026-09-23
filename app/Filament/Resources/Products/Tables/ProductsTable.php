@@ -6,7 +6,7 @@ namespace App\Filament\Resources\Products\Tables;
 
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Models\Category;
-use App\Models\Product;
+use App\Models\Product as ProductModel;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -19,8 +19,8 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * ProductsTable
@@ -45,7 +45,7 @@ class ProductsTable
                 // It falls back from a custom getter to Spatie MediaLibrary.
                 ImageColumn::make('thumbnail')
                     ->label('Immagine')
-                    ->state(fn (Product $record) => $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl())
+                    ->state(fn (ProductModel $record) => $record->getFirstImage()->thumbnail_url ?? $record->getThumbnailUrl())
                     ->circular()
                     ->size(50),
 
@@ -54,7 +54,7 @@ class ProductsTable
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
-                    ->description(fn (Product $record): string => $record->sku ?? 'Nessun SKU'),
+                    ->description(fn (ProductModel $record): string => $record->sku ?? 'Nessun SKU'),
 
                 TextColumn::make('category.name')
                     ->label('Categoria')
@@ -121,14 +121,14 @@ class ProductsTable
                     ->placeholder('Tutti')
                     ->trueLabel('Solo con Outlet')
                     ->falseLabel('Senza Outlet')
-                    ->query(fn (EloquentBuilder $query) => $query->hasOutletSkus()),
+                    ->query(fn (Builder $query) => $query->whereHas('skus', fn ($q) => $q->where('is_outlet', true))),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 // Action to view the product in the frontend catalog
                 Action::make('view')
                     ->label('Vedi')
                     ->icon('heroicon-o-eye')
-                    ->url(function (Product $record): ?string {
+                    ->url(function (ProductModel $record): ?string {
                         /** @var Category|null $category */
                         $category = $record->category;
                         if (! $category?->slug) {
@@ -137,10 +137,10 @@ class ProductsTable
 
                         return route('product', [
                             'category' => (string) $category->slug,
-                            'product' => (string) $record->getAttribute('slug'),
+                            'product' => (string) $record->slug,
                         ]);
                     })
-                    ->visible(fn (Product $record): bool => (bool) $record->category_id)
+                    ->visible(fn (ProductModel $record): bool => (bool) $record->category_id)
                     ->openUrlInNewTab(),
                 EditAction::make(),
                 DeleteAction::make(),
@@ -152,7 +152,10 @@ class ProductsTable
                         ->label('Attiva')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => true])))
+                        ->action(fn (EloquentCollection $records) => $records->each(function ($record): void {
+                            /** @var ProductModel $record */
+                            $record->update(['is_active' => true]);
+                        }))
                         ->requiresConfirmation()
                         ->modalHeading('Attiva prodotti')
                         ->modalDescription('Sei sicuro di voler attivare i prodotti selezionati?')
@@ -161,7 +164,10 @@ class ProductsTable
                         ->label('Disattiva')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn (Collection $records) => $records->each(fn ($record) => $record->update(['is_active' => false])))
+                        ->action(fn (EloquentCollection $records) => $records->each(function ($record): void {
+                            /** @var ProductModel $record */
+                            $record->update(['is_active' => false]);
+                        }))
                         ->requiresConfirmation()
                         ->modalHeading('Disattiva prodotti')
                         ->modalDescription('Sei sicuro di voler disattivare i prodotti selezionati?')
@@ -175,7 +181,10 @@ class ProductsTable
                         ->form([
                             ProductForm::getCategoryField(),
                         ])
-                        ->action(fn (Collection $records, array $data) => $records->each(fn ($record) => $record->update(['category_id' => $data['category_id']])))
+                        ->action(fn (EloquentCollection $records, array $data) => $records->each(function ($record) use ($data): void {
+                            /** @var ProductModel $record */
+                            $record->update(['category_id' => $data['category_id']]);
+                        }))
                         ->deselectRecordsAfterCompletion()
                         ->modalHeading('Assegna categoria')
                         ->modalDescription('Seleziona la categoria da assegnare ai prodotti selezionati.')

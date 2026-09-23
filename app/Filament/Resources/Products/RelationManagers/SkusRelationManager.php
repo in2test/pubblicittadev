@@ -90,7 +90,7 @@ class SkusRelationManager extends RelationManager
 
                                 // 2. Get options that belong to these exposed types and are associated with this product's SKUs
                                 return VariationOption::whereIn('variation_type_id', $exposedTypeIds)
-                                    ->whereHas('skus', function (Builder $query) use ($owner) {
+                                    ->whereHas('skus.product', function (Builder $query) use ($owner) {
                                         $query->where('product_id', $owner->id);
                                     })
                                     ->pluck('name', 'id');

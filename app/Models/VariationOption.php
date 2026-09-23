@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
@@ -37,9 +38,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $sort_order
  * @property ModifierType|null $default_modifier_type
  * @property numeric $default_price_modifier
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, ProductVariationOption> $productVariationOptions
  * @property-read int|null $product_variation_options_count
  *
  * @method static \Database\Factories\VariationOptionFactory factory($count = null, $state = [])
@@ -93,6 +91,20 @@ class VariationOption extends Model
     public function productVariationOptions(): HasMany
     {
         return $this->hasMany(ProductVariationOption::class);
+    }
+
+    /**
+     * Get the SKUs associated with this variation option through the many-to-many relationship.
+     * Used by Filament for eager loading in the outlets SKU bulk action form.
+     */
+    /**
+     * @return BelongsToMany<ProductSku, $this>
+     */
+    public function skus(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductSku::class, 'product_sku_options', 'variation_option_id', 'product_sku_id')
+            ->withPivot(['is_outlet', 'override_price'])
+            ->withTimestamps();
     }
 
     public function getHexColor(): string

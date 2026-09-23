@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\Product;
 use App\Models\ProductSku;
+use Exception;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -16,7 +19,7 @@ class MarkOutletSkus extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         return $this->markSkusFromArguments();
     }
@@ -66,7 +69,7 @@ class MarkOutletSkus extends Command
                 }
             }
 
-            if (empty($skuIdsToUpdate)) {
+            if ($skuIdsToUpdate === []) {
                 $this->error('No SKUs found to update.');
 
                 return Command::FAILURE;
@@ -75,7 +78,7 @@ class MarkOutletSkus extends Command
             // Mark as outlet and set price
             ProductSku::whereIn('id', $skuIdsToUpdate)->update([
                 'is_outlet' => true,
-                'override_price' => (float) $price ?? 0,
+                'override_price' => isset($price) ? (float) $price : 0,
             ]);
 
             DB::commit();
@@ -83,11 +86,11 @@ class MarkOutletSkus extends Command
             $this->info(sprintf(
                 "Updated %d SKU(s) as outlet items with price €%s\n",
                 count($skuIdsToUpdate),
-                number_format((float) $price ?? 0, 2)
+                number_format(isset($price) ? (float) $price : 0, 2)
             ));
 
             return Command::SUCCESS;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             $this->error('Error: '.$e->getMessage());
 

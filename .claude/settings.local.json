@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
+  },
   "permissions": {
     "allow": [
       "Bash(php artisan:*)",
@@ -30,7 +33,14 @@
       "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Models\\\\Product.php\")",
       "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Services\\\\ProductStartingPriceService.php\")",
       "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Livewire\\\\OutletProducts.php\")",
-      "Bash(vendor/bin/pint)"
+      "Bash(vendor/bin/pint)",
+      "Bash(composer show:*)",
+      "mcp__laravel-boost__search-docs",
+      "Bash(docker run:*)",
+      "Bash(.\\\\vendor\\\\bin\\\\phpstan analyse:*)",
+      "Bash(php:*)",
+      "Bash(vendor/bin/phpstan clear-result-cache:*)",
+      "WebSearch"
     ]
   },
   "enableAllProjectMcpServers": true,

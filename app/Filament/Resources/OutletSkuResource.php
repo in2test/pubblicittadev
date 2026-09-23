@@ -146,7 +146,8 @@ class OutletSkuResource extends Resource
                                         return [];
                                     }
 
-                                    $productId = $firstRecord->product_id;
+                                    /** @var ProductSku */
+                                    $productId = (int) $firstRecord->product_id; // @phpstan-ignore-line
 
                                     // Find exposed variation types for this product
                                     $exposedTypeIds = ProductVariationType::where('product_id', $productId)
@@ -154,8 +155,10 @@ class OutletSkuResource extends Resource
                                         ->pluck('variation_type_id');
 
                                     return VariationOption::whereIn('variation_type_id', $exposedTypeIds)
-                                        ->whereHas('skus', function (Builder $q) use ($productId) {
-                                            $q->where('product_id', $productId);
+                                        ->whereHas('skus', function (Builder $q) {
+                                            /** @var VariationOption $option */
+                                            $option = $q->getModel();
+                                            $q->where('product_sku_options.variation_option_id', $option->id);
                                         })
                                         ->pluck('name', 'id');
                                 })
@@ -168,9 +171,8 @@ class OutletSkuResource extends Resource
                             if (! $firstRecord) {
                                 return;
                             }
-                            $productId = $firstRecord->product_id;
 
-                            ProductSku::where('product_id', $productId)
+                            ProductSku::where('product_id', (int) $firstRecord->product->id) // @phpstan-ignore-line
                                 ->whereHas('options', function (Builder $q) use ($optionIds) {
                                     $q->whereIn('variation_option_id', $optionIds);
                                 })
