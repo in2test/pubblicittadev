@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\OutletSkuResource\Pages;
 
-use App\Filament\Resources\OutletSkuResource;
+use App\Filament\Resources\OutletSkuResource\OutletSkuResource;
 use Filament\Resources\Pages\EditRecord;
 
 class EditOutletSku extends EditRecord

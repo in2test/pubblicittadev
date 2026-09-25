@@ -40,7 +40,8 @@
       "Bash(.\\\\vendor\\\\bin\\\\phpstan analyse:*)",
       "Bash(php:*)",
       "Bash(vendor/bin/phpstan clear-result-cache:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(composer run *)"
     ]
   },
   "enableAllProjectMcpServers": true,

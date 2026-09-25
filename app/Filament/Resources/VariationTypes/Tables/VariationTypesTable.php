@@ -8,6 +8,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class VariationTypesTable
@@ -39,6 +40,8 @@ class VariationTypesTable
                     ->label('Numero Opzioni')
                     ->badge()
                     ->color('primary'),
+                ToggleColumn::make('expose_in_url')
+                    ->label('Esponi in URL'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
