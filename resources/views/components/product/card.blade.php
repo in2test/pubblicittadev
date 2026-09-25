@@ -15,12 +15,26 @@
 
     /** @var bool|null */
     $minOutletPrice = $isOutlet && $product->hasValidOutletPrice() ? $product->getStartingUnitPrice(true) : null;
+
+    $productUrlParams = ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug];
+    if ($isOutlet && $minOutletPrice !== null) {
+        $firstOutletSku = $product->skus()->where('is_outlet', true)->with('options.variationType')->first();
+        if ($firstOutletSku) {
+            foreach ($firstOutletSku->options as $opt) {
+                if ($opt->variationType?->expose_in_url) {
+                    $slug = \Illuminate\Support\Str::slug($opt->variationType->name);
+                    $productUrlParams[$slug] = $opt->value ?: $opt->id;
+                    break;
+                }
+            }
+        }
+    }
 @endphp
 
 <article
     class="group relative flex flex-col h-full border-b-4 border-transparent hover:border-accent-700 transition-all duration-300 bg-gray-50">
     
-    <a href="{{ route('product', ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug]) }}"
+    <a href="{{ route('product', $productUrlParams) }}"
         class="absolute inset-0 z-10" aria-label="{{ $product->name }}"></a>
         
     <div class="flex flex-col h-full relative z-0 pointer-events-none">

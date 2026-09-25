@@ -8,146 +8,17 @@
 
 ## 🚨 ACTIVE ISSUES & OPEN TICKETS
 
-### ✅ [DONE] Outlet System for Variation-Specific Pricing
-*   **Goal**: Allow admins to mark specific product variations (SKUs) as "Outlet" and override their prices independently of the rest of the product.
-*   **Outcome**: Implemented `is_outlet` flag on `ProductSku`, added admin controls in `ProductResource`, created a dedicated `/outlet` landing page, and added promotional UI (banner, nav link, badges). Verified with unit tests and full codebase formatting.
+### ✅ [DONE] Outlet System with Product & Exposed Variations Cascade
+*   **Goal**: Provide an administrative Outlet section showing Products where admins can configure outlet status and override prices either for the entire product or per exposed variation (e.g. `Colore: Bianco` with all its sub-sizes S, M, L... receiving the outlet price, leaving other variants like `Giallo` at regular price).
+*   **Outcome**:
+    *   Refactored `OutletSkuResource` to manage **Products** with a dedicated modal action ("Configura Outlet").
+    *   Modal enables assigning `is_outlet` and `outlet_price` at the whole-product level or targeting individual exposed variants (`expose_in_url` / non-modifier variation types), with automatic cascade down to all matching `ProductSku` records.
+    *   Enhanced frontend configurator (`cart-form.blade.php`, `info.blade.php`, `card.blade.php`) to display visual Outlet indicators directly on color swatches and variant buttons, with dynamic badge and pricing on selection.
+    *   Covered with automated unit & feature tests (`OutletPricingTest`, `OutletPageTest`).
 
-### ✅ [DONE] Cross-Item Cart Quantity Tier Discount Failure
-*   **Resolved in commit**: `887ce54` (Bug Fix: Quantity Discount Highlighting & Application for Multi-SKU Products).
-*   **Symptom**: When a user adds different variants of the same base product to the cart, the volume discount failed to apply upon cart updating.
-*   **Solution**: Refactored the item group accumulation loop to aggregate base product IDs/categories before checking tier thresholds.
-
-### Solution to be implemented
-*Bug Fix: Quantity Discount Highlighting & Application for Multi-SKU Products
-Background
-For products like "Basic T" (type: newwave), users can select quantities across multiple sizes (SKUs): e.g., 8×XS, 4×S, 5×M = 17 total units. The 5% discount should activate at ≥10 units.
-
-The UI correctly highlights the discount tier badge when the total crosses the threshold, but the price shown and applied is wrong — it uses the per-SKU quantity (e.g., 5 for M) to look up the discount instead of the grand total. The discount is only actually applied when a single size reaches the threshold alone.
-
-The same fault exists in the cart (CartPresenter) when calculating savings, and in the addToCart payload which stores an incorrect per-unit price.
-
-Root Causes
-Bug 1 — totalQuantity() Computed Property (Product Page, ⚡product.blade.php)
-php
-
-// Lines 367–382
-public function totalQuantity(): int
-{
-    $product = $this->product();
-    if ($product->type === 'newwave') {
-        return array_sum(array_map(intval(...), $this->quantities));  // ✅ correct for newwave
-    }
-    // For standard products: returns only the active SKU's qty — misses other sizes
-    $activeSku = ...
-    return $activeSku ? (int) ($this->quantities[$activeSku->id] ?? 0) : 0;
-}
-newwave products correctly sum all sizes in $this->quantities. ✅
-
-However, ProductPriceCalculator::calculateTotalPrice() receives $totalQuantity as the aggregate, but also receives $skuQuantities (all individual sizes). Inside the calculator, each SKU is priced using calculateFinalUnitPrice($product, $skuQty, ...) — meaning discount lookup uses the per-SKU qty, not the grand total.
-
-Bug 2 — ProductPriceCalculator::calculateTotalPrice() — Per-SKU Discount Lookup
-php
-
-// Lines 90–111 — the loop that builds the total
-foreach ($skuQuantities as $skuId => $rawQty) {
-    $skuQty = (int) $rawQty;
-    if ($skuQty > 0) {
-        $sku = ...;
-        // ❌ BUG: passes $skuQty (e.g. 5 for M), not $totalQuantity (17)
-        $unitPrice = $this->calculateFinalUnitPrice($product, $skuQty, null, null, $sku);
-        ...
-        $total += $unitPrice * $skuQty;
-    }
-}
-calculateFinalUnitPrice calls getPriceForQuantity($product, $quantity) which then calls QuantityDiscountService::calculatePrice($product, $quantity) — using the wrong quantity (5 instead of 17).
-
-Fix: Pass $totalQuantity to calculateFinalUnitPrice for the discount lookup, while still multiplying by $skuQty for the line total.
-
-Bug 3 — ⚡product.blade.php Discount Highlighting vs. Actual Price
-The highlighting at line 779–782 correctly uses $this->totalQuantity (the grand total). ✅
-
-But as shown in Bug 2, the price calculation uses per-SKU qty for discount lookup. So the badge appears active but the price charged is undiscounted. This is fixed by Bug 2.
-
-Bug 4 — Cart CartPresenter::present() — basePrice for Multi-SKU Items
-In CartPresenter::present() (line 130–133), $basePrice is derived from the active SKU or product price. But is_discounted (line 198) and totalSavings (line 216) compare $discPrice < $basePrice. Since $discPrice is already incorrectly calculated (Bug 2), even after fixing Bug 2 the basePrice comparison needs to be consistent with a "no discount" reference price, not the already-discounted price.
-
-NOTE
-
-After fixing Bug 2, CartPresenter should work correctly because disc_price will properly reflect the discounted unit price. The is_discounted and totalSavings comparisons are logically sound already — they just need the upstream price to be fixed.
-
-Bug 5 — addToCart Stores Wrong Unit Price
-In ⚡product.blade.php line 584:
-
-php
-
-'price' => ($this->totalPrice() / $this->totalQuantity()),
-This stores the calculated (potentially wrong) unit price in the session. Once Bug 2 is fixed, this will naturally store the correct discounted unit price.
-
-Proposed Changes
-1. app/Services/ProductPriceCalculator.php
-[MODIFY] 
-ProductPriceCalculator.php
-Change the foreach ($skuQuantities ...) loop so that the discount is looked up using $totalQuantity (grand total across all sizes), while the line total is still multiplied by $skuQty:
-
-diff
-
- foreach ($skuQuantities as $skuId => $rawQty) {
-     $skuQty = (int) $rawQty;
-     if ($skuQty > 0) {
-         $sku = $product->skus->firstWhere('id', $skuId);
-         if ($isCustomFormat && $nearestSku instanceof ProductSku) {
-             $sku = $nearestSku;
-         }
--        $unitPrice = $this->calculateFinalUnitPrice($product, $skuQty, null, null, $sku);
-+        // Use $totalQuantity for discount tier lookup; $skuQty is only used for line subtotal
-+        $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
-         if ($sku && $sku->override_price !== null) {
-             $unitPrice = (float) $sku->override_price;
-         }
-         if ($isCustomFormat) {
-             $unitPrice *= 1.20;
-         }
-         $total += $unitPrice * $skuQty;
-     }
- }
-This is the core fix. One line change with clear intent.
-
-Verification Plan
-Scenario: 8 XS + 4 S + 5 M (total 17, above the 10-unit threshold)
-Before fix	After fix
-Badge highlighted ✅, price still at full rate ❌	Badge highlighted ✅, price discounted ✅
-XS priced at qty=8 → no discount	XS priced at qty=17 → 5% discount
-S priced at qty=4 → no discount	S priced at qty=17 → 5% discount
-M priced at qty=5 → no discount	M priced at qty=17 → 5% discount
-Scenario: 10 XS only
-Before & after
-No change — already worked correctly (single SKU = skuQty == totalQuantity)
-Automated Tests
-bash
-
-php artisan test --compact --filter=ProductPriceCalculator
-php artisan test --compact --filter=CartPresenter
-php artisan test --compact --filter=QuantityDiscount
-After the fix, run the full suite:
-
-bash
-
-php artisan test --compact
-Manual Verification
-Navigate to Basic-T product page
-Set 8 XS + 4 S + 5 M (total = 17)
-Verify price shows discounted rate (5% off) — previously showed full price €6.90, should now show ~€6.55
-Add to cart
-In cart, verify is_discounted flag is true and savings are displayed
-Test boundary: reduce M from 5 to 2 (total = 14) → still discounted. Reduce XS to 1 (total = 7) → discount removed
-Impact Assessment
-Scope: Single method, single line change in ProductPriceCalculator
-Risk: Low — totalQuantity is already passed into calculateTotalPrice and is correct for both single-SKU and multi-SKU scenarios
-No schema changes needed
-No new files needed
-IMPORTANT
-
-After fixing, check whether existing Pest tests for ProductPriceCalculator cover multi-SKU discount scenarios. If not, add a test that asserts the discount is applied using the total qty across all SKUs.*
+### ✅ [DONE] Multi-SKU Quantity Tier Discount Application & Price Calculation
+*   **Symptom**: For multi-SKU products (e.g. NewWave apparel with multiple sizes selected), the badge correctly highlighted volume discounts based on `$totalQuantity`, but the calculated unit price passed per-SKU quantity (`$skuQty`) to `calculateFinalUnitPrice()`, causing full prices or incorrect tiers to be applied unless a single size reached the threshold alone.
+*   **Solution**: In `app/Services/ProductPriceCalculator.php` (`calculateTotalPrice()`), updated `calculateFinalUnitPrice()` call to evaluate volume discount tiers using `$totalQuantity` (aggregate quantity across all variants) while multiplying by `$skuQty` for the line subtotal. Verified with automated test suites.
 
 ---
 

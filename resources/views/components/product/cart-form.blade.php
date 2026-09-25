@@ -258,6 +258,7 @@
                                 $option = $pvo->option;
                                 if (!$option) continue;
                                 $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
+                                $isOptionOutlet = $product->skus->filter(fn ($s) => $s->options->contains('id', $option->id) && $s->is_outlet)->isNotEmpty();
                             @endphp
 
                             @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)
@@ -269,7 +270,7 @@
                                         ? 'background: linear-gradient(135deg, ' . $hexColors[0] . ' 50%, ' . $hexColors[1] . ' 50%)'
                                         : 'background-color: ' . ($hexColors[0] ?? '#cccccc');
                                 @endphp
-                                <div class="flex flex-col items-center gap-1">
+                                <div class="flex flex-col items-center gap-1 relative">
                                     <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                                         wire:key="option-swatch-{{ $option->id }}"
                                         @class([
@@ -279,20 +280,32 @@
                                         ])
                                         @style([$swatchStyle])
                                         title="{{ $option->name }}"
-                                    ></button>
+                                    >
+                                        @if ($isOptionOutlet)
+                                            <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-orange-600 rounded-bl-sm" title="Outlet"></span>
+                                        @endif
+                                    </button>
                                     <span class="text-[9px] font-mono text-center leading-tight max-w-[48px] md:hidden opacity-80">{{ $option->name }}</span>
+                                    @if ($isOptionOutlet)
+                                        <span class="text-[8px] font-black uppercase text-orange-600 leading-none">Outlet</span>
+                                    @endif
                                 </div>
                             @else
                                 {{-- Rendering come classico pulsante testuale --}}
                                 <button type="button" wire:click="setOption({{ $type->id }}, {{ $option->id }})"
                                     wire:key="option-btn-{{ $option->id }}"
                                     @class([
-                                        'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex flex-col items-center justify-center gap-1',
+                                        'px-4 py-2 border text-xs font-mono font-bold uppercase text-center transition-all duration-200 flex flex-col items-center justify-center gap-1 relative',
                                         'bg-primary text-gray-50 border-primary' => $isActive,
                                         'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
                                     ])
                                 >
-                                    <span>{{ $option->name }}</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <span>{{ $option->name }}</span>
+                                        @if ($isOptionOutlet)
+                                            <span class="bg-orange-600 text-white text-[8px] font-black uppercase px-1 py-0.2 rounded tracking-wider">Outlet</span>
+                                        @endif
+                                    </div>
                                     @if ($option->description)
                                         <span class="text-[9px] font-normal normal-case tracking-normal opacity-80">{{ $option->description }}</span>
                                     @endif

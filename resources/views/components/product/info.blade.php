@@ -1,4 +1,4 @@
-@props(['product', 'displaySku' => null, 'displayTitle' => null, 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null])
+@props(['product', 'displaySku' => null, 'displayTitle' => null, 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null, 'isOutletSelected' => false])
 
 @php
     /** @var \App\Models\Product $product */
@@ -15,14 +15,13 @@
     $basePrice = $priceData['base_price'];
 
     // Determine if we're showing outlet price for display (no quantity selected)
-    $showOutletPrice = !$onRequest && $totalQuantity == 0 && $product->hasValidOutletPrice();
+    $showOutletPrice = !$onRequest && $totalQuantity == 0 && ($isOutletSelected || $product->hasValidOutletPrice());
     $displayPrice = $showOutletPrice ? $product->getStartingUnitPrice(true) : ($product->getStartingUnitPrice() ?? $baseFallback);
     $isOutletShowcase = $showOutletPrice;
 
-    // For cart items, determine if outlet badge should be shown
-    $currentIsOutlet = false;
-    if ($totalQuantity > 0 && $product->hasValidOutletPrice()) {
-        // Check if current price matches outlet minimum (simple comparison)
+    // For selected configuration, determine if outlet badge should be shown
+    $currentIsOutlet = $isOutletSelected;
+    if (!$currentIsOutlet && $totalQuantity > 0 && $product->hasValidOutletPrice()) {
         $outletMin = $product->getMinimumOutletPrice();
         $currentIsOutlet = abs($currentUnitPrice - $outletMin) < 0.01 ||
                            ($product->pricing_model === 'area' && abs($currentBasePrice - $outletMin) < 0.01);

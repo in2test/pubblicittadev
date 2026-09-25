@@ -764,9 +764,12 @@ new class extends Component
         <div class="lg:col-span-7 2xl:col-span-5 ">
             <x-product.gallery :images="$images" />
         </div>
-        <!-- Right Column: Info & Config -->
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
-            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" />
+            @php
+                $activeSkuModel = $this->activeSku();
+                $isOutletSelected = $activeSkuModel?->is_outlet ?? false;
+            @endphp
+            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" />
 
             <!-- Quantity Discounts List -->
             @if ($product->getQuantityDiscounts()->isNotEmpty())

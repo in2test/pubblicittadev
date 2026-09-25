@@ -10,4 +10,9 @@ use Filament\Resources\Pages\ListRecords;
 class ListOutletSkus extends ListRecords
 {
     protected static string $resource = OutletSkuResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [];
+    }
 }
