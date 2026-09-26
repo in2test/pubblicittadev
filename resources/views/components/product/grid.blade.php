@@ -15,7 +15,7 @@
             <p class="text-gray-400 mt-4 text-sm font-mono uppercase tracking-widest">{{ $emptyMessage }}</p>
 
             @if ($attributes->has('reset-action'))
-                <button wire:click="{{ $attributes->get('reset-action') }}"
+                <button type="button" wire:click="{{ $attributes->get('reset-action') }}"
                     class="mt-10 px-10 py-5 bg-gray-950 text-gray-50 text-[10px] font-mono uppercase tracking-[0.3em] hover:bg-primary transition-colors">
                     Resetta Tutto
                 </button>

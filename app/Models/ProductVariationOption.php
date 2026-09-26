@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -28,7 +29,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $updated_at
  * @property-read VariationOption $option
  * @property-read ProductVariationType $productVariationType
+ * @property-read int|null $options_count
  *
+ * @method static ProductVariationOptionFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductVariationOption newModelQuery()
  * @method static Builder<static>|ProductVariationOption newQuery()
  * @method static Builder<static>|ProductVariationOption query()
@@ -51,6 +54,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Table(name: 'product_variation_options')]
 class ProductVariationOption extends Model
 {
+    use HasFactory;
+
     public $incrementing = true;
 
     /**
@@ -96,6 +101,20 @@ class ProductVariationOption extends Model
         $this->loadMissing('option');
 
         return $this->option->default_modifier_type;
+    }
+
+    /**
+     * Debug method to inspect the model's state
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'id' => $this->id,
+            'price_modifier' => $this->price_modifier,
+            'modifier_type' => $this->modifier_type,
+            'variation_option_id' => $this->variation_option_id,
+            'product_variation_type_id' => $this->product_variation_type_id,
+        ];
     }
 
     protected function casts(): array

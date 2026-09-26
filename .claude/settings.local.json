@@ -1,51 +1,32 @@
 {
   "env": {
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "256000"
   },
   "permissions": {
     "allow": [
-      "Bash(php artisan:*)",
       "mcp__laravel-boost__browser-logs",
-      "Bash(vendor/bin/pint --format agent)",
       "mcp__laravel-boost__database-schema",
-      "Bash(composer run:*)",
+      "mcp__laravel-boost__database-query",
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__search-docs",
       "Bash(php -v)",
+      "Bash(php -m)",
+      "Bash(dir *)",
+      "Bash(php artisan *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
+      "Bash(composer run *)",
+      "Bash(vendor/bin/pint *)",
       "Bash(vendor/bin/phpstan analyse:*)",
-      "Bash(git push *)",
-      "Bash(vendor/bin/phpstan --memory-limit=-1)",
-      "Bash(vendor/bin/larastan analyze:*)",
-      "Bash(vendor/bin/phpstan analyze:*)",
-      "Bash(./vendor/bin/phpstan analyze *)",
-      "Bash(php -m)",
-      "Bash(dir *)",
-      "Bash(git commit:*)",
-      "mcp__laravel-boost__database-query",
-      "Bash(vendor/bin/pint --dirty --format agent)",
-      "Bash(vendor/bin/pint --test)",
-      "Bash(vendor/bin/pint --format agent app/Models/*.php app/Http/Controllers/CheckoutController.php)",
-      "Bash(vendor/bin/pest --filter=OrderItemTest --compact)",
-      "Bash(vendor/bin/pest --compact)",
-      "Bash(git checkout:*)",
-      "mcp__laravel-boost__application-info",
-      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Models\\\\Product.php\")",
-      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Services\\\\ProductStartingPriceService.php\")",
-      "Bash(php -l \"C:\\\\sites\\\\pubblicittadev\\\\app\\\\Livewire\\\\OutletProducts.php\")",
-      "Bash(vendor/bin/pint)",
       "Bash(composer show:*)",
-      "mcp__laravel-boost__search-docs",
-      "Bash(docker run:*)",
-      "Bash(.\\\\vendor\\\\bin\\\\phpstan analyse:*)",
-      "Bash(php:*)",
-      "Bash(vendor/bin/phpstan clear-result-cache:*)",
       "WebSearch",
-      "Bash(composer run *)"
+      "Bash(vendor/bin/pint --format agent)"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "laravel-boost"
-  ]
+  ],
+  "outputStyle": "Learning"
 }

@@ -30,4 +30,21 @@ class ProductFactory extends Factory
             'is_featured' => fake()->boolean(),
         ];
     }
+
+    /**
+     * Create a product without a category (standalone product).
+     */
+    public function withoutCategory(): array
+    {
+        return [
+            'name' => fake()->words(3, true),
+            'slug' => fake()->unique()->slug(),
+            'description' => fake()->paragraph(),
+            'sku' => fake()->unique()->bothify('PRD-######'),
+            'price' => fake()->randomFloat(2, 10, 1000),
+            'product_class' => ProductClass::ItemBased,
+            'category_id' => null,
+            'is_featured' => fake()->boolean(),
+        ];
+    }
 }

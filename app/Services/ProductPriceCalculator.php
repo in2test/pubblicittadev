@@ -31,7 +31,7 @@ class ProductPriceCalculator
         ?float $height = null,
         array $selectedOptions = [],
     ): float {
-        if ($totalQuantity === 0) {
+        if ($totalQuantity <= 0) {
             return 0.0;
         }
 
@@ -47,7 +47,8 @@ class ProductPriceCalculator
             }
 
             $billedArea = $product->calculateTotalBilledArea($totalQuantity, $width, $height);
-            $pricePerSqm = $this->productPricingService->getPriceForQuantity($product, $totalQuantity);
+            // For area-based products, use the base price directly without tier logic
+            $pricePerSqm = $this->productPricingService->getPriceForAreaBasedProduct($product);
 
             $activeSku = $this->variantResolver->getActiveSku($product, $selectedOptions) ?? $product->skus->first();
 
@@ -118,10 +119,16 @@ class ProductPriceCalculator
                 $sku = $nearestSku;
             }
 
-            $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
-
-            if ($sku instanceof ProductSku && $sku->override_price !== null) {
-                $unitPrice = (float) $sku->override_price;
+            // Check for override price on the default SKU before calculating unit price
+            if ($product->relationLoaded('skus') && $product->skus->first()) {
+                $defaultSku = $product->skus->first();
+                if ($defaultSku->override_price !== null) {
+                    $unitPrice = (float) $defaultSku->override_price;
+                } else {
+                    $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
+                }
+            } else {
+                $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
             }
 
             if ($isCustomFormat) {
@@ -190,14 +197,32 @@ class ProductPriceCalculator
                 // If options are already loaded, use the in-memory collection directly
                 if ($pvt && $pvt->relationLoaded('options')) {
                     foreach ($selectedOptionIds as $selectedOptionId) {
-                        $productVariationOption = $pvt->options->firstWhere('variation_option_id', $selectedOptionId);
+                        // Debug: log what we're looking for
+                        $found = $pvt->options->firstWhere('variation_option_id', $selectedOptionId);
+                        if (! $found) {
+                            $found = $pvt->options->firstWhere('id', $selectedOptionId);
+                        }
 
-                        if ($productVariationOption) {
-                            $modifier = $productVariationOption->getEffectivePriceModifier();
-                            $modifierType = $productVariationOption->getEffectiveModifierType();
+                        // Debug: log what we found
+                        if ($found) {
+                            // dd([
+                            //     'found' => true,
+                            //     'id' => $found->id,
+                            //     'price_modifier' => $found->price_modifier,
+                            //     'modifier_type' => $found->modifier_type,
+                            //     'getEffectivePriceModifier()' => $found->getEffectivePriceModifier(),
+                            //     'getEffectiveModifierType()' => $found->getEffectiveModifierType(),
+                            // ]);
+                        }
 
-                            if ($modifier > 0) {
-                                if ($modifierType->value === 'percentage') {
+                        if ($found) {
+                            $modifier = $found->getEffectivePriceModifier();
+                            $modifierType = $found->getEffectiveModifierType();
+
+                            // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
+                            if ($modifier !== 0) {
+                                // Check both enum value and string for compatibility
+                                if ($modifierType->value === 'percentage' || $modifierType === 'percentage') {
                                     $percentageModifiers += $modifier;
                                 } else {
                                     $flatModifiers += $modifier;
@@ -221,7 +246,8 @@ class ProductPriceCalculator
                     $modifier = $productVariationOption->getEffectivePriceModifier();
                     $modifierType = $productVariationOption->getEffectiveModifierType();
 
-                    if ($modifier > 0) {
+                    // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
+                    if ($modifier !== 0) {
                         if ($modifierType->value === 'percentage') {
                             $percentageModifiers += $modifier;
                         } else {
@@ -232,10 +258,12 @@ class ProductPriceCalculator
             }
         }
 
+        // Apply flat modifiers first (per unit, then multiplied by quantity)
         $total += $flatModifiers * $totalQuantity;
 
-        if ($percentageModifiers > 0) {
-            $total += $total * ($percentageModifiers / 100.0);
+        // Apply percentage modifiers to the original total (before flat modifiers)
+        if ($percentageModifiers !== 0) {
+            $total = $total * (1 + $percentageModifiers / 100.0);
         }
 
         return $total;

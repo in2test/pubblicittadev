@@ -114,7 +114,7 @@ new class extends \Livewire\Component
 <div>
     <div class="mb-8 flex justify-between items-center border-b-2 border-gray-950 pb-4">
         <h2 class="text-xl font-black uppercase tracking-wider text-gray-950">I Miei Indirizzi</h2>
-        <button wire:click="openCreate" class="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-gray-50 border-2 border-gray-950 text-xs font-black uppercase tracking-widest hover:bg-gray-950 transition-colors">
+        <button type="button" wire:click="openCreate" class="inline-flex items-center gap-2 px-4 py-2.5 bg-secondary text-gray-50 border-2 border-gray-950 text-xs font-black uppercase tracking-widest hover:bg-gray-950 transition-colors">
             <span class="material-symbols-outlined text-lg">add</span>
             <span class="hidden sm:inline">Aggiungi</span>
         </button>
@@ -153,8 +153,8 @@ new class extends \Livewire\Component
                 </div>
 
                 <div class="mt-4 flex gap-2 pt-2 border-t border-gray-200">
-                    <button wire:click="edit({{ $address->id }})" class="px-3 py-1.5 border-2 border-gray-950 text-[10px] font-black uppercase tracking-wider bg-gray-50 hover:bg-gray-100 transition-colors">Modifica</button>
-                    <button wire:click="delete({{ $address->id }})" wire:confirm="Sei sicuro di voler rimuovere questo indirizzo?" class="px-3 py-1.5 border-2 border-gray-950 text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 hover:bg-red-100 transition-colors">Rimuovi</button>
+                    <button type="button" wire:click="edit({{ $address->id }})" class="px-3 py-1.5 border-2 border-gray-950 text-[10px] font-black uppercase tracking-wider bg-gray-50 hover:bg-gray-100 transition-colors">Modifica</button>
+                    <button type="button" wire:click="delete({{ $address->id }})" wire:confirm="Sei sicuro di voler rimuovere questo indirizzo?" class="px-3 py-1.5 border-2 border-gray-950 text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 hover:bg-red-100 transition-colors">Rimuovi</button>
                 </div>
             </div>
         @empty
@@ -181,8 +181,8 @@ new class extends \Livewire\Component
                 <form wire:submit.prevent="save" class="space-y-6">
                     <!-- Tipo Indirizzo -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Tipo Indirizzo</label>
-                        <select wire:model.live="type" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
+                        <label for="address-type" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Tipo Indirizzo</label>
+                        <select id="address-type" wire:model.live="type" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
                             <option value="shipping">Spedizione</option>
                             <option value="billing">Fatturazione</option>
                         </select>
@@ -190,8 +190,8 @@ new class extends \Livewire\Component
 
                     <!-- Nome / Intestatario -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome / Intestatario</label>
-                        <input type="text" wire:model="name" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Es. Mario Rossi" />
+                        <label for="address-name" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome / Intestatario</label>
+                        <input id="address-name" type="text" wire:model="name" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Es. Mario Rossi" />
                         @error('name') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                     </div>
 

@@ -3,6 +3,7 @@
     <header class="mb-6 sm:mb-12 px-4 sm:px-8 py-4 sm:py-12 3xl:px-32">
         <h1 class="text-3xl sm:text-5xl font-black tracking-tighter uppercase text-primary leading-none mb-2">Il Tuo Carrello</h1>
         <p class="font-mono text-xs sm:text-sm uppercase tracking-widest text-secondary">Riepilogo Lavorazioni</p>
+        <h2 class="text-lg font-bold uppercase tracking-wide text-on-surface mt-4">Articoli nel carrello</h2>
     </header>
 
     @if (count($items ?? []) === 0)
@@ -43,7 +44,7 @@
                 </div>
 
                 {{-- Body --}}
-                <div class="flex-grow p-5 flex flex-col gap-4">
+                <div class="grow p-5 flex flex-col gap-4">
 
                     {{-- Header row: name + job id + actions --}}
                     <div class="flex items-start justify-between gap-4">
@@ -279,8 +280,8 @@
                 {{-- CTAs with Overall Notes --}}
                 <div class="space-y-4" x-data="{ orderNotes: '' }">
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
-                        <textarea x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                        <label for="order-notes" class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
+                        <textarea id="order-notes" x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
                     </div>
 
                     <div class="space-y-3">

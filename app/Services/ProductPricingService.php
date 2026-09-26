@@ -49,8 +49,8 @@ class ProductPricingService
                     ->sortByDesc('min_quantity')
                     ->first();
 
+                // Only use first tier as starting price for custom/on-request products
                 if (! $match && ($product->price <= 0 || $product->allows_custom_size)) {
-                    // Custom or on-request products may use their first tier as a starting price.
                     return $tiers->sortBy('min_quantity')->first();
                 }
 
@@ -69,12 +69,9 @@ class ProductPricingService
                 ->orderByDesc('min_quantity')
                 ->first();
 
+            // Only fallback to first tier for custom/on-request products
             if (! $tier && ($product->price <= 0 || $product->allows_custom_size)) {
-                /** @var PricingTier|null $fallbackTier */
-                $fallbackTier = $query->orderBy('min_quantity')->first();
-
-                // Mirror the eager-loaded fallback when no tier covers the requested quantity.
-                return $fallbackTier;
+                return $query->orderBy('min_quantity')->first();
             }
 
             return $tier;
@@ -87,8 +84,12 @@ class ProductPricingService
             if ($tier instanceof PricingTier) {
                 return (float) $tier->price_per_unit;
             }
+
+            // If no SKU-specific tier found, use base price (no fallback to product-level tiers)
+            return null;
         }
 
+        // No specific SKU requested, look for product-level tiers
         $tier = $findTier(null);
         if ($tier instanceof PricingTier) {
             return (float) $tier->price_per_unit;
@@ -100,18 +101,16 @@ class ProductPricingService
                     ($t->max_quantity >= $quantity || is_null($t->max_quantity)));
 
             if ($matchedTiers->isEmpty()) {
-                if ($product->price <= 0 || $product->allows_custom_size) {
-                    $minPrice = $product->pricingTiers->sortBy('min_quantity')->first()?->price_per_unit;
-                } else {
-                    $minPrice = null;
-                }
-            } else {
-                $minPrice = $matchedTiers->min('price_per_unit');
+                // No tier matches the quantity - return null to use base price
+                return null;
             }
 
-            return $minPrice !== null ? (float) $minPrice : null;
+            $minPrice = $matchedTiers->min('price_per_unit');
+
+            return (float) $minPrice;
         }
 
+        // No eager-loaded tiers, query fresh
         $minPrice = $product->pricingTiers()
             ->where('min_quantity', '<=', $quantity)
             ->where(function (Builder $query) use ($quantity) {
@@ -120,11 +119,20 @@ class ProductPricingService
             })
             ->min('price_per_unit');
 
-        if ($minPrice === null && ($product->price <= 0 || $product->allows_custom_size)) {
-            $minPrice = $product->pricingTiers()->orderBy('min_quantity')->value('price_per_unit');
-            // Preserve the starting-price behavior for custom and on-request products.
+        // If no tier matches, return null to use base price
+        if ($minPrice === null) {
+            return null;
         }
 
-        return $minPrice !== null ? (float) $minPrice : null;
+        return (float) $minPrice;
+    }
+
+    /**
+     * For area-based products without explicit tiers, use the base price directly.
+     */
+    public function getPriceForAreaBasedProduct(Product $product): float
+    {
+        // Area-based products should use their base price for quantity calculations
+        return (float) $product->price;
     }
 }
