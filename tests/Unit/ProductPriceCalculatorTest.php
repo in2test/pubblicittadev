@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ModifierType;
 use App\Enums\ProductClass;
 use App\Models\Product;
 use App\Models\ProductSku;

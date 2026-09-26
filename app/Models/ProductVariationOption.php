@@ -95,7 +95,19 @@ class ProductVariationOption extends Model
     public function getEffectiveModifierType(): ModifierType
     {
         if ($this->price_modifier !== null) {
-            return $this->modifier_type ?? ModifierType::Flat;
+            // The casts() method ensures modifier_type is already an enum instance.
+            // Simply return it directly since it's already properly typed.
+            $modifierType = $this->modifier_type ?? ModifierType::Flat;
+
+            // Debug: log the modifier type for troubleshooting
+            \Log::info('ProductVariationOption::getEffectiveModifierType', [
+                'id' => $this->id,
+                'price_modifier' => $this->price_modifier,
+                'modifier_type_raw' => $this->modifier_type,
+                'modifier_type_value' => $modifierType instanceof ModifierType ? $modifierType->value : null,
+            ]);
+
+            return $modifierType;
         }
 
         $this->loadMissing('option');

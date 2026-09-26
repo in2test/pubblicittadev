@@ -172,6 +172,11 @@ class ProductPriceCalculator
         // Eager-load variationTypes and their options/pivots up front to avoid N+1 queries
         $product->loadMissing(['variationTypes', 'productVariationTypes']);
 
+        // TODO(human): Fix flat modifier calculation - currently returns 800 instead of 980
+        // The issue is in how the pivot data is accessed from eager-loaded relations.
+        // Need to verify that $pivot->is_modifier works correctly when loaded via relation.
+        // Consider using explicit query or accessing pivot through productVariationType directly.
+
         $flatModifiers = 0.0;
         $percentageModifiers = 0.0;
 
@@ -224,18 +229,23 @@ class ProductPriceCalculator
                             $modifierType = $found->getEffectiveModifierType();
 
                             // Debug: log the modifier details
-                            \Log::info("applyModifiersToTotal - option id={$found->id}: modifier={$modifier}, type={$modifierType->value}");
+                            \Log::info("applyModifiersToTotal - option id={$found->id}: modifier={$modifier}, type=" . ($modifierType instanceof \App\Enums\ModifierType ? $modifierType->value : json_encode($modifierType)));
 
                             // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
                             if ($modifier !== 0) {
                                 // Check both enum value and string for compatibility
-                                if ($modifierType->value === 'percentage' || $modifierType === 'percentage') {
+                                if ($modifierType instanceof \App\Enums\ModifierType && $modifierType->value === 'percentage') {
                                     \Log::info("applyModifiersToTotal - applying percentage modifier: {$modifier}");
                                     $percentageModifiers += $modifier;
-                                } else {
+                                } elseif ($modifierType instanceof \App\Enums\ModifierType && $modifierType->value === 'flat') {
                                     \Log::info("applyModifiersToTotal - applying flat modifier: {$modifier}");
                                     $flatModifiers += $modifier;
+                                } else {
+                                    \Log::info("applyModifiersToTotal - applying flat modifier (fallback): {$modifier}");
+                                    $flatModifiers += $modifier;
                                 }
+                            } else {
+                                \Log::info("applyModifiersToTotal - skipping modifier because it's zero: {$modifier}");
                             }
                         }
                     }
