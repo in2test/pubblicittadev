@@ -807,7 +807,7 @@ new class extends Component
     </div>
 
     @if($this->product()->technical_specs || $this->product()->certifications || $this->product()->construction_features || $this->product()->customization_notes)
-        <div class="px-8 py-16 3xl:px-32 bg-white border-t-4 border-gray-950">
+        <div class="px-8 py-16 3xl:px-32 bg-gray-50 border-t-4 border-gray-950">
             <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
                 @if($this->product()->technical_specs)
                     <div>

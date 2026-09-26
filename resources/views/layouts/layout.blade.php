@@ -220,7 +220,7 @@
     <div class=" bg-accent-500 py-2 text-center w-full shadow-md font-mono uppercase tracking-widest text-sm text-gray-950">
         Trasporto gratuito per ordini superiori a €200
     </div>
-    <div class=" bg-red-600 py-2 text-center w-full shadow-md font-mono uppercase tracking-widest text-sm text-white">
+    <div class=" bg-accent-700 py-2 text-center w-full shadow-md font-mono uppercase tracking-widest text-sm text-gray-50">
         🔥 Offerte Outlet: Risparmio incredibile su colori selezionati! <a href="{{ route('outlet') }}" class="underline font-bold">Scopri di più</a>
     </div>
     <livewire:navigation />

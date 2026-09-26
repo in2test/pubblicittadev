@@ -16,7 +16,8 @@ class OutletProducts extends Component
     public function render(): View
     {
         return view('livewire.outlet-products', [
-            'products' => Product::hasOutletSkus()
+            'products' => Product::with('category')
+                ->hasOutletSkus()
                 ->active()
                 ->paginate(12),
         ])->layout('layouts.layout');
