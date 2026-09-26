@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\ProductVariationOption;
 use App\Models\ProductVariationType;
+use Illuminate\Support\Facades\Log;
 
 class ProductPriceCalculator
 {
@@ -174,6 +175,10 @@ class ProductPriceCalculator
         $flatModifiers = 0.0;
         $percentageModifiers = 0.0;
 
+        // Debug: log the selectedOptions format
+        \Log::info('applyModifiersToTotal - selectedOptions:', ['selectedOptions' => $selectedOptions]);
+        \Log::info('applyModifiersToTotal - variationTypes:', ['variationTypes' => $product->variationTypes->pluck('id')->toArray()]);
+
         // variationTypes and productVariationTypes are already eager-loaded from getProducts()
         foreach ($product->variationTypes as $type) {
             /** @var ProductVariationType|null $pivot */
@@ -188,11 +193,17 @@ class ProductPriceCalculator
             }
             $selectedOptionIds = array_filter($selectedOptionIds);
 
+            // Debug: log what we're looking for
+            \Log::info("applyModifiersToTotal - type {$type->id}: pivot={$pivot?->id}, selectedOptionIds=".json_encode($selectedOptionIds));
+
             // Check if options are already loaded on the pivot (from eager load in getProducts)
             // If loaded, filter from the in-memory collection to avoid DB queries
             if ($product->relationLoaded('productVariationTypes')) {
                 $pvt = $product->productVariationTypes->firstWhere('id', $pivot->id)
                     ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
+
+                // Debug: log if pvt is found
+                \Log::info("applyModifiersToTotal - pvt for type {$type->id}: ".($pvt ? 'found' : 'not found'));
 
                 // If options are already loaded, use the in-memory collection directly
                 if ($pvt && $pvt->relationLoaded('options')) {
@@ -205,26 +216,24 @@ class ProductPriceCalculator
 
                         // Debug: log what we found
                         if ($found) {
-                            // dd([
-                            //     'found' => true,
-                            //     'id' => $found->id,
-                            //     'price_modifier' => $found->price_modifier,
-                            //     'modifier_type' => $found->modifier_type,
-                            //     'getEffectivePriceModifier()' => $found->getEffectivePriceModifier(),
-                            //     'getEffectiveModifierType()' => $found->getEffectiveModifierType(),
-                            // ]);
+                            \Log::info("applyModifiersToTotal - found option: id={$found->id}, price_modifier={$found->price_modifier}, modifier_type=".json_encode($found->modifier_type));
                         }
 
                         if ($found) {
                             $modifier = $found->getEffectivePriceModifier();
                             $modifierType = $found->getEffectiveModifierType();
 
+                            // Debug: log the modifier details
+                            \Log::info("applyModifiersToTotal - option id={$found->id}: modifier={$modifier}, type={$modifierType->value}");
+
                             // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
                             if ($modifier !== 0) {
                                 // Check both enum value and string for compatibility
                                 if ($modifierType->value === 'percentage' || $modifierType === 'percentage') {
+                                    \Log::info("applyModifiersToTotal - applying percentage modifier: {$modifier}");
                                     $percentageModifiers += $modifier;
                                 } else {
+                                    \Log::info("applyModifiersToTotal - applying flat modifier: {$modifier}");
                                     $flatModifiers += $modifier;
                                 }
                             }
@@ -258,14 +267,13 @@ class ProductPriceCalculator
             }
         }
 
+        // Debug: log the modifiers before applying
+        \Log::info('applyModifiersToTotal - modifiers:', ['flatModifiers' => $flatModifiers, 'percentageModifiers' => $percentageModifiers]);
+
         // Apply flat modifiers first (per unit, then multiplied by quantity)
         $total += $flatModifiers * $totalQuantity;
 
         // Apply percentage modifiers to the original total (before flat modifiers)
-        if ($percentageModifiers !== 0) {
-            $total = $total * (1 + $percentageModifiers / 100.0);
-        }
-
-        return $total;
+        return $total * (1 + $percentageModifiers / 100.0);
     }
 }

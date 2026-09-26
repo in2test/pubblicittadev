@@ -119,11 +119,9 @@ test('it applies percentage modifier correctly', function () {
     $pivot = ProductVariationType::create([
         'product_id' => $product->id,
         'variation_type_id' => $variationType->id,
-        'pivot' => [
-            'is_modifier' => true,
-            'modifier_type' => 'percentage',
-            'modifier_value' => 10,
-        ],
+        'is_modifier' => true,  // Set directly on the model, not in pivot array
+        'modifier_type' => 'percentage',
+        'modifier_value' => 10,
     ]);
 
     $option = VariationOption::factory()->create();
@@ -151,53 +149,6 @@ test('it applies percentage modifier correctly', function () {
     // 100 * 10 = 1000, minus 10% = 900
     expect($total)->toBe(900.00);
 })->name('applies percentage modifier correctly');
-
-test('it applies percentage modifier correctly - debug', function () {
-    $product = Product::factory()->create([
-        'product_class' => ProductClass::ItemBased,
-        'price' => 100.00,
-    ]);
-
-    // Add a 10% discount modifier (negative value = discount)
-    $variationType = VariationType::factory()->create(['name' => 'Opzione']);
-    $pivot = ProductVariationType::create([
-        'product_id' => $product->id,
-        'variation_type_id' => $variationType->id,
-        'pivot' => [
-            'is_modifier' => true,
-            'modifier_type' => 'percentage',
-            'modifier_value' => 10,
-        ],
-    ]);
-
-    $option = VariationOption::factory()->create();
-    ProductVariationOption::create([
-        'variation_option_id' => $option->id,
-        'product_variation_type_id' => $pivot->id,
-        'modifier_type' => 'percentage',
-        'price_modifier' => -10, // Negative = discount
-    ]);
-
-    $calculator = app(ProductPriceCalculator::class);
-
-    // Eager-load options so the calculator can access them from memory
-    $product->load(['variationTypes', 'productVariationTypes', 'productVariationTypes.options']);
-
-    // selectedOptions should be an array keyed by variation_type_id with arrays of option IDs
-    $total = $calculator->calculateTotalPrice(
-        product: $product,
-        totalQuantity: 10,
-        selectedOptions: [
-            $variationType->id => [$option->id],
-        ],
-    );
-
-    // TODO(human) - Debug: Add logging to understand why modifiers aren't being applied.
-    // Expected: 100 * 10 = 1000, minus 10% = 900
-    // Actual: 1000.0
-    // Check if selectedOptions format matches what the calculator expects.
-    expect($total)->toBe(900.00);
-})->name('applies percentage modifier correctly - debug');
 
 test('it handles negative quantity gracefully', function () {
     $product = Product::factory()->create([
@@ -245,23 +196,22 @@ test('it applies flat modifier correctly', function () {
     ]);
 
     // Add a 20 flat discount modifier (negative value = discount)
+
     $variationType = VariationType::factory()->create(['name' => 'Opzione']);
     $pivot = ProductVariationType::create([
         'product_id' => $product->id,
         'variation_type_id' => $variationType->id,
-        'pivot' => [
-            'is_modifier' => true,
-            'modifier_type' => 'flat',
-            'modifier_value' => 20,
-        ],
+        'is_modifier' => true,  // Set directly on the model, not in pivot array
+        'modifier_type' => 'flat',
+        'modifier_value' => 20,
     ]);
 
     $option = VariationOption::factory()->create();
     ProductVariationOption::create([
         'variation_option_id' => $option->id,
         'product_variation_type_id' => $pivot->id,
-        'modifier_type' => 'flat',
-        'price_modifier' => -20, // Negative = discount
+        'modifier_type' => ModifierType::Flat,  // Use enum instead of string
+        'price_modifier' => -20.0, // Negative = discount (use float)
     ]);
 
     $calculator = app(ProductPriceCalculator::class);
@@ -281,53 +231,6 @@ test('it applies flat modifier correctly', function () {
     // 100 * 10 = 1000, minus 20 flat = 980
     expect($total)->toBe(980.00);
 })->name('applies flat modifier correctly');
-
-test('it applies flat modifier correctly - debug', function () {
-    $product = Product::factory()->create([
-        'product_class' => ProductClass::ItemBased,
-        'price' => 100.00,
-    ]);
-
-    // Add a 20 flat discount modifier (negative value = discount)
-    $variationType = VariationType::factory()->create(['name' => 'Opzione']);
-    $pivot = ProductVariationType::create([
-        'product_id' => $product->id,
-        'variation_type_id' => $variationType->id,
-        'pivot' => [
-            'is_modifier' => true,
-            'modifier_type' => 'flat',
-            'modifier_value' => 20,
-        ],
-    ]);
-
-    $option = VariationOption::factory()->create();
-    ProductVariationOption::create([
-        'variation_option_id' => $option->id,
-        'product_variation_type_id' => $pivot->id,
-        'modifier_type' => 'flat',
-        'price_modifier' => -20, // Negative = discount
-    ]);
-
-    $calculator = app(ProductPriceCalculator::class);
-
-    // Eager-load options so the calculator can access them from memory
-    $product->load(['variationTypes', 'productVariationTypes', 'productVariationTypes.options']);
-
-    // selectedOptions should be an array keyed by variation_type_id with arrays of option IDs
-    $total = $calculator->calculateTotalPrice(
-        product: $product,
-        totalQuantity: 10,
-        selectedOptions: [
-            $variationType->id => [$option->id],
-        ],
-    );
-
-    // TODO(human) - Debug: Add logging to understand why modifiers aren't being applied.
-    // Expected: 100 * 10 = 1000, minus 20 flat = 980
-    // Actual: 1000.0
-    // Check if selectedOptions format matches what the calculator expects.
-    expect($total)->toBe(980.00);
-})->name('applies flat modifier correctly - debug');
 
 test('it returns zero for zero quantity', function () {
     $product = Product::factory()->create([

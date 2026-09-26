@@ -81,7 +81,7 @@ test('it rejects invalid option references', function () {
     try {
         $sku->options()->attach($nonExistentOption->id);
     } catch (Exception $e) {
-        throw new Exception('Attaching non-existent option threw exception: '.$e->getMessage());
+        throw new Exception('Attaching non-existent option threw exception: '.$e->getMessage(), $e->getCode(), $e);
     }
 })->name('rejects invalid option references');
 
