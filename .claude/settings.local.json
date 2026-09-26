@@ -21,7 +21,10 @@
       "Bash(vendor/bin/phpstan analyse:*)",
       "Bash(composer show:*)",
       "WebSearch",
-      "Bash(vendor/bin/pint --format agent)"
+      "Bash(vendor/bin/pint --format agent)",
+      "Bash(git restore *)",
+      "Bash(git checkout *)",
+      "Bash(git commit -m 'fix: restore blade files to production state *)"
     ]
   },
   "enableAllProjectMcpServers": true,

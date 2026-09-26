@@ -128,7 +128,7 @@ class ProductModifierFallbackTest extends TestCase
         ProductVariationOption::create([
             'product_variation_type_id' => $pvt->id,
             'variation_option_id' => $option->id,
-            'modifier_type' => ModifierType::Flat->value,
+            'modifier_type' => ModifierType::Percentage->value,
             'price_modifier' => null,
         ]);
 

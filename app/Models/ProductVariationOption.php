@@ -6,12 +6,14 @@ namespace App\Models;
 
 use App\Enums\ModifierType;
 use Carbon\CarbonImmutable;
+use Database\Factories\ProductVariationOptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Represents the per-product configuration of a single modifier option.
@@ -42,7 +44,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|ProductVariationOption whereUpdatedAt($value)
  * @method static Builder<static>|ProductVariationOption whereVariationOptionId($value)
  *
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 #[Fillable([
     'product_variation_type_id',
@@ -100,7 +102,7 @@ class ProductVariationOption extends Model
             $modifierType = $this->modifier_type ?? ModifierType::Flat;
 
             // Debug: log the modifier type for troubleshooting
-            \Log::info('ProductVariationOption::getEffectiveModifierType', [
+            Log::info('ProductVariationOption::getEffectiveModifierType', [
                 'id' => $this->id,
                 'price_modifier' => $this->price_modifier,
                 'modifier_type_raw' => $this->modifier_type,

@@ -182,7 +182,7 @@
             }
         @endphp
         <div class="space-y-4">
-            <label class="text-[10px] font-mono uppercase tracking-widest text-secondary mb-4 flex flex-wrap items-center gap-1">
+            <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4 flex flex-wrap items-center gap-1">
                 <span>{{ $type->name }}</span>
                 @if(isset($selectedOptions[$type->id]))
                     @php
@@ -285,7 +285,7 @@
                                             <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-orange-600 rounded-bl-sm" title="Outlet"></span>
                                         @endif
                                     </button>
-                                    <span class="text-[9px] font-mono text-center leading-tight max-w-12 md:hidden opacity-80">{{ $option->name }}</span>
+                                    <span class="text-[9px] font-mono text-center leading-tight max-w-[48px] md:hidden opacity-80">{{ $option->name }}</span>
                                     @if ($isOptionOutlet)
                                         <span class="text-[8px] font-black uppercase text-orange-600 leading-none">Outlet</span>
                                     @endif
@@ -336,7 +336,7 @@
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
-                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-3.75">
+                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-[15px]">
                         @if($product->min_custom_width || $product->max_custom_width)
                             <span class="text-secondary/70">Limiti: {{ (int) $product->min_custom_width }} - {{ (int) $product->max_custom_width }} mm</span>
                         @else
@@ -356,7 +356,7 @@
                             class="w-full h-12 border border-gray-600/20 bg-gray-50 px-4 pr-12 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 font-mono text-xs text-secondary">mm</span>
                     </div>
-                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-13.75">
+                    <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-tight mt-1 min-h-[15px]">
                         @if($product->min_custom_height || $product->max_custom_height)
                             <span class="text-secondary/70">Limiti: {{ (int) $product->min_custom_height }} - {{ (int) $product->max_custom_height }} mm</span>
                         @else
@@ -610,7 +610,21 @@
                         <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
                     </div>
 
-                    
+                    {{--
+                    @if ($product->sheet_width > 0 && $product->sheet_height > 0 && $itemsPerSheet > 0)
+                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
+                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Resa Foglio di Stampa</span>
+                            <span class="text-sm font-bold text-primary font-mono">{{ $itemsPerSheet }} pz / foglio</span>
+                        </div>
+                        @php
+                            $sheetsNeeded = ceil($totalQuantity / $itemsPerSheet);
+                        @endphp
+                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
+                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Fogli di Stampa Necessari</span>
+                            <span class="text-sm font-bold text-primary font-mono">{{ $sheetsNeeded }} {{ $sheetsNeeded == 1 ? 'foglio' : 'fogli' }}</span>
+                        </div>
+                    @endif
+                    --}}
                     
                     @if($this->totalPrice > 0)
                         <div class="flex justify-between items-center pt-2 border-t border-primary/20">

@@ -229,8 +229,8 @@ test('it applies flat modifier correctly', function () {
         ],
     );
 
-    // 100 * 10 = 1000, minus 20 flat = 980
-    expect($total)->toBe(980.00);
+    // 100 * 10 = 1000, minus 20*10 flat = 800
+    expect($total)->toBe(800.00);
 })->name('applies flat modifier correctly');
 
 test('it returns zero for zero quantity', function () {

@@ -248,7 +248,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                 <div class="sticky top-24 bg-gray-50 rounded-2xl border-2 border-primary p-6 shadow-xl shadow-primary/5">
                     <h2 class="text-xl font-black uppercase tracking-tight mb-6 pb-4 border-b border-gray-200">Riepilogo Ordine</h2>
                     
-                    <div class="space-y-4 mb-8 max-h-100 overflow-y-auto pr-2">
+                    <div class="space-y-4 mb-8 max-h-[400px] overflow-y-auto pr-2">
                         @foreach($items as $jobId => $item)
                             <div class="flex gap-3">
                                 @php $product = \App\Models\Product::find($item['product_id']); @endphp

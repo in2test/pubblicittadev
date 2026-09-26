@@ -13,7 +13,7 @@
             <!-- Left Column: Contact Form -->
             <div class="lg:col-span-7">
                 <div class="bg-surface-container-lowest p-8 md:p-12 border-l-4 border-primary">
-                    <form action="#" class="space-y-10" method="get">
+                    <form action="#" class="space-y-10">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div class="relative group">
                                 <label
@@ -91,8 +91,8 @@
                                 <span class="material-symbols-outlined text-primary" data-icon="factory">factory</span>
                             </div>
                             <div>
-                                <h2 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Sede
-                                    Centrale</h2>
+                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Sede
+                                    Centrale</h3>
                                 <p class="text-xl font-bold tracking-tight">SS 155 per Fiuggi, 128<br />03010 Trivigliano (FR), Italia</p>
                             </div>
                         </div>
@@ -138,7 +138,6 @@
                 <!-- Styled Map Placeholder -->
                 <div class="relative h-64 w-full grayscale hover:grayscale-0 contrast-125 border border-outline-variant overflow-hidden transition-all duration-500">
                     <iframe 
-                        title="Posizione PubbliCittà 24 srls"
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.627914041124!2d13.269293!3d41.7723186!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132558ae53356aa1%3A0xd87cadd6464c2404!2sPubbliCitta&#39;%2024%20srls!5e0!3m2!1sit!2sit!4v1717325988583!5m2!1sit!2sit" 
                         class="w-full h-full border-0" 
                         allowfullscreen="" 
