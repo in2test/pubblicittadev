@@ -19,7 +19,7 @@
                     <!-- Hero Section -->
                     <x-hero :slides="$heroSlides" />
                     <!-- Services Section: Bento Grid -->
-                    <x-services />
+                    <x-services categories="[]" />
                     <!-- Featured Products -->
                     <x-featured-products :products="$products" />
                     <!-- Certifications -->

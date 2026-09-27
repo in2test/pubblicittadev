@@ -286,7 +286,7 @@ new class extends Component {
                                 />
 
                                 <button
-                                    @click="copy()"
+                                    @click="copy()" type="button"
                                     class="px-3 transition-colors border-l cursor-pointer border-gray-200"
                                 >
                                     <flux:icon.document-duplicate x-show="!copied" variant="outline"></flux:icon>

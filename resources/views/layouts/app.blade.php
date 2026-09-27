@@ -54,7 +54,7 @@
                 
                 @if(auth()->user()?->isAdmin())
                     <div class="border-2 border-amber-500 bg-amber-50/50 p-4 shadow-md shadow-amber-500/5">
-                        <h3 class="text-xs font-bold uppercase tracking-widest text-amber-800 mb-2">Amministrazione</h3>
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-amber-800 mb-2">Amministrazione</h2>
                         <a href="{{ url('/admin') }}" 
                            class="block w-full text-center py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-wider transition-colors">
                             Pannello Admin

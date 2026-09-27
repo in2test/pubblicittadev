@@ -1,5 +1,5 @@
 <x-layout>
-    <div class="max-w-screen-xl mx-auto px-6 py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-6 py-16 md:py-24">
         <div class="mb-16">
             <h1 class="text-4xl md:text-6xl font-black tracking-tighter text-on-surface leading-tight">
                 Portfolio Lavori
@@ -31,7 +31,7 @@
                                     {{ $item->category }}
                                 </span>
                             @endif
-                            <h3 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-2">{{ $item->title }}</h3>
+                            <h2 class="text-xl font-black uppercase tracking-tight text-gray-950 mb-2">{{ $item->title }}</h2>
                             @if($item->description)
                                 <p class="text-sm text-gray-600 line-clamp-3">{{ $item->description }}</p>
                             @endif

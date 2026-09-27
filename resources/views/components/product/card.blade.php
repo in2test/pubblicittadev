@@ -89,7 +89,7 @@
                         {{-- Promo/Regular pricing --}}
                         <span class="font-mono text-[10px] text-gray-700 font-bold">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
                     @else
-                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none">Da definire</span>
+                        <span class="font-mono text-[10px] text-gray-700 font-bold">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
                     @endif
                 </div>
             </div>

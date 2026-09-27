@@ -68,7 +68,7 @@
                     setTimeout(() => shared = false, 2000);
                 }
             ">
-            <span x-text="shared ? 'Link Copiato!' : 'Condividi'></span>
+            <span x-text="shared ? 'Link Copiato!' : 'Condividi'"></span>
         </flux:button>
     </div>
 </div>

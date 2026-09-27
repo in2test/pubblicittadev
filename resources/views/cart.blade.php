@@ -43,18 +43,18 @@
                 </div>
 
                 {{-- Body --}}
-                <div class="flex-grow p-5 flex flex-col gap-4">
+                <div class="grow p-5 flex flex-col gap-4">
 
                     {{-- Header row: name + job id + actions --}}
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="text-lg font-black uppercase tracking-tight">
+                                <h2 class="text-lg font-black uppercase tracking-tight">
                                     <a href="{{ route('product', ['category' => $item['cat_slug'], 'product' => $item['product_slug']]) }}"
                                         class="hover:text-primary transition-colors">
                                         {{ $item['product_name'] }}
                                     </a>
-                                </h3>
+                                </h2>
                                 <span class="font-mono text-[10px] bg-surface-container px-2 py-0.5 text-secondary uppercase tracking-tighter">
                                     #{{ Str::limit($jobId, 8, '') }}
                                 </span>
@@ -280,7 +280,8 @@
                 <div class="space-y-4" x-data="{ orderNotes: '' }">
                     <div>
                         <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
-                        <textarea x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..." class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                        <textarea x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..."
+                            class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
                     </div>
 
                     <div class="space-y-3">

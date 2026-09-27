@@ -42,7 +42,7 @@
             @endphp
             <li wire:key="category-tree-root-{{ $root->id }}">
                 {{-- Root Category Button --}}
-                <button
+                <button type="button"
                     wire:click="selectCategory('{{ $root->slug }}')"
                     @class([
                         'w-full text-left transition-all duration-300 flex items-center justify-between group py-2 px-3 rounded uppercase tracking-tight',
@@ -74,7 +74,7 @@
                                 $isExactChild = ($categorySlug === $child->slug);
                             @endphp
                             <li wire:key="category-tree-child-{{ $child->id }}">
-                                <button
+                                <button type="button"
                                     wire:click="selectCategory('{{ $child->slug }}')"
                                     @class([
                                         'w-full text-left py-2 px-3 hover:text-primary transition-all duration-200 text-xs font-bold uppercase tracking-tight flex items-center justify-between rounded group',
@@ -99,7 +99,7 @@
                                                 $isActiveGrandchild = ($categorySlug === $grandchild->slug);
                                             @endphp
                                             <li wire:key="category-tree-grandchild-{{ $grandchild->id }}">
-                                                <button
+                                                <button type="button"
                                                     wire:click="selectCategory('{{ $grandchild->slug }}')"
                                                     @class([
                                                         'w-full text-left py-1.5 px-2 hover:text-primary transition-all duration-200 text-[11px] font-bold uppercase tracking-tight flex items-center justify-between rounded group',

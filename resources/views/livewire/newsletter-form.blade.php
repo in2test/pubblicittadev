@@ -38,12 +38,13 @@ new class extends Component {
         </div>
     @else
         <form wire:submit="subscribe" class="flex border-b border-gray-300 pb-2 mb-4 relative">
-            <input 
+            <input
                 wire:model="email"
+                name="email"
                 class="bg-transparent border-none outline-none focus:ring-0 text-[10px] font-mono w-full px-0 @error('email') text-red-600 placeholder-red-400 @enderror"
-                placeholder="INDIRIZZO EMAIL" 
-                type="email" 
-                required 
+                placeholder="INDIRIZZO EMAIL"
+                type="email"
+                required
             />
             <button type="submit" class="text-accent-500 hover:text-accent-700 transition-colors" wire:loading.attr="disabled">
                 <span wire:loading.remove class="material-symbols-outlined">east</span>

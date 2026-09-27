@@ -13,7 +13,7 @@
             <!-- Left Column: Contact Form -->
             <div class="lg:col-span-7">
                 <div class="bg-surface-container-lowest p-8 md:p-12 border-l-4 border-primary">
-                    <form action="#" class="space-y-10">
+                    <form action="#" class="space-y-10" method="get">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div class="relative group">
                                 <label
@@ -91,8 +91,8 @@
                                 <span class="material-symbols-outlined text-primary" data-icon="factory">factory</span>
                             </div>
                             <div>
-                                <h3 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Sede
-                                    Centrale</h3>
+                                <h2 class="font-mono text-xs uppercase tracking-widest text-secondary mb-2">Sede
+                                    Centrale</h2>
                                 <p class="text-xl font-bold tracking-tight">SS 155 per Fiuggi, 128<br />03010 Trivigliano (FR), Italia</p>
                             </div>
                         </div>

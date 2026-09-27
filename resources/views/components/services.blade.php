@@ -58,7 +58,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <!-- Step 1 -->
-        <div class="group relative overflow-hidden bg-gray-50 flex flex-col justify-between p-8 border border-gray-200 min-h-[300px]">
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col justify-between p-8 border border-gray-200 min-h-75">
             <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
                 <span class="text-8xl font-black text-gray-950">1</span>
             </div>
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Step 2 -->
-        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-[300px]">
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-75">
             <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
                 <span class="text-8xl font-black text-gray-950">2</span>
             </div>
@@ -85,7 +85,7 @@
         </div>
 
         <!-- Step 3 -->
-        <div class="group relative overflow-hidden bg-gray-950 flex flex-col p-8 text-gray-50 min-h-[300px]">
+        <div class="group relative overflow-hidden bg-gray-950 flex flex-col p-8 text-gray-50 min-h-75">
             <div class="absolute top-0 right-0 p-4 opacity-20 select-none pointer-events-none">
                 <span class="text-8xl font-black text-gray-50">3</span>
             </div>
@@ -96,7 +96,7 @@
         </div>
 
         <!-- Step 4 -->
-        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-[300px]">
+        <div class="group relative overflow-hidden bg-gray-50 flex flex-col p-8 border border-gray-200 min-h-75">
             <div class="absolute top-0 right-0 p-4 opacity-10 select-none pointer-events-none">
                 <span class="text-8xl font-black text-gray-950">4</span>
             </div>

@@ -1,10 +1,10 @@
 @props(['slides'])
 
 <!-- Hero Section: Asymmetric Split -->
-<section class="relative min-h-[600px] flex flex-col lg:flex-row overflow-hidden lg:h-[calc(100vh-80px)] mt-20 lg:mt-0">
+<section class="relative min-h-150 flex flex-col lg:flex-row overflow-hidden lg:h-[calc(100vh-80px)] mt-20 lg:mt-0">
     <!-- Left Side: Typography Content -->
     <div class="w-full lg:w-1/2 bg-gray-50 flex items-center px-8 3xl:px-32 py-14 relative z-10">
-        <div class="max-w-4xl min-h-[160px] lg:min-h-[200px]">
+        <div class="max-w-4xl min-h-40 lg:min-h-50">
             <div class="flex items-center gap-4 mb-8">
                 <span class="font-mono text-xs tracking-[0.3em] uppercase text-accent-500 font-bold">Stampa, grafica e personalizzazione dal 1990</span>
                 <div class="h-px w-12 bg-accent-500/30"></div>
@@ -75,7 +75,7 @@
         @if(!empty($slides[0]))
         <div class="absolute top-20 left-12 lg:left-20 bg-gray-50/80 p-6 shadow-2xl max-w-xs hidden md:block backdrop-blur-sm z-20">
             <div class="font-mono text-[10px] text-accent-500 mb-4" x-text="slides[activeSlide]?.status || 'SYSTEM_STATUS: ACTIVE'">{{ $slides[0]['status'] ?? 'SYSTEM_STATUS: ACTIVE' }}</div>
-            <h3 class="text-xl font-bold mb-2 text-gray-900" x-text="slides[activeSlide]?.label">{{ $slides[0]['label'] ?? 'Abbigliamento Premium' }}</h3>
+            <h2 class="text-xl font-bold mb-2 text-gray-900" x-text="slides[activeSlide]?.label">{{ $slides[0]['label'] ?? 'Abbigliamento Premium' }}</h2>
             <p class="text-sm text-gray-700 mb-4 leading-snug" x-text="slides[activeSlide]?.description || ''">{{ $slides[0]['description'] ?? 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.' }}</p>
             <div class="flex justify-between items-center border-t border-accent-500 pt-4">
                 <span class="font-mono text-xs text-gray-900" x-text="slides[activeSlide]?.sub">{{ $slides[0]['sub'] ?? 'Qualità Certificata' }}</span>

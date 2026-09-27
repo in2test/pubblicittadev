@@ -43,10 +43,10 @@
             </p>
         </div>
         <div class="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-            <button @click="acceptAll()" class="w-full sm:w-auto bg-secondary text-gray-50 px-8 py-3 font-black border-2 border-gray-950 uppercase tracking-widest text-xs hover:bg-gray-950 transition-colors whitespace-nowrap">
+            <button type="button" @click="acceptAll()" class="w-full sm:w-auto bg-secondary text-gray-50 px-8 py-3 font-black border-2 border-gray-950 uppercase tracking-widest text-xs hover:bg-gray-950 transition-colors whitespace-nowrap">
                 Accetta Tutto
             </button>
-            <button @click="acceptEssential()" class="w-full sm:w-auto bg-gray-50 border-2 border-gray-950 text-gray-950 px-8 py-3 font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
+            <button type="button" @click="acceptEssential()" class="w-full sm:w-auto bg-gray-50 border-2 border-gray-950 text-gray-950 px-8 py-3 font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
                 Solo Essenziali
             </button>
         </div>

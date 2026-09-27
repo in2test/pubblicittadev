@@ -95,7 +95,7 @@ new class extends Component {
             <!-- Right Section: Actions/Icons -->
             <div class="flex items-center lg:gap-4 justify-self-end">
                 <!-- Search trigger button -->
-                <button id="search-trigger" aria-label="Cerca"
+                <button type="button" id="search-trigger" aria-label="Cerca"
                     class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full"
                     @click="searchOpen = true; megaMenuOpen = false">
                     <span class="material-symbols-outlined">search</span>
@@ -116,7 +116,7 @@ new class extends Component {
                 <!-- Account dropdown / trigger button -->
                 @if ($this->authUser)
                 <div class="relative hidden lg:block" x-data="{ open: false }">
-                    <button id="user-menu-button" aria-label="Account menu" @click="open = !open"
+                    <button type="button" id="user-menu-button" aria-label="Account menu" @click="open = !open"
                         @mouseenter="open = true"
                         class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full">
                         <span class="material-symbols-outlined text-green-600">verified_user</span>
@@ -144,7 +144,7 @@ new class extends Component {
                     </div>
                 </div>
                 @else
-                <button id="account-button" aria-label="Account"
+                <button type="button" id="account-button" aria-label="Account"
                     class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full hidden lg:block"
                     onclick="openAuthModal()">
                     <span class="material-symbols-outlined">account_circle</span>
@@ -152,7 +152,7 @@ new class extends Component {
                 @endif
 
                 <!-- Dark Mode Toggle Button -->
-                <button id="theme-toggle" aria-label="Toggle dark mode"
+                <button type="button" id="theme-toggle" aria-label="Toggle dark mode"
                     class="p-2 hover:bg-gray-100 text-gray-700 hover:text-gray-950 focus:outline-none transition-colors rounded-full">
                     <div id="icon-system" class=""><span class="material-symbols-outlined">computer</span></div>
                     <div id="icon-light" class="hidden"><span class="material-symbols-outlined">light_mode</span></div>
@@ -189,13 +189,13 @@ new class extends Component {
             <div>
                 <div class="flex items-center justify-between pb-4 border-b border-gray-200 mb-6">
                     <span class="text-sm font-bold tracking-[0.25em] text-gray-950">PUBBLICITTA24</span>
-                    <button class="text-gray-500 hover:text-gray-950 p-2 font-mono text-lg" @click="mobileMenuOpen = false">✕</button>
+                    <button type="button" class="text-gray-500 hover:text-gray-950 p-2 font-mono text-lg" @click="mobileMenuOpen = false">✕</button>
                 </div>
 
                 <div class="space-y-4 font-mono text-xs uppercase tracking-widest">
                     <!-- Mobile Catalog Accordion -->
                     <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="flex items-center justify-between w-full py-2 font-semibold text-gray-900">
+                        <button type="button" @click="expanded = !expanded" class="flex items-center justify-between w-full py-2 font-semibold text-gray-900">
                             <span>CATALOGO</span>
                             <span class="material-symbols-outlined transition-transform" :class="expanded ? 'rotate-180' : ''">expand_more</span>
                         </button>
@@ -208,7 +208,7 @@ new class extends Component {
                                     {{ mb_strtoupper($category->name) }}
                                 </a>
                                 @else
-                                <button @click="subExpanded = !subExpanded" class="flex items-center justify-between w-full py-1 text-gray-700 uppercase font-semibold">
+                                <button type="button" @click="subExpanded = !subExpanded" class="flex items-center justify-between w-full py-1 text-gray-700 uppercase font-semibold">
                                     <span>{{ mb_strtoupper($category->name) }}</span>
                                     <span class="material-symbols-outlined text-[14px] transition-transform duration-300" :class="subExpanded ? 'rotate-180 text-accent-500' : ''">expand_more</span>
                                 </button>
@@ -254,7 +254,7 @@ new class extends Component {
                     <button type="submit" class="text-[10px] text-red-600 hover:underline uppercase tracking-widest">ESCI</button>
                 </form>
                 @else
-                <button class="text-[10px] font-bold text-gray-900 tracking-widest hover:text-accent-500 transition-colors flex items-center gap-1.5" @click="mobileMenuOpen = false; openAuthModal()">
+                <button type="button" class="text-[10px] font-bold text-gray-900 tracking-widest hover:text-accent-500 transition-colors flex items-center gap-1.5" @click="mobileMenuOpen = false; openAuthModal()">
                     <span class="material-symbols-outlined text-sm">account_circle</span>
                     ACCEDI / REGISTRATI
                 </button>
@@ -284,7 +284,7 @@ new class extends Component {
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-8">
                     <span class="font-mono text-xs tracking-widest text-gray-500 uppercase">Cerca nel catalogo</span>
-                    <button class="text-gray-500 hover:text-gray-950 p-2 font-mono text-sm uppercase tracking-widest" @click="searchOpen = false">
+                    <button  type="button" class="text-gray-500 hover:text-gray-950 p-2 font-mono text-sm uppercase tracking-widest" @click="searchOpen = false">
                         Chiudi ✕
                     </button>
                 </div>
@@ -352,7 +352,7 @@ new class extends Component {
                                                class="group flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200">
                                                 
                                                 <!-- Product Thumbnail -->
-                                                <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                                <div class="h-12 w-12 shrink-0 overflow-hidden rounded bg-gray-100 border border-gray-200 flex items-center justify-center">
                                                     @if($product->getFirstImageUrl('thumbnail'))
                                                         <img src="{{ $product->getFirstImageUrl('thumbnail') }}" alt="{{ $product->name }}" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300">
                                                     @else

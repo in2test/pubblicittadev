@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
+use Exception;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
+#[Description('Imports data from database/localhost.sql into SQLite')]
+#[Signature('db:import-sqlite')]
 class ImportSqliteData extends Command
 {
-    protected $signature = 'db:import-sqlite';
-
-    protected $description = 'Imports data from database/localhost.sql into SQLite';
-
-    public function handle()
+    public function handle(): int
     {
         $sqlPath = database_path('localhost.sql');
 
@@ -22,25 +25,29 @@ class ImportSqliteData extends Command
         }
 
         $this->info('Reading SQL dump file...');
-        $content = file_get_contents($sqlPath);
+        $content = (string) file_get_contents($sqlPath);
 
-        // Normalize line breaks
+        // Normalize line breaks (handle both CRLF and CR)
         $content = str_replace("\r\n", "\n", $content);
+        $content = str_replace("\r", "\n", $content);
 
         $this->info('Extracting data structures...');
 
         // Split file content by the string INSERT INTO (case-insensitive)
+        // preg_split returns array on success, we handle empty result below
         $rawChunks = preg_split('/(?=INSERT\s+INTO\s+)/i', $content);
 
         $statements = [];
-        foreach ($rawChunks as $chunk) {
-            $chunk = trim($chunk);
-            if (preg_match('/^INSERT\s+INTO/i', $chunk)) {
-                $pos = strpos($chunk, ';');
-                if ($pos !== false) {
-                    $statements[] = substr($chunk, 0, $pos + 1);
-                } else {
-                    $statements[] = $chunk.';';
+        if (is_array($rawChunks)) {
+            foreach ($rawChunks as $chunk) {
+                $chunk = trim($chunk);
+                if (preg_match('/^INSERT\s+INTO/i', $chunk)) {
+                    $pos = strpos($chunk, ';');
+                    if ($pos !== false) {
+                        $statements[] = substr($chunk, 0, $pos + 1);
+                    } else {
+                        $statements[] = $chunk.';';
+                    }
                 }
             }
         }
@@ -61,12 +68,13 @@ class ImportSqliteData extends Command
 
         DB::beginTransaction();
         foreach ($statements as $statement) {
+            // Convert backticks to double quotes for SQLite compatibility
             $cleanStatement = str_replace('`', '"', $statement);
 
             try {
                 DB::statement($cleanStatement);
                 $imported++;
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 $failed++;
             }
             $this->output->progressAdvance();

@@ -150,7 +150,7 @@ new class extends Component {
                             @if($error)
                                 <div class="bg-red-50 p-4 border-2 border-red-950">
                                     <div class="flex">
-                                        <div class="flex-shrink-0">
+                                        <div class="shrink-0">
                                             <span class="material-symbols-outlined text-red-400">warning</span>
                                         </div>
                                         <div class="ml-3">
@@ -161,13 +161,13 @@ new class extends Component {
                             @endif
 
                             <div class="flex gap-4 border-b border-gray-200">
-                                <button
+                                <button type="button"
                                     wire:click="switchMode('login')"
                                     class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'login' ? 'border-b-2 border-accent-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
                                 >
                                     Accedi
                                 </button>
-                                <button
+                                <button  type="button"
                                     wire:click="switchMode('register')"
                                     class="pb-3 text-sm font-bold uppercase tracking-wider transition-all {{ $mode === 'register' ? 'border-b-2 border-accent-500 text-gray-950' : 'text-gray-400 hover:text-gray-600' }}"
                                 >

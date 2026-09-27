@@ -11,6 +11,6 @@
     </div>
     
     <div class="pb-24">
-        <x-services />
+        <x-services categories="[]" />
     </div>
 </x-layout>

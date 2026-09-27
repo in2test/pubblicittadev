@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\ModifierType;
 use App\Enums\ProductClass;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -76,13 +75,15 @@ class ProductPriceCalculator
 
     /**
      * Calculates price for area-based products (price per square meter).
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     private function calculateAreaBasedPrice(
         Product $product,
         int $totalQuantity,
         ?float $width,
         ?float $height,
-        array $selectedOptions,
+        array $selectedOptions = [],
     ): float {
         if (empty($width) || empty($height)) {
             return 0.0;
@@ -98,8 +99,10 @@ class ProductPriceCalculator
 
     /**
      * Gets the price per square meter for area-based products.
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
-    private function getPriceForAreaBasedProduct(Product $product, array $selectedOptions): float
+    private function getPriceForAreaBasedProduct(Product $product, array $selectedOptions = []): float
     {
         $activeSku = $this->variantResolver->getActiveSku($product, $selectedOptions) ?? $product->skus->first();
 
@@ -112,14 +115,17 @@ class ProductPriceCalculator
 
     /**
      * Calculates price for standard products with fixed or custom sizes.
+     *
+     * @param  array<int|string, int|float|string>  $skuQuantities
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     private function calculateStandardProductPrice(
         Product $product,
         int $totalQuantity,
-        array $skuQuantities,
-        ?float $width,
-        ?float $height,
-        array $selectedOptions,
+        array $skuQuantities = [],
+        ?float $width = null,
+        ?float $height = null,
+        array $selectedOptions = [],
     ): float {
         $total = 0.0;
         $isCustomFormat = $this->detectCustomFormat($product, $width, $height, $selectedOptions);
@@ -157,8 +163,10 @@ class ProductPriceCalculator
 
     /**
      * Detects if the product uses custom format (option ID 999999).
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
-    private function detectCustomFormat(Product $product, ?float $width, ?float $height, array $selectedOptions): bool
+    private function detectCustomFormat(Product $product, ?float $width, ?float $height, array $selectedOptions = []): bool
     {
         if (! $product->allows_custom_size || ! $width || ! $height) {
             return false;
@@ -169,12 +177,14 @@ class ProductPriceCalculator
 
     /**
      * Finds the nearest format SKU for custom size requests.
+     *
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
      */
     private function findNearestFormatSku(
         Product $product,
         float $width,
         float $height,
-        array $selectedOptions,
+        array $selectedOptions = [],
     ): ?ProductSku {
         $nearestFormatId = $this->variantResolver->getNearestFormatOptionId($product, $width, $height);
 
@@ -338,7 +348,7 @@ class ProductPriceCalculator
                 ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
 
             // Load PVT options if not already loaded
-            if (! $pvt || ! $pvt->relationLoaded('options')) {
+            if ($pvt && ! $pvt->relationLoaded('options')) {
                 $pvt->load('options');
             }
 
@@ -362,8 +372,8 @@ class ProductPriceCalculator
                     $modifierType = $found->getEffectiveModifierType();
 
                     // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
-                    if ($modifier !== 0) {
-                        if ($modifierType instanceof ModifierType && $modifierType->value === 'percentage') {
+                    if ($modifier !== 0.0) {
+                        if ($modifierType->value === 'percentage') {
                             $percentageModifiers += $modifier;
                         } else {
                             $flatModifiers += $modifier;
