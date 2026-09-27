@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\Log;
  * @method static Builder<static>|ProductVariationOption whereUpdatedAt($value)
  * @method static Builder<static>|ProductVariationOption whereVariationOptionId($value)
  *
- * @mixin Eloquent
+ * @mixin Model
  */
 #[Fillable([
     'product_variation_type_id',
@@ -56,7 +56,16 @@ use Illuminate\Support\Facades\Log;
 #[Table(name: 'product_variation_options')]
 class ProductVariationOption extends Model
 {
+    /**
+     * @template TFactory of \Illuminate\Database\Eloquent\Factories\Factory
+     */
     use HasFactory;
+
+    public function __construct(array $attributes = [])
+    {
+        $this->table = 'product_variation_options';
+        parent::__construct($attributes);
+    }
 
     public $incrementing = true;
 
@@ -98,7 +107,6 @@ class ProductVariationOption extends Model
     {
         if ($this->price_modifier !== null) {
             // The casts() method ensures modifier_type is already an enum instance.
-            // Simply return it directly since it's already properly typed.
             $modifierType = $this->modifier_type ?? ModifierType::Flat;
 
             // Debug: log the modifier type for troubleshooting
@@ -106,7 +114,7 @@ class ProductVariationOption extends Model
                 'id' => $this->id,
                 'price_modifier' => $this->price_modifier,
                 'modifier_type_raw' => $this->modifier_type,
-                'modifier_type_value' => $modifierType instanceof ModifierType ? $modifierType->value : null,
+                'modifier_type_value' => $modifierType->value,
             ]);
 
             return $modifierType;
