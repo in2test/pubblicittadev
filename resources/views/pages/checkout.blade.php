@@ -254,7 +254,7 @@ new #[Layout('layouts.app')] #[Title('Checkout')] class extends Component
                                 @php $product = \App\Models\Product::find($item['product_id']); @endphp
                                 @if($product)
                                     <div class="w-12 h-12 rounded-lg bg-gray-100 shrink-0 overflow-hidden border border-gray-200">
-                                        <img src="{{ $product->getThumbnailUrl() }}" class="w-full h-full object-cover">
+                                        <img src="{{ $product->getThumbnailUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-xs font-bold leading-tight line-clamp-1">{{ $product->name }}</p>

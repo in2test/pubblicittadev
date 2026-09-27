@@ -80,6 +80,7 @@
                                             <input
                                                 type="checkbox"
                                                 wire:model="validatedProducts.{{ $index }}.selected"
+                                                title="Seleziona per importare questo prodotto"
                                                 class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
                                             />
                                         @else

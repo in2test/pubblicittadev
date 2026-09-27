@@ -91,8 +91,8 @@ new #[Title('Security settings')] class extends Component {
     <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <div class="space-y-2">
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Current password') }}</label>
-                <input wire:model="current_password" type="password" required autocomplete="current-password" 
+                <label for="current_password" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Current password') }}</label>
+                <input wire:model="current_password" id="current_password" type="password" required autocomplete="current-password" 
                        class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                 @error('current_password') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
             </div>
@@ -104,8 +104,8 @@ new #[Title('Security settings')] class extends Component {
                 get hasNumber() { return /[0-9]/.test(this.password) },
                 get hasSymbol() { return /[^A-Za-z0-9]/.test(this.password) }
             }">
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('New password') }}</label>
-                <input wire:model="password" @input="password = $event.target.value" type="password" required autocomplete="new-password" placeholder="Es. P@ssword123 (min. 8 caratteri, maiuscola, numero e simbolo)" 
+                <label for="password" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('New password') }}</label>
+                <input wire:model="password" id="password" @input="password = $event.target.value" type="password" required autocomplete="new-password" placeholder="Es. P@ssword123 (min. 8 caratteri, maiuscola, numero e simbolo)" 
                        class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                 @error('password') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
 
@@ -131,8 +131,8 @@ new #[Title('Security settings')] class extends Component {
             </div>
 
             <div class="space-y-2">
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Confirm password') }}</label>
-                <input wire:model="password_confirmation" type="password" required autocomplete="new-password" 
+                <label for="password_confirmation" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Confirm password') }}</label>
+                <input wire:model="password_confirmation" id="password_confirmation" type="password" required autocomplete="new-password" 
                        class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                 @error('password_confirmation') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
             </div>

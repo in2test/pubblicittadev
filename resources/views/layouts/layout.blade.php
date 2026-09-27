@@ -59,7 +59,7 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": ["PrintShop", "LocalBusiness"],
+      "@type": ["LocalBusiness"],
       "name": "Pubblicittà24",
       "url": "https://www.pubblicitta24.it",
       "logo": "https://www.pubblicitta24.it/apple-touch-icon.png",

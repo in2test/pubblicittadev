@@ -97,8 +97,6 @@ return [
         // 'security-no-raw-echo' => ['error', ['allowed' => ['$post->renderedBody']]],
         // 'security-csrf-field' => ['error', ['applicationHosts' => ['admin.example']]],
         // 'best-practices-self-closing-void-elements' => 'off',
-
-        // TODO(human) - Sheath sanitizing: Review and enable these rules if needed.
         // Run 'php artisan sheath:lint --print-config' to see the resolved config.
     ],
 

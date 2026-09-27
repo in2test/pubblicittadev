@@ -181,8 +181,8 @@ new class extends \Livewire\Component
                 <form wire:submit.prevent="save" class="space-y-6">
                     <!-- Tipo Indirizzo -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Tipo Indirizzo</label>
-                        <select wire:model.live="type" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
+                        <label for="address-type" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Tipo Indirizzo') }}</label>
+                        <select wire:model.live="type" id="address-type" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
                             <option value="shipping">Spedizione</option>
                             <option value="billing">Fatturazione</option>
                         </select>
@@ -190,28 +190,28 @@ new class extends \Livewire\Component
 
                     <!-- Nome / Intestatario -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome / Intestatario</label>
-                        <input type="text" wire:model="name" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Es. Mario Rossi" />
+                        <label for="name" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome / Intestatario</label>
+                        <input id="name" type="text" wire:model="name" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Es. Mario Rossi" />
                         @error('name') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Indirizzo -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Indirizzo e Numero Civico</label>
-                        <input type="text" wire:model="street" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Via, Piazza, etc." />
+                        <label for="street" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Indirizzo e Numero Civico</label>
+                        <input id="street" type="text" wire:model="street" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" placeholder="Via, Piazza, etc." />
                         @error('street') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <!-- Città and Provincia -->
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2 space-y-2">
-                            <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Città</label>
-                            <input type="text" wire:model="city" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                            <label for="city" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Città</label>
+                            <input id="city" type="text" wire:model="city" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                             @error('city') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Prov. (Sigla)</label>
-                            <input type="text" wire:model="state" maxlength="2" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors text-center" />
+                            <label for="state" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Prov. (Sigla)</label>
+                            <input id="state" type="text" wire:model="state" maxlength="2" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors text-center" />
                             @error('state') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
@@ -219,13 +219,13 @@ new class extends \Livewire\Component
                     <!-- CAP and Paese -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">CAP</label>
-                            <input type="text" wire:model="zip" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                            <label for="zip" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">CAP</label>
+                            <input id="zip" type="text" wire:model="zip" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                             @error('zip') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Paese</label>
-                            <select wire:model="country" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
+                            <label for="country" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Paese</label>
+                            <select id="country" wire:model="country" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-black uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors">
                                 <option value="IT">Italia</option>
                                 <option value="FR">Francia</option>
                                 <option value="DE">Germania</option>
@@ -237,8 +237,8 @@ new class extends \Livewire\Component
 
                     <!-- Telefono -->
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Telefono</label>
-                        <input type="text" wire:model="phone" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                        <label for="phone" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Telefono</label>
+                        <input id="phone" type="text" wire:model="phone" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                         @error('phone') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -249,26 +249,26 @@ new class extends \Livewire\Component
                             
                             <div class="grid grid-cols-1 gap-4">
                                 <div class="space-y-2">
-                                    <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Partita IVA</label>
-                                    <input type="text" wire:model="vat_number" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                                    <label for="vat_number" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Partita IVA</label>
+                                    <input id="vat_number" type="text" wire:model="vat_number" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                                     @error('vat_number') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Codice Fiscale</label>
-                                    <input type="text" wire:model="fiscal_code" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                                    <label for="fiscal_code" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Codice Fiscale</label>
+                                    <input id="fiscal_code" type="text" wire:model="fiscal_code" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                                     @error('fiscal_code') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 gap-4">
                                 <div class="space-y-2">
-                                    <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Codice SDI (7 caratteri)</label>
-                                    <input type="text" wire:model="sdi_code" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                                    <label for="sdi_code" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Codice SDI (7 caratteri)</label>
+                                    <input id="sdi_code" type="text" wire:model="sdi_code" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                                     @error('sdi_code') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Email PEC</label>
-                                    <input type="email" wire:model="pec_email" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
+                                    <label for="pec_email" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Email PEC</label>
+                                    <input id="pec_email" type="email" wire:model="pec_email" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                                     @error('pec_email') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
                                 </div>
                             </div>

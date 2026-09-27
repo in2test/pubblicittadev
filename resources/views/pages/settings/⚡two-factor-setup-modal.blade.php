@@ -283,6 +283,7 @@ new class extends Component {
                                     readonly
                                     value="{{ $manualSetupKey }}"
                                     class="w-full p-3 bg-transparent outline-none text-gray-900"
+                                    aria-label="Chiave di configurazione manuale per l'autenticazione a due fattori"
                                 />
 
                                 <button

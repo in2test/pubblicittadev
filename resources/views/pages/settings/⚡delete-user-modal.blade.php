@@ -35,8 +35,8 @@ new class extends Component {
         </div>
 
         <div class="space-y-2">
-            <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Password</label>
-            <input type="password" wire:model="password" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" required />
+            <label for="password" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Password') }}</label>
+            <input wire:model="password" id="password" type="password" class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" required />
             @error('password') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
         </div>
 

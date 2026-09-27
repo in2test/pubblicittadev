@@ -57,7 +57,7 @@ use Illuminate\Support\Facades\Log;
 class ProductVariationOption extends Model
 {
     /**
-     * @template TFactory of \Illuminate\Database\Eloquent\Factories\Factory
+     * @use HasFactory<ProductVariationOptionFactory>
      */
     use HasFactory;
 

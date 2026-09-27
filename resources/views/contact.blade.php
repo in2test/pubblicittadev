@@ -16,35 +16,39 @@
                     <form action="#" class="space-y-10" method="get">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div class="relative group">
-                                <label
+                                <label for="name"
                                     class="block font-mono text-[10px] uppercase tracking-widest text-secondary mb-2">Nome
                                     Completo</label>
                                 <input
+                                    id="name"
                                     class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface placeholder:text-outline-variant transition-all"
                                     placeholder="Es. Mario Rossi" type="text" />
                             </div>
                             <div class="relative group">
-                                <label
+                                <label for="company"
                                     class="block font-mono text-[10px] uppercase tracking-widest text-secondary mb-2">Azienda</label>
                                 <input
+                                    id="company"
                                     class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface placeholder:text-outline-variant transition-all"
                                     placeholder="Nome Società S.p.A." type="text" />
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div class="relative group">
-                                <label
+                                <label for="email"
                                     class="block font-mono text-[10px] uppercase tracking-widest text-secondary mb-2">Indirizzo
                                     Email</label>
                                 <input
+                                    id="email"
                                     class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface placeholder:text-outline-variant transition-all"
                                     placeholder="m.rossi@azienda.it" type="email" />
                             </div>
                             <div class="relative group">
-                                <label
+                                <label for="department"
                                     class="block font-mono text-[10px] uppercase tracking-widest text-secondary mb-2">Reparto
                                     di Interesse</label>
                                 <select
+                                    id="department"
                                     class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface transition-all appearance-none">
                                     <option>Commerciale</option>
                                     <option>Assistenza Tecnica</option>
@@ -54,20 +58,21 @@
                             </div>
                         </div>
                         <div class="relative group">
-                            <label
+                            <label for="message"
                                 class="block font-mono text-[10px] uppercase tracking-widest text-secondary mb-2">Messaggio
                                 Tecnico</label>
                             <textarea
+                                id="message"
                                 class="w-full bg-transparent border-0 border-b border-outline-variant focus:ring-0 focus:border-primary px-0 py-2 text-on-surface placeholder:text-outline-variant transition-all resize-none"
                                 placeholder="Descriva la sua richiesta nei dettagli..." rows="4"></textarea>
                         </div>
-                        
-                        <label class="flex items-start gap-3 mt-8 cursor-pointer">
-                            <input type="checkbox" required class="mt-1 border-gray-300 rounded text-primary focus:ring-primary">
-                            <span class="text-sm font-mono text-gray-600 leading-tight">
-                                Ho letto l’<a href="{{ route('privacy') }}" class="text-primary hover:underline">Informativa Privacy</a> e acconsento al trattamento dei miei dati per la gestione della richiesta.
+
+                        <div class="flex items-start gap-3 mt-8 cursor-pointer">
+                            <input type="checkbox" id="privacy-check" required class="mt-1 border-gray-300 rounded text-primary focus:ring-primary" aria-labelledby="privacy-label">
+                            <span class="text-sm font-mono text-gray-600 leading-tight" id="privacy-label">
+                                Ho letto l’<a href="{{ route(`privacy`) }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Informativa Privacy</a> e acconsento al trattamento dei miei dati per la gestione della richiesta.
                             </span>
-                        </label>
+                        </div>
 
                         <div class="pt-6">
                             <button
@@ -138,6 +143,7 @@
                 <!-- Styled Map Placeholder -->
                 <div class="relative h-64 w-full grayscale hover:grayscale-0 contrast-125 border border-outline-variant overflow-hidden transition-all duration-500">
                     <iframe 
+                        title="cartina per PubbliCitta 24 srls"
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2970.627914041124!2d13.269293!3d41.7723186!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x132558ae53356aa1%3A0xd87cadd6464c2404!2sPubbliCitta&#39;%2024%20srls!5e0!3m2!1sit!2sit!4v1717325988583!5m2!1sit!2sit" 
                         class="w-full h-full border-0" 
                         allowfullscreen="" 

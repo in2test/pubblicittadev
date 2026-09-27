@@ -238,6 +238,7 @@
                         <select
                             wire:change="setOption({{ $type->id }}, $event.target.value)"
                             id="variation-select-{{ $type->id }}"
+                            aria-label="{{ $type->name }}"
                             class="w-full h-11 border border-gray-600/20 bg-gray-50 px-4 text-xs font-mono font-bold uppercase text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         >
                             @foreach ($productOptions as $pvo)
@@ -405,7 +406,7 @@
                                     ({{ $sheetsInfo['sheets_x'] }} in larghezza × {{ $sheetsInfo['sheets_y'] }} in altezza).
                                 @elseif ($sheetsInfo['sheets_x'] > 1)
                                     ({{ $sheetsInfo['sheets_x'] }} in larghezza).
-                                @else
+                                @elseif ($sheetsInfo['sheets_y'] > 1)
                                     ({{ $sheetsInfo['sheets_y'] }} in altezza).
                                 @endif
                                 Il prezzo rimane calcolato sul totale dei mq.
@@ -575,8 +576,9 @@
                                 })(this)"
                                 class="w-8 h-10 border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-base transition-colors select-none"
                             >−</button>
-                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" type="number" min="{{ $isNewwave ? 0 : $minQtyAllowedWithStep }}" step="{{ isset($qtyStep) ? $qtyStep : 1 }}"
+                            <input wire:model.live.debounce.1000ms="quantities.{{ $sku->id }}" id="quantity-input-{{ $sku->id }}" type="number" min="{{ $isNewwave ? 0 : $minQtyAllowedWithStep }}" step="{{ isset($qtyStep) ? $qtyStep : 1 }}"
                                 @if ($isNewwave && $sku->quantity <= 0) disabled @endif
+                                aria-label="{{ $rowLabel }}"
                                 class="w-16 h-10 border border-gray-600/20 bg-gray-50 px-2 text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-100/50">
                             <button type="button"
                                 onclick="(function(btn){
@@ -610,23 +612,6 @@
                         <span class="text-xs font-mono uppercase tracking-widest text-primary">Totale Articoli</span>
                         <span class="text-lg font-bold text-primary">{{ $this->totalQuantity }}</span>
                     </div>
-
-                    {{--
-                    @if ($product->sheet_width > 0 && $product->sheet_height > 0 && $itemsPerSheet > 0)
-                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
-                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Resa Foglio di Stampa</span>
-                            <span class="text-sm font-bold text-primary font-mono">{{ $itemsPerSheet }} pz / foglio</span>
-                        </div>
-                        @php
-                            $sheetsNeeded = ceil($totalQuantity / $itemsPerSheet);
-                        @endphp
-                        <div class="flex justify-between items-center pt-2 border-t border-primary/20">
-                            <span class="text-xs font-mono uppercase tracking-widest text-primary">Fogli di Stampa Necessari</span>
-                            <span class="text-sm font-bold text-primary font-mono">{{ $sheetsNeeded }} {{ $sheetsNeeded == 1 ? 'foglio' : 'fogli' }}</span>
-                        </div>
-                    @endif
-                    --}}
-                    
                     @if($this->totalPrice > 0)
                         <div class="flex justify-between items-center pt-2 border-t border-primary/20">
                             <span class="text-xs font-mono uppercase tracking-widest text-primary">Prezzo Totale (Stampe incluse)</span>
@@ -652,10 +637,8 @@
 
     {{-- SEZIONE: Note del Cliente --}}
     <div>
-        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">
-            Note aggiuntive
-        </label>
-        <textarea wire:model="notes" name="notes" rows="4"
+        <label for="order-notes" class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-4">{{ __('Note aggiuntive') }}</label>
+        <textarea wire:model="notes" id="order-notes" name="notes" rows="4"
             class="w-full rounded border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"></textarea>
         @error('notes')
             <p class="mt-2 text-xs text-red-600">{{ $message }}</p>

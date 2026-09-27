@@ -74,22 +74,22 @@ new #[Title('Profile settings')] class extends Component {
             || (auth()->user() instanceof MustVerifyEmail && auth()->user()->hasVerifiedEmail());
     }
 }; ?>
-
+ 
 <section class="w-full">
     @include('partials.settings-heading')
 
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <div class="space-y-2">
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Nome</label>
-                <input wire:model="name" type="text" required autofocus autocomplete="name" 
+                <label for="name" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Nome') }}</label>
+                <input wire:model="name" id="name" type="text" required autocomplete="name"
                        class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                 @error('name') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="space-y-2">
-                <label class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">Email</label>
-                <input wire:model="email" type="email" required autocomplete="email" 
+                <label for="email" class="block text-[10px] font-mono uppercase tracking-widest text-gray-400">{{ __('Email') }}</label>
+                <input wire:model="email" id="email" type="email" required autocomplete="email"
                        class="w-full bg-gray-50 border-2 border-gray-950 p-3 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0 transition-colors" />
                 @error('email') <p class="text-xs text-red-600 font-mono mt-1">{{ $message }}</p> @enderror
 

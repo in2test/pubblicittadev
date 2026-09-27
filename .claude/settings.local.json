@@ -27,7 +27,8 @@
       "Bash(git commit -m 'fix: restore blade files to production state *)",
       "Bash(git commit -m 'fix: eager load category relationship in OutletProducts to prevent lazy loading exception *)",
       "Bash(vendor/bin/pest --filter=ProductVariationOptionTest --compact)",
-      "Bash(git commit -m 'fix: specify HasFactory template to resolve static analysis warning *)"
+      "Bash(git commit -m 'fix: specify HasFactory template to resolve static analysis warning *)",
+      "Bash(git commit -m 'feat: complete critical test coverage gaps for PIANO_IMPLEMENTAZIONE *)"
     ]
   },
   "enableAllProjectMcpServers": true,

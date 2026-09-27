@@ -279,8 +279,8 @@
                 {{-- CTAs with Overall Notes --}}
                 <div class="space-y-4" x-data="{ orderNotes: '' }">
                     <div>
-                        <label class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">Note sull'ordine</label>
-                        <textarea x-model="orderNotes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..."
+                        <label for="order-notes" class="block text-[10px] font-mono uppercase tracking-widest text-secondary mb-2">{{ __('Note sull\'ordine') }}</label>
+                        <textarea x-model="orderNotes" id="order-notes" rows="2" placeholder="Scrivi qui eventuali note aggiuntive sull'ordine..."
                             class="w-full rounded border border-outline-variant/20 bg-surface-container-lowest px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
                     </div>
 
