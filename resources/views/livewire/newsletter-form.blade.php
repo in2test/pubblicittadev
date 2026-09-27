@@ -67,7 +67,7 @@ new class extends Component {
                 Desidero ricevere comunicazioni informative e promozionali via email. Il consenso è facoltativo e può essere revocato in qualsiasi momento.
             </span>
         </label>
-            <a href="{{ route('privacy') }}" target="_blank" rel="noopener noreferrer" class="text-accent-500 hover:underline">Privacy Policy</a>.
+            <a href="{{ route('privacy') }}" target="_blank" rel="noopener noreferrer" class="text-accent-500 hover:underline text-[9px] font-mono leading-tight">Privacy Policy</a>.
         @error('consent')
             <p class="text-[9px] font-mono text-red-600 mt-1 mb-2">{{ $message }}</p>
         @enderror

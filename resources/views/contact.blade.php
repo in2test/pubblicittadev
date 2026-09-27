@@ -70,7 +70,7 @@
                         <div class="flex items-start gap-3 mt-8 cursor-pointer">
                             <input type="checkbox" id="privacy-check" required class="mt-1 border-gray-300 rounded text-primary focus:ring-primary" aria-labelledby="privacy-label">
                             <span class="text-sm font-mono text-gray-600 leading-tight" id="privacy-label">
-                                Ho letto l’<a href="{{ route(`privacy`) }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Informativa Privacy</a> e acconsento al trattamento dei miei dati per la gestione della richiesta.
+                                Ho letto l'<a href="{{ route('privacy') }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Informativa Privacy</a> e acconsento al trattamento dei miei dati per la gestione della richiesta.
                             </span>
                         </div>
 
