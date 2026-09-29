@@ -1,4 +1,4 @@
-@props(['products', 'emptyMessage' => 'Nessun prodotto trovato.'])
+@props(['products', 'emptyMessage' => 'Nessun prodotto trovato.', 'onOutletPage' => false])
 
 {{-- 
     Shared Product Grid Component
@@ -7,9 +7,7 @@
 
 <div {{ $attributes->merge(['class' => 'grid gap-2 grid-cols-[repeat(auto-fill,minmax(min(350px,100%),1fr))]']) }}>
     @forelse ($products as $product)
-
-        <x-product.card :$product :index="$loop->index" :isOutlet=true />
-
+        <x-product.card :$product :index="$loop->index" :isOutlet=true :$onOutletPage/>
     @empty
         <div class="col-span-full py-40 text-center bg-gray-50 border border-gray-100">
             <span class="material-symbols-outlined text-6xl text-gray-200 mb-8">inventory_2</span>

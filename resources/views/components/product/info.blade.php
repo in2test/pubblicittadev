@@ -15,16 +15,21 @@
     $basePrice = $priceData['base_price'];
 
     // Determine if we're showing outlet price for display (no quantity selected)
-    $showOutletPrice = !$onRequest && $totalQuantity == 0 && ($isOutletSelected || $product->hasValidOutletPrice());
-    $displayPrice = $showOutletPrice ? $product->getStartingUnitPrice(true) : ($product->getStartingUnitPrice() ?? $baseFallback);
+    // Only show outlet badge when the currently selected SKU is an outlet, not just because product has outlet SKUs
+    $showOutletPrice = !$onRequest && $totalQuantity == 0 && ($isOutletSelected || ($currentBasePrice !== null && $currentBasePrice < $basePrice));
+    // Use currentBasePrice (selected SKU's price) when available, otherwise fallback to minimum starting price
+    $displayPrice = $currentBasePrice ?? ($showOutletPrice ? $product->getStartingUnitPrice(true) : ($product->getStartingUnitPrice() ?? $baseFallback));
     $isOutletShowcase = $showOutletPrice;
 
     // For selected configuration, determine if outlet badge should be shown
     $currentIsOutlet = $isOutletSelected;
-    if (!$currentIsOutlet && $totalQuantity > 0 && $product->hasValidOutletPrice()) {
-        $outletMin = $product->getMinimumOutletPrice();
-        $currentIsOutlet = abs($currentUnitPrice - $outletMin) < 0.01 ||
-                           ($product->pricing_model === 'area' && abs($currentBasePrice - $outletMin) < 0.01);
+    if (!$currentIsOutlet && $totalQuantity > 0) {
+        // Check if current SKU is outlet by comparing to minimum outlet price (only if product has outlet SKUs)
+        if ($product->hasValidOutletPrice()) {
+            $outletMin = $product->getMinimumOutletPrice();
+            $currentIsOutlet = abs($currentUnitPrice - $outletMin) < 0.01 ||
+                               ($product->pricing_model === 'area' && abs($currentBasePrice - $outletMin) < 0.01);
+        }
     }
 @endphp
 

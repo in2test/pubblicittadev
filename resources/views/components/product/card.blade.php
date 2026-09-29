@@ -2,6 +2,7 @@
     'product',
     'index' => 0,
     'isOutlet' => false,  // When true, show outlet badge and pricing (for OutletProducts page)
+    'onOutletPage'=>false,  // When true, show "A partire da" text for outlet pricing (for OutletProducts page)
 ])
 
 @php
@@ -17,7 +18,7 @@
     $minOutletPrice = $isOutlet && $product->hasValidOutletPrice() ? $product->getStartingUnitPrice(true) : null;
 
     $productUrlParams = ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug];
-    if ($isOutlet && $minOutletPrice !== null) {
+    if ($onOutletPage && $minOutletPrice !== null) {
         $firstOutletSku = $product->skus()->where('is_outlet', true)->with('options.variationType')->first();
         if ($firstOutletSku) {
             foreach ($firstOutletSku->options as $opt) {
