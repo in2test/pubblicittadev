@@ -1,8 +1,11 @@
 # 📋 Implementation Plan & System Architecture — Pubblicittà24
 
 **Current Status**: 🚀 PRODUCTION READY (Completed & Local SEO Active)
-**System Date**: September 27, 2026
+**System Date**: September 29, 2026
 **Core Scope**: E-commerce platform with automated Stripe payments, B2B manual quotation flows, NewWave API automated inventory sync, and hyper-targeted Local SEO for the Ciociaria region.
+
+### 🧪 Test Coverage Status
+* **Critical Services Tested**: ✅ ProductStartingPriceService, CategoryQuantityDiscount (Recently completed)
 
 ## 📊 Project Overview & Architecture
 
@@ -161,15 +164,15 @@ Configured globally inside `resources/views/layouts/layout.blade.php`:
 
 The platform runs a Pest PHP test suite featuring **190+ automated unit and architecture assertions**:
 
-* **Functional Coverage**: Suites for new features like `OutletPricingTest`, `OutletPageTest`, and `MultiSkuQuantityDiscountTest` ensure the pricing cascade and volume aggregates do not regress.
+* **Functional Coverage**: Suites for new features like `OutletPricingTest`, `OutletPageTest`, `MultiSkuQuantityDiscountTest`, and `ProductStartingPriceServiceTest` ensure the pricing cascade, volume aggregates, and starting price calculations do not regress.
 * **Architecture Enforcement**: Strict compliance rules (e.g., `ControllersDoNotSendMailDirectly.php`, `ModelsDoNotDependOnExternalServices.php`).
 
 ### 📊 Current Status
 
 * **Total Models**: 20
-* **Models with Tests**: ~8 (40%)
+* **Models with Tests**: ~9 (45%)
 * **Total Services**: 23
-* **Services with Tests**: ~5 (22%)
+* **Services with Tests**: ~6 (26%)
 
 ### ✅ Tests Already Created
 
@@ -180,14 +183,53 @@ The platform runs a Pest PHP test suite featuring **190+ automated unit and arch
 | QuantityDiscountServiceTest | ✅ Exists | tests/Unit/QuantityDiscountServiceTest.php |
 | PricingTierTest | ✅ Exists | tests/Unit/PricingTierTest.php |
 | ProductSkuTest | ✅ Exists | tests/Unit/ProductSkuTest.php |
+| ProductStartingPriceServiceTest | ✅ Exists | tests/Unit/ProductStartingPriceServiceTest.php |
+| CategoryQuantityDiscountTest | ✅ Exists | tests/Unit/CategoryQuantityDiscountTest.php |
 
 ### ❌ Missing Tests (High Priority Focus)
 
 The most critical missing tests to implement next:
 
-1. `ProductStartingPriceServiceTest`
-2. `CategoryQuantityDiscountTest`
-3. `UserAnonymizationServiceTest` (Once the GDPR deletion strategy is built)
+1. `UserAnonymizationServiceTest` (Once the GDPR deletion strategy is built)
+
+---
+
+## ⚠️ Tests NOT Yet Created — DO NOT SKIP
+
+The following test suites are **required** for production compliance and must be created before deployment:
+
+### Domain Services (Critical)
+- `ProductGalleryServiceTest` - Image processing actions decoupled from Product model
+- `ProductSynchronizerMetadataTest` - NewWave API metadata sync
+- `ProductSynchronizerImagesTest` - Remote image sync
+- `ProductSynchronizerSKUVariationsTest` - SKU/variation sync
+- `ProductSynchronizerAvailabilityTest` - Real-time availability sync
+
+### Feature Tests (Critical)
+- `CheckoutProcessTest` - Authenticated checkout flow
+- `CartMutationTest` - Cart add/update operations
+- `OrderCreationTest` - Order placement with Stripe webhooks
+- `B2BQuoteWorkflowTest` - Private corporate quotation process
+- `OutletPricingCascadeTest` - Outlet price cascade to SKUs
+- `ShippingTierCalculationTest` - Shipping cost calculation by order total
+
+### Architecture Enforcement Tests (Critical)
+- `ControllersDoNotSendMailDirectlyTest` - Ensures controllers delegate to services
+- `ModelsDoNotDependOnExternalServicesTest` - Ensures models don't call Stripe/Mail directly
+- `NoRawQueriesInControllersTest` - Enforces Eloquent relationships over raw SQL
+
+### Integration Tests (Critical)
+- `StripeWebhookHandlerTest` - Payment intent completion handling
+- `NewWaveInventorySyncTest` - GraphQL inventory balance polling
+- `SpatieMediaLibraryUploadTest` - File upload and processing pipeline
+- `CookieBannerConsentTest` - GDPR consent management flow
+
+### Performance Tests (Recommended)
+- `ProductCatalogLoadTimeTest` - Homepage/product page load benchmarks
+- `CartCheckoutFlowTest` - End-to-end checkout performance
+- `DatabaseQueryPerformanceTest` - N+1 query detection and optimization
+
+**Note**: These tests ensure architectural integrity, GDPR compliance, and production reliability. Do not skip creation of any test in this list.
 
 ## 🛠️ Development Workflow & Tooling
 
