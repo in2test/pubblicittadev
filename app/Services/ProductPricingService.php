@@ -17,20 +17,32 @@ class ProductPricingService
 
     /**
      * Calculates the price for a given quantity, optionally including a specific SKU.
-     * If an offer price is active, the offer price is returned regardless of quantity.
+     * Category quantity discounts are applied on top of any offer price or base price.
      */
     public function getPriceForQuantity(Product $product, int $quantity = 1, ?ProductSku $sku = null): float
     {
         if ($product->offer_price > 0) {
-            return (float) $product->offer_price;
+            // Apply category quantity discount on top of the offer price.
+            return $this->applyQuantityDiscount($product, (float) $product->offer_price, $quantity);
         }
 
-        // An explicit offer price takes precedence over every quantity-based rule.
+        // Explicit tier price takes precedence over quantity-based category discounts.
         if ($tierPrice = $this->getTierPrice($product, $quantity, $sku)) {
             return $tierPrice;
         }
 
         return max(0.0, $this->quantityDiscountService->calculatePrice($product, $quantity));
+    }
+
+    /**
+     * Applies the category quantity discount to the given price.
+     * Used by the price calculator when a SKU has an outlet override_price.
+     */
+    public function applyQuantityDiscount(Product $product, float $price, int $quantity): float
+    {
+        $discount = $this->quantityDiscountService->getDiscountForCategoryTree($product->category_id, $quantity);
+
+        return max(0.0, $this->quantityDiscountService->computeDiscountedPrice($price, $discount));
     }
 
     /**
@@ -132,7 +144,6 @@ class ProductPricingService
      */
     public function getPriceForAreaBasedProduct(Product $product): float
     {
-        // Area-based products should use their base price for quantity calculations
         return (float) $product->price;
     }
 }

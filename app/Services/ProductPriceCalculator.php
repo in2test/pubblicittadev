@@ -223,9 +223,9 @@ class ProductPriceCalculator
         // Get unit price from pricing service
         $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
 
-        // Apply override price if set
+        // Apply override price if set; still apply category quantity discount on top of it.
         if ($sku && $sku->override_price !== null) {
-            $unitPrice = (float) $sku->override_price;
+            $unitPrice = $this->productPricingService->applyQuantityDiscount($product, (float) $sku->override_price, $totalQuantity);
         }
 
         // Apply custom format surcharge
@@ -253,11 +253,11 @@ class ProductPriceCalculator
         // Get unit price
         $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
 
-        // Check for override price on default SKU
+        // Check for override price on default SKU; still apply category quantity discount on top.
         if ($product->relationLoaded('skus') && $product->skus->first()) {
             $defaultSku = $product->skus->first();
             if ($defaultSku->override_price !== null) {
-                $unitPrice = (float) $defaultSku->override_price;
+                $unitPrice = $this->productPricingService->applyQuantityDiscount($product, (float) $defaultSku->override_price, $totalQuantity);
             }
         }
 
