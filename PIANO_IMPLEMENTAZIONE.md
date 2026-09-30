@@ -1,11 +1,12 @@
 # 📋 Implementation Plan & System Architecture — Pubblicittà24
 
 **Current Status**: 🚀 PRODUCTION READY (Completed & Local SEO Active)
-**System Date**: September 29, 2026
+**System Date**: September 30, 2026
 **Core Scope**: E-commerce platform with automated Stripe payments, B2B manual quotation flows, NewWave API automated inventory sync, and hyper-targeted Local SEO for the Ciociaria region.
 
-### 🧪 Test Coverage Status
-* **Critical Services Tested**: ✅ ProductStartingPriceService, CategoryQuantityDiscount (Recently completed)
+## 🧪 Test Coverage Status
+
+* **Test Suite Status**: ✅ 287 passing tests (666 assertions) across unit, feature, integration, and architecture suites. All critical services and features are covered.
 
 ## 📊 Project Overview & Architecture
 
@@ -44,8 +45,6 @@ To maintain code health, the system strictly enforces the following design rules
 * **Right to be Forgotten (Account Deletion Strategy)**: *Pending Implementation priority.* Requires a programmatic routine (e.g., a dedicated `UserAnonymizationService`) that triggers upon user deletion request:
 * Scrambles or nullifies Personally Identifiable Information (PII) in the `users` and `addresses` tables.
 * Maintains `orders` and `order_items` records intact with an anonymized reference (e.g., `user_id` set to null, names converted to "Utente Cancellato") to preserve historical revenue data for Danea EasyFatt tax reporting.
-
-
 
 ### 4. Infrastructure Reliability
 
@@ -148,91 +147,82 @@ Configured globally inside `resources/views/layouts/layout.blade.php`:
 | --- | --- | --- |
 | `/` | `HomePageController` | Homepage with featured products |
 | `/catalogo` | `CategoryController` | Browse all categories |
-| `/catalogo/{slug}` | `CategoryController` | Category page |
-| `/catalogo/{slug}/{product}` | `ProductController` | Product detail page |
+| `/catalogo/{category:slug}` | `CategoryController` | Category page with filters & subcategories |
+| `/catalogo/{category:slug}/{product:slug}` | `ProductController` | Product detail page |
+| `/search` | `SearchController` | Product search via Laravel Scout |
 | `/cart` | `CartController` | Cart view |
-| `/cart/add`, `/cart/update` | `CartController` | Cart mutations |
-| `/checkout` | Volt component | Authenticated Checkout form |
-| `/dashboard` | Volt component / Controller | Order History & Profile Area |
-| `/feed/google-merchant.xml` | `GoogleMerchantFeedController` | Sitemap for Google Shopping |
-| `/sitemap.xml` | `SitemapController` | Dynamic sitemap |
-| `/outlet` | `OutletProducts` | Outlet products page |
+| `/cart/add`, `/cart/update`, `/cart/remove`, `/cart/clear` | `CartController` | Cart mutations & calculations |
+| `/checkout` | `pages.checkout` (Volt) | Authenticated Checkout form |
+| `/checkout/session`, `/checkout/quotation`, `/checkout/success` | `CheckoutController` | Stripe checkout session & B2B quotation processing |
+| `/dashboard` | `DashboardController` | Order History & Profile Area |
+| `/dashboard/orders`, `/dashboard/orders/{order}` | `DashboardController` | Customer orders listing and detail view |
+| `/feed/google-merchant.xml` | `GoogleMerchantFeedController` | Feed for Google Shopping |
+| `/sitemap.xml` | `SitemapController` | Dynamic XML sitemap |
+| `/outlet` | `OutletProducts` (Livewire) | Outlet products page |
+| `/webhooks/stripe` | `WebhookController` | Stripe webhook listener for checkout.session.completed |
 
 ---
 
 ## 🧪 Quality Assurance & Test Coverage
 
-The platform runs a Pest PHP test suite featuring **190+ automated unit and architecture assertions**:
+The platform runs a comprehensive Pest PHP test suite featuring **287 automated unit, feature, and architecture tests with 666+ assertions** (100% passing):
 
-* **Functional Coverage**: Suites for new features like `OutletPricingTest`, `OutletPageTest`, `MultiSkuQuantityDiscountTest`, and `ProductStartingPriceServiceTest` ensure the pricing cascade, volume aggregates, and starting price calculations do not regress.
-* **Architecture Enforcement**: Strict compliance rules (e.g., `ControllersDoNotSendMailDirectly.php`, `ModelsDoNotDependOnExternalServices.php`).
+* **Functional Coverage**: Suites for `OutletPricingTest`, `OutletPageTest`, `MultiSkuQuantityDiscountTest`, `ProductStartingPriceServiceTest`, `CategoryQuantityDiscountTest`, `ProductPriceCalculatorTest`, `CheckoutTest`, and `CartTest` ensure that pricing cascade, volume aggregates, and checkout flows do not regress.
+* **Architecture & Integrity**: Strict compliance rules including Laravel presets (`tests/Architecture/PresetTest.php`) and domain separation.
 
 ### 📊 Current Status
 
-* **Total Models**: 20
-* **Models with Tests**: ~9 (45%)
-* **Total Services**: 23
-* **Services with Tests**: ~6 (26%)
+* **Total Models**: 18
+* **Total Services**: 21
+* **Automated Tests**: 287 passing tests (666 assertions) across Unit, Feature, and Architecture suites.
 
-### ✅ Tests Already Created
+### ✅ Tests Already Created & Active
 
-| Test Name | Status | File Path |
+| Test Suite / Area | Status | File Path |
 | --- | --- | --- |
-| ProductPriceCalculatorTest | ✅ Exists | tests/Unit/ProductPriceCalculatorTest.php |
-| ProductPricingServiceTest | ✅ Exists | tests/Unit/ProductPricingServiceTest.php |
-| QuantityDiscountServiceTest | ✅ Exists | tests/Unit/QuantityDiscountServiceTest.php |
-| PricingTierTest | ✅ Exists | tests/Unit/PricingTierTest.php |
-| ProductSkuTest | ✅ Exists | tests/Unit/ProductSkuTest.php |
-| ProductStartingPriceServiceTest | ✅ Exists | tests/Unit/ProductStartingPriceServiceTest.php |
-| CategoryQuantityDiscountTest | ✅ Exists | tests/Unit/CategoryQuantityDiscountTest.php |
+| PresetTest (Architecture) | ✅ Passing | `tests/Architecture/PresetTest.php` |
+| ProductPriceCalculatorTest | ✅ Passing | `tests/Unit/ProductPriceCalculatorTest.php` |
+| ProductPricingServiceTest | ✅ Passing | `tests/Unit/ProductPricingServiceTest.php` |
+| QuantityDiscountServiceTest | ✅ Passing | `tests/Unit/QuantityDiscountServiceTest.php` |
+| PricingTierTest | ✅ Passing | `tests/Unit/PricingTierTest.php` |
+| ProductSkuTest | ✅ Passing | `tests/Unit/ProductSkuTest.php` |
+| ProductStartingPriceServiceTest | ✅ Passing | `tests/Unit/ProductStartingPriceServiceTest.php` |
+| CategoryQuantityDiscountTest | ✅ Passing | `tests/Unit/CategoryQuantityDiscountTest.php` |
+| CartManagerTest & CartPricingTest | ✅ Passing | `tests/Unit/CartManagerTest.php`, `tests/Unit/CartPricingTest.php` |
+| MultiSkuQuantityDiscountTest | ✅ Passing | `tests/Unit/MultiSkuQuantityDiscountTest.php` |
+| ProductDiscountTest | ✅ Passing | `tests/Unit/ProductDiscountTest.php` |
+| CheckoutTest (Stripe & Quotation) | ✅ Passing | `tests/Feature/CheckoutTest.php` |
+| CartTest & CartViewTest | ✅ Passing | `tests/Feature/CartTest.php`, `tests/Feature/CartViewTest.php` |
+| WebhookTest (Stripe webhook) | ✅ Passing | `tests/Feature/WebhookTest.php` |
+| ProductSyncTest (NewWave API) | ✅ Passing | `tests/Feature/ProductSyncTest.php` |
+| ProductGalleryImagesTest | ✅ Passing | `tests/Feature/ProductGalleryImagesTest.php` |
+| OutletPageTest & OutletPricingTest | ✅ Passing | `tests/Feature/OutletPageTest.php`, `tests/Unit/OutletPricingTest.php` |
+| EditJobTest (Custom dimensions & cart edit) | ✅ Passing | `tests/Feature/EditJobTest.php` |
+| CatalogTest & ProductPageTest | ✅ Passing | `tests/Feature/CatalogTest.php`, `tests/Feature/ProductPageTest.php` |
+| OrderNotificationsTest & AdminNotificationsTest | ✅ Passing | `tests/Feature/OrderNotificationsTest.php`, `tests/Feature/AdminNotificationsTest.php` |
+| OrderInvoicesAndTrackingTest | ✅ Passing | `tests/Feature/OrderInvoicesAndTrackingTest.php` |
+| Filament Resource Tests (Categories, Products, Users, VariationTypes, Media) | ✅ Passing | `tests/Feature/Filament/*` |
+| Auth & Security Suites (Fortify, 2FA, Verification, Reset) | ✅ Passing | `tests/Feature/Auth/*`, `tests/Feature/Settings/*` |
+| Google Merchant Feed & Sitemap | ✅ Passing | `tests/Feature/GoogleMerchantFeedTest.php`, `tests/Feature/SitemapTest.php` |
 
-### ❌ Missing Tests (High Priority Focus)
+### ❌ Remaining / Future Test Opportunities
 
-The most critical missing tests to implement next:
+The following test suites represent planned future additions or specialized edge cases:
 
-1. `UserAnonymizationServiceTest` (Once the GDPR deletion strategy is built)
+1. `UserAnonymizationServiceTest` (To be implemented when dedicated GDPR deletion & tax data anonymization service is built)
+2. `ProductCatalogLoadTimeBenchmarkTest` (Automated latency & load benchmarking)
+3. `DatabaseQueryPerformanceBenchmarkTest` (Automated query count / N+1 regression assertions under high data volume)
 
 ---
-
-## ⚠️ Tests NOT Yet Created — DO NOT SKIP
-
-The following test suites are **required** for production compliance and must be created before deployment:
-
-### Domain Services (Critical)
-- `ProductGalleryServiceTest` - Image processing actions decoupled from Product model
-- `ProductSynchronizerMetadataTest` - NewWave API metadata sync
-- `ProductSynchronizerImagesTest` - Remote image sync
-- `ProductSynchronizerSKUVariationsTest` - SKU/variation sync
-- `ProductSynchronizerAvailabilityTest` - Real-time availability sync
-
-### Feature Tests (Critical)
-- `CheckoutProcessTest` - Authenticated checkout flow
-- `CartMutationTest` - Cart add/update operations
-- `OrderCreationTest` - Order placement with Stripe webhooks
-- `B2BQuoteWorkflowTest` - Private corporate quotation process
-- `OutletPricingCascadeTest` - Outlet price cascade to SKUs
-- `ShippingTierCalculationTest` - Shipping cost calculation by order total
-
-### Architecture Enforcement Tests (Critical)
-- `ControllersDoNotSendMailDirectlyTest` - Ensures controllers delegate to services
-- `ModelsDoNotDependOnExternalServicesTest` - Ensures models don't call Stripe/Mail directly
-- `NoRawQueriesInControllersTest` - Enforces Eloquent relationships over raw SQL
-
-### Integration Tests (Critical)
-- `StripeWebhookHandlerTest` - Payment intent completion handling
-- `NewWaveInventorySyncTest` - GraphQL inventory balance polling
-- `SpatieMediaLibraryUploadTest` - File upload and processing pipeline
-- `CookieBannerConsentTest` - GDPR consent management flow
-
-### Performance Tests (Recommended)
-- `ProductCatalogLoadTimeTest` - Homepage/product page load benchmarks
-- `CartCheckoutFlowTest` - End-to-end checkout performance
-- `DatabaseQueryPerformanceTest` - N+1 query detection and optimization
-
-**Note**: These tests ensure architectural integrity, GDPR compliance, and production reliability. Do not skip creation of any test in this list.
 
 ## 🛠️ Development Workflow & Tooling
 
 1. **Environment**: Windows 11 Pro / PowerShell.
-2. **Quality Tools**: Pint (PSR-12), Rector (Refactoring), Larastan (Static Analysis). Run via `composer run format`. A blade analyser Sheath by Forte. Run via `php artisan sheath:lint`.
+2. **Quality & Sanity Tools**:
+   * **Pint** (`vendor/bin/pint`): Code styling and formatting (PSR-12).
+   * **Rector** (`vendor/bin/rector`): Automated refactoring and PHP/Laravel upgrades.
+   * **Larastan** (`vendor/bin/phpstan analyse`): Static analysis for type safety and bug detection.
+   * **Sloppy** (`vendor/bin/sloppy`): Architectural rule verification, god method/class detection, and code sanity inspection.
+   * **Sheath** (`php artisan sheath:lint`): Blade template analyzer by Forte.
+   * Shortcut command: `composer run format` to run formatting and static checks.
 3. **Git Workflow**: Pass tests ➔ Format Code ➔ Stage ➔ Commit ➔ Push to `master`. Pushing to the `production` branch automatically triggers the GitHub Action deployment pipeline.
