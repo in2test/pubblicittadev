@@ -91,6 +91,8 @@ To maintain code health, the system strictly enforces the following design rules
 * **Multi-SKU Quantity Discount Resolution**: Refactored the `ProductPriceCalculator` to handle volume discounts across multi-SKU products (e.g., buying 10 Small and 10 Large shirts of the same color). Evaluates discount tiers based on aggregate cart quantity.
 * **Authenticated GraphQL Gateway (NewWave API)**: Lazy-sync connection handling matching remote inventory balances every 12 hours. Fast stock polling is configured to bypass massive dataset recalculations.
 * **Hybrid Media Asset Pipeline**: Merged local uploads handled by Spatie MediaLibrary with remote layout images using selective color queries (`?colore=XX`).
+* **Google Merchant Feed**: Exports effective per-SKU prices, XML-safe image URLs, and up to 10 additional variant-aware product images per offer.
+* **Catalog Recovery**: Unknown URLs return a branded 404 page with the searchable product catalog.
 * **User Dashboard (Order History)**: Account area allowing clients to review past orders. Reordering is manual due to the high-variance, custom nature of the printed goods.
 
 ---

@@ -12,11 +12,27 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('generates google merchant xml feed', function () {
-    Product::factory()->create([
+    $product = Product::factory()->create([
         'is_active' => true,
         'sku' => 'TEST-123',
         'name' => 'Test Product',
         'description' => 'Test description',
+    ]);
+    $imageUrl = 'https://images.example/main.jpg?width=600&fit=crop';
+    $additionalImageUrl = 'https://images.example/detail.jpg?width=600&fit=crop';
+
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => $imageUrl,
+        'large_url' => $imageUrl,
+        'order_by' => 1,
+    ]);
+
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => $additionalImageUrl,
+        'large_url' => $additionalImageUrl,
+        'order_by' => 2,
     ]);
 
     $response = $this->get('/feed/google-merchant.xml');
@@ -31,6 +47,14 @@ it('generates google merchant xml feed', function () {
         ->toContain('<g:price>')
         ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
+
+    $feed = simplexml_load_string($xml);
+    expect($feed)->toBeInstanceOf(SimpleXMLElement::class);
+
+    $merchantNamespace = $feed->getNamespaces(true)['g'];
+    $item = $feed->channel->item[0]->children($merchantNamespace);
+    expect((string) $item->image_link)->toBe($imageUrl)
+        ->and((string) $item->additional_image_link[0])->toBe($additionalImageUrl);
 });
 
 it('generates variants in google merchant xml feed', function () {
@@ -98,11 +122,20 @@ it('exports valid xml and the effective outlet sku price', function () {
     ]);
 
     $imageUrl = 'https://images.example/product.jpg?width=600&fit=crop&w=1472';
+    $additionalImageUrl = 'https://images.example/product-side.jpg?width=600&fit=crop&w=1472';
 
     Image::create([
         'product_id' => $product->id,
         'image_url' => $imageUrl,
         'large_url' => $imageUrl,
+        'order_by' => 1,
+    ]);
+
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => $additionalImageUrl,
+        'large_url' => $additionalImageUrl,
+        'order_by' => 2,
     ]);
 
     $response = $this->get('/feed/google-merchant.xml');
@@ -117,7 +150,8 @@ it('exports valid xml and the effective outlet sku price', function () {
     $merchantItem = $item->children($merchantNamespace);
 
     expect((string) $merchantItem->price)->toBe('45.00 EUR')
-        ->and((string) $merchantItem->image_link)->toBe($imageUrl);
+        ->and((string) $merchantItem->image_link)->toBe($imageUrl)
+        ->and((string) $merchantItem->additional_image_link[0])->toBe($additionalImageUrl);
 });
 
 it('sets kids age group for junior products in feed', function () {

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\VariationOption;
 use App\Services\ProductPricingService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -132,18 +133,7 @@ class GoogleMerchantFeedController extends Controller
                         }
                         $item->addChild('g:link', htmlspecialchars($link), 'http://base.google.com/ns/1.0');
 
-                        $imageUrl = null;
-                        if ($colorOption) {
-                            $skuImage = $product->getImagesForOption($colorOption->id)->first();
-                            if ($skuImage) {
-                                $imageAttributes = (array) $skuImage;
-                                $imageUrl = $imageAttributes['large'] ?? $imageAttributes['url'] ?? null;
-                            }
-                        }
-                        if (! $imageUrl) {
-                            $imageUrl = $product->getFirstImageUrl('large');
-                        }
-                        $item->addChild('g:image_link', htmlspecialchars($imageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
+                        $this->addImageLinks($item, $product, $colorOption);
 
                         // Specific price for this SKU
                         $skuPrice = $this->productPricingService->getSkuPriceForQuantity($product, 1, $sku);
@@ -199,8 +189,7 @@ class GoogleMerchantFeedController extends Controller
                     }
 
                     $item->addChild('g:link', route('product', [$categorySlug, $product->slug]), 'http://base.google.com/ns/1.0');
-                    $imageUrl = $product->getFirstImageUrl('large');
-                    $item->addChild('g:image_link', htmlspecialchars($imageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
+                    $this->addImageLinks($item, $product);
 
                     $priceData = $product->getDisplayPriceData();
                     $price = number_format((float) $priceData['price'], 2, '.', '');
@@ -253,5 +242,37 @@ class GoogleMerchantFeedController extends Controller
             'abbigliamento-da-lavoro' => 'Apparel & Accessories > Clothing > Uniforms',
             default => 'Apparel & Accessories > Clothing',
         };
+    }
+
+    private function addImageLinks(SimpleXMLElement $item, Product $product, ?VariationOption $colorOption = null): void
+    {
+        $variantImages = $colorOption instanceof VariationOption ? $product->getImagesForOption($colorOption->id) : collect();
+        $genericImages = $product->getImagesForOption(null);
+        $imageCandidates = $colorOption instanceof VariationOption
+            ? $variantImages->concat($genericImages)
+            : $genericImages;
+
+        $imageUrl = null;
+        if ($imageCandidates->isNotEmpty()) {
+            $imageAttributes = (array) $imageCandidates->first();
+            $imageUrl = $imageAttributes['large'] ?? $imageAttributes['url'] ?? null;
+        }
+        $imageUrl ??= $product->getFirstImageUrl('large');
+
+        $item->addChild('g:image_link', htmlspecialchars($imageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
+
+        $additionalImageUrls = $imageCandidates
+            ->map(function (object $image): ?string {
+                $attributes = (array) $image;
+
+                return $attributes['large'] ?? $attributes['url'] ?? null;
+            })
+            ->filter(fn (?string $url): bool => ! in_array($url, [null, '', $imageUrl], true))
+            ->unique()
+            ->take(10);
+
+        foreach ($additionalImageUrls as $additionalImageUrl) {
+            $item->addChild('g:additional_image_link', htmlspecialchars($additionalImageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
+        }
     }
 }
