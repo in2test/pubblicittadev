@@ -220,13 +220,7 @@ class ProductPriceCalculator
             $sku = $nearestSku;
         }
 
-        // Get unit price from pricing service
-        $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
-
-        // Apply override price if set; still apply category quantity discount on top of it.
-        if ($sku && $sku->override_price !== null) {
-            $unitPrice = $this->productPricingService->applyQuantityDiscount($product, (float) $sku->override_price, $totalQuantity);
-        }
+        $unitPrice = $this->productPricingService->getSkuPriceForQuantity($product, $totalQuantity, $sku);
 
         // Apply custom format surcharge
         if ($isCustomFormat) {

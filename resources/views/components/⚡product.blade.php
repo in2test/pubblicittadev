@@ -17,6 +17,8 @@ new class extends Component
     // Contiene le opzioni selezionate dall'utente (Key: variation_type_id, Value: variation_option_id)
     public array $selectedOptions = [];
 
+    public bool $hasExplicitSkuSelection = false;
+
     // Identificativo univoco dell'articolo nel carrello (se in fase di modifica)
     public ?string $jobId = null;
 
@@ -92,6 +94,8 @@ new class extends Component
                 $this->jobId = null;
             }
         }
+
+        $this->hasExplicitSkuSelection = $this->selectedOptions !== [];
 
         // Seleziona automaticamente le opzioni più economiche (se non già selezionate)
         if ($this->product->type !== 'newwave') {
@@ -189,6 +193,7 @@ new class extends Component
                 $this->selectedOptions[$typeId] = $optionId;
             }
         }
+        $this->hasExplicitSkuSelection = true;
 
         // Se si seleziona il formato personalizzato, inizializziamo le dimensioni se vuote
         if ($optionId === 999999) {
@@ -769,7 +774,7 @@ new class extends Component
                 $activeSkuModel = $this->activeSku();
                 $isOutletSelected = $activeSkuModel?->is_outlet ?? false;
             @endphp
-            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" />
+            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" :hasExplicitSkuSelection="$hasExplicitSkuSelection" />
 
             <!-- Quantity Discounts List -->
             @if ($product->getQuantityDiscounts()->isNotEmpty())

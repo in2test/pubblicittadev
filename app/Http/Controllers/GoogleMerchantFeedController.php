@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductPricingService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
@@ -13,6 +14,8 @@ use Throwable;
 
 class GoogleMerchantFeedController extends Controller
 {
+    public function __construct(private readonly ProductPricingService $productPricingService) {}
+
     public function index(): Response
     {
         if (function_exists('opcache_reset')) {
@@ -140,11 +143,11 @@ class GoogleMerchantFeedController extends Controller
                         if (! $imageUrl) {
                             $imageUrl = $product->getFirstImageUrl('large');
                         }
-                        $item->addChild('g:image_link', $imageUrl, 'http://base.google.com/ns/1.0');
+                        $item->addChild('g:image_link', htmlspecialchars($imageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
 
                         // Specific price for this SKU
-                        $skuPrice = $product->getPriceForQuantity(1, $sku);
-                        $price = number_format((float) $skuPrice, 2, '.', '');
+                        $skuPrice = $this->productPricingService->getSkuPriceForQuantity($product, 1, $sku);
+                        $price = number_format($skuPrice, 2, '.', '');
                         $item->addChild('g:price', $price.' EUR', 'http://base.google.com/ns/1.0');
 
                         // Availability & condition
@@ -197,7 +200,7 @@ class GoogleMerchantFeedController extends Controller
 
                     $item->addChild('g:link', route('product', [$categorySlug, $product->slug]), 'http://base.google.com/ns/1.0');
                     $imageUrl = $product->getFirstImageUrl('large');
-                    $item->addChild('g:image_link', $imageUrl, 'http://base.google.com/ns/1.0');
+                    $item->addChild('g:image_link', htmlspecialchars($imageUrl, ENT_XML1 | ENT_QUOTES, 'UTF-8'), 'http://base.google.com/ns/1.0');
 
                     $priceData = $product->getDisplayPriceData();
                     $price = number_format((float) $priceData['price'], 2, '.', '');

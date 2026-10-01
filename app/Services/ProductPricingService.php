@@ -34,6 +34,15 @@ class ProductPricingService
         return max(0.0, $this->quantityDiscountService->calculatePrice($product, $quantity));
     }
 
+    public function getSkuPriceForQuantity(Product $product, int $quantity = 1, ?ProductSku $sku = null): float
+    {
+        if ($sku?->override_price !== null) {
+            return $this->applyQuantityDiscount($product, (float) $sku->override_price, $quantity);
+        }
+
+        return $this->getPriceForQuantity($product, $quantity, $sku);
+    }
+
     /**
      * Applies the category quantity discount to the given price.
      * Used by the price calculator when a SKU has an outlet override_price.

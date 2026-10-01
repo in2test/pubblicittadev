@@ -8,7 +8,7 @@
             </p>
         </div>
 
-        <x-product.grid :$products :onOutletPage=true/>
+        <x-product.grid :$products :onOutletPage=true />
     </div>
 </section>
 

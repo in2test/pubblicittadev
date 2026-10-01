@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\CategoryQuantityDiscount;
+use App\Models\Image;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use App\Services\QuantityDiscountService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -70,6 +73,51 @@ it('generates variants in google merchant xml feed', function () {
         ->toContain('<g:age_group>adult</g:age_group>')
         ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
+});
+
+it('exports valid xml and the effective outlet sku price', function () {
+    $product = Product::factory()->create([
+        'is_active' => true,
+        'sku' => 'OUTLET-PARENT',
+        'price' => 100,
+    ]);
+
+    CategoryQuantityDiscount::create([
+        'category_id' => $product->category_id,
+        'min_quantity' => 1,
+        'discount_type' => 'percent',
+        'discount_value' => 10,
+    ]);
+    QuantityDiscountService::clearCache();
+
+    $sku = ProductSku::factory()->create([
+        'product_id' => $product->id,
+        'sku' => 'OUTLET-VARIANT',
+        'is_outlet' => true,
+        'override_price' => 50,
+    ]);
+
+    $imageUrl = 'https://images.example/product.jpg?width=600&fit=crop&w=1472';
+
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => $imageUrl,
+        'large_url' => $imageUrl,
+    ]);
+
+    $response = $this->get('/feed/google-merchant.xml');
+
+    $response->assertSuccessful();
+    $feed = simplexml_load_string($response->getContent());
+    expect($feed)->toBeInstanceOf(SimpleXMLElement::class);
+
+    $merchantNamespace = $feed->getNamespaces(true)['g'];
+    $item = collect($feed->channel->item)
+        ->first(fn (SimpleXMLElement $item): bool => (string) $item->children($merchantNamespace)->id === $sku->sku);
+    $merchantItem = $item->children($merchantNamespace);
+
+    expect((string) $merchantItem->price)->toBe('45.00 EUR')
+        ->and((string) $merchantItem->image_link)->toBe($imageUrl);
 });
 
 it('sets kids age group for junior products in feed', function () {

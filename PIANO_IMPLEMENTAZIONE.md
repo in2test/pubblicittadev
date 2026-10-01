@@ -6,7 +6,7 @@
 
 ## 🧪 Test Coverage Status
 
-* **Test Suite Status**: ✅ 287 passing tests (666 assertions) across unit, feature, integration, and architecture suites. All critical services and features are covered.
+* **Test Suite Status**: ✅ 292 passing tests (666+ assertions) across unit, feature, integration, and architecture suites. All critical services and features are covered.
 
 ## 📊 Project Overview & Architecture
 
@@ -87,7 +87,7 @@ To maintain code health, the system strictly enforces the following design rules
 
 ### Feature Integrations & Upgrades
 
-* **Outlet Cascade System**: Implemented an advanced configuration modal in the Filament admin panel. Allows admins to assign `is_outlet` status and prices globally to a Product or targeted to specific exposed variants. These settings cascade to update all underlying `ProductSku` permutations.
+* **Outlet Cascade System**: Implemented an advanced configuration modal in the Filament admin panel. Allows admins to assign `is_outlet` status and prices globally to a Product or targeted to specific exposed variants. These settings cascade to update all underlying `ProductSku` permutations. On product pages, an unselected product displays the minimum outlet price and badge when available; an explicitly selected variant displays only that SKU's price and outlet status.
 * **Multi-SKU Quantity Discount Resolution**: Refactored the `ProductPriceCalculator` to handle volume discounts across multi-SKU products (e.g., buying 10 Small and 10 Large shirts of the same color). Evaluates discount tiers based on aggregate cart quantity.
 * **Authenticated GraphQL Gateway (NewWave API)**: Lazy-sync connection handling matching remote inventory balances every 12 hours. Fast stock polling is configured to bypass massive dataset recalculations.
 * **Hybrid Media Asset Pipeline**: Merged local uploads handled by Spatie MediaLibrary with remote layout images using selective color queries (`?colore=XX`).
@@ -165,7 +165,7 @@ Configured globally inside `resources/views/layouts/layout.blade.php`:
 
 ## 🧪 Quality Assurance & Test Coverage
 
-The platform runs a comprehensive Pest PHP test suite featuring **287 automated unit, feature, and architecture tests with 666+ assertions** (100% passing):
+The platform runs a comprehensive Pest PHP test suite featuring **292 automated unit, feature, and architecture tests with 666+ assertions** (100% passing). The latest full test run passed, and Rector, Pint, and Larastan completed without errors:
 
 * **Functional Coverage**: Suites for `OutletPricingTest`, `OutletPageTest`, `MultiSkuQuantityDiscountTest`, `ProductStartingPriceServiceTest`, `CategoryQuantityDiscountTest`, `ProductPriceCalculatorTest`, `CheckoutTest`, and `CartTest` ensure that pricing cascade, volume aggregates, and checkout flows do not regress.
 * **Architecture & Integrity**: Strict compliance rules including Laravel presets (`tests/Architecture/PresetTest.php`) and domain separation.
@@ -174,7 +174,7 @@ The platform runs a comprehensive Pest PHP test suite featuring **287 automated 
 
 * **Total Models**: 18
 * **Total Services**: 21
-* **Automated Tests**: 287 passing tests (666 assertions) across Unit, Feature, and Architecture suites.
+* **Automated Tests**: 292 passing tests (666+ assertions) across Unit, Feature, and Architecture suites.
 
 ### ✅ Tests Already Created & Active
 
@@ -196,7 +196,7 @@ The platform runs a comprehensive Pest PHP test suite featuring **287 automated 
 | WebhookTest (Stripe webhook) | ✅ Passing | `tests/Feature/WebhookTest.php` |
 | ProductSyncTest (NewWave API) | ✅ Passing | `tests/Feature/ProductSyncTest.php` |
 | ProductGalleryImagesTest | ✅ Passing | `tests/Feature/ProductGalleryImagesTest.php` |
-| OutletPageTest & OutletPricingTest | ✅ Passing | `tests/Feature/OutletPageTest.php`, `tests/Unit/OutletPricingTest.php` |
+| Outlet display, OutletPageTest & OutletPricingTest | ✅ Passing | `tests/Feature/ProductOutletDisplayTest.php`, `tests/Feature/OutletPageTest.php`, `tests/Unit/OutletPricingTest.php` |
 | EditJobTest (Custom dimensions & cart edit) | ✅ Passing | `tests/Feature/EditJobTest.php` |
 | CatalogTest & ProductPageTest | ✅ Passing | `tests/Feature/CatalogTest.php`, `tests/Feature/ProductPageTest.php` |
 | OrderNotificationsTest & AdminNotificationsTest | ✅ Passing | `tests/Feature/OrderNotificationsTest.php`, `tests/Feature/AdminNotificationsTest.php` |

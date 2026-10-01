@@ -1,4 +1,4 @@
-@props(['product', 'displaySku' => null, 'displayTitle' => null, 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null, 'isOutletSelected' => false])
+@props(['product', 'displaySku' => null, 'displayTitle' => null, 'totalQuantity' => 0, 'totalPrice' => 0.0, 'currentBasePrice' => null, 'isOutletSelected' => false, 'hasExplicitSkuSelection' => false])
 
 @php
     /** @var \App\Models\Product $product */
@@ -14,13 +14,10 @@
     $isDiscounted = $priceData['is_discounted'] || ($currentUnitPrice < $priceData['base_price']);
     $basePrice = $priceData['base_price'];
 
-    // Determine if we're showing outlet price for display (no quantity selected).
-    // Show the outlet badge whenever the product has ANY outlet SKUs — not only when the
-    // auto-selected (first) SKU happens to be an outlet one.
+    // Use product-level outlet pricing only when no specific SKU price is selected.
     $hasOutletSkus = $product->hasValidOutletPrice();
-    $showOutletPrice = !$onRequest && $totalQuantity == 0 && ($isOutletSelected || $hasOutletSkus || ($currentBasePrice !== null && $currentBasePrice < $basePrice));
-    // When the product has outlet SKUs and no quantity is selected, display the minimum outlet price.
-    $displayPrice = ($totalQuantity == 0 && $hasOutletSkus)
+    $showOutletPrice = !$onRequest && $totalQuantity == 0 && ($isOutletSelected || (!$hasExplicitSkuSelection && $hasOutletSkus));
+    $displayPrice = ($totalQuantity == 0 && $hasOutletSkus && !$hasExplicitSkuSelection)
         ? ($product->getStartingUnitPrice(true) ?? $currentBasePrice ?? $product->getStartingUnitPrice() ?? $baseFallback)
         : ($currentBasePrice ?? ($showOutletPrice ? $product->getStartingUnitPrice(true) : ($product->getStartingUnitPrice() ?? $baseFallback)));
     $isOutletShowcase = $showOutletPrice;
