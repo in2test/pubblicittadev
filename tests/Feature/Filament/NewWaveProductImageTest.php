@@ -45,6 +45,42 @@ it('persists remote image urls in the image model from the NewWave product form'
         ->exists())->toBeTrue();
 });
 
+it('moves a selected gallery image to the first position', function () {
+    $product = Product::factory()->create([
+        'type' => Product::TYPE_NEWWAVE,
+        'sync_status' => SyncStatus::Synced,
+    ]);
+
+    Image::factory()->create([
+        'product_id' => $product->id,
+        'image_url' => 'https://example.com/first-image.jpg',
+        'order_by' => 1,
+    ]);
+
+    $selectedImage = Image::factory()->create([
+        'product_id' => $product->id,
+        'image_url' => 'https://example.com/selected-image.jpg',
+        'order_by' => 2,
+    ]);
+
+    $livewire = Livewire::test(EditNewWaveProduct::class, [
+        'record' => $product->getRouteKey(),
+    ]);
+    $galleryState = $livewire->get('data.remote_images');
+    $selectedItemKey = collect($galleryState)->search(
+        fn (array $item): bool => (int) $item['id'] === $selectedImage->id,
+    );
+
+    $livewire
+        ->callFormComponentAction('remote_images', 'moveToFirst', arguments: [
+            'item' => $selectedItemKey,
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($product->images()->orderBy('order_by')->first()->is($selectedImage))->toBeTrue();
+});
+
 it('assigns a remote variation image to its color when syncing NewWave data', function () {
     $product = Product::factory()->create([
         'sku' => 'TESTSKU',

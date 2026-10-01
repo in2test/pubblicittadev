@@ -238,6 +238,19 @@ class NewWaveProductForm
                                     ->columnSpanFull(),
                             ])
                             ->extraItemActions([
+                                Action::make('moveToFirst')
+                                    ->label('Sposta in cima')
+                                    ->icon(Heroicon::ArrowUp)
+                                    ->tooltip('Sposta questa immagine in cima alla galleria')
+                                    ->action(function (array $arguments, Repeater $component): void {
+                                        $state = $component->getState();
+                                        $itemKey = $arguments['item'];
+                                        $itemState = $state[$itemKey];
+
+                                        unset($state[$itemKey]);
+
+                                        $component->state([$itemKey => $itemState] + $state);
+                                    }),
                                 Action::make('downloadToLibrary')
                                     ->label('Scarica in libreria')
                                     ->icon(Heroicon::OutlinedArrowDownTray)
