@@ -9,6 +9,11 @@
         </div>
 
         <x-product.grid :$products :onOutletPage=true />
+
+        @if ($products->hasPages())
+            <div class="mt-16 border-t border-gray-200 pt-8">
+                {{ $products->links() }}
+            </div>
+        @endif
     </div>
 </section>
-
