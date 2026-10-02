@@ -32,7 +32,6 @@ class ProductDataMapper
             }
         }
 
-        // variations
         foreach ($payload['variations'] ?? [] as $v) {
             $colorCode = $v['itemColorCode'] ?? '';
             if (! empty($v['pictures'])) {

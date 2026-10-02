@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PortfolioItem;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -28,7 +29,27 @@ class HomePageController extends Controller
      */
     public function index(): View
     {
-        $products = Product::active()
+        $products = $this->featuredProducts();
+        $portfolioItems = $this->portfolioItems();
+        $carouselProducts = $this->carouselProducts(6 - $portfolioItems->count());
+
+        $heroSlides = [
+            ...$this->portfolioSlides($portfolioItems),
+            ...$this->productSlides($carouselProducts),
+        ];
+
+        return view('welcome', [
+            'products' => $products,
+            'heroSlides' => $this->completeHeroSlides($heroSlides),
+        ]);
+    }
+
+    /**
+     * @return Collection<int, Product>
+     */
+    private function featuredProducts(): Collection
+    {
+        return Product::active()
             ->select([
                 'id',
                 'name',
@@ -57,17 +78,26 @@ class HomePageController extends Controller
             ->orderByDesc('created_at')
             ->take(9)
             ->get();
+    }
 
-        $portfolioItems = PortfolioItem::has('media')
+    /**
+     * @return Collection<int, PortfolioItem>
+     */
+    private function portfolioItems(): Collection
+    {
+        return PortfolioItem::has('media')
             ->orderBy('sort_order')
             ->orderByDesc('created_at')
             ->take(3)
             ->get();
+    }
 
-        $portfolioCount = $portfolioItems->count();
-        $productsNeeded = 6 - $portfolioCount;
-
-        $carouselProducts = Product::active()
+    /**
+     * @return Collection<int, Product>
+     */
+    private function carouselProducts(int $needed): Collection
+    {
+        return Product::active()
             ->where(function ($q) {
                 $q->has('media')->orHas('images');
             })
@@ -77,18 +107,24 @@ class HomePageController extends Controller
             ])
             ->orderByDesc('is_featured')
             ->inRandomOrder()
-            ->take($productsNeeded)
+            ->take($needed)
             ->get();
+    }
 
-        $heroSlides = [];
-
+    /**
+     * @param  Collection<int, PortfolioItem>  $portfolioItems
+     * @return array<int, array{img: string|null, label: string, sub: string, description: string, status: string}>
+     */
+    private function portfolioSlides(Collection $portfolioItems): array
+    {
+        $slides = [];
         foreach ($portfolioItems as $item) {
             $img = $item->getFirstMediaUrl('portfolio_images', 'large') ?: $item->getFirstMediaUrl('portfolio_images');
             if ($img) {
                 $img = str_replace('/standard/', '/largethumbnail/', $img);
             }
 
-            $heroSlides[] = [
+            $slides[] = [
                 'img' => $img,
                 'label' => mb_strtoupper((string) $item->title),
                 'sub' => 'PROGETTO PORTFOLIO',
@@ -97,6 +133,16 @@ class HomePageController extends Controller
             ];
         }
 
+        return $slides;
+    }
+
+    /**
+     * @param  Collection<int, Product>  $carouselProducts
+     * @return array<int, array{img: string, label: string, sub: string, description: string, status: string}>
+     */
+    private function productSlides(Collection $carouselProducts): array
+    {
+        $slides = [];
         foreach ($carouselProducts as $item) {
             $img = $item->getFirstMediaUrl('product_images', 'large');
             if (! $img) {
@@ -106,7 +152,7 @@ class HomePageController extends Controller
                 $img = str_replace('/standard/', '/largethumbnail/', $img);
             }
 
-            $heroSlides[] = [
+            $slides[] = [
                 'img' => $img,
                 'label' => mb_strtoupper((string) $item->name),
                 'sub' => 'REF: '.($item->sku ?? 'PROD-'.$item->id),
@@ -115,6 +161,15 @@ class HomePageController extends Controller
             ];
         }
 
+        return $slides;
+    }
+
+    /**
+     * @param  array<int, array{img: string|null, label: string, sub: string, description: string, status: string}>  $heroSlides
+     * @return array<int, array{img: string|null, label: string, sub: string, description: string, status: string}>
+     */
+    private function completeHeroSlides(array $heroSlides): array
+    {
         $defaultSlides = [
             ['img' => 'https://images.nwgmedia.com/largethumbnail/715867/028230_BasicPolo_ss26_v9%20copy.jpg', 'label' => 'STAMPA ALTA DEFINIZIONE', 'sub' => 'REF: PB-2024', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
             ['img' => 'https://images.nwgmedia.com/largethumbnail/725895/028242_114_ClassicPolowomens_SS26_2.jpg', 'label' => 'MATERIALI PREMIUM', 'sub' => 'REF: MAT-100', 'description' => 'Materiali certificati e stampe ultra-resistenti per ogni settore lavorativo.', 'status' => 'SYSTEM_STATUS: ACTIVE'],
@@ -125,15 +180,10 @@ class HomePageController extends Controller
         ];
 
         $c = count($heroSlides);
-        if ($c < 6) {
-            for ($i = $c; $i < 6; $i++) {
-                $heroSlides[] = $defaultSlides[$i];
-            }
+        for ($i = $c; $i < 6; $i++) {
+            $heroSlides[] = $defaultSlides[$i];
         }
 
-        return view('welcome', [
-            'products' => $products,
-            'heroSlides' => $heroSlides,
-        ]);
+        return $heroSlides;
     }
 }

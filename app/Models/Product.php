@@ -484,22 +484,7 @@ class Product extends Model implements HasMedia
      */
     protected function material(): Attribute
     {
-        return Attribute::make(get: function () {
-            $type = $this->variationTypes->firstWhere('name', VariationType::MATERIALE);
-            if (! $type) {
-                return null;
-            }
-            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-            if (! $pvt) {
-                return null;
-            }
-            $option = $pvt->options()->first()?->option;
-            if (! $option) {
-                return null;
-            }
-
-            return $option->value;
-        });
+        return Attribute::make(get: fn (): ?string => $this->getVariationAttributeValue(VariationType::MATERIALE));
     }
 
     /**
@@ -509,22 +494,22 @@ class Product extends Model implements HasMedia
      */
     protected function pattern(): Attribute
     {
-        return Attribute::make(get: function () {
-            $type = $this->variationTypes->firstWhere('name', VariationType::MOTIVO);
-            if (! $type) {
-                return null;
-            }
-            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-            if (! $pvt) {
-                return null;
-            }
-            $option = $pvt->options()->first()?->option;
-            if (! $option) {
-                return null;
-            }
+        return Attribute::make(get: fn (): ?string => $this->getVariationAttributeValue(VariationType::MOTIVO));
+    }
 
-            return $option->value;
-        });
+    private function getVariationAttributeValue(string $variationTypeName): ?string
+    {
+        $type = $this->variationTypes->firstWhere('name', $variationTypeName);
+        if (! $type) {
+            return null;
+        }
+
+        $productVariationType = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
+        if (! $productVariationType) {
+            return null;
+        }
+
+        return $productVariationType->options()->first()?->option?->value;
     }
 
     /**

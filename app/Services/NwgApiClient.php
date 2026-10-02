@@ -68,28 +68,7 @@ class NwgApiClient
 
         GRAPHQL;
 
-        try {
-            $response = $this->client()
-                ->post($this->endpoint, [
-                    'query' => $query,
-                    'variables' => [
-                        'productNumber' => $productNumber,
-                        'language' => 'it',
-                    ],
-                ]);
-
-            if (! $response->successful()) {
-                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
-
-                return null;
-            }
-
-            return $response->json()['data']['productById'] ?? null;
-        } catch (Exception $e) {
-            Log::error("NWG API Exception: {$e->getMessage()}");
-
-            return null;
-        }
+        return $this->fetchProductData($query, $productNumber, 'it', 'full product data');
     }
 
     /**
@@ -114,28 +93,7 @@ class NwgApiClient
             }
         GRAPHQL;
 
-        try {
-            $response = $this->client()
-                ->post($this->endpoint, [
-                    'query' => $query,
-                    'variables' => [
-                        'productNumber' => $productNumber,
-                        'language' => 'it',
-                    ],
-                ]);
-
-            if (! $response->successful()) {
-                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
-
-                return null;
-            }
-
-            return $response->json()['data']['productById'] ?? null;
-        } catch (Exception $e) {
-            Log::error("NWG API Exception: {$e->getMessage()}");
-
-            return null;
-        }
+        return $this->fetchProductData($query, $productNumber, 'it', 'basic product data');
     }
 
     /**
@@ -156,28 +114,7 @@ class NwgApiClient
             }
         GRAPHQL;
 
-        try {
-            $response = $this->client()
-                ->post($this->endpoint, [
-                    'query' => $query,
-                    'variables' => [
-                        'productNumber' => $productNumber,
-                        'language' => 'it',
-                    ],
-                ]);
-
-            if (! $response->successful()) {
-                Log::error("NWG API Error: {$response->status()} - {$response->body()}");
-
-                return null;
-            }
-
-            return $response->json()['data']['productById'] ?? null;
-        } catch (Exception $e) {
-            Log::error("NWG API Exception: {$e->getMessage()}");
-
-            return null;
-        }
+        return $this->fetchProductData($query, $productNumber, 'it', 'product availability');
     }
 
     /**
@@ -225,6 +162,14 @@ query Query($productNumber: String!, $language: String!) {
 }
 GQL;
 
+        return $this->fetchProductData($query, $productNumber, $language, 'full GraphQL');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function fetchProductData(string $query, string $productNumber, string $language, string $operation): ?array
+    {
         try {
             $response = $this->client()
                 ->post($this->endpoint, [
@@ -234,15 +179,16 @@ GQL;
                         'language' => $language,
                     ],
                 ]);
+
             if (! $response->successful()) {
-                Log::error("NWG API Error (full GraphQL): {$response->status()} - {$response->body()}");
+                Log::error("NWG API Error ({$operation}): {$response->status()} - {$response->body()}");
 
                 return null;
             }
 
             return $response->json()['data']['productById'] ?? null;
-        } catch (Exception $e) {
-            Log::error("NWG API Exception (full GraphQL): {$e->getMessage()}");
+        } catch (Exception $exception) {
+            Log::error("NWG API Exception ({$operation}): {$exception->getMessage()}");
 
             return null;
         }

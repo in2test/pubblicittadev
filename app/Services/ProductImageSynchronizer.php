@@ -24,71 +24,101 @@ class ProductImageSynchronizer
             return;
         }
 
-        $remoteImagesArray = [];
+        $remoteImages = [
+            ...$this->collectProductPictures($product, $data['pictures'] ?? []),
+            ...$this->collectVariationPictures($data['variations'] ?? [], $colorOptionsCache),
+        ];
 
-        // Top-level product pictures
-        if (! empty($data['pictures'])) {
-            foreach ($data['pictures'] as $idx => $img) {
-                $url = $img['standardUrl'] ?? '';
-                if ($url) {
-                    $remoteImagesArray[] = [
-                        'id' => 'top_'.$idx,
-                        'url' => $url,
-                        'thumb' => $img['thumbnailUrl'] ?? '',
-                        'medium' => $img['largeThumbnailUrl'] ?? '',
-                        'large' => $img['standardUrl'] ?? '',
-                        'variation_option_id' => null,
-                    ];
+        $this->persistRemoteImages($product, $remoteImages);
+    }
 
-                    Log::info("Remote image for SKU {$product->sku}: {$url}");
+    /**
+     * @param  array<int, array<string, mixed>>  $pictures
+     * @return array<int, array<string, mixed>>
+     */
+    private function collectProductPictures(Product $product, array $pictures): array
+    {
+        $remoteImages = [];
+
+        foreach ($pictures as $index => $picture) {
+            $url = $picture['standardUrl'] ?? '';
+            if (! $url) {
+                continue;
+            }
+
+            $remoteImages[] = [
+                'id' => 'top_'.$index,
+                'url' => $url,
+                'thumb' => $picture['thumbnailUrl'] ?? '',
+                'medium' => $picture['largeThumbnailUrl'] ?? '',
+                'large' => $picture['standardUrl'] ?? '',
+                'variation_option_id' => null,
+            ];
+
+            Log::info("Remote image for SKU {$product->sku}: {$url}");
+        }
+
+        return $remoteImages;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variations
+     * @param  Collection<string, VariationOption>  $colorOptionsCache
+     * @return array<int, array<string, mixed>>
+     */
+    private function collectVariationPictures(array $variations, Collection $colorOptionsCache): array
+    {
+        $remoteImages = [];
+
+        foreach ($variations as $variation) {
+            $colorCode = (string) ($variation['itemColorCode'] ?? '');
+            /** @var VariationOption|null $colorOption */
+            $colorOption = $colorOptionsCache->get($colorCode);
+
+            foreach ($variation['pictures'] ?? [] as $index => $picture) {
+                $url = $picture['standardUrl'] ?? '';
+                if (! $url) {
+                    continue;
                 }
+
+                $remoteImages[] = [
+                    'id' => 'var_'.($colorCode ?: 'nc').'_'.$index,
+                    'url' => $url,
+                    'thumb' => $picture['thumbnailUrl'] ?? '',
+                    'medium' => $picture['largeThumbnailUrl'] ?? '',
+                    'large' => $picture['standardUrl'] ?? '',
+                    'variation_option_id' => $colorOption?->id,
+                ];
             }
         }
 
-        // Variation-level pictures
-        if (! empty($data['variations'])) {
-            foreach ($data['variations'] as $v) {
-                $colorCode = (string) ($v['itemColorCode'] ?? '');
-                /** @var VariationOption|null $colorOption */
-                $colorOption = $colorOptionsCache->get($colorCode);
+        return $remoteImages;
+    }
 
-                if (! empty($v['pictures'])) {
-                    foreach ($v['pictures'] as $idx => $vImg) {
-                        $url = $vImg['standardUrl'] ?? '';
-                        if ($url) {
-                            $remoteImagesArray[] = [
-                                'id' => 'var_'.($colorCode ?: 'nc').'_'.$idx,
-                                'url' => $url,
-                                'thumb' => $vImg['thumbnailUrl'] ?? '',
-                                'medium' => $vImg['largeThumbnailUrl'] ?? '',
-                                'large' => $vImg['standardUrl'] ?? '',
-                                'variation_option_id' => $colorOption?->id,
-                            ];
-                        }
-                    }
-                }
-            }
-        }
-
+    /**
+     * @param  array<int, array<string, mixed>>  $remoteImages
+     */
+    private function persistRemoteImages(Product $product, array $remoteImages): void
+    {
         // Process all collected images in a single pass
         $remoteImageOrder = 0;
-        foreach ($remoteImagesArray as $img) {
+        foreach ($remoteImages as $image) {
             Image::updateOrCreate([
                 'product_id' => $product->id,
-                'image_url' => $img['url'],
-                'variation_option_id' => $img['variation_option_id'],
+                'image_url' => $image['url'],
+                'variation_option_id' => $image['variation_option_id'],
             ], [
                 'order_by' => $remoteImageOrder++,
                 'image_description' => $product->name,
-                'thumbnail_url' => $img['thumb'] ?: null,
-                'medium_url' => $img['medium'] ?: null,
-                'large_url' => $img['large'] ?: null,
+                'thumbnail_url' => $image['thumb'] ?: null,
+                'medium_url' => $image['medium'] ?: null,
+                'large_url' => $image['large'] ?: null,
             ]);
-            Log::info("Caching remote image for SKU {$product->sku}: {$img['url']}");
+            Log::info("Caching remote image for SKU {$product->sku}: {$image['url']}");
         }
 
-        if ($remoteImagesArray !== []) {
-            Log::info('Cached '.count($remoteImagesArray)." remote images to 'images' table for SKU {$product->sku}");
+        if ($remoteImages !== []) {
+            Log::info('Cached '.count($remoteImages)." remote images to 'images' table for SKU {$product->sku}");
         }
     }
 }

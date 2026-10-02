@@ -80,7 +80,7 @@ To maintain code health, the system strictly enforces the following design rules
 
 * **Decoupled Model Behaviors**: Extracted image processing actions from the core `Product` model into an independent, testable `ProductGalleryService`.
 * **Deconstructed Sync Routines**: Split the monolithic `ProductSynchronizer` engine into four single-responsibility sub-services: Metadata, Images, SKU/Variations, and Real-Time Availability.
-* **Query Optimization**: Eradicated N+1 query loops inside `CartController::index()` via a structural Cart Presenter Query Service that preloads variations, matrix scales, and prices in a single batch.
+* **Query Optimization**: Cart presentation uses a batched relation data loader and a focused item presenter to preload variation data and avoid N+1 query loops.
 * **Asynchronous-like Side-Effects**: Shifted email dispatches out of raw Eloquent saving states. Uses Laravel's native `defer()` container wrapper post-database transaction.
 * **Enums Integration**: Replaced string states with native PHP Backed Enums (`PaymentStatus`, `WorkStatus`) built with weight matrices for status sorting and localized descriptive strings (`->label()`).
 * **Performance Indexes Applied**: `images(product_id, variation_option_id)`, `orders(user_id, created_at)`, `product_skus(product_id, sku)`, `products(category_id, is_active)`.

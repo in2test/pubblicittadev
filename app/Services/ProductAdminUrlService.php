@@ -8,6 +8,7 @@ use App\Enums\ProductClass;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Filament\Resources\Products\ProductResource;
 use App\Models\Product;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProductAdminUrlService
@@ -32,7 +33,12 @@ class ProductAdminUrlService
                 ProductClass::Apparel, ProductClass::AreaBased, ProductClass::ItemBased => ProductResource::getUrl('edit', ['record' => $product]),
                 default => '#',
             };
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            Log::warning('Unable to resolve the product admin URL.', [
+                'product_id' => $product->getKey(),
+                'exception' => $exception::class,
+            ]);
+
             // URL generation must not break customer-facing pages if the admin panel is unavailable.
             return '#';
         }

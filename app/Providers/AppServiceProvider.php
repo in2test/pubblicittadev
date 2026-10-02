@@ -49,7 +49,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ProductAvailabilityService::class);
         $this->app->singleton(ProductSynchronizer::class);
 
-        // Notification services
         $this->app->singleton(OrderNotificationService::class);
         $this->app->singleton(OrderPaymentNotificationService::class);
 

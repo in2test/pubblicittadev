@@ -55,7 +55,6 @@ class ProductSynchronizer
             ['presentation_type' => 'radio']
         );
 
-        // Synchronize metadata
         $this->metadataSynchronizer->sync($product, $data);
 
         // Pre-cache color options

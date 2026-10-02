@@ -8,6 +8,7 @@ use App\Enums\ProductClass;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\ProductVariationType;
+use App\Models\VariationType;
 
 class ProductPriceCalculator
 {
@@ -34,7 +35,6 @@ class ProductPriceCalculator
             return 0.0;
         }
 
-        // Ensure relations are loaded
         $this->ensureRelationsLoaded($product);
 
         // Handle area-based products separately
@@ -244,7 +244,6 @@ class ProductPriceCalculator
             $sku = $nearestSku;
         }
 
-        // Get unit price
         $unitPrice = $this->calculateFinalUnitPrice($product, $totalQuantity, null, null, $sku);
 
         // Check for override price on default SKU; still apply category quantity discount on top.
@@ -315,6 +314,21 @@ class ProductPriceCalculator
         // Eager-load variationTypes and their options/pivots up front to avoid N+1 queries
         $product->loadMissing(['variationTypes', 'productVariationTypes']);
 
+        $modifiers = $this->selectedModifiers($product, $selectedOptions);
+
+        // Apply flat modifiers per unit, then multiply by quantity
+        $total += $modifiers['flat'] * $totalQuantity;
+
+        // Apply percentage modifiers as a percentage of the total
+        return $total + ($total * $modifiers['percentage'] / 100);
+    }
+
+    /**
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
+     * @return array{flat: float, percentage: float}
+     */
+    private function selectedModifiers(Product $product, array $selectedOptions): array
+    {
         $flatModifiers = 0.0;
         $percentageModifiers = 0.0;
 
@@ -325,64 +339,67 @@ class ProductPriceCalculator
                 continue;
             }
 
-            $selectedOptionIds = $selectedOptions[$type->id] ?? [];
-            if (! is_array($selectedOptionIds)) {
-                $selectedOptionIds = [$selectedOptionIds];
-            }
-            $selectedOptionIds = array_filter($selectedOptionIds);
-
-            // Skip if no options selected for this modifier type
-            if ($selectedOptionIds === []) {
-                continue;
-            }
-
-            // Get the product variation type record for this modifier type
-            /** @var ?ProductVariationType $pvt */
-            $pvt = $product->productVariationTypes->firstWhere('id', $pivot->id)
-                ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
-
-            // Load PVT options if not already loaded
-            if ($pvt && ! $pvt->relationLoaded('options')) {
-                $pvt->load('options');
-            }
-
-            // Skip if PVT or options are not loaded (shouldn't happen with eager loading)
-            if (! $pvt || ! $pvt->relationLoaded('options')) {
-                continue;
-            }
-
-            // Collect all modifiers for this variation type from in-memory collection
-            foreach ($selectedOptionIds as $selectedOptionId) {
-                $found = $pvt->options->firstWhere('variation_option_id', $selectedOptionId);
-                if (! $found) {
-                    $found = $pvt->options->firstWhere('id', $selectedOptionId);
-                }
-
-                if ($found) {
-                    // Load the option relation to ensure fallback works
-                    $found->load('option');
-
-                    $modifier = $found->getEffectivePriceModifier();
-                    $modifierType = $found->getEffectiveModifierType();
-
-                    // Apply modifier if it's non-zero (positive = surcharge, negative = discount)
-                    if ($modifier !== 0.0) {
-                        if ($modifierType->value === 'percentage') {
-                            $percentageModifiers += $modifier;
-                        } else {
-                            $flatModifiers += $modifier;
-                        }
-                    }
-                }
-            }
+            $typeModifiers = $this->selectedModifiersForType($product, $type, $pivot, $selectedOptions);
+            $flatModifiers += $typeModifiers['flat'];
+            $percentageModifiers += $typeModifiers['percentage'];
         }
 
-        // Apply flat modifiers per unit, then multiply by quantity
-        $total += ($flatModifiers * $totalQuantity);
+        return ['flat' => $flatModifiers, 'percentage' => $percentageModifiers];
+    }
 
-        // Apply percentage modifiers as a percentage of the total
-        $total += ($total * $percentageModifiers / 100);
+    /**
+     * @param  array<int|string, int|string|array<int|string, int|string>|null>  $selectedOptions
+     * @return array{flat: float, percentage: float}
+     */
+    private function selectedModifiersForType(
+        Product $product,
+        VariationType $type,
+        ProductVariationType $pivot,
+        array $selectedOptions,
+    ): array {
+        $selectedOptionIds = $selectedOptions[$type->id] ?? [];
+        if (! is_array($selectedOptionIds)) {
+            $selectedOptionIds = [$selectedOptionIds];
+        }
+        $selectedOptionIds = array_filter($selectedOptionIds);
 
-        return $total;
+        if ($selectedOptionIds === []) {
+            return ['flat' => 0.0, 'percentage' => 0.0];
+        }
+
+        /** @var ProductVariationType|null $productVariationType */
+        $productVariationType = $product->productVariationTypes->firstWhere('id', $pivot->id)
+            ?? $product->productVariationTypes->firstWhere('variation_type_id', $type->id);
+
+        if ($productVariationType && ! $productVariationType->relationLoaded('options')) {
+            $productVariationType->load('options');
+        }
+
+        if (! $productVariationType || ! $productVariationType->relationLoaded('options')) {
+            return ['flat' => 0.0, 'percentage' => 0.0];
+        }
+
+        $modifiers = ['flat' => 0.0, 'percentage' => 0.0];
+        foreach ($selectedOptionIds as $selectedOptionId) {
+            $option = $productVariationType->options->firstWhere('variation_option_id', $selectedOptionId)
+                ?? $productVariationType->options->firstWhere('id', $selectedOptionId);
+
+            if (! $option) {
+                continue;
+            }
+
+            $option->load('option');
+            $modifier = $option->getEffectivePriceModifier();
+            if ($modifier === 0.0) {
+                continue;
+            }
+
+            $modifierKey = $option->getEffectiveModifierType()->value === 'percentage'
+                ? 'percentage'
+                : 'flat';
+            $modifiers[$modifierKey] += $modifier;
+        }
+
+        return $modifiers;
     }
 }

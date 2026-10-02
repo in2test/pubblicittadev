@@ -27,31 +27,8 @@ class ImportSqliteData extends Command
         $this->info('Reading SQL dump file...');
         $content = (string) file_get_contents($sqlPath);
 
-        // Normalize line breaks (handle both CRLF and CR)
-        $content = str_replace("\r\n", "\n", $content);
-        $content = str_replace("\r", "\n", $content);
-
         $this->info('Extracting data structures...');
-
-        // Split file content by the string INSERT INTO (case-insensitive)
-        // preg_split returns array on success, we handle empty result below
-        $rawChunks = preg_split('/(?=INSERT\s+INTO\s+)/i', $content);
-
-        $statements = [];
-        if (is_array($rawChunks)) {
-            foreach ($rawChunks as $chunk) {
-                $chunk = trim($chunk);
-                if (preg_match('/^INSERT\s+INTO/i', $chunk)) {
-                    $pos = strpos($chunk, ';');
-                    if ($pos !== false) {
-                        $statements[] = substr($chunk, 0, $pos + 1);
-                    } else {
-                        $statements[] = $chunk.';';
-                    }
-                }
-            }
-        }
-
+        $statements = $this->extractStatements($content);
         $totalCount = count($statements);
         $this->info('Found '.$totalCount.' active data tables/blocks to process.');
 
@@ -61,34 +38,71 @@ class ImportSqliteData extends Command
             return 1;
         }
 
+        $results = $this->executeStatements($statements);
+        $this->reportResults($results['imported'], $results['failed']);
+
+        return 0;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractStatements(string $content): array
+    {
+        $normalizedContent = str_replace(["\r\n", "\r"], "\n", $content);
+        $rawChunks = preg_split('/(?=INSERT\s+INTO\s+)/i', $normalizedContent) ?: [];
+        $statements = [];
+
+        foreach ($rawChunks as $chunk) {
+            $chunk = trim($chunk);
+            if (! preg_match('/^INSERT\s+INTO/i', $chunk)) {
+                continue;
+            }
+
+            $position = strpos($chunk, ';');
+            $statements[] = $position !== false ? substr($chunk, 0, $position + 1) : $chunk.';';
+        }
+
+        return $statements;
+    }
+
+    /**
+     * @param  array<int, string>  $statements
+     * @return array{imported: int, failed: int}
+     */
+    private function executeStatements(array $statements): array
+    {
         $imported = 0;
         $failed = 0;
 
-        $this->output->progressStart($totalCount);
-
+        $this->output->progressStart(count($statements));
         DB::beginTransaction();
-        foreach ($statements as $statement) {
-            // Convert backticks to double quotes for SQLite compatibility
-            $cleanStatement = str_replace('`', '"', $statement);
 
+        foreach ($statements as $index => $statement) {
             try {
-                DB::statement($cleanStatement);
+                DB::statement(str_replace('`', '"', $statement));
                 $imported++;
-            } catch (Exception) {
+            } catch (Exception $exception) {
                 $failed++;
+                $this->warn('Skipped SQL block '.($index + 1).': '.class_basename($exception));
             }
+
             $this->output->progressAdvance();
         }
-        DB::commit();
 
+        DB::commit();
         $this->output->progressFinish();
+
+        return ['imported' => $imported, 'failed' => $failed];
+    }
+
+    private function reportResults(int $imported, int $failed): void
+    {
         $this->info('✓ Process complete!');
         $this->info('Successfully executed: '.$imported.' database blocks.');
 
         if ($failed > 0) {
             $this->warn('Skipped/Failed: '.$failed.' blocks (usually due to structure mismatches).');
         }
-
-        return 0;
     }
 }

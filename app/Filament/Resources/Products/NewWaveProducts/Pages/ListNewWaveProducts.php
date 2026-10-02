@@ -90,90 +90,148 @@ class ListNewWaveProducts extends ListRecords
                         ->defaultItems(0)
                         ->addActionLabel('Aggiungi variante'),
                 ])
-                ->action(function (array $data) {
-                    $skus = array_filter(
-                        array_map(trim(...), preg_split('/[\s,;]+/', (string) $data['skus']) ?: []));
-
-                    if ($skus === []) {
-                        Notification::make()->title('Errore')->body('Inserisci almeno un codice SKU.')->danger()->send();
-
-                        return;
-                    }
-
-                    $service = app(ProductAvailabilityService::class);
-                    $results = $service->validateSkus(array_values($skus));
-
-                    $imported = 0;
-                    $errors = [];
-
-                    foreach ($results['valid'] as $sku => $info) {
-                        if (Product::where('sku', $sku)->exists()) {
-                            continue;
-                        }
-
-                        try {
-                            $product = Product::create([
-                                'name' => $info['name'],
-                                'sku' => $sku,
-                                'slug' => SlugGenerator::unique(Product::class, $info['name']),
-                                'type' => Product::TYPE_NEWWAVE,
-                                'price' => $info['price'] ?? 0,
-                                'category_id' => $data['category_id'] ?? null,
-                                'sync_status' => SyncStatus::Pending,
-                                'is_active' => false,
-                            ]);
-
-                            if (! empty($data['variation_types'])) {
-                                foreach ($data['variation_types'] as $index => $variationData) {
-                                    $variationTypeId = $variationData['variation_type_id'] ?? null;
-                                    if (! $variationTypeId) {
-                                        continue;
-                                    }
-
-                                    $pvt = ProductVariationType::firstOrCreate([
-                                        'product_id' => $product->id,
-                                        'variation_type_id' => $variationTypeId,
-                                    ], [
-                                        'sort_order' => $index,
-                                        'has_images' => false,
-                                        'is_modifier' => true,
-                                    ]);
-
-                                    if (! empty($variationData['variation_option_ids'])) {
-                                        foreach ($variationData['variation_option_ids'] as $optId) {
-                                            ProductVariationOption::firstOrCreate([
-                                                'product_variation_type_id' => $pvt->id,
-                                                'variation_option_id' => $optId,
-                                            ]);
-                                        }
-                                    }
-                                }
-                            }
-
-                            SyncNewWaveProductJob::dispatch($product->id);
-                            $imported++;
-                        } catch (Throwable $e) {
-                            $errors[] = $sku.': '.$e->getMessage();
-                        }
-                    }
-
-                    if ($imported > 0) {
-                        Notification::make()
-                            ->title('Importazione completata')
-                            ->body("Importati {$imported} prodotti.")
-                            ->success()
-                            ->send();
-                    }
-
-                    if ($errors !== []) {
-                        Notification::make()
-                            ->title('Errori')
-                            ->body(implode(', ', $errors))
-                            ->danger()
-                            ->send();
-                    }
-                }),
+                ->action(fn (array $data) => $this->importBatch($data)),
             CreateAction::make(),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function importBatch(array $data): void
+    {
+        $skus = $this->parseSkus((string) ($data['skus'] ?? ''));
+        if ($skus === []) {
+            Notification::make()->title('Errore')->body('Inserisci almeno un codice SKU.')->danger()->send();
+
+            return;
+        }
+
+        $results = app(ProductAvailabilityService::class)->validateSkus($skus);
+        [$imported, $errors] = $this->importValidSkus($results['valid'], $data);
+
+        $this->notifyBatchResults($imported, $errors);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function parseSkus(string $input): array
+    {
+        return array_values(array_filter(array_map(
+            trim(...),
+            preg_split('/[\s,;]+/', $input) ?: [],
+        )));
+    }
+
+    /**
+     * @param  array<string, array{name: string, price: float|null}>  $validSkus
+     * @param  array<string, mixed>  $data
+     * @return array{int, array<int, string>}
+     */
+    private function importValidSkus(array $validSkus, array $data): array
+    {
+        $imported = 0;
+        $errors = [];
+
+        foreach ($validSkus as $sku => $info) {
+            if (Product::where('sku', $sku)->exists()) {
+                continue;
+            }
+
+            try {
+                $product = $this->createProduct($sku, $info, $data);
+                SyncNewWaveProductJob::dispatch($product->id);
+                $imported++;
+            } catch (Throwable $exception) {
+                $errors[] = $sku.': '.$exception->getMessage();
+            }
+        }
+
+        return [$imported, $errors];
+    }
+
+    /**
+     * @param  array{name: string, price: float|null}  $info
+     * @param  array<string, mixed>  $data
+     */
+    private function createProduct(string $sku, array $info, array $data): Product
+    {
+        $product = Product::create([
+            'name' => $info['name'],
+            'sku' => $sku,
+            'slug' => SlugGenerator::unique(Product::class, $info['name']),
+            'type' => Product::TYPE_NEWWAVE,
+            'price' => $info['price'] ?? 0,
+            'category_id' => $data['category_id'] ?? null,
+            'sync_status' => SyncStatus::Pending,
+            'is_active' => false,
+        ]);
+
+        $this->attachVariationTypes($product, $data['variation_types'] ?? []);
+
+        return $product;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variationTypes
+     */
+    private function attachVariationTypes(Product $product, array $variationTypes): void
+    {
+        foreach ($variationTypes as $index => $variationData) {
+            $variationTypeId = $variationData['variation_type_id'] ?? null;
+            if (! $variationTypeId) {
+                continue;
+            }
+
+            $productVariationType = ProductVariationType::firstOrCreate([
+                'product_id' => $product->id,
+                'variation_type_id' => $variationTypeId,
+            ], [
+                'sort_order' => $index,
+                'has_images' => false,
+                'is_modifier' => true,
+            ]);
+
+            $this->attachVariationOptions(
+                $productVariationType,
+                $variationData['variation_option_ids'] ?? [],
+            );
+        }
+    }
+
+    /**
+     * @param  array<int, int|string>  $optionIds
+     */
+    private function attachVariationOptions(ProductVariationType $productVariationType, array $optionIds): void
+    {
+        foreach ($optionIds as $optionId) {
+            ProductVariationOption::firstOrCreate([
+                'product_variation_type_id' => $productVariationType->id,
+                'variation_option_id' => $optionId,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, string>  $errors
+     */
+    private function notifyBatchResults(int $imported, array $errors): void
+    {
+        if ($imported > 0) {
+            Notification::make()
+                ->title('Importazione completata')
+                ->body("Importati {$imported} prodotti.")
+                ->success()
+                ->send();
+        }
+
+        if ($errors !== []) {
+            Notification::make()
+                ->title('Errori')
+                ->body(implode(', ', $errors))
+                ->danger()
+                ->send();
+        }
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Encoders\FormatEncoder;
@@ -199,7 +200,12 @@ class Image extends Model
             $this->product->syncLocalMediaToImageRecords();
 
             return $media;
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            Log::warning('Unable to download image to the media library.', [
+                'image_id' => $this->getKey(),
+                'exception' => $exception::class,
+            ]);
+
             return null;
         }
     }

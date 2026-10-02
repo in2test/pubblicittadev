@@ -32,7 +32,27 @@ class ProductSkuSynchronizer
             return;
         }
 
-        // Attach types to product
+        [$productColorType, $productSizeType] = $this->productVariationTypes($product, $colorType, $sizeType);
+        $sizeOptionsCache = $sizeType->options()->get()->keyBy('value');
+        $skuData = $this->buildSkuData($product, $data['variations'], $sizeType, $colorOptionsCache, $sizeOptionsCache);
+
+        $this->upsertSkus($skuData['skus']);
+        $skuRecords = ProductSku::where('product_id', $product->id)->get()->keyBy('sku');
+
+        $this->syncProductVariationOptions(
+            $productColorType,
+            $productSizeType,
+            $skuData['used_color_option_ids'],
+            $skuData['used_size_option_ids'],
+        );
+        $this->syncSkuOptionPivots($data['variations'], $colorOptionsCache, $sizeOptionsCache, $skuRecords);
+    }
+
+    /**
+     * @return array{ProductVariationType, ProductVariationType}
+     */
+    private function productVariationTypes(Product $product, VariationType $colorType, VariationType $sizeType): array
+    {
         $productColorType = ProductVariationType::firstOrCreate([
             'product_id' => $product->id,
             'variation_type_id' => $colorType->id,
@@ -47,66 +67,54 @@ class ProductSkuSynchronizer
             'has_images' => false,
         ]);
 
-        $sizeOptionsCache = $sizeType->options()->get()->keyBy('value');
+        return [$productColorType, $productSizeType];
+    }
 
-        $skusToUpsert = [];
-        $totalVariations = count($data['variations']);
-        $processedVariations = 0;
-
+    /**
+     * @param  array<int, array<string, mixed>>  $variations
+     * @param  Collection<string, VariationOption>  $colorOptionsCache
+     * @param  Collection<string, VariationOption>  $sizeOptionsCache
+     * @return array{
+     *     skus: array<int, array<string, mixed>>,
+     *     used_color_option_ids: array<int, true>,
+     *     used_size_option_ids: array<int, true>
+     * }
+     */
+    private function buildSkuData(
+        Product $product,
+        array $variations,
+        VariationType $sizeType,
+        Collection $colorOptionsCache,
+        Collection $sizeOptionsCache,
+    ): array {
+        $skus = [];
         $usedColorOptionIds = [];
         $usedSizeOptionIds = [];
+        $totalVariations = count($variations);
 
-        foreach ($data['variations'] as $variationData) {
-            $processedVariations++;
-
-            if ($processedVariations % 10 === 0 || $processedVariations === $totalVariations) {
-                $progress = 40 + (int) (($processedVariations / max($totalVariations, 1)) * 55);
+        foreach ($variations as $index => $variation) {
+            if (($index + 1) % 10 === 0 || $index + 1 === $totalVariations) {
+                $progress = 40 + (int) ((($index + 1) / max($totalVariations, 1)) * 55);
                 $product->update(['sync_progress' => $progress]);
             }
 
-            $colorCode = (string) ($variationData['itemColorCode'] ?? '');
-            $colorOption = null;
+            $colorCode = (string) ($variation['itemColorCode'] ?? '');
+            /** @var VariationOption|null $colorOption */
+            $colorOption = $colorCode !== '' && $colorCode !== '0' ? $colorOptionsCache->get($colorCode) : null;
+            if ($colorOption) {
+                $usedColorOptionIds[$colorOption->id] = true;
+            }
 
-            if ($colorCode !== '' && $colorCode !== '0') {
-                /** @var VariationOption|null $colorOption */
-                $colorOption = $colorOptionsCache->get($colorCode);
-                if ($colorOption) {
-                    $usedColorOptionIds[$colorOption->id] = true;
+            foreach ($variation['skus'] ?? [] as $item) {
+                $sizeOption = $this->sizeOption($item, $sizeType, $sizeOptionsCache);
+                if ($sizeOption instanceof VariationOption) {
+                    $usedSizeOptionIds[$sizeOption->id] = true;
                 }
-            }
 
-            if (empty($variationData['skus'])) {
-                continue;
-            }
-
-            foreach ($variationData['skus'] as $item) {
                 $actualAvailability = (int) $item['availability'];
                 $halvedQuantity = (int) floor($actualAvailability / 2);
 
-                $sizeName = $item['skuSize']['webtext'] ?? null;
-                $sizeCode = (string) ($item['skuSize']['size'] ?? '');
-                $sizeOption = null;
-
-                if ($sizeCode !== '') {
-                    /** @var VariationOption|null $sizeOption */
-                    $sizeOption = $sizeOptionsCache->get($sizeCode);
-
-                    if (! $sizeOption && $sizeName) {
-                        // Only create if no pre-seeded record exists (preserves canonical size names)
-                        $sizeOption = VariationOption::create([
-                            'variation_type_id' => $sizeType->id,
-                            'name' => $sizeName,
-                            'value' => $sizeCode,
-                        ]);
-                        $sizeOptionsCache->put($sizeCode, $sizeOption);
-                    }
-
-                    if ($sizeOption) {
-                        $usedSizeOptionIds[$sizeOption->id] = true;
-                    }
-                }
-
-                $skusToUpsert[] = [
+                $skus[] = [
                     'sku' => $item['sku'],
                     'product_id' => $product->id,
                     'quantity' => $halvedQuantity,
@@ -117,79 +125,135 @@ class ProductSkuSynchronizer
             }
         }
 
-        // Batch upsert SKUs
-        if ($skusToUpsert !== []) {
-            ProductSku::upsert(
-                $skusToUpsert,
-                ['sku'],
-                ['quantity', 'is_available', 'updated_at']
-            );
-            VariationType::firstOrCreate(
-                ['name' => VariationType::MATERIALE],
-                ['presentation_type' => 'text']
-            );
-            VariationType::firstOrCreate(
-                ['name' => VariationType::MOTIVO],
-                ['presentation_type' => 'text']
-            );
+        return [
+            'skus' => $skus,
+            'used_color_option_ids' => $usedColorOptionIds,
+            'used_size_option_ids' => $usedSizeOptionIds,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @param  Collection<string, VariationOption>  $sizeOptionsCache
+     */
+    private function sizeOption(array $item, VariationType $sizeType, Collection $sizeOptionsCache): ?VariationOption
+    {
+        $sizeName = $item['skuSize']['webtext'] ?? null;
+        $sizeCode = (string) ($item['skuSize']['size'] ?? '');
+        if ($sizeCode === '') {
+            return null;
         }
 
-        // Fetch back SKUs to map their options
-        $skuRecords = ProductSku::where('product_id', $product->id)->get()->keyBy('sku');
-        $skuOptionsData = [];
+        /** @var VariationOption|null $sizeOption */
+        $sizeOption = $sizeOptionsCache->get($sizeCode);
+        if (! $sizeOption && $sizeName) {
+            $sizeOption = VariationOption::create([
+                'variation_type_id' => $sizeType->id,
+                'name' => $sizeName,
+                'value' => $sizeCode,
+            ]);
+            $sizeOptionsCache->put($sizeCode, $sizeOption);
+        }
 
-        foreach ($data['variations'] as $variationData) {
-            $colorCode = (string) ($variationData['itemColorCode'] ?? '');
+        return $sizeOption;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $skus
+     */
+    private function upsertSkus(array $skus): void
+    {
+        if ($skus === []) {
+            return;
+        }
+
+        ProductSku::upsert($skus, ['sku'], ['quantity', 'is_available', 'updated_at']);
+        VariationType::firstOrCreate(
+            ['name' => VariationType::MATERIALE],
+            ['presentation_type' => 'text'],
+        );
+        VariationType::firstOrCreate(
+            ['name' => VariationType::MOTIVO],
+            ['presentation_type' => 'text'],
+        );
+    }
+
+    /**
+     * @param  array<int, true>  $colorOptionIds
+     * @param  array<int, true>  $sizeOptionIds
+     */
+    private function syncProductVariationOptions(
+        ProductVariationType $productColorType,
+        ProductVariationType $productSizeType,
+        array $colorOptionIds,
+        array $sizeOptionIds,
+    ): void {
+        foreach (array_keys($colorOptionIds) as $optionId) {
+            ProductVariationOption::firstOrCreate([
+                'product_variation_type_id' => $productColorType->id,
+                'variation_option_id' => $optionId,
+            ]);
+        }
+
+        foreach (array_keys($sizeOptionIds) as $optionId) {
+            ProductVariationOption::firstOrCreate([
+                'product_variation_type_id' => $productSizeType->id,
+                'variation_option_id' => $optionId,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variations
+     * @param  Collection<string, VariationOption>  $colorOptionsCache
+     * @param  Collection<string, VariationOption>  $sizeOptionsCache
+     * @param  Collection<int, ProductSku>  $skuRecords
+     */
+    private function syncSkuOptionPivots(
+        array $variations,
+        Collection $colorOptionsCache,
+        Collection $sizeOptionsCache,
+        Collection $skuRecords,
+    ): void {
+        $skuOptions = [];
+        foreach ($variations as $variation) {
+            $colorCode = (string) ($variation['itemColorCode'] ?? '');
             /** @var VariationOption|null $colorOption */
             $colorOption = $colorOptionsCache->get($colorCode);
 
-            foreach ($variationData['skus'] as $item) {
-                /** @var ProductSku|null $skuObj */
-                $skuObj = $skuRecords->get($item['sku']);
-                if ($skuObj) {
-                    if ($colorOption) {
-                        $skuOptionsData[] = [
-                            'product_sku_id' => $skuObj->id,
-                            'variation_option_id' => $colorOption->id,
-                        ];
-                    }
+            foreach ($variation['skus'] as $item) {
+                /** @var ProductSku|null $sku */
+                $sku = $skuRecords->get($item['sku']);
+                if (! $sku) {
+                    continue;
+                }
 
-                    $sizeCode = (string) ($item['skuSize']['size'] ?? '');
-                    /** @var VariationOption|null $sizeOption */
-                    $sizeOption = $sizeOptionsCache->get($sizeCode);
-                    if ($sizeOption) {
-                        $skuOptionsData[] = [
-                            'product_sku_id' => $skuObj->id,
-                            'variation_option_id' => $sizeOption->id,
-                        ];
-                    }
+                if ($colorOption) {
+                    $skuOptions[] = [
+                        'product_sku_id' => $sku->id,
+                        'variation_option_id' => $colorOption->id,
+                    ];
+                }
+
+                $sizeCode = (string) ($item['skuSize']['size'] ?? '');
+                /** @var VariationOption|null $sizeOption */
+                $sizeOption = $sizeOptionsCache->get($sizeCode);
+                if ($sizeOption) {
+                    $skuOptions[] = [
+                        'product_sku_id' => $sku->id,
+                        'variation_option_id' => $sizeOption->id,
+                    ];
                 }
             }
         }
 
-        // Assign valid options to product variations
-        foreach (array_keys($usedColorOptionIds) as $optId) {
-            ProductVariationOption::firstOrCreate([
-                'product_variation_type_id' => $productColorType->id,
-                'variation_option_id' => $optId,
-            ]);
-        }
-        foreach (array_keys($usedSizeOptionIds) as $optId) {
-            ProductVariationOption::firstOrCreate([
-                'product_variation_type_id' => $productSizeType->id,
-                'variation_option_id' => $optId,
-            ]);
+        if ($skuRecords->isEmpty()) {
+            return;
         }
 
-        // Delete old pivot entries and insert new ones
-        if ($skuRecords->isNotEmpty()) {
-            $skuIds = $skuRecords->pluck('id')->toArray();
-            DB::table('product_sku_options')->whereIn('product_sku_id', $skuIds)->delete();
-
-            // Chunk inserts if too many
-            foreach (array_chunk($skuOptionsData, 500) as $chunk) {
-                DB::table('product_sku_options')->insertOrIgnore($chunk);
-            }
+        DB::table('product_sku_options')->whereIn('product_sku_id', $skuRecords->pluck('id'))->delete();
+        foreach (array_chunk($skuOptions, 500) as $chunk) {
+            DB::table('product_sku_options')->insertOrIgnore($chunk);
         }
     }
 }

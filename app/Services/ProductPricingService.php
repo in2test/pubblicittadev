@@ -59,49 +59,10 @@ class ProductPricingService
      */
     public function getTierPrice(Product $product, int $quantity, ?ProductSku $sku = null): ?float
     {
-        $findTier = function (?int $skuId) use ($product, $quantity): ?PricingTier {
-            if ($product->relationLoaded('pricingTiers')) {
-                $tiers = $product->pricingTiers
-                    ->filter(fn (PricingTier $t) => $t->product_sku_id === $skuId);
-
-                $match = $tiers
-                    ->filter(fn (PricingTier $t) => $t->min_quantity <= $quantity &&
-                        ($t->max_quantity >= $quantity || is_null($t->max_quantity)))
-                    ->sortByDesc('min_quantity')
-                    ->first();
-
-                // Only use first tier as starting price for custom/on-request products
-                if (! $match && ($product->price <= 0 || $product->allows_custom_size)) {
-                    return $tiers->sortBy('min_quantity')->first();
-                }
-
-                return $match;
-            }
-
-            $query = $product->pricingTiers()->where('product_sku_id', $skuId);
-
-            /** @var PricingTier|null $tier */
-            $tier = (clone $query)
-                ->where('min_quantity', '<=', $quantity)
-                ->where(function (Builder $query) use ($quantity) {
-                    $query->where('max_quantity', '>=', $quantity)
-                        ->orWhereNull('max_quantity');
-                })
-                ->orderByDesc('min_quantity')
-                ->first();
-
-            // Only fallback to first tier for custom/on-request products
-            if (! $tier && ($product->price <= 0 || $product->allows_custom_size)) {
-                return $query->orderBy('min_quantity')->first();
-            }
-
-            return $tier;
-        };
-
         $skuId = $sku?->id;
 
         if ($skuId) {
-            $tier = $findTier($skuId);
+            $tier = $this->findTier($product, $quantity, $skuId);
             if ($tier instanceof PricingTier) {
                 return (float) $tier->price_per_unit;
             }
@@ -111,7 +72,7 @@ class ProductPricingService
         }
 
         // No specific SKU requested, look for product-level tiers
-        $tier = $findTier(null);
+        $tier = $this->findTier($product, $quantity);
         if ($tier instanceof PricingTier) {
             return (float) $tier->price_per_unit;
         }
@@ -146,6 +107,42 @@ class ProductPricingService
         }
 
         return (float) $minPrice;
+    }
+
+    private function findTier(Product $product, int $quantity, ?int $skuId = null): ?PricingTier
+    {
+        if ($product->relationLoaded('pricingTiers')) {
+            $tiers = $product->pricingTiers
+                ->filter(fn (PricingTier $tier) => $tier->product_sku_id === $skuId);
+
+            $match = $tiers
+                ->filter(fn (PricingTier $tier) => $tier->min_quantity <= $quantity &&
+                    ($tier->max_quantity >= $quantity || $tier->max_quantity === null))
+                ->sortByDesc('min_quantity')
+                ->first();
+
+            if (! $match && ($product->price <= 0 || $product->allows_custom_size)) {
+                return $tiers->sortBy('min_quantity')->first();
+            }
+
+            return $match;
+        }
+
+        $query = $product->pricingTiers()->where('product_sku_id', $skuId);
+        $tier = (clone $query)
+            ->where('min_quantity', '<=', $quantity)
+            ->where(function (Builder $query) use ($quantity) {
+                $query->where('max_quantity', '>=', $quantity)
+                    ->orWhereNull('max_quantity');
+            })
+            ->orderByDesc('min_quantity')
+            ->first();
+
+        if (! $tier && ($product->price <= 0 || $product->allows_custom_size)) {
+            return $query->orderBy('min_quantity')->first();
+        }
+
+        return $tier;
     }
 
     /**

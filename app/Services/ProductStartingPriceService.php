@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ProductStartingPriceService
 {
@@ -45,84 +46,11 @@ class ProductStartingPriceService
         $minQty = $this->getMinimumOrderQuantity($product);
 
         if ($product->product_class === ProductClass::AreaBased) {
-            $billedArea = $product->calculateTotalBilledArea($minQty, 1.0, 1.0);
-
-            $price = $isOutlet
-                ? $this->getMinimumValidOutletPrice($product) ?? $product->getPriceForQuantity($minQty)
-                : $product->getPriceForQuantity($minQty);
-
-            return $price * $billedArea;
+            return $this->areaBasedMinimumPrice($product, $minQty, $isOutlet);
         }
 
         if ($product->allows_custom_size) {
-            $formatType = $product->relationLoaded('variationTypes')
-                ? $product->variationTypes->firstWhere('name', 'Formato')
-                : $product->variationTypes()->where('name', 'Formato')->first();
-
-            $minPriceFound = null;
-
-            if ($formatType) {
-                /** @var ProductVariationType|null $pvt */
-                $pvt = $product->relationLoaded('productVariationTypes')
-                    ? $product->productVariationTypes->where('variation_type_id', $formatType->id)->first()
-                    : $product->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
-
-                if ($pvt) {
-                    if ($pvt->relationLoaded('options')) {
-                        $options = $pvt->options
-                            ->map(fn ($o) => $o->relationLoaded('option') ? $o->option : $o->option()->first())
-                            ->filter();
-                    } else {
-                        $options = VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($pvt) {
-                            $query->where('product_variation_type_id', $pvt->id);
-                        })->get();
-                    }
-
-                    foreach ($options as $format) {
-                        $width = null;
-                        $height = null;
-                        $name = strtolower((string) $format->name);
-
-                        if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
-                            $width = $product->min_custom_width ?? 10.0;
-                            $height = $product->min_custom_height ?? 10.0;
-                        } elseif (preg_match('/(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)/i', $name, $matches)) {
-                            $width = (float) str_replace(',', '.', $matches[1]);
-                            $height = (float) str_replace(',', '.', $matches[2]);
-                            if (str_contains(strtolower($name), 'cm')) {
-                                $width *= 10;
-                                $height *= 10;
-                            }
-                        }
-
-                        if ($width && $height) {
-                            $itemsPerSheet = $product->calculateItemsPerSheet($width, $height);
-                            if ($itemsPerSheet > 0) {
-                                $quantity = (int) ceil($minQty / $itemsPerSheet) * $itemsPerSheet;
-                                if ($quantity < $itemsPerSheet) {
-                                    $quantity = $itemsPerSheet;
-                                }
-
-                                // For outlet, we try to find the minimum price among outlet SKUs that match this format
-                                if ($isOutlet) {
-                                    $price = $product->skus()
-                                        ->where('is_outlet', true)
-                                        ->whereHas('options', fn ($q) => $q->where('id', $format->id))
-                                        ->min('override_price') ?? $product->calculateFinalUnitPrice($quantity);
-                                } else {
-                                    $price = $product->calculateFinalUnitPrice($quantity);
-                                }
-
-                                $totalPrice = $price * $quantity;
-                                if ($minPriceFound === null || $totalPrice < $minPriceFound) {
-                                    $minPriceFound = $totalPrice;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
+            $minPriceFound = $this->customFormatMinimumPrice($product, $minQty, $isOutlet);
             if ($minPriceFound !== null) {
                 return $minPriceFound;
             }
@@ -135,6 +63,116 @@ class ProductStartingPriceService
         return $unitPrice * $minQty;
     }
 
+    private function areaBasedMinimumPrice(Product $product, int $minimumQuantity, bool $isOutlet): float
+    {
+        $billedArea = $product->calculateTotalBilledArea($minimumQuantity, 1.0, 1.0);
+        $unitPrice = $isOutlet
+            ? $this->getMinimumValidOutletPrice($product) ?? $product->getPriceForQuantity($minimumQuantity)
+            : $product->getPriceForQuantity($minimumQuantity);
+
+        return $unitPrice * $billedArea;
+    }
+
+    private function customFormatMinimumPrice(Product $product, int $minimumQuantity, bool $isOutlet): ?float
+    {
+        $formatType = $product->relationLoaded('variationTypes')
+            ? $product->variationTypes->firstWhere('name', 'Formato')
+            : $product->variationTypes()->where('name', 'Formato')->first();
+
+        if (! $formatType) {
+            return null;
+        }
+
+        /** @var ProductVariationType|null $productVariationType */
+        $productVariationType = $product->relationLoaded('productVariationTypes')
+            ? $product->productVariationTypes->where('variation_type_id', $formatType->id)->first()
+            : $product->productVariationTypes()->where('variation_type_id', $formatType->id)->first();
+
+        if (! $productVariationType) {
+            return null;
+        }
+
+        $minimumPrice = null;
+        foreach ($this->formatOptions($productVariationType) as $format) {
+            [$width, $height] = $this->formatDimensions($product, $format);
+            if (! $width || ! $height) {
+                continue;
+            }
+
+            $itemsPerSheet = $product->calculateItemsPerSheet($width, $height);
+            if ($itemsPerSheet <= 0) {
+                continue;
+            }
+
+            $quantity = (int) ceil($minimumQuantity / $itemsPerSheet) * $itemsPerSheet;
+            $price = $this->formatUnitPrice($product, $format, $quantity, $isOutlet);
+            $totalPrice = $price * $quantity;
+
+            if ($minimumPrice === null || $totalPrice < $minimumPrice) {
+                $minimumPrice = $totalPrice;
+            }
+        }
+
+        return $minimumPrice;
+    }
+
+    /**
+     * @return Collection<int, VariationOption>
+     */
+    private function formatOptions(ProductVariationType $productVariationType): Collection
+    {
+        if ($productVariationType->relationLoaded('options')) {
+            return $productVariationType->options
+                ->map(fn ($option) => $option->relationLoaded('option') ? $option->option : $option->option()->first())
+                ->filter();
+        }
+
+        return VariationOption::whereHas('productVariationOptions', function (Builder $query) use ($productVariationType) {
+            $query->where('product_variation_type_id', $productVariationType->id);
+        })->get();
+    }
+
+    /**
+     * @return array{0: float|null, 1: float|null}
+     */
+    private function formatDimensions(Product $product, VariationOption $format): array
+    {
+        $name = strtolower((string) $format->name);
+        if (str_contains($name, 'personalizzato') || str_contains($name, 'custom')) {
+            return [
+                $product->min_custom_width ?? 10.0,
+                $product->min_custom_height ?? 10.0,
+            ];
+        }
+
+        if (! preg_match('/(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)/i', $name, $matches)) {
+            return [null, null];
+        }
+
+        $width = (float) str_replace(',', '.', $matches[1]);
+        $height = (float) str_replace(',', '.', $matches[2]);
+        if (str_contains($name, 'cm')) {
+            $width *= 10;
+            $height *= 10;
+        }
+
+        return [$width, $height];
+    }
+
+    private function formatUnitPrice(Product $product, VariationOption $format, int $quantity, bool $isOutlet): float
+    {
+        if (! $isOutlet) {
+            return $product->calculateFinalUnitPrice($quantity);
+        }
+
+        $skuPrice = $product->skus()
+            ->where('is_outlet', true)
+            ->whereHas('options', fn ($query) => $query->where('id', $format->id))
+            ->min('override_price');
+
+        return $skuPrice !== null ? (float) $skuPrice : $product->calculateFinalUnitPrice($quantity);
+    }
+
     public function getStartingUnitPrice(Product $product, bool $skipCache = false, bool $isOutlet = false): float
     {
         if (! $skipCache && ! $isOutlet && $product->cached_starting_unit_price !== null) {
@@ -144,28 +182,44 @@ class ProductStartingPriceService
         $baseFallback = $product->offer_price > 0 ? (float) $product->offer_price : (float) $product->price;
 
         if ($product->product_class === ProductClass::Apparel || $product->product_class === ProductClass::AreaBased) {
-            if (array_key_exists('pricing_tiers_min_price_per_unit', $product->getAttributes())) {
-                $minTierPrice = $product->pricing_tiers_min_price_per_unit;
-            } elseif ($product->relationLoaded('pricingTiers')) {
-                $minTierPrice = $product->pricingTiers->min('price_per_unit');
-            } else {
-                $minTierPrice = $product->pricingTiers()->min('price_per_unit');
-            }
-
-            if ($minTierPrice !== null) {
-                $baseFallback = (float) $minTierPrice;
-            }
+            $baseFallback = $this->minimumTierUnitPrice($product) ?? $baseFallback;
         }
 
         if ($isOutlet) {
             $minSkuPrice = (float) $product->skus()->where('is_outlet', true)->min('override_price');
-            if ($minSkuPrice > 0) {
-                return $minSkuPrice;
-            }
 
+            return $minSkuPrice > 0 ? $minSkuPrice : $baseFallback;
+        }
+
+        ['prices' => $skuPrices, 'has_unpriced_sku' => $hasSkuWithoutOverride] = $this->skuOverridePrices($product);
+
+        if ($skuPrices->isEmpty()) {
             return $baseFallback;
         }
 
+        $minSkuPrice = (float) $skuPrices->min();
+
+        return $hasSkuWithoutOverride ? min($baseFallback, $minSkuPrice) : $minSkuPrice;
+    }
+
+    private function minimumTierUnitPrice(Product $product): ?float
+    {
+        if (array_key_exists('pricing_tiers_min_price_per_unit', $product->getAttributes())) {
+            $minTierPrice = $product->pricing_tiers_min_price_per_unit;
+        } elseif ($product->relationLoaded('pricingTiers')) {
+            $minTierPrice = $product->pricingTiers->min('price_per_unit');
+        } else {
+            $minTierPrice = $product->pricingTiers()->min('price_per_unit');
+        }
+
+        return $minTierPrice !== null ? (float) $minTierPrice : null;
+    }
+
+    /**
+     * @return array{prices: Collection<int, float>, has_unpriced_sku: bool}
+     */
+    private function skuOverridePrices(Product $product): array
+    {
         if (array_key_exists('skus_min_override_price', $product->getAttributes())) {
             $minSkuOverride = $product->skus_min_override_price;
             $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
@@ -181,16 +235,10 @@ class ProductStartingPriceService
             $hasSkuWithoutOverride = $product->skus()->whereNull('override_price')->exists();
         }
 
-        if ($skuPrices->isNotEmpty()) {
-            $minSkuPrice = (float) $skuPrices->min();
-            if ($hasSkuWithoutOverride) {
-                return min($baseFallback, $minSkuPrice);
-            }
-
-            return $minSkuPrice;
-        }
-
-        return $baseFallback;
+        return [
+            'prices' => $skuPrices,
+            'has_unpriced_sku' => $hasSkuWithoutOverride,
+        ];
     }
 
     /**
