@@ -1,230 +1,391 @@
-# 📋 Implementation Plan & System Architecture — Pubblicittà24
+# Pubblicitta24 — Project Status and Implementation Plan
 
-**Current Status**: 🚀 PRODUCTION READY (Completed & Local SEO Active)
-**System Date**: September 30, 2026
-**Core Scope**: E-commerce platform with automated Stripe payments, B2B manual quotation flows, NewWave API automated inventory sync, and hyper-targeted Local SEO for the Ciociaria region.
+**Repository snapshot:** 2026-10-03
+**Status:** Core catalogue, pricing, quotation/order processing, Stripe checkout,
+NewWave integration, and Filament administration are implemented. Tests and
+`composer run format` were reported passing at this snapshot. A configured
+production deployment workflow exists; this document does not independently
+verify the live production environment.
 
-## 🧪 Test Coverage Status
+This file describes the implementation found in this repository. It replaces
+older plans and counts that no longer match the source. Items under
+“Remaining work” are gaps or operational checks, not promises that a feature is
+already available.
 
-* **Test Suite Status**: ✅ 292 passing tests (666+ assertions) across unit, feature, integration, and architecture suites. All critical services and features are covered.
+## 1. Product and customer workflows
 
-## 📊 Project Overview & Architecture
+Pubblicitta24 is a product catalogue and ordering platform for custom apparel,
+printing, and related products. It supports both paid orders and requests for
+quotation. It is not a quotation-only storefront.
 
-### 🧬 Core Ecosystem
+### Catalogue and product configuration
 
-* **Name**: Pubblicittà24 Platform (Custom & Standard Prints, Rigid Media, Promotional Apparel).
-* **Fulfillment Vectors**: Authenticated Checkout (Stripe Webhooks) **OR** Private Corporate B2B Quote Workflow. (Note: Guest checkout is disabled; account creation is strictly required for order placement).
-* **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Volt 1, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11.
+- Browse the home page, category hierarchy, and product detail pages.
+- Search through Laravel Scout.
+- Configure variation types and options, including exposed URL selections,
+image-bearing options, and price modifiers.
+- Select SKU-backed product variants, availability, and quantities.
+- Calculate prices using product pricing tiers, SKU price overrides, category
+  quantity discounts, and outlet pricing.
+- Support apparel/item-based and area-based products, including custom print
+  dimensions and sheet/print area calculations.
+- Show outlet products and portfolio content.
+- Manage product/category images through Spatie Media Library. NewWave products
+  can also use remote images and variation-specific product imagery.
 
-### 📐 SOLID Design & Architectural Refactor Rules
+### Cart, checkout, and orders
 
-To maintain code health, the system strictly enforces the following design rules verified by a PEST/PHPUnit architecture suite:
+- The cart is session-backed. Customers can add, update, remove, or clear
+  configured jobs; multi-SKU quantities and custom dimensions are supported.
+- Cart and price-preview endpoints recalculate prices on the server.
+- Checkout routes require authentication. Customers can submit a quotation
+  request or start a Stripe Checkout Session for payment.
+- Quotation requests are stored as `orders` with `payment_status = quotation`;
+  there is no separate `quotes` table.
+- Stripe webhook processing records payment state. Orders and line items retain
+  pricing and customization data for administration.
+- Shipping supports delivery and pickup; delivery cost is selected from
+  configured shipping tiers. Addresses belong to customer accounts.
+- Order work states cover pending, awaiting customer files, processing, ready,
+  shipped, and completed. Admins can manage invoices and shipment/tracking
+  details.
+- Customers with verified accounts can view their dashboard and order history.
 
-1. **Zero-Fat Controllers**: Controllers are banned from calling the `Mail` facade directly; operations are entirely delegated to dedicated Domain Services via Container Resolution.
-2. **Clean Domain Models**: Models do not interact with Stripe or Mail infrastructure. Outbound calls are fully encapsulated.
-3. **Encapsulated Queries**: Database queries prioritize Eloquent relationships. Raw DB queries are restricted to performance-critical calculation boundaries.
+### NewWave catalogue synchronization
 
----
+- NewWave products are represented in the product catalogue and synchronized
+  through the GraphQL client, mapper, synchronizer services, and queued jobs.
+- Sync state is tracked as pending, syncing, synced, or failed.
+- Administrators can trigger product synchronization.
+- Product detail requests defer an availability refresh for a NewWave product
+  when its `updated_at` is at least 12 hours old; a cache lock prevents
+  concurrent refreshes for the same product.
+- **There is no automatic scheduled catalogue sync in the application
+  scheduler.** The current console kernel explicitly leaves scheduled work
+  disabled.
 
-## 🛡️ Operations, Compliance & Security (Active Workflows)
+## 2. Application architecture
 
-### 1. Accounting & Invoicing Workflow
+### Runtime and main packages
 
-* **Current Process**: Orders are captured via Stripe (B2C) or approved via Quote (B2B). Billing data is collected during checkout.
-* **Danea EasyFatt Integration**: Invoices are generated manually off-platform using Danea EasyFatt software.
-* **SDI & Delivery**: Invoices are transmitted to the *Sistema di Interscambio* (SDI) via Danea, and a courtesy PDF is subsequently emailed to the client.
+Versions below reflect the installed project dependencies at this snapshot.
 
-### 2. Print File Ingestion Strategy
+| Area | Package / runtime | Version |
+| --- | --- | --- |
+| PHP | PHP | 8.5 |
+| Backend framework | `laravel/framework` | 13.34.0 |
+| Admin panel | `filament/filament` | 5.9.0 |
+| Reactive UI | `livewire/livewire` | 4.4.7 |
+| Single-file components | `livewire/volt` | 1.11.2 |
+| UI components | `livewire/flux` | 2.20.1 |
+| CSS/build | Tailwind CSS | 4.x |
+| Asset bundler | Vite | 8.x |
+| Search | `laravel/scout` | 11.8.0 |
+| Media | `spatie/laravel-medialibrary` | 11.23.8 |
+| Payments | `stripe/stripe-php` | 20.3.1 |
+| Tests | Pest | 5.3.0 |
+| Static analysis | Larastan | 3.10.0 |
 
-* **Current Off-Platform Flow**: To bypass malware vectors, server storage limits, and massive timeout configurations, file uploads are **not** currently handled natively on the platform.
-* **Client Instructions**: Post-checkout, clients are instructed via order confirmation to submit high-resolution production files (PDF/TIFF) via direct Email or WeTransfer, referencing their specific `order_number`.
+The project also uses Fortify for authentication, Laravel Boost for agent and
+development tooling, Rector, Pint, Sloppy, and Sheath. Exact dependency
+constraints are in `composer.json` and `package.json`; `composer.lock` and
+`package-lock.json` record the resolved versions.
 
-### 3. GDPR & Data Lifecycle Management
+### Main code boundaries
 
-* **Consent Management**: Active native cookie banner segregating functional storage from tracking analytics (Options: *Accetta Tutto* vs. *Solo Essenziali*).
-* **Right to be Forgotten (Account Deletion Strategy)**: *Pending Implementation priority.* Requires a programmatic routine (e.g., a dedicated `UserAnonymizationService`) that triggers upon user deletion request:
-* Scrambles or nullifies Personally Identifiable Information (PII) in the `users` and `addresses` tables.
-* Maintains `orders` and `order_items` records intact with an anonymized reference (e.g., `user_id` set to null, names converted to "Utente Cancellato") to preserve historical revenue data for Danea EasyFatt tax reporting.
+- `app/Http/Controllers` handles HTTP request/response coordination.
+- `app/Http/Requests` contains request validation for cart operations.
+- `app/Models` contains Eloquent entities and relationships.
+- `app/Services` contains pricing, cart presentation, checkout, media,
+  synchronization, notifications, feeds, and display operations.
+- `app/Jobs` contains queued NewWave product and image synchronization jobs.
+- `app/Filament/Resources` contains the admin panel resources and schemas.
+- `app/Livewire` contains the interactive outlet-products page.
+- `resources/views` contains Blade, Livewire, and Volt UI.
 
-### 4. Infrastructure Reliability
+The service layer includes focused components such as
+`ProductPriceCalculator`, `ProductPricingService`, `QuantityDiscountService`,
+`CartManager`, `CartPresentationDataLoader`, `CheckoutOrderService`,
+`StripeCheckoutSessionService`, `ProductAvailabilityService`,
+`ProductSynchronizer`, `ProductGalleryService`, and
+`GoogleMerchantFeedBuilder`.
 
-* **Asynchronous Error Tracking**: Because email dispatches rely on Laravel's `defer()` post-transaction, unhandled exceptions do not block the user but will fail silently. Integration of a logging/tracking service (e.g., Sentry or Flare) is required to monitor deferred task failures.
-* **Data Backups**: Automated nightly dumps of the PostgreSQL/MySQL database and Spatie MediaLibrary assets stored in an isolated off-site environment.
+## 3. Data model
 
----
+The repository contains 28 migration files. The application schema includes
+the following domain tables (the live schema can differ by environment):
 
-## 🗄️ Normalized Database Schema
+| Domain | Tables | Purpose |
+| --- | --- | --- |
+| Accounts | `users`, `addresses` | Fortify accounts, user role/status and customer shipping/billing details |
+| Catalogue | `categories`, `products`, `images`, `media` | Product/category hierarchy, legacy/remote images, and Media Library assets |
+| Variations and stock | `variation_types`, `variation_options`, `product_variation_types`, `product_variation_options`, `product_skus`, `product_sku_options` | Product options, modifier configuration, SKU availability and outlet overrides |
+| Pricing | `pricing_tiers`, `category_quantity_discounts`, `shipping_tiers` | Product/SKU quantity pricing, category discounts, and delivery rates |
+| Orders | `orders`, `order_items`, `transporters` | Paid orders and quotations, customizations, fulfillment state, invoices and tracking |
+| Site content | `portfolio_items`, `newsletter_subscriptions` | Portfolio and newsletter subscribers |
+| Laravel infrastructure | `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations` | Framework cache, queue, session, auth, and migration state |
 
-### 📦 Core Catalog & Taxonomy
+`orders` stores both checkout orders and quotation requests using
+`payment_status`. `order_items.customization_json` preserves the cart
+configuration; `design_file_path` and the `awaiting_file` work state support
+tracking jobs that still need production files. A complete customer-facing
+design-file upload workflow was not confirmed in the routes inspected.
 
-* `categories`: `id`, `name`, `slug`, `parent_id`, `description`, `is_active`, `display_mode`
-* `products`: `id`, `name`, `slug`, `sku`, `description`, `category_id`, `is_featured`, `type` (`standard`|`newwave`), `pricing_model` (`fixed`|`quantity`|`area`), `min_area`, `max_width`, `max_height`, `sheet_width`, `sheet_height`, `allows_custom_size`, `min_custom_width`, `max_custom_width`, `min_custom_height`, `max_custom_height`, `sync_status`, `sync_progress`, `synced_at`, `is_active`, `override_price`, `override_description`, `remote_images` (JSON), `price`, `offer_price`, `created_at`, `updated_at`
+The checked-in `.env.example` defaults to SQLite and a synchronous queue. Those
+are development defaults, not a statement about the production database or
+queue configuration.
 
-### 📦 Pricing Matrices & Logic Rules
+## 4. Current routes and surfaces
 
-* `pricing_tiers`: `id`, `product_id`, `product_sku_id`, `is_custom_price`, `min_quantity`, `max_quantity`, `price_per_unit`
-* `category_quantity_discounts`: `id`, `category_id`, `min_quantity`, `max_quantity`, `discount_type` (`percent`|`fixed`), `discount_value`, `description`
-* `shipping_tiers`: `id`, `name`, `min_order_total`, `cost`, `is_active`
+The web route list contains 68 registered routes, including vendor/admin and
+authentication routes. The principal application routes are:
 
-### 📦 Sales, Actions, & Operations
+| Path | Handler | Purpose / access |
+| --- | --- | --- |
+| `/` | `HomePageController` | Home page |
+| `/catalogo` | `CategoryController` | Catalogue root |
+| `/catalogo/{category:slug}` | `CategoryController` | Category and subcategory page |
+| `/catalogo/{category:slug}/{product:slug}` | `ProductController` | Product detail and configuration |
+| `/search` | `SearchController` | Catalogue search |
+| `/outlet` | `OutletProducts` (Livewire) | Outlet listing |
+| `/portfolio` | `PortfolioController` | Portfolio |
+| `/cart`, `/cart/*` | `CartController` | Cart, mutations, and `/cart/price` preview |
+| `/checkout` | Volt component | Authenticated checkout |
+| `/checkout/session` | `CheckoutController` | Authenticated Stripe checkout or quotation creation |
+| `/checkout/quotation` | `CheckoutController` | Authenticated direct quotation request |
+| `/checkout/success`, `/checkout/cancel` | `CheckoutController` | Authenticated checkout return pages |
+| `/dashboard/*` | `DashboardController` | Verified account order/address views |
+| `/webhooks/stripe` | `WebhookController` | Stripe webhook receiver |
+| `/feed/google-merchant.xml` | `GoogleMerchantFeedController` | Google Merchant product feed |
+| `/sitemap.xml` | `SitemapController` | XML sitemap |
+| `/admin/*` | Filament | Product, category, variation, SKU/outlet, order, user, shipping, transporter, portfolio, and newsletter administration |
+| `/chi-siamo`, `/servizi`, `/contact` | Static Blade views | Informational pages |
+| `/privacy`, `/cookie-policy`, `/terms`, `/shipping-returns` | Static Blade views | Legal and policy pages |
 
-* `addresses`: `id`, `user_id` (FK), `type` (`shipping`|`billing`), `name`, `street`, `city`, `state`, `zip`, `country`, `phone`, `vat_number`, `fiscal_code`, `sdi_code`, `pec_email`, `is_default`
-* `orders`: `id`, `user_id` (FK), `order_number`, `payment_status` (Backed Enum), `work_status` (Backed Enum), `total_price`, `total_items`, `shipping_cost`, `shipping_method`, `shipping_address_id`, `billing_address_id`, `stripe_session_id`, `stripe_payment_intent_id`, `paid_at`, `notes`
-* `order_items`: `id`, `order_id`, `product_id`, `quantity`, `unit_price`, `subtotal`, `customization_json` (JSON features), `external_file_reference` (Notes for WeTransfer/Email tracking), `work_status`
+Checkout requires authentication but is not grouped under the `verified`
+middleware in `routes/web.php`. Dashboard routes require both authentication
+and email verification.
 
----
+## 5. Operations, SEO, and integrations
 
-## 🛠️ Implemented Systems Log
+### Payments and external integrations
 
-### Core Engine Redesign
+- Stripe Checkout Sessions are created through a dedicated service; webhook
+  handling is routed separately from browser checkout.
+- NewWave GraphQL endpoint, token, and TLS verification are environment
+  configured.
+- Google Merchant feed, Google Customer Reviews badge/checkout opt-in, and
+  Google Analytics consent updates are present in the application.
+- SMTP, Stripe, NewWave, and other environment-dependent integrations require
+  valid deployment secrets and external service configuration.
 
-* **Decoupled Model Behaviors**: Extracted image processing actions from the core `Product` model into an independent, testable `ProductGalleryService`.
-* **Deconstructed Sync Routines**: Split the monolithic `ProductSynchronizer` engine into four single-responsibility sub-services: Metadata, Images, SKU/Variations, and Real-Time Availability.
-* **Query Optimization**: Cart presentation uses a batched relation data loader and a focused item presenter to preload variation data and avoid N+1 query loops.
-* **Asynchronous-like Side-Effects**: Shifted email dispatches out of raw Eloquent saving states. Uses Laravel's native `defer()` container wrapper post-database transaction.
-* **Enums Integration**: Replaced string states with native PHP Backed Enums (`PaymentStatus`, `WorkStatus`) built with weight matrices for status sorting and localized descriptive strings (`->label()`).
-* **Performance Indexes Applied**: `images(product_id, variation_option_id)`, `orders(user_id, created_at)`, `product_skus(product_id, sku)`, `products(category_id, is_active)`.
+### SEO and content
 
-### Feature Integrations & Upgrades
+- The shared layout emits page metadata, canonical URLs, Open Graph/Twitter
+  metadata, and LocalBusiness structured data.
+- Sitemap and Google Merchant XML feed endpoints are implemented.
+- The site has local-business metadata for Fiuggi/Ciociaria, but the
+  city/service-specific landing routes described in older drafts are not
+  registered. Do not treat those proposed URLs as implemented pages.
+- A cookie banner stores essential/all consent and updates Google consent
+  state. Policy pages describe the intended consent behavior.
 
-* **Outlet Cascade System**: Implemented an advanced configuration modal in the Filament admin panel. Allows admins to assign `is_outlet` status and prices globally to a Product or targeted to specific exposed variants. These settings cascade to update all underlying `ProductSku` permutations. On product pages, an unselected product displays the minimum outlet price and badge when available; an explicitly selected variant displays only that SKU's price and outlet status.
-* **Multi-SKU Quantity Discount Resolution**: Refactored the `ProductPriceCalculator` to handle volume discounts across multi-SKU products (e.g., buying 10 Small and 10 Large shirts of the same color). Evaluates discount tiers based on aggregate cart quantity.
-* **Authenticated GraphQL Gateway (NewWave API)**: Lazy-sync connection handling matching remote inventory balances every 12 hours. Fast stock polling is configured to bypass massive dataset recalculations.
-* **Hybrid Media Asset Pipeline**: Merged local uploads handled by Spatie MediaLibrary with remote layout images using selective color queries (`?colore=XX`).
-* **Google Merchant Feed**: Exports effective per-SKU prices, XML-safe image URLs, and up to 10 additional variant-aware product images per offer.
-* **Catalog Recovery**: Unknown URLs return a branded 404 page with the searchable product catalog.
-* **User Dashboard (Order History)**: Account area allowing clients to review past orders. Reordering is manual due to the high-variance, custom nature of the printed goods.
+### Production deployment
 
----
+`.github/workflows/deploy-production.yml` deploys on pushes to `production`.
+It installs production Composer dependencies, runs `npm ci` and the Vite build,
+then transfers and extracts an archive over SSH using GitHub secrets. Successful
+workflow execution, server-side prerequisites, queue workers, cron setup,
+backups, and live service configuration must be checked in the deployment
+environment; they cannot be inferred from the workflow file alone.
 
-## 📍 Local SEO Strategy (Fiuggi & Ciociaria Dominance)
+## 6. Quality and verification
 
-### 1. Geolocated Header Structures
+- Tests use Pest and are organized under `tests/Architecture`, `tests/Feature`,
+  and `tests/Unit`.
+- At this snapshot, the repository contains 69 files named `*Test.php`.
+- The project reports passing tests and a clean `composer run format` at the
+  snapshot date. The `format` Composer script runs Rector, Pint, Sloppy, and
+  PHPStan/Larastan.
+- GitHub Actions has separate test and lint workflows. The test workflow runs
+  against PHP 8.4 and 8.5, installs Node 22 dependencies, builds assets, and
+  runs Pest. The production workflow builds with Node 24 and PHP 8.5.
+- The project-local `npm` package was removed; it was the source of the npm
+  audit findings. The normal system npm CLI remains in use. The dependency
+  audit was reported clean after removal.
 
-* **Home Target Hook**: `Pubblicittà24 | Stampa Digitale, Grande Formato e Abbigliamento a Fiuggi`
-* **Home Snippet**: `Professional digital printing in Fiuggi and Frosinone province: business cards, flyers, banners, Forex panels, gadgets, and custom apparel. Free online quotes.`
-* **Targeted Landing Directories**: `/stampa-digitale-fiuggi`, `/stampa-grande-formato-fiuggi`, `/abbigliamento-lavoro-fiuggi`.
+Useful commands:
 
-### 2. Semantic Graph Implementation (`Schema.org`)
-
-Configured globally inside `resources/views/layouts/layout.blade.php`:
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "PrintShop",
-  "name": "Pubblicittà24",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Fiuggi",
-    "addressRegion": "FR",
-    "addressCountry": "IT"
-  },
-  "areaServed": [
-    "Fiuggi", "Anagni", "Alatri", "Ferentino", "Frosinone",
-    "Sora", "Paliano", "Acuto", "Piglio", "Guarcino", "Ciociaria"
-  ],
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "Printing & Customization Services",
-    "itemListElement": [
-      "Digital Printing",
-      "Business Cards",
-      "Large Format Printing",
-      "Signage",
-      "Rigid Panels",
-      "Promotional Apparel",
-      "Workwear"
-    ]
-  }
-}
-
+```powershell
+php artisan test --compact
+composer run format
+npm audit
+npm run build
+php artisan route:list --except-vendor
+php artisan truss:export --format=llm --compact
 ```
 
----
+## 7. Remaining work and operational checks: TO DO
 
-## 🎯 Controllers & Routes
+These items are not confirmed as implemented end-to-end and should be prioritized
+according to product and operational needs:
 
-| Route | Controller / Handler | Purpose |
-| --- | --- | --- |
-| `/` | `HomePageController` | Homepage with featured products |
-| `/catalogo` | `CategoryController` | Browse all categories |
-| `/catalogo/{category:slug}` | `CategoryController` | Category page with filters & subcategories |
-| `/catalogo/{category:slug}/{product:slug}` | `ProductController` | Product detail page |
-| `/search` | `SearchController` | Product search via Laravel Scout |
-| `/cart` | `CartController` | Cart view |
-| `/cart/add`, `/cart/update`, `/cart/remove`, `/cart/clear` | `CartController` | Cart mutations & calculations |
-| `/checkout` | `pages.checkout` (Volt) | Authenticated Checkout form |
-| `/checkout/session`, `/checkout/quotation`, `/checkout/success` | `CheckoutController` | Stripe checkout session & B2B quotation processing |
-| `/dashboard` | `DashboardController` | Order History & Profile Area |
-| `/dashboard/orders`, `/dashboard/orders/{order}` | `DashboardController` | Customer orders listing and detail view |
-| `/feed/google-merchant.xml` | `GoogleMerchantFeedController` | Feed for Google Shopping |
-| `/sitemap.xml` | `SitemapController` | Dynamic XML sitemap |
-| `/outlet` | `OutletProducts` (Livewire) | Outlet products page |
-| `/webhooks/stripe` | `WebhookController` | Stripe webhook listener for checkout.session.completed |
+### Priority correctness, payment, and fulfillment work
 
----
+1. **Fix order work-status aggregation.** `Order::updateWorkStatusFromItems()`
+   currently writes a numeric weight as the order status, while status labels
+   and workflow code expect a `WorkStatus` value. Persist the actual enum value
+   selected by the aggregation rule and add regression coverage for item status
+   changes, deletions, and mixed item states.
+2. **Send payment notifications once.** The current payment completion path and
+   Stripe webhook both invoke payment notifications. Keep one notification
+   owner and test that a successful webhook sends one customer confirmation and
+   one notification per admin, including when Stripe redelivers the event.
+3. **Make Stripe payment-session handling safe for repeat attempts.** A
+   customer's pending order can receive multiple Checkout Sessions, and the
+   webhook currently processes order metadata without checking the session
+   against the order's stored active session. Reuse or expire prior sessions,
+   validate the session/order association, and define how late or duplicate
+   successful charges are reconciled. Test repeated checkout attempts,
+   mismatched/late sessions, idempotent inventory changes, and the chosen
+   duplicate-charge handling.
+4. **Do not mark failed NewWave requests as synced.** API failures currently
+   return `null`, the synchronizer returns without an error, and the job can
+   then record a successful sync. Distinguish successful data retrieval from
+   failed or malformed responses so the job records an honest terminal state
+   and useful diagnostics. Test success, API failure, malformed data,
+   exceptions, and a missing product.
+5. **Scope checkout success lookups to the signed-in customer.** The success
+   page looks up an order by Stripe session ID without checking its owner. Scope
+   access to the authenticated user (or use an appropriately signed,
+   short-lived completion mechanism) and test that one customer cannot retrieve
+   another customer's order or expose their personal data through the page.
+6. **Complete the quotation-review-to-payment journey.** Customers can submit a
+   quotation, and admins can edit order-item prices, but make the full handoff
+   explicit: review customer notes/configuration, revise line prices and
+   totals, notify the customer of the final offer, and let them accept/pay that
+   finalized amount. Preserve an auditable distinction between an unreviewed
+   request and an offer ready for payment; ensure an old Stripe session cannot
+   charge a superseded total. Test acceptance/payment and rejection, revision,
+   and stale-session paths.
+7. **Finish customer design-file delivery.** Add the branded upload flow to
+   product customization and carry its state through the cart, quotation or
+   checkout, and order item so customers can attach artwork before payment or
+   quote review rather than switching to an external file-transfer service.
+   Use private temporary storage, explicit allowed file types and size limits,
+   content validation, safe generated names, authorization, cleanup of abandoned
+   uploads, and reliable association to the correct order item/SKU. Define
+   whether files are processed asynchronously and how upload/processing errors
+   are shown. Retain a documented manual fallback until the full flow is live.
 
-## 🧪 Quality Assurance & Test Coverage
+### Search visibility and business growth
 
-The platform runs a comprehensive Pest PHP test suite featuring **292 automated unit, feature, and architecture tests with 666+ assertions** (100% passing). The latest full test run passed, and Rector, Pint, and Larastan completed without errors:
+1. **Build a quality-controlled local landing-page framework.** If the service
+   area and local offering are confirmed, implement data-driven,
+   allowlisted pages such as `/stampa-personalizzata/{provincia}/{comune}` for
+   priority locations on the Roma-Napoli axis. Use one maintainable template
+   with genuinely useful, location-specific copy, accurate titles, headings,
+   metadata, image alt text, canonical URLs, internal links, and sitemap
+   entries. Verify any claims about rapid delivery, in-person consultation, or
+   file checks before publishing them. Avoid generating thin or duplicate pages;
+   test valid locations, unknown slugs, metadata, and sitemap inclusion.
+2. **Develop industry-specific collections and landing pages.** If supported by
+   the catalogue and production capabilities, create curated verticals such as
+   HoReCa and construction/workwear, using suitable existing products (for
+   example BASIC POLO or MIAMI HOODY). Explain factual material and use-case
+   benefits rather than generic duplicated copy. Add relevant metadata,
+   canonical/internal links and sitemap entries, and test product membership
+   and invalid sector slugs.
+3. **Validate B2B volume pricing and quotation presentation.** The application
+    already has pricing tiers and category quantity discounts. Confirm these
+    cover approved bulk-price rules; if not, implement the missing rules and a
+    clear tier/discount matrix without bypassing server-side price calculation.
+    Test displayed and charged totals at tier boundaries and across quote
+    revisions.
+4. **Request authentic local customer reviews.** Establish a process to invite
+    customers to leave honest reviews on the business's Google profile without
+    incentives, gating, or pressure to leave positive feedback. Treat the
+    proposed request for 5–10 reviews as a planning target, not a guaranteed
+    SEO outcome.
 
-* **Functional Coverage**: Suites for `OutletPricingTest`, `OutletPageTest`, `MultiSkuQuantityDiscountTest`, `ProductStartingPriceServiceTest`, `CategoryQuantityDiscountTest`, `ProductPriceCalculatorTest`, `CheckoutTest`, and `CartTest` ensure that pricing cascade, volume aggregates, and checkout flows do not regress.
-* **Architecture & Integrity**: Strict compliance rules including Laravel presets (`tests/Architecture/PresetTest.php`) and domain separation.
+The suggested “Days 1–7 / 8–15 / 16–30” sequence is an optional prioritization
+outline, not a delivery commitment. Sequence work by customer impact, verified
+operational capability, and content readiness. Do not rely on unsupported claims
+about time-on-site as a ranking factor.
 
-### 📊 Current Status
+### Test coverage backlog
 
-* **Total Models**: 18
-* **Total Services**: 21
-* **Automated Tests**: 292 passing tests (666+ assertions) across Unit, Feature, and Architecture suites.
+The feature suite covers many primary flows, but the following targeted
+regression cases remain:
 
-### ✅ Tests Already Created & Active
+1. **Checkout and payment-session failures:** cover successful pickup checkout
+   without a shipping address and payment for the customer's own pending order.
+   Reject invalid or missing fields, foreign or already-processed orders, and
+   Stripe session-creation failures without creating unauthorized orders or
+   losing the cart. Foreign-address rejection is already covered.
+2. **Stripe webhook handling:** cover malformed payloads, invalid signatures,
+   irrelevant event types, and events with missing or unknown order metadata.
+   On a valid event, assert one payment transition, one inventory decrement,
+   and exactly-once notifications despite event redelivery. Missing signature
+   and successful repeated-delivery responses are already covered.
+3. **NewWave job lifecycle:** assert successful jobs record `synced`, 100%
+   progress, and a sync timestamp; failures and malformed responses must not
+   appear successful, thrown failures must record `failed`, and missing
+   products must be safely skipped. Existing tests cover synchronizer output
+   and an unsuccessful API response, but not the queued job's terminal state.
+4. **Cart mutation boundaries:** add partial bulk-removal coverage proving
+   unselected items remain. Invalid or unknown item keys, invalid quantities,
+   and malformed bulk-removal input must not change or remove unrelated items.
+   Existing tests cover successful single-item updates/removals.
+5. **Cart pricing contract:** assert exact unit and total prices, quantity, and
+   discount status for representative tiered, area-based, and selected-option
+   cases. Cover invalid option/configuration combinations. Existing tests
+   check the basic JSON shape and malformed field validation.
+6. **Admin action authorization:** admin success and non-admin denial for one
+   action are covered. Add guest checks and non-admin denial for both product
+   toggle and sync actions, plus unknown product identifiers.
+7. **Order ownership and payment lifecycle:** test cross-customer checkout
+   success lookup denial; pending-order reuse; duplicate Stripe session
+   attempts; stale/mismatched webhook sessions; duplicate-charge behavior;
+   item-to-order status aggregation; payment notification counts; and quote
+   revision, customer acceptance, and payment of the final offer.
+8. **Artwork upload lifecycle:** test accepted file types and size limits,
+   rejected/invalid uploads, private storage and authorization, abandoned
+   temporary-file cleanup, and correct association to the intended order item
+   after both payment and quotation submission.
+9. **Landing-page behavior:** test allowed/unknown locality and sector slugs,
+   product filtering, metadata/canonical URLs, and sitemap entries; confirm
+   page copy only makes verified service and material claims.
 
-| Test Suite / Area | Status | File Path |
-| --- | --- | --- |
-| PresetTest (Architecture) | ✅ Passing | `tests/Architecture/PresetTest.php` |
-| ProductPriceCalculatorTest | ✅ Passing | `tests/Unit/ProductPriceCalculatorTest.php` |
-| ProductPricingServiceTest | ✅ Passing | `tests/Unit/ProductPricingServiceTest.php` |
-| QuantityDiscountServiceTest | ✅ Passing | `tests/Unit/QuantityDiscountServiceTest.php` |
-| PricingTierTest | ✅ Passing | `tests/Unit/PricingTierTest.php` |
-| ProductSkuTest | ✅ Passing | `tests/Unit/ProductSkuTest.php` |
-| ProductStartingPriceServiceTest | ✅ Passing | `tests/Unit/ProductStartingPriceServiceTest.php` |
-| CategoryQuantityDiscountTest | ✅ Passing | `tests/Unit/CategoryQuantityDiscountTest.php` |
-| CartManagerTest & CartPricingTest | ✅ Passing | `tests/Unit/CartManagerTest.php`, `tests/Unit/CartPricingTest.php` |
-| MultiSkuQuantityDiscountTest | ✅ Passing | `tests/Unit/MultiSkuQuantityDiscountTest.php` |
-| ProductDiscountTest | ✅ Passing | `tests/Unit/ProductDiscountTest.php` |
-| CheckoutTest (Stripe & Quotation) | ✅ Passing | `tests/Feature/CheckoutTest.php` |
-| CartTest & CartViewTest | ✅ Passing | `tests/Feature/CartTest.php`, `tests/Feature/CartViewTest.php` |
-| WebhookTest (Stripe webhook) | ✅ Passing | `tests/Feature/WebhookTest.php` |
-| ProductSyncTest (NewWave API) | ✅ Passing | `tests/Feature/ProductSyncTest.php` |
-| ProductGalleryImagesTest | ✅ Passing | `tests/Feature/ProductGalleryImagesTest.php` |
-| Outlet display, OutletPageTest & OutletPricingTest | ✅ Passing | `tests/Feature/ProductOutletDisplayTest.php`, `tests/Feature/OutletPageTest.php`, `tests/Unit/OutletPricingTest.php` |
-| EditJobTest (Custom dimensions & cart edit) | ✅ Passing | `tests/Feature/EditJobTest.php` |
-| CatalogTest & ProductPageTest | ✅ Passing | `tests/Feature/CatalogTest.php`, `tests/Feature/ProductPageTest.php` |
-| OrderNotificationsTest & AdminNotificationsTest | ✅ Passing | `tests/Feature/OrderNotificationsTest.php`, `tests/Feature/AdminNotificationsTest.php` |
-| OrderInvoicesAndTrackingTest | ✅ Passing | `tests/Feature/OrderInvoicesAndTrackingTest.php` |
-| Filament Resource Tests (Categories, Products, Users, VariationTypes, Media) | ✅ Passing | `tests/Feature/Filament/*` |
-| Auth & Security Suites (Fortify, 2FA, Verification, Reset) | ✅ Passing | `tests/Feature/Auth/*`, `tests/Feature/Settings/*` |
-| Google Merchant Feed & Sitemap | ✅ Passing | `tests/Feature/GoogleMerchantFeedTest.php`, `tests/Feature/SitemapTest.php` |
+### Operations, privacy, and maintenance
 
-### ❌ Remaining / Future Test Opportunities
+1. **Production release safeguards:** add a required CI gate for the
+    `production` branch and pull requests targeting it. Define a safe release
+    sequence for dependencies, database migrations, health checks, and rollback
+    or recovery; avoid an unverified in-place deploy being treated as a
+    successful release. Test the deployment procedure against a staging
+    environment before relying on it.
+2. **Account deletion and data lifecycle:** define and implement an authorized
+    user deletion/anonymization process that respects order-retention and
+    accounting requirements. A dedicated anonymization service was not found.
+3. **Scheduled synchronization:** decide whether full NewWave catalog sync
+    needs scheduled execution. It is not currently scheduled; product detail
+    pages only defer availability refreshes for stale products.
+4. **Production operations:** document and verify the production database,
+    queue worker, scheduler (if added), storage/media disks, mail, Stripe webhook
+    registration, monitoring, backups, and restore procedure. Confirm that the
+    deployment process runs migrations deliberately and that recovery is tested.
+5. **Performance baselines:** add workload-based query-count or load benchmarks
+    if operational traffic warrants them. Do not treat the absence of benchmark
+    suites as a failure of ordinary functional test coverage.
 
-The following test suites represent planned future additions or specialized edge cases:
+## 8. Snapshot caveats
 
-1. `UserAnonymizationServiceTest` (To be implemented when dedicated GDPR deletion & tax data anonymization service is built)
-2. `ProductCatalogLoadTimeBenchmarkTest` (Automated latency & load benchmarking)
-3. `DatabaseQueryPerformanceBenchmarkTest` (Automated query count / N+1 regression assertions under high data volume)
-
----
-
-## 🛠️ Development Workflow & Tooling
-
-1. **Environment**: Windows 11 Pro / PowerShell.
-2. **Quality & Sanity Tools**:
-   * **Pint** (`vendor/bin/pint`): Code styling and formatting (PSR-12).
-   * **Rector** (`vendor/bin/rector`): Automated refactoring and PHP/Laravel upgrades.
-   * **Larastan** (`vendor/bin/phpstan analyse`): Static analysis for type safety and bug detection.
-   * **Sloppy** (`vendor/bin/sloppy`): Architectural rule verification, god method/class detection, and code sanity inspection.
-   * **Sheath** (`php artisan sheath:lint`): Blade template analyzer by Forte.
-   * Shortcut command: `composer run format` to run formatting and static checks.
-3. **Git Workflow**: Pass tests ➔ Format Code ➔ Stage ➔ Commit ➔ Push to `master`. Pushing to the `production` branch automatically triggers the GitHub Action deployment pipeline.
+- Counts and package versions above are repository/runtime observations for the
+  snapshot date and will change as the project evolves.
+- A green local test or formatting run does not by itself prove production
+  readiness, deployment success, payment-provider configuration, legal
+  compliance, or recovery capability.
+- Update this document when routes, schema, deployment workflows, or major
+  customer workflows change. Prefer code, migrations, configuration, and
+  current test results over older prose when they disagree.
