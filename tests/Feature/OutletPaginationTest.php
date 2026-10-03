@@ -30,7 +30,9 @@ it('provides pagination to reach outlet products beyond the first twelve', funct
 
     $firstPage = get(route('outlet'));
 
-    $firstPage->assertSee('Outlet Product 1')->assertDontSee('Outlet Product 13')->assertSeeHtml('Vai alla pagina 2');
+    $firstPage->assertSee('Outlet Product 1')
+        ->assertDontSee('Outlet Product 13')
+        ->assertSeeHtml("wire:click=\"gotoPage(2, 'page')\"");
 
     $secondPage = get(route('outlet', ['page' => 2]));
 
