@@ -6,13 +6,68 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductVariationOption;
+use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class ProductVariationDisplayService
 {
+    /**
+     * @return array{display: Collection<int, VariationOption>, remaining: int, total: int}
+     */
+    public function getPreviewColors(Product $product, int $limit = 8): array
+    {
+        if ($product->relationLoaded('productVariationTypes')) {
+            $productVariationType = $product->productVariationTypes->firstWhere('has_images', true);
+            if (! $productVariationType) {
+                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+            }
+        } else {
+            $visualType = $product->variationTypes()
+                ->wherePivot('has_images', true)
+                ->first();
+            if (! $visualType) {
+                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+            }
+
+            $productVariationType = ProductVariationType::query()
+                ->where('product_id', $product->id)
+                ->where('variation_type_id', $visualType->id)
+                ->first();
+        }
+
+        if (! $productVariationType instanceof ProductVariationType) {
+            return ['display' => collect(), 'remaining' => 0, 'total' => 0];
+        }
+
+        if ($productVariationType->relationLoaded('options')) {
+            $options = $productVariationType->options
+                ->map(fn (ProductVariationOption $productVariationOption) => $productVariationOption->relationLoaded('option')
+                    ? $productVariationOption->option
+                    : null)
+                ->filter()
+                ->sortBy('sort_order')
+                ->values();
+        } else {
+            $productVariationTypeId = $productVariationType->id;
+            $options = VariationOption::query()
+                ->whereHas('productVariationOptions', function (Builder $query) use ($productVariationTypeId) {
+                    $query->where('product_variation_type_id', $productVariationTypeId);
+                })
+                ->orderBy('sort_order')
+                ->get();
+        }
+
+        return [
+            'display' => $options->take($limit),
+            'remaining' => max(0, $options->count() - $limit),
+            'total' => $options->count(),
+        ];
+    }
+
     public function getColorOptions(Product $product): string
     {
         $colorVariationTypes = $product->variationTypes()

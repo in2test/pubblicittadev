@@ -72,6 +72,7 @@
         "format": [
             "vendor/bin/rector",
             "vendor/bin/pint",
+            "vendor/bin/sloppy",
             "vendor/bin/phpstan analyse"
         ],
         "dev": [

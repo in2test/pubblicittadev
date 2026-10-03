@@ -349,14 +349,14 @@ class Order extends Model implements HasMedia
      */
     protected function decrementInventory(): void
     {
-        /** @var OrderItem[] $items */
+        /** @var Collection<int, OrderItem> $items */
         $items = $this->items;
 
         $allSkuIds = $items->flatMap(
-            fn (OrderItem $item): array => array_keys($item->customization_json['quantities'] ?? []),
+            fn (OrderItem $item): array => array_keys($this->quantitiesBySku($this->customizationConfiguration($item))),
         );
         $fallbackProductIds = $items
-            ->filter(fn (OrderItem $item): bool => empty($item->customization_json['quantities'] ?? []))
+            ->filter(fn (OrderItem $item): bool => $this->quantitiesBySku($this->customizationConfiguration($item)) === [])
             ->pluck('product_id');
 
         $skuMap = ProductSku::query()
@@ -368,12 +368,11 @@ class Order extends Model implements HasMedia
             ->keyBy('id');
 
         foreach ($items as $item) {
-            /** @var array{quantity?: int|string, quantities?: array<int|string, int|string>} $config */
-            $config = $item->customization_json;
+            $config = $this->customizationConfiguration($item);
             $productId = $item->product_id;
-            $quantities = $config['quantities'] ?? [];
+            $quantities = $this->quantitiesBySku($config);
 
-            if (empty($quantities)) {
+            if ($quantities === []) {
                 // Fallback nel caso di singola quantità (senza array quantities)
                 $skuMap->firstWhere('product_id', $productId)
                     ?->decrement('quantity', (int) ($config['quantity'] ?? 1));
@@ -386,6 +385,27 @@ class Order extends Model implements HasMedia
                 $skuMap->get((int) $skuId)?->decrement('quantity', (int) $qty);
             }
         }
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function customizationConfiguration(OrderItem $item): array
+    {
+        $configuration = $item->getAttribute('customization_json');
+
+        return is_array($configuration) ? $configuration : [];
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $configuration
+     * @return array<int|string, mixed>
+     */
+    private function quantitiesBySku(array $configuration): array
+    {
+        $quantities = $configuration['quantities'] ?? [];
+
+        return is_array($quantities) ? $quantities : [];
     }
 
     /**

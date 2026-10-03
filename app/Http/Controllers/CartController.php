@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\ProductClass;
+use App\Http\Requests\Cart\PriceCartRequest;
 use App\Http\Requests\Cart\StoreCartRequest;
 use App\Models\Product;
 use App\Services\CartManager;
@@ -171,19 +172,12 @@ class CartController extends Controller
      * or selects a new print placement). It instantly recalculates the total price, unit price,
      * and detects if a discount is currently active, returning the data as JSON to update the UI instantly.
      *
-     * @param  Request  $request  The incoming request containing product configuration parameters.
+     * @param  PriceCartRequest  $request  The validated product configuration parameters.
      * @return JsonResponse Returns JSON with unit_price, total_price, quantity, and discount_applied flag.
      */
-    public function price(Request $request): JsonResponse
+    public function price(PriceCartRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'width' => 'nullable|numeric|min:0.1',
-            'height' => 'nullable|numeric|min:0.1',
-            'selected_options' => 'nullable|array',
-            'quantities' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $product = Product::findOrFail((int) $validated['product_id']);
         $quantity = (int) $validated['quantity'];

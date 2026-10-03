@@ -98,6 +98,13 @@ it('delegates product variation display data while preserving its results', func
         ->and($previewColors['remaining'])->toBe(1)
         ->and($previewColors['total'])->toBe(2);
 
+    $product->load('productVariationTypes.options.option');
+    $loadedPreviewColors = $product->getPreviewColors(1);
+
+    expect($loadedPreviewColors['display']->pluck('name')->all())->toBe(['Bianco'])
+        ->and($loadedPreviewColors['remaining'])->toBe(1)
+        ->and($loadedPreviewColors['total'])->toBe(2);
+
     Image::create([
         'product_id' => $product->id,
         'image_url' => 'https://example.com/navy.jpg',
@@ -109,6 +116,28 @@ it('delegates product variation display data while preserving its results', func
 
     expect($selectedOption)->toBeInstanceOf(VariationOption::class)
         ->and($selectedOption->id)->toBe($navyOption->id);
+});
+
+it('resolves single and multi-colour variation option swatches', function () {
+    $singleColor = VariationOption::factory()->make([
+        'name' => 'Verde Bandiera',
+        'value' => null,
+        'color_hex' => null,
+    ]);
+    $multiColor = VariationOption::factory()->make([
+        'name' => 'Bianco/Navy',
+        'value' => null,
+        'color_hex' => null,
+    ]);
+    $customColor = VariationOption::factory()->make([
+        'name' => 'Custom',
+        'value' => null,
+        'color_hex' => '#123456',
+    ]);
+
+    expect($singleColor->getHexColors())->toBe(['#009246'])
+        ->and($multiColor->getHexColors())->toBe(['#ffffff', '#000080'])
+        ->and($customColor->getHexColors())->toBe(['#123456']);
 });
 
 it('delegates print sheet and billed area calculations', function () {

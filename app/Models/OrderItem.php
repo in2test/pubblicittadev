@@ -29,7 +29,7 @@ use Override;
  * @property int $quantity
  * @property float $unit_price
  * @property float $subtotal
- * @property array $customization_json
+ * @property array<string, mixed>|null $customization_json
  * @property-read Product $product
  * @property-read Order $order
  * @property string|null $work_status

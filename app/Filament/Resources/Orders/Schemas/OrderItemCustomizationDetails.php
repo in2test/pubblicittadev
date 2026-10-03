@@ -41,6 +41,9 @@ class OrderItemCustomizationDetails
         return new HtmlString($html.'</ul>');
     }
 
+    /**
+     * @param  array<string, mixed>  $optionsSummary
+     */
     private static function appendOptionsSummary(array $optionsSummary, string &$html): float
     {
         $thicknessMm = 0;
@@ -89,6 +92,9 @@ class OrderItemCustomizationDetails
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $json
+     */
     private static function appendQuantityBreakdown(array $json, string &$html, ?Product $product): void
     {
         $quantities = $json['quantities'] ?? [];
@@ -126,6 +132,9 @@ class OrderItemCustomizationDetails
         $html .= '</ul></li>';
     }
 
+    /**
+     * @param  array<string, mixed>  $json
+     */
     private static function appendItemNotes(array $json, string &$html): void
     {
         if (! empty($json['notes'])) {

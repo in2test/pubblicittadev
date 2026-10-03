@@ -208,6 +208,9 @@ class NewWaveProductForm
             ]);
     }
 
+    /**
+     * @param  array<int|string, string>  $colorOptions
+     */
     private static function galleryTab(array $colorOptions): Tab
     {
         return Tab::make('Galleria & Colori')

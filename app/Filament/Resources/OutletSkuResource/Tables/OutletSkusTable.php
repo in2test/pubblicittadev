@@ -14,11 +14,14 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -50,6 +53,9 @@ class OutletSkusTable
             ->bulkActions([]);
     }
 
+    /**
+     * @return array<int, Column>
+     */
     private static function columns(): array
     {
         return [
@@ -141,6 +147,9 @@ class OutletSkusTable
         return 'Da €'.number_format((float) $minPrice, 2, ',', '.').' a €'.number_format((float) $maxPrice, 2, ',', '.');
     }
 
+    /**
+     * @return array<int, BaseFilter>
+     */
     private static function filters(): array
     {
         return [
@@ -178,6 +187,9 @@ class OutletSkusTable
             ->action(fn (array $data, Product $record) => self::saveOutletSettings($data, $record));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private static function outletFormState(Product $record): array
     {
         $skus = $record->skus;
@@ -194,7 +206,7 @@ class OutletSkusTable
         $exposedVariants = [];
         if ($exposedTypes->isNotEmpty()) {
             $optionsByType = VariationOption::query()
-                ->whereIn('variation_type_id', $exposedTypes->modelKeys())
+                ->whereIn('variation_type_id', $exposedTypes->pluck('id'))
                 ->whereHas('skus', fn ($query) => $query->where('product_id', $record->id))
                 ->orderBy('sort_order')
                 ->get()
@@ -230,6 +242,9 @@ class OutletSkusTable
         ];
     }
 
+    /**
+     * @return array<int, Component>
+     */
     private static function outletForm(): array
     {
         return [
@@ -281,6 +296,9 @@ class OutletSkusTable
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private static function saveOutletSettings(array $data, Product $record): void
     {
         $productIsOutlet = (bool) ($data['product_is_outlet'] ?? false);

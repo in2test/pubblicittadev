@@ -236,6 +236,46 @@ class CartTest extends TestCase
         $response->assertViewIs('cart');
     }
 
+    public function test_price_endpoint_returns_calculated_product_prices(): void
+    {
+        $product = Product::factory()->create(['price' => 50]);
+
+        $response = $this->getJson(route('cart.price', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ]));
+
+        $response->assertSuccessful()
+            ->assertJsonStructure([
+                'unit_price',
+                'total_price',
+                'quantity',
+                'discount_applied',
+            ])
+            ->assertJsonPath('quantity', 2);
+    }
+
+    public function test_price_endpoint_validates_product_configuration(): void
+    {
+        $this->getJson(route('cart.price', [
+            'product_id' => 'invalid',
+            'quantity' => 0,
+            'width' => 0,
+            'height' => 'invalid',
+            'selected_options' => 'invalid',
+            'quantities' => 'invalid',
+        ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'product_id',
+                'quantity',
+                'width',
+                'height',
+                'selected_options',
+                'quantities',
+            ]);
+    }
+
     public function test_adding_same_product_creates_separate_jobs(): void
     {
         $product = Product::factory()->create(['price' => 50]);

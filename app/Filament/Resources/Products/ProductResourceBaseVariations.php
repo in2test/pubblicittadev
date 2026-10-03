@@ -7,12 +7,12 @@ namespace App\Filament\Resources\Products;
 use App\Enums\ModifierType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 
@@ -239,6 +239,9 @@ final class ProductResourceBaseVariations
         return "Default globale: {$option->default_price_modifier}{$symbol}";
     }
 
+    /**
+     * @param  array<string, mixed>  $state
+     */
     private static function variationTypeLabel(array $state): ?string
     {
         /** @var VariationType|null $type */

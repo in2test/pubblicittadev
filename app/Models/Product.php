@@ -11,6 +11,7 @@ use App\Concerns\HasProductVariationDisplay;
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
+use App\Services\ProductVariationDisplayService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -355,56 +356,11 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * @return array{display: Collection<int, VariationOption>, remaining: int, total: int}
+     * @return array{display: \Illuminate\Support\Collection<int, VariationOption>, remaining: int, total: int}
      */
     public function getPreviewColors(int $limit = 8): array
     {
-        if ($this->relationLoaded('productVariationTypes')) {
-            $productVariationType = $this->productVariationTypes->firstWhere('has_images', true);
-            if (! $productVariationType) {
-                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
-            }
-        } else {
-            $visualType = $this->variationTypes()
-                ->wherePivot('has_images', true)
-                ->first();
-            if (! $visualType) {
-                return ['display' => collect(), 'remaining' => 0, 'total' => 0];
-            }
-
-            $productVariationType = ProductVariationType::query()
-                ->where('product_id', $this->id)
-                ->where('variation_type_id', $visualType->id)
-                ->first();
-        }
-
-        if (! $productVariationType instanceof ProductVariationType) {
-            return ['display' => collect(), 'remaining' => 0, 'total' => 0];
-        }
-
-        if ($productVariationType->relationLoaded('options')) {
-            $options = $productVariationType->options
-                ->map(fn (ProductVariationOption $productVariationOption) => $productVariationOption->relationLoaded('option')
-                    ? $productVariationOption->option
-                    : null)
-                ->filter()
-                ->sortBy('sort_order')
-                ->values();
-        } else {
-            $productVariationTypeId = $productVariationType->id;
-            $options = VariationOption::query()
-                ->whereHas('productVariationOptions', function (Builder $query) use ($productVariationTypeId) {
-                    $query->where('product_variation_type_id', $productVariationTypeId);
-                })
-                ->orderBy('sort_order')
-                ->get();
-        }
-
-        return [
-            'display' => $options->take($limit),
-            'remaining' => max(0, $options->count() - $limit),
-            'total' => $options->count(),
-        ];
+        return app(ProductVariationDisplayService::class)->getPreviewColors($this, $limit);
     }
 
     /**
