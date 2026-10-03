@@ -60,8 +60,14 @@ class MarkOutletSkus extends Command
             }
 
             $skuIdsToUpdate = [];
+            $existingSkus = ProductSku::query()
+                ->where('product_id', $productId)
+                ->whereIn('sku', $skus)
+                ->get()
+                ->keyBy('sku');
+
             foreach ($skus as $skuStr) {
-                $existing = ProductSku::where('product_id', $productId)->where('sku', $skuStr)->first();
+                $existing = $existingSkus->get($skuStr);
                 if ($existing) {
                     $skuIdsToUpdate[] = $existing->id;
                 } else {

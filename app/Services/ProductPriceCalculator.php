@@ -18,6 +18,64 @@ class ProductPriceCalculator
     ) {}
 
     /**
+     * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
+     */
+    public function getSheetsNeeded(Product $product, float $width, float $height): array
+    {
+        $calculateSheets = function (float $itemWidth, float $itemHeight) use ($product): array {
+            $sheetWidth = $product->sheet_width ?: null;
+            $sheetHeight = $product->sheet_height ?: null;
+
+            $sheetsX = $sheetWidth ? (int) ceil($itemWidth / $sheetWidth) : 1;
+            $sheetsY = $sheetHeight ? (int) ceil($itemHeight / $sheetHeight) : 1;
+
+            return [
+                'sheets' => $sheetsX * $sheetsY,
+                'sheets_x' => $sheetsX,
+                'sheets_y' => $sheetsY,
+                'exceeds' => $sheetsX > 1 || $sheetsY > 1,
+            ];
+        };
+
+        $normal = $calculateSheets($width, $height);
+        $rotated = $calculateSheets($height, $width);
+
+        return $rotated['sheets'] < $normal['sheets'] ? $rotated : $normal;
+    }
+
+    public function calculateItemsPerSheet(Product $product, float $itemWidth, float $itemHeight): int
+    {
+        if (! $product->sheet_width || ! $product->sheet_height || $itemWidth <= 0 || $itemHeight <= 0) {
+            return 1;
+        }
+
+        $sheetWidth = (float) $product->sheet_width;
+        $sheetHeight = (float) $product->sheet_height;
+        $gap = 6.0;
+
+        $fitNormal = floor(($sheetWidth + $gap) / ($itemWidth + $gap))
+            * floor(($sheetHeight + $gap) / ($itemHeight + $gap));
+        $fitRotated = floor(($sheetWidth + $gap) / ($itemHeight + $gap))
+            * floor(($sheetHeight + $gap) / ($itemWidth + $gap));
+
+        return (int) max($fitNormal, $fitRotated);
+    }
+
+    public function calculateTotalBilledArea(Product $product, int $quantity, float $width, float $height): float
+    {
+        if ($quantity === 0 || $width <= 0 || $height <= 0) {
+            return 0.0;
+        }
+
+        $actualArea = ($width * $height) / 1000000.0 * $quantity;
+        $minimumArea = $product->min_area ? (float) $product->min_area : 0.0;
+
+        return $minimumArea > 0.0
+            ? ceil($actualArea / $minimumArea) * $minimumArea
+            : $actualArea;
+    }
+
+    /**
      * Calculates the total price for an entire job (cart item or product configuration).
      *
      * @param  array<int|string, int|float|string>  $skuQuantities

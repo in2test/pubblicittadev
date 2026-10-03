@@ -1,10 +1,12 @@
 <?php
 
+use App\Models\Image;
 use App\Models\Product;
 use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -57,4 +59,70 @@ it('resolves material and pattern from their linked variation options', function
 
     expect($product->material)->toBe('cotone')
         ->and($product->pattern)->toBe('righe');
+});
+
+it('delegates product variation display data while preserving its results', function () {
+    $product = Product::factory()->create();
+    $colorType = VariationType::factory()->create([
+        'name' => 'Colore',
+        'presentation_type' => 'color_swatch',
+    ]);
+    $productVariationType = ProductVariationType::create([
+        'product_id' => $product->id,
+        'variation_type_id' => $colorType->id,
+        'has_images' => true,
+        'is_modifier' => false,
+        'sort_order' => 0,
+    ]);
+
+    $whiteOption = VariationOption::factory()->create([
+        'variation_type_id' => $colorType->id,
+        'name' => 'Bianco',
+        'value' => 'white',
+        'sort_order' => 0,
+    ]);
+    $navyOption = VariationOption::factory()->create([
+        'variation_type_id' => $colorType->id,
+        'name' => 'Navy',
+        'value' => 'navy',
+        'sort_order' => 1,
+    ]);
+
+    $productVariationType->options()->create(['variation_option_id' => $whiteOption->id]);
+    $productVariationType->options()->create(['variation_option_id' => $navyOption->id]);
+
+    $previewColors = $product->getPreviewColors(1);
+
+    expect($product->getColorOptions())->toBe('Bianco, Navy')
+        ->and($previewColors['display']->pluck('name')->all())->toBe(['Bianco'])
+        ->and($previewColors['remaining'])->toBe(1)
+        ->and($previewColors['total'])->toBe(2);
+
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => 'https://example.com/navy.jpg',
+        'variation_option_id' => $navyOption->id,
+        'order_by' => 0,
+    ]);
+
+    $selectedOption = $product->getVariationOptionFromRequest(Request::create('/?colore=navy'));
+
+    expect($selectedOption)->toBeInstanceOf(VariationOption::class)
+        ->and($selectedOption->id)->toBe($navyOption->id);
+});
+
+it('delegates print sheet and billed area calculations', function () {
+    $product = Product::factory()->make([
+        'sheet_width' => 200,
+        'sheet_height' => 100,
+        'min_area' => 0.6,
+    ]);
+
+    expect($product->getSheetsNeeded(180, 220))->toBe([
+        'sheets' => 3,
+        'sheets_x' => 1,
+        'sheets_y' => 3,
+        'exceeds' => true,
+    ])->and($product->calculateItemsPerSheet(80, 40))->toBe(4)
+        ->and($product->calculateTotalBilledArea(2, 1000, 500))->toBe(1.2);
 });

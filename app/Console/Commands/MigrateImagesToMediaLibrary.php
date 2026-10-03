@@ -10,6 +10,7 @@ use App\Models\Product;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 
 #[Signature('app:migrate-images-to-media-library')]
 #[Description('Migrate existing images from Image model to Spatie Media Library')]
@@ -23,56 +24,64 @@ class MigrateImagesToMediaLibrary extends Command
         $this->info('Starting migration of images to media library...');
 
         // Migrate product images
-        $productImages = Image::whereNotNull('product_id', 'and')->get();
-        $this->info("Found {$productImages->count()} product images to migrate");
+        $productImageCount = Image::query()->whereNotNull('product_id')->count();
+        $this->info("Found {$productImageCount} product images to migrate");
+        Image::query()
+            ->with('product')
+            ->whereNotNull('product_id')
+            ->chunkById(500, function (Collection $productImages): void {
+                foreach ($productImages as $image) {
+                    /** @var Product|null $product */
+                    $product = $image->product;
+                    if (! $product) {
+                        $this->warn("Product {$image->product_id} not found, skipping image {$image->id}");
 
-        foreach ($productImages as $image) {
-            /** @var Product|null $product */
-            $product = Product::where('id', '=', $image->product_id, 'and')->first();
-            if (! $product) {
-                $this->warn("Product {$image->product_id} not found, skipping image {$image->id}");
+                        continue;
+                    }
 
-                continue;
-            }
+                    if ($image->image_path) {
+                        $product->addMedia(storage_path('app/public/'.$image->image_path))
+                            ->usingName($image->image_description ?? 'Product Image')
+                            ->toMediaCollection('images');
+                    } elseif ($image->image_url) {
+                        $product->addMediaFromUrl($image->image_url)
+                            ->usingName($image->image_description ?? 'Product Image')
+                            ->toMediaCollection('images');
+                    }
 
-            if ($image->image_path) {
-                $product->addMedia(storage_path('app/public/'.$image->image_path))
-                    ->usingName($image->image_description ?? 'Product Image')
-                    ->toMediaCollection('images');
-            } elseif ($image->image_url) {
-                $product->addMediaFromUrl($image->image_url)
-                    ->usingName($image->image_description ?? 'Product Image')
-                    ->toMediaCollection('images');
-            }
-
-            $this->line("Migrated product image {$image->id}");
-        }
+                    $this->line("Migrated product image {$image->id}");
+                }
+            });
 
         // Migrate category images
-        $categoryImages = Image::whereNotNull('category_id', 'and')->get();
-        $this->info("Found {$categoryImages->count()} category images to migrate");
+        $categoryImageCount = Image::query()->whereNotNull('category_id')->count();
+        $this->info("Found {$categoryImageCount} category images to migrate");
+        Image::query()
+            ->with('category')
+            ->whereNotNull('category_id')
+            ->chunkById(500, function (Collection $categoryImages): void {
+                foreach ($categoryImages as $image) {
+                    /** @var Category|null $category */
+                    $category = $image->category;
+                    if (! $category) {
+                        $this->warn("Category {$image->category_id} not found, skipping image {$image->id}");
 
-        foreach ($categoryImages as $image) {
-            /** @var Category|null $category */
-            $category = Category::where('id', '=', $image->category_id, 'and')->first();
-            if (! $category) {
-                $this->warn("Category {$image->category_id} not found, skipping image {$image->id}");
+                        continue;
+                    }
 
-                continue;
-            }
+                    if ($image->image_path) {
+                        $category->addMedia(storage_path('app/public/'.$image->image_path))
+                            ->usingName($image->image_description ?? 'Category Image')
+                            ->toMediaCollection('images');
+                    } elseif ($image->image_url) {
+                        $category->addMediaFromUrl($image->image_url)
+                            ->usingName($image->image_description ?? 'Category Image')
+                            ->toMediaCollection('images');
+                    }
 
-            if ($image->image_path) {
-                $category->addMedia(storage_path('app/public/'.$image->image_path))
-                    ->usingName($image->image_description ?? 'Category Image')
-                    ->toMediaCollection('images');
-            } elseif ($image->image_url) {
-                $category->addMediaFromUrl($image->image_url)
-                    ->usingName($image->image_description ?? 'Category Image')
-                    ->toMediaCollection('images');
-            }
-
-            $this->line("Migrated category image {$image->id}");
-        }
+                    $this->line("Migrated category image {$image->id}");
+                }
+            });
 
         $this->info('Migration completed! You can now drop the images table if desired.');
     }

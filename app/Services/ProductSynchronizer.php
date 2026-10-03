@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use Carbon\CarbonImmutable;
 
 class ProductSynchronizer
 {
@@ -59,20 +60,36 @@ class ProductSynchronizer
 
         // Pre-cache color options
         $colorOptionsCache = $colorType->options()->get()->keyBy('value');
-        if (! empty($data['variations'])) {
-            foreach ($data['variations'] as $variationData) {
-                $variationColorCode = (string) ($variationData['itemColorCode'] ?? '');
-                if ($variationColorCode !== '' && $variationColorCode !== '0' && ! $colorOptionsCache->has($variationColorCode)) {
-                    $variationColorName = is_array($variationData['itemWebColor'] ?? null)
-                        ? ($variationData['itemWebColor'][0] ?? '')
-                        : (string) ($variationData['itemWebColor'] ?? '');
+        $newColorOptions = [];
+        foreach ($data['variations'] ?? [] as $variationData) {
+            $variationColorCode = (string) ($variationData['itemColorCode'] ?? '');
+            if ($variationColorCode === '' || $variationColorCode === '0' || $colorOptionsCache->has($variationColorCode)) {
+                continue;
+            }
 
-                    $colorOptionsCache->put($variationColorCode, VariationOption::create([
-                        'variation_type_id' => $colorType->id,
-                        'name' => $variationColorName ?: 'Color '.$variationColorCode,
-                        'value' => $variationColorCode,
-                    ]));
-                }
+            $variationColorName = is_array($variationData['itemWebColor'] ?? null)
+                ? ($variationData['itemWebColor'][0] ?? '')
+                : (string) ($variationData['itemWebColor'] ?? '');
+
+            $newColorOptions[$variationColorCode] ??= [
+                'variation_type_id' => $colorType->id,
+                'name' => $variationColorName ?: 'Color '.$variationColorCode,
+                'value' => $variationColorCode,
+                'created_at' => CarbonImmutable::now(),
+                'updated_at' => CarbonImmutable::now(),
+            ];
+        }
+
+        if ($newColorOptions !== []) {
+            VariationOption::query()->insert(array_values($newColorOptions));
+            $insertedColorOptions = VariationOption::query()
+                ->where('variation_type_id', $colorType->id)
+                ->whereIn('value', array_keys($newColorOptions))
+                ->get()
+                ->keyBy('value');
+
+            foreach ($insertedColorOptions as $value => $colorOption) {
+                $colorOptionsCache->put($value, $colorOption);
             }
         }
 

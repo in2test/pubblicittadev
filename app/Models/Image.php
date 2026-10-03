@@ -254,7 +254,7 @@ class Image extends Model
             $resizedImage->resize($width, $height);
 
             $webpData = (string) $resizedImage->encode(
-                new FormatEncoder(Format::create('webp'), 80)
+                new FormatEncoder(Format::WEBP, 80)
             );
             $disk->put($variantPath, $webpData, 'public');
             $generatedPaths["{$variant}_path"] = $variantPath;

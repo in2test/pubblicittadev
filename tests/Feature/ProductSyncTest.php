@@ -44,13 +44,14 @@ it('synchronizes product data correctly from API', function () {
 
     $mockClient = Mockery::mock(NwgApiClient::class);
     $mockClient->shouldReceive('getFullProductData')
-        ->once()
+        ->twice()
         ->with('TEST-SKU')
         ->andReturn($apiData);
 
     // Swap the singleton in the container
     $this->app->instance(NwgApiClient::class, $mockClient);
 
+    app(ProductSynchronizer::class)->syncProduct($product);
     app(ProductSynchronizer::class)->syncProduct($product);
 
     $product->refresh();
@@ -70,6 +71,7 @@ it('synchronizes product data correctly from API', function () {
 
     expect($colorOption->value)->toBe('10');
     expect($sizeOption->value)->toBe('M');
+    expect($product->variationTypes)->toHaveCount(2);
 });
 
 it('does not update price if override_price is set', function () {

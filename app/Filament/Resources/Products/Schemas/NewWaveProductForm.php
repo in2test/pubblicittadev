@@ -39,7 +39,25 @@ class NewWaveProductForm
     {
         $colorOptions = VariationOption::pluck('name', 'id')->all();
 
-        $generalTab = Tab::make('Configurazione Generale')
+        $generalTab = self::generalTab();
+        $galleryTab = self::galleryTab($colorOptions);
+        $personalizationsTab = self::personalizationsTab();
+
+        return $schema
+            ->components([
+                Tabs::make('Prodotto NewWave')
+                    ->tabs([
+                        $generalTab,
+                        $galleryTab,
+                        $personalizationsTab,
+                    ])
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    private static function generalTab(): Tab
+    {
+        return Tab::make('Configurazione Generale')
             ->icon('heroicon-o-cog-6-tooth')
             ->schema([
                 Grid::make(3)
@@ -188,8 +206,11 @@ class NewWaveProductForm
                     ]),
 
             ]);
+    }
 
-        $galleryTab = Tab::make('Galleria & Colori')
+    private static function galleryTab(array $colorOptions): Tab
+    {
+        return Tab::make('Galleria & Colori')
             ->icon('heroicon-o-photo')
             ->schema([
                 Section::make('Caricamento / Cache Immagini')
@@ -272,22 +293,14 @@ class NewWaveProductForm
                     ]),
 
             ]);
+    }
 
-        $personalizationsTab = Tab::make('Personalizzazioni')
+    private static function personalizationsTab(): Tab
+    {
+        return Tab::make('Personalizzazioni')
             ->icon('heroicon-o-scissors')
             ->schema([
-                ProductForm::getModifiersRepeater(),
-            ]);
-
-        return $schema
-            ->components([
-                Tabs::make('Prodotto NewWave')
-                    ->tabs([
-                        $generalTab,
-                        $galleryTab,
-                        $personalizationsTab,
-                    ])
-                    ->columnSpanFull(),
+                ProductVariationFields::getModifiersRepeater(),
             ]);
     }
 }

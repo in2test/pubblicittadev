@@ -118,6 +118,35 @@ it('syncs remote image urls through the dedicated product media sync service', f
         ->exists())->toBeTrue();
 });
 
+it('updates an existing remote image record without creating a duplicate', function () {
+    $product = Product::factory()->create([
+        'type' => Product::TYPE_NEWWAVE,
+        'remote_images' => [
+            [
+                'url' => 'https://example.com/service-image.jpg',
+                'image_description' => 'Original description',
+            ],
+        ],
+    ]);
+
+    $service = app(ProductMediaSyncService::class);
+    $service->syncLocalMediaToImageRecords($product);
+    $image = Image::query()->where('product_id', $product->id)->firstOrFail();
+
+    $product->update([
+        'remote_images' => [
+            [
+                'url' => 'https://example.com/service-image.jpg',
+                'image_description' => 'Updated description',
+            ],
+        ],
+    ]);
+    $service->syncLocalMediaToImageRecords($product->fresh());
+
+    expect(Image::query()->where('product_id', $product->id)->count())->toBe(1)
+        ->and($image->fresh()->image_description)->toBe('Updated description');
+});
+
 it('can download a remote image url into the product media library', function () {
     Storage::fake('public');
     config(['media-library.media_downloader' => TestDownloader::class]);

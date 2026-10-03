@@ -7,7 +7,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 class QuantityDiscountService
 {
@@ -20,9 +20,6 @@ class QuantityDiscountService
     /** @var array<string, CategoryQuantityDiscount|null> */
     protected static array $discounts = [];
 
-    /** @var Collection<int, CategoryQuantityDiscount>|null */
-    protected static ?Collection $allDiscounts = null;
-
     /**
      * Clear the static request-level caches.
      */
@@ -31,7 +28,6 @@ class QuantityDiscountService
         self::$categories = [];
         self::$categoryPaths = [];
         self::$discounts = [];
-        self::$allDiscounts = null;
     }
 
     /**
@@ -40,17 +36,7 @@ class QuantityDiscountService
     protected function getCategoryById(int $id): ?Category
     {
         if (! array_key_exists($id, self::$categories)) {
-            if (self::$categories === []) {
-                // Load all categories into the static per-request cache to prevent N+1 queries
-                $all = Category::all();
-                foreach ($all as $cat) {
-                    self::$categories[$cat->id] = $cat;
-                }
-            }
-
-            if (! array_key_exists($id, self::$categories)) {
-                self::$categories[$id] = Category::find($id);
-            }
+            self::$categories[$id] = Category::find($id);
         }
 
         return self::$categories[$id];
@@ -77,23 +63,26 @@ class QuantityDiscountService
         }
 
         $path = $this->buildCategoryPath($categoryId);
+        $uncachedCategoryIds = collect($path)
+            ->filter(fn (int $catId): bool => ! array_key_exists("{$catId}-{$quantity}", self::$discounts))
+            ->values();
+
+        if ($uncachedCategoryIds->isNotEmpty()) {
+            $discountsByCategory = CategoryQuantityDiscount::query()
+                ->whereIn('category_id', $uncachedCategoryIds)
+                ->where('min_quantity', '<=', $quantity)
+                ->orderByDesc('min_quantity')
+                ->orderByDesc('discount_value')
+                ->get()
+                ->groupBy('category_id');
+
+            foreach ($uncachedCategoryIds as $catId) {
+                self::$discounts["{$catId}-{$quantity}"] = $discountsByCategory->get($catId)?->first();
+            }
+        }
 
         foreach ($path as $catId) {
             $cacheKey = "{$catId}-{$quantity}";
-            if (! array_key_exists($cacheKey, self::$discounts)) {
-                if (! self::$allDiscounts instanceof Collection) {
-                    self::$allDiscounts = CategoryQuantityDiscount::all();
-                }
-
-                self::$discounts[$cacheKey] = self::$allDiscounts
-                    ->filter(fn ($d) => $d->category_id === $catId && $d->min_quantity <= $quantity)
-                    ->sortBy([
-                        ['min_quantity', 'desc'],
-                        ['discount_value', 'desc'],
-                    ])
-                    ->first();
-            }
-
             $discount = self::$discounts[$cacheKey];
             if ($discount) {
                 return $discount;
@@ -111,6 +100,23 @@ class QuantityDiscountService
     public function getCategoryPathIds(int $categoryId): array
     {
         return $this->buildCategoryPath($categoryId);
+    }
+
+    /**
+     * @return Collection<int, CategoryQuantityDiscount>
+     */
+    public function getQuantityDiscountsForProduct(Product $product): Collection
+    {
+        if (! $product->category_id) {
+            return collect();
+        }
+
+        $categoryIds = $this->getCategoryPathIds($product->category_id);
+
+        return CategoryQuantityDiscount::whereIn('category_id', $categoryIds, 'and', false)
+            ->where('min_quantity', '>', 1)
+            ->orderBy('min_quantity', 'asc')
+            ->get();
     }
 
     /**

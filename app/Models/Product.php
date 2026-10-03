@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Concerns\HasProductGallery;
+use App\Concerns\HasProductOutletPricing;
+use App\Concerns\HasProductPricing;
+use App\Concerns\HasProductVariationDisplay;
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
-use App\Services\ProductGalleryService;
-use App\Services\ProductMediaSyncService;
-use App\Services\ProductPriceCalculator;
-use App\Services\ProductPricingService;
-use App\Services\ProductStartingPriceService;
-use App\Services\ProductVariantResolver;
-use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -21,15 +18,13 @@ use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -68,17 +63,17 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property float|null $pricing_tiers_min_price_per_unit
  * @property int|null $pricing_tiers_min_quantity
  * @property-read Category $category
- * @property-read \Illuminate\Database\Eloquent\Collection<int, VariationType> $variationTypes
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductSku> $skus
+ * @property-read Collection<int, VariationType> $variationTypes
+ * @property-read Collection<int, ProductSku> $skus
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Image> $images
+ * @property-read Collection<int, Image> $images
  * @property-read int|null $images_count
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PricingTier> $pricingTiers
+ * @property-read Collection<int, PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
  * @property-read int|null $skus_count
  * @property-read ProductVariationType|null $pivot
@@ -178,28 +173,12 @@ class Product extends Model implements HasMedia
      */
     use HasFactory;
 
+    use HasProductGallery;
+    use HasProductOutletPricing;
+    use HasProductPricing;
+    use HasProductVariationDisplay;
     use InteractsWithMedia;
     use Searchable;
-
-    /** @var Collection<int, CategoryQuantityDiscount>|null */
-    private ?Collection $quantityDiscountsCache = null;
-
-    /** @var array<string, float|null> */
-    private array $priceCache = [];
-
-    /** @var array<string, float|null> */
-    private array $tierPriceCache = [];
-
-    /** @var array<string, float> */
-    private array $outletPriceCache = []; // Grouped by variation type:option_id -> price
-
-    /**
-     * Flush outlet price cache - called when product pricing changes.
-     */
-    public function flushOutletPriceCache(): void
-    {
-        $this->outletPriceCache = [];
-    }
 
     public const TYPE_STANDARD = 'standard';
 
@@ -306,39 +285,6 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Get a string of **all** color options for the product, comma‑separated.
-     * This method retrieves every defined colour variation option.
-     */
-    public function getColorOptions(): string
-    {
-        // 1. Retrieve all variation types associated with this product that either:
-        //    - Have a presentation_type of 'color_swatch'
-        //    - Contain the word 'color' in their name
-        //    - Or have the 'has_images' pivot column flag set to true (carrying variation images)
-        $colorVariationTypes = $this->variationTypes()
-            ->where(function ($query) {
-                $query->where('presentation_type', 'color_swatch')
-                    ->orWhere('name', 'like', '%color%');
-            })
-            ->orWherePivot('has_images', true)
-            ->with('options')
-            ->get();
-
-        // 2. Extract the associated variation option records, grab their names,
-        //    filter down to unique names, sort them alphabetically, and format as a comma-separated list.
-        $colorNames = $colorVariationTypes
-            ->pluck('options')
-            // Flatten nested collections of options into a single collection of VariationOption models
-            ->flatten()
-            ->pluck('name')
-            ->unique()
-            ->sort()
-            ->join(', ');
-
-        return $colorNames ?? '';
-    }
-
-    /**
      * Get the brand of the product based on its name.
      *
      * @return Attribute<string, never>
@@ -400,131 +346,15 @@ class Product extends Model implements HasMedia
      */
 
     /**
-     * Resolve selected variation option from HTTP request query parameters.
-     * Checks variation types matching query parameters (e.g. ?colore=96 or ?colore=blu-navy).
-     *
-     * @param  Request|null  $request  Optional HTTP request object (defaults to current request)
-     * @return VariationOption|null The matched variation option with images, or null if none found.
+     * Get the Filament admin edit URL for this product
      */
-    public function getVariationOptionFromRequest(?Request $request = null): ?VariationOption
+    public function getAdminEditUrl(): string
     {
-        $request ??= request();
-
-        if (empty($request->query())) {
-            return null;
-        }
-
-        $this->loadMissing([
-            'variationTypes',
-            'productVariationTypes.options.option',
-        ]);
-
-        foreach ($this->variationTypes as $type) {
-            $slug = Str::slug($type->name);
-            $val = $request->query($slug) ?? $request->query($type->name) ?? $request->query(strtolower($type->name));
-            if ($val === null) {
-                continue;
-            }
-            if ($val === '') {
-                continue;
-            }
-
-            $pvt = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-
-            if (! $pvt) {
-                continue;
-            }
-
-            $options = $pvt->options
-                ->map(fn (ProductVariationOption $pvo) => $pvo->relationLoaded('option') ? $pvo->option : $pvo->option()->first())
-                ->filter();
-
-            $valStr = (string) $val;
-            $matchedOption = $options->first(fn (VariationOption $opt) => (string) $opt->id === $valStr
-                || (string) $opt->value === $valStr
-                || (string) $opt->name === $valStr
-                || Str::slug((string) $opt->name) === Str::slug($valStr)
-                || Str::slug((string) $opt->value) === Str::slug($valStr));
-
-            if ($matchedOption) {
-                $images = $this->getImagesForOption($matchedOption->id);
-                if ($images->isNotEmpty()) {
-                    return $matchedOption;
-                }
-            }
-        }
-
-        return null;
+        // Keep URL generation outside the model so Filament routing does not become a model concern.
+        return app(ProductAdminUrlService::class)->resolve($this);
     }
 
     /**
-     * Get the first available image (thumbnail), optionally taking a variation option ID or request into account.
-     */
-    public function getFirstImage(?int $variationOptionId = null): ?object
-    {
-        return app(ProductGalleryService::class)->getFirstImage($this, $variationOptionId);
-    }
-
-    /**
-     * Get the URL of the first available image.
-     *
-     * @param  string  $conversion  The image conversion to use (e.g., 'medium', 'thumbnail', 'large')
-     * @param  int|null  $variationOptionId  Optional variation option ID override
-     * @return string The URL
-     */
-    public function getFirstImageUrl(string $conversion = 'medium', ?int $variationOptionId = null): string
-    {
-        return app(ProductGalleryService::class)->getFirstImageUrl($this, $conversion, $variationOptionId);
-    }
-
-    /**
-     * Get the material attribute value from linked variation option.
-     *
-     * @return Attribute<string|null, never>
-     */
-    protected function material(): Attribute
-    {
-        return Attribute::make(get: fn (): ?string => $this->getVariationAttributeValue(VariationType::MATERIALE));
-    }
-
-    /**
-     * Get the pattern (motivo) attribute value from linked variation option.
-     *
-     * @return Attribute<string|null, never>
-     */
-    protected function pattern(): Attribute
-    {
-        return Attribute::make(get: fn (): ?string => $this->getVariationAttributeValue(VariationType::MOTIVO));
-    }
-
-    private function getVariationAttributeValue(string $variationTypeName): ?string
-    {
-        $type = $this->variationTypes->firstWhere('name', $variationTypeName);
-        if (! $type) {
-            return null;
-        }
-
-        $productVariationType = $this->productVariationTypes->firstWhere('variation_type_id', $type->id);
-        if (! $productVariationType) {
-            return null;
-        }
-
-        return $productVariationType->options()->first()?->option?->value;
-    }
-
-    /**
-     * Get the thumbnail URL for the product.
-     *
-     * @return string|null The thumbnail URL, or null if no image exists.
-     */
-    public function getThumbnailUrl(): ?string
-    {
-        return app(ProductGalleryService::class)->getThumbnailUrl($this);
-    }
-
-    /**
-     * Get a list of unique options for the visual variation (e.g., Color) for preview
-     *
      * @return array{display: Collection<int, VariationOption>, remaining: int, total: int}
      */
     public function getPreviewColors(int $limit = 8): array
@@ -535,7 +365,6 @@ class Product extends Model implements HasMedia
                 return ['display' => collect(), 'remaining' => 0, 'total' => 0];
             }
         } else {
-            // Safely load variation types without triggering lazy loading
             $visualType = $this->variationTypes()
                 ->wherePivot('has_images', true)
                 ->first();
@@ -543,8 +372,8 @@ class Product extends Model implements HasMedia
                 return ['display' => collect(), 'remaining' => 0, 'total' => 0];
             }
 
-            // Get all options associated with this product's visual type
-            $productVariationType = ProductVariationType::where('product_id', $this->id)
+            $productVariationType = ProductVariationType::query()
+                ->where('product_id', $this->id)
                 ->where('variation_type_id', $visualType->id)
                 ->first();
         }
@@ -555,15 +384,20 @@ class Product extends Model implements HasMedia
 
         if ($productVariationType->relationLoaded('options')) {
             $options = $productVariationType->options
-                ->map(fn (ProductVariationOption $pvo) => $pvo->relationLoaded('option') ? $pvo->option : null)
+                ->map(fn (ProductVariationOption $productVariationOption) => $productVariationOption->relationLoaded('option')
+                    ? $productVariationOption->option
+                    : null)
                 ->filter()
                 ->sortBy('sort_order')
                 ->values();
         } else {
             $productVariationTypeId = $productVariationType->id;
-            $options = VariationOption::whereHas('productVariationOptions', function ($query) use ($productVariationTypeId) {
-                $query->where('product_variation_type_id', $productVariationTypeId);
-            })->orderBy('sort_order')->get();
+            $options = VariationOption::query()
+                ->whereHas('productVariationOptions', function (Builder $query) use ($productVariationTypeId) {
+                    $query->where('product_variation_type_id', $productVariationTypeId);
+                })
+                ->orderBy('sort_order')
+                ->get();
         }
 
         return [
@@ -571,438 +405,6 @@ class Product extends Model implements HasMedia
             'remaining' => max(0, $options->count() - $limit),
             'total' => $options->count(),
         ];
-    }
-
-    /**
-     * Get display price data including discounts
-     *
-     * @return array{price: float, base_price: float, is_discounted: bool, on_request: bool}
-     */
-    public function getDisplayPriceData(int $quantity = 1): array
-    {
-        $discountedPrice = $this->getPriceForQuantity($quantity);
-        $basePrice = (float) $this->price;
-
-        return [
-            'price' => $discountedPrice,
-            'base_price' => $basePrice,
-            'is_discounted' => ($discountedPrice > 0 && $discountedPrice < $basePrice),
-            'on_request' => ($basePrice <= 0 && $discountedPrice <= 0),
-        ];
-    }
-
-    /**
-     * Get images for a specific variation option (e.g. a color), or generic images if no option is given.
-     * Much more efficient than getAllImages() when only one color's images are needed.
-     *
-     * @param  int|null  $variationOptionId  The variation option ID to filter by (null = generic images)
-     * @return Collection<int, object>
-     */
-    public function getImagesForOption(?int $variationOptionId): Collection
-    {
-        return app(ProductGalleryService::class)->getImagesForOption($this, $variationOptionId);
-    }
-
-    /**
-     * Get all images for the product, both local and remote.
-     * Prioritizes local images, then remote images from the 'images' table.
-     *
-     * @return Collection<int, object>
-     */
-    public function getAllImages(): Collection
-    {
-        return app(ProductGalleryService::class)->getAllImages($this);
-    }
-
-    /**
-     * Synchronize local media and remote_images JSON with remote image records in the database.
-     */
-    public function syncLocalMediaToImageRecords(): void
-    {
-        // Keep this legacy model API as a compatibility wrapper while the workflow lives in a service.
-        app(ProductMediaSyncService::class)->syncLocalMediaToImageRecords($this);
-    }
-
-    /**
-     * Get the Filament admin edit URL for this product
-     */
-    public function getAdminEditUrl(): string
-    {
-        // Keep URL generation outside the model so Filament routing does not become a model concern.
-        return app(ProductAdminUrlService::class)->resolve($this);
-    }
-
-    /**
-     * Calculates the price for a given quantity, optionally including a specific SKU.
-     * If an offer price is active, the offer price is returned regardless of quantity.
-     *
-     * @param  int  $quantity  The quantity to price
-     * @param  ProductSku|null  $sku  The specific SKU to price (optional)
-     * @return float The calculated price per unit
-     */
-    public function getPriceForQuantity(int $quantity = 1, ?ProductSku $sku = null): float
-    {
-        $cacheKey = $quantity.'_'.($sku->id ?? 'null');
-        if (array_key_exists($cacheKey, $this->priceCache)) {
-            return (float) $this->priceCache[$cacheKey];
-        }
-
-        $price = app(ProductPricingService::class)->getPriceForQuantity($this, $quantity, $sku);
-
-        return $this->priceCache[$cacheKey] = $price;
-    }
-
-    /**
-     * Retrieves the tier price based on quantity and optional SKU.
-     *
-     * Priority:
-     * 1. SKU-specific tier for the given quantity
-     * 2. Global product tier for the given quantity
-     * 3. Minimum unit price among all specific SKU tiers for the given quantity (if global is missing)
-     * 4. Minimum tier unit price across the product (if no quantity matches, and price is <=0 or custom size allowed)
-     *
-     * @param  int  $quantity  The requested quantity
-     * @param  ProductSku|null  $sku  The specific SKU (optional)
-     * @return float|null The tier price per unit, or null if no tier is found
-     */
-    public function getTierPrice(int $quantity, ?ProductSku $sku = null): ?float
-    {
-        $cacheKey = $quantity.'_'.($sku->id ?? 'null');
-        if (array_key_exists($cacheKey, $this->tierPriceCache)) {
-            return $this->tierPriceCache[$cacheKey];
-        }
-
-        $tierPrice = app(ProductPricingService::class)->getTierPrice($this, $quantity, $sku);
-
-        return $this->tierPriceCache[$cacheKey] = $tierPrice;
-    }
-
-    /**
-     * Calculates how many physical sheets are needed for the given dimensions.
-     *
-     * Tests both original and 90-degree rotated orientations to find the one that
-     * requires the fewest sheets. If max_width or max_height is null, that axis is
-     * considered unlimited. This calculation is purely informational for the customer
-     * and does not affect pricing.
-     *
-     * @param  float  $width  Item width in mm
-     * @param  float  $height  Item height in mm
-     * @return array{sheets: int, sheets_x: int, sheets_y: int, exceeds: bool}
-     */
-    public function getSheetsNeeded(float $width, float $height): array
-    {
-        $calc = function (float $w, float $h): array {
-            // Both item size ($w, $h) and sheet size (sheet_width, sheet_height) are in mm.
-            $sheetW = $this->sheet_width ?: null;
-            $sheetH = $this->sheet_height ?: null;
-
-            $sheetsX = $sheetW ? (int) ceil($w / $sheetW) : 1;
-            $sheetsY = $sheetH ? (int) ceil($h / $sheetH) : 1;
-
-            return [
-                'sheets' => $sheetsX * $sheetsY,
-                'sheets_x' => $sheetsX,
-                'sheets_y' => $sheetsY,
-                'exceeds' => $sheetsX > 1 || $sheetsY > 1,
-            ];
-        };
-
-        $normal = $calc($width, $height);
-        $rotated = $calc($height, $width); // Rotazione di 90°
-
-        // Preferisce l'orientamento che richiede meno fogli in totale.
-        return $rotated['sheets'] < $normal['sheets'] ? $rotated : $normal;
-    }
-
-    /**
-     * Calculates how many items of a given size can fit on a single print sheet.
-     * Uses the configured sheet_width and sheet_height for the product.
-     *
-     * Tests both normal and 90-degree rotated orientations to maximize yield.
-     * Includes a fixed 6mm gap between items for cutting margins.
-     *
-     * @param  float  $itemWidth  Item width in mm
-     * @param  float  $itemHeight  Item height in mm
-     * @return int The maximum number of items that fit on a single sheet
-     */
-    public function calculateItemsPerSheet(float $itemWidth, float $itemHeight): int
-    {
-        if (! $this->sheet_width || ! $this->sheet_height || $itemWidth <= 0 || $itemHeight <= 0) {
-            return 1;
-        }
-
-        $w = (float) $this->sheet_width;
-        $h = (float) $this->sheet_height;
-        $gap = 6.0; // Margine/spaziatura tra gli elementi da stampare
-
-        // Elementi che entrano in orientamento normale
-        $fitNormal = floor(($w + $gap) / ($itemWidth + $gap)) * floor(($h + $gap) / ($itemHeight + $gap));
-        // Elementi che entrano ruotandoli di 90 gradi
-        $fitRotated = floor(($w + $gap) / ($itemHeight + $gap)) * floor(($h + $gap) / ($itemWidth + $gap));
-
-        return (int) max($fitNormal, $fitRotated);
-    }
-
-    /**
-     * Calculates the total billed area (in square meters) for the given quantity and dimensions.
-     * If the product has a min_area configured, the actual area is rounded up to the nearest
-     * multiple of min_area before returning.
-     *
-     * @param  int  $quantity  Number of items
-     * @param  float  $width  Physical width of the item in MILLIMETERS (mm)
-     * @param  float  $height  Physical height of the item in MILLIMETERS (mm)
-     * @return float The total calculated area in square meters (sqm), rounded to min_area if applicable.
-     */
-    public function calculateTotalBilledArea(int $quantity, float $width, float $height): float
-    {
-        if ($quantity === 0 || $width <= 0 || $height <= 0) {
-            return 0.0;
-        }
-
-        // Gli input sono in MM. (width * height) fornisce i millimetri quadrati.
-        // Per ottenere i metri quadrati, dividiamo per 1.000.000.
-        $actualArea = ($width * $height) / 1000000.0 * $quantity;
-        $minArea = $this->min_area ? (float) $this->min_area : 0.0;
-
-        // Se c'è un'area minima, arrotonda l'area effettiva al multiplo superiore dell'area minima (ceiling).
-        return $minArea > 0.0
-            ? ceil($actualArea / $minArea) * $minArea
-            : $actualArea;
-    }
-
-    /**
-     * Get the active SKU based on selected options.
-     *
-     * Iterates through all the product's SKUs to find the one that matches all the non-modifier
-     * variation type options provided in $selectedOptions.
-     *
-     * @param  array<int, int|array<int>>  $selectedOptions  Map of variation_type_id => variation_option_id(s)
-     * @return ProductSku|null The matching SKU, or null if no exact match is found.
-     */
-    public function getActiveSku(array $selectedOptions): ?ProductSku
-    {
-        return app(ProductVariantResolver::class)->getActiveSku($this, $selectedOptions);
-    }
-
-    /**
-     * Get outlet prices grouped by variation option (e.g., each color/size combination).
-     * Only returns options that have at least one outlet SKU with a valid price.
-     *
-     * @return array<string, float> Maps variation_type_id => min outlet price for that option type
-     */
-    public function getOutletPricesPerOption(): array
-    {
-        $outletSkuWithPrice = $this->skus()
-            ->where('is_outlet', true)
-            ->whereNotNull('override_price')
-            ->where('override_price', '>', 0)
-            ->with('options')
-            ->get();
-
-        if ($outletSkuWithPrice->isEmpty()) {
-            return [];
-        }
-
-        /** @var ProductSku $sku */
-        foreach ($outletSkuWithPrice as $sku) {
-            // For each outlet SKU, find its primary variation option (usually the visual one like Color)
-            // and use that as the key. We only care about options that have images (the main selectors).
-            foreach ($sku->options as $optionRelation) {
-                /** @var ProductVariationOption|null $optionRelation */
-                $option = $optionRelation->option ?? null;
-
-                if (! $option) {
-                    continue;
-                }
-
-                // Key by the option type name and ID for unique grouping
-                // This groups prices by variation type (e.g., Color: Rosso, Size: XL)
-                $key = $option->type.':'.$option->id;
-
-                // Return minimum outlet price for each option group
-                if (! isset($this->outletPriceCache[$key]) ||
-                    $sku->override_price < $this->outletPriceCache[$key]) {
-                    $this->outletPriceCache[$key] = (float) $sku->override_price;
-                }
-            }
-        }
-
-        return $this->outletPriceCache;
-    }
-
-    /**
-     * Get the minimum outlet price among all available outlet variations.
-     * Used for displaying "a partire da" on product cards.
-     *
-     * @return float The minimum outlet unit price, or 0 if no outlet SKUs exist.
-     */
-    public function getMinimumOutletPrice(): float
-    {
-        $minPrice = $this->skus()
-            ->where('is_outlet', true)
-            ->whereNotNull('override_price')
-            ->where('override_price', '>', 0)
-            ->min('override_price');
-
-        return $minPrice > 0 ? (float) $minPrice : 0.0;
-    }
-
-    /**
-     * Check if the product has at least one outlet SKU with a valid price.
-     *
-     * @return bool True if there are outlet SKUs with positive override_price.
-     */
-    public function hasValidOutletPrice(): bool
-    {
-        return $this->skus()
-            ->where('is_outlet', true)
-            ->whereNotNull('override_price')
-            ->where('override_price', '>', 0)
-            ->exists();
-    }
-
-    /**
-     * Calculates the total price for an entire job (cart item or product configuration).
-     *
-     * This is the main pricing engine of the platform. It handles all 3 pricing models:
-     * 1. Area-based: Calculates the total billed area (respecting minimum area per piece) and multiplies by the price per sqm.
-     * 2. Quantity-based: Finds the exact price tier based on quantity and selected print side.
-     * 3. Fixed: Uses a standard unit price regardless of quantity.
-     *
-     * It also aggregates any additional costs from selected print placements (e.g., Front, Back)
-     * and correctly applies variant-specific (SKU) price overrides if present.
-     *
-     * @param  int  $totalQuantity  Total quantity of items for this job.
-     * @param  array<int, int>  $skuQuantities  Map of SKU ID -> quantity (e.g., [12 => 5, 13 => 10]) for variant breakdown.
-     * @param  float|null  $width  Physical width in CENTIMETERS (required if pricing_model is 'area').
-     * @param  float|null  $height  Physical height in CENTIMETERS (required if pricing_model is 'area').
-     * @param  array<int, int|array<int>>  $selectedOptions  IDs of variation options used to determine the active SKU.
-     * @return float The final total price, formatted and ready.
-     */
-    public function calculateTotalPrice(
-        int $totalQuantity,
-        array $skuQuantities = [],
-        ?float $width = null,
-        ?float $height = null,
-        array $selectedOptions = []
-    ): float {
-        return app(ProductPriceCalculator::class)->calculateTotalPrice(
-            $this,
-            $totalQuantity,
-            $skuQuantities,
-            $width,
-            $height,
-            $selectedOptions,
-        );
-    }
-
-    /**
-     * Finds the nearest existing format option ID for the provided custom dimensions.
-     * Uses Euclidean distance to find the closest match.
-     *
-     * @param  float  $width  Custom width in mm
-     * @param  float  $height  Custom height in mm
-     * @return int|null The ID of the nearest format option, or null if none found
-     */
-    public function getNearestFormatOptionId(float $width, float $height): ?int
-    {
-        return app(ProductVariantResolver::class)->getNearestFormatOptionId($this, $width, $height);
-    }
-
-    /**
-     * Applies the surcharge from price modifiers (percentage or flat per-unit).
-     * Uses a two-level fallback: product-level override → global default on VariationOption.
-     *
-     * @param  array<int, int|array<int>>  $selectedOptions
-     */
-    public function applyModifiersToTotal(float $total, int $totalQuantity, array $selectedOptions): float
-    {
-        return app(ProductPriceCalculator::class)->applyModifiersToTotal($this, $total, $totalQuantity, $selectedOptions);
-    }
-
-    /**
-     * Calculates the unit price for a single quantity.
-     * Useful for estimations and displaying "price per unit" for fixed or quantity-based models.
-     *
-     * @param  int  $quantity  Target quantity
-     * @param  float|null  $width  Item width (required for area-based model)
-     * @param  float|null  $height  Item height (required for area-based model)
-     * @param  ProductSku|null  $sku  Specific SKU (optional)
-     * @return float The calculated final unit price
-     */
-    public function calculateFinalUnitPrice(int $quantity, ?float $width = null, ?float $height = null, ?ProductSku $sku = null): float
-    {
-        return app(ProductPriceCalculator::class)->calculateFinalUnitPrice($this, $quantity, $width, $height, $sku);
-    }
-
-    /**
-     * Returns the Minimum Order Quantity (MOQ) for this product.
-     * Based on the pricing tiers configuration. Area based products always return 1.
-     *
-     * @return int The minimum order quantity
-     */
-    public function getMinimumOrderQuantity(): int
-    {
-        return app(ProductStartingPriceService::class)->getMinimumOrderQuantity($this);
-    }
-
-    /**
-     * Returns the lowest possible total price for a new order of this product.
-     *
-     * @return float The starting absolute price
-     */
-    public function getStartingPrice(bool $isOutlet = false): float
-    {
-        return app(ProductStartingPriceService::class)->getStartingPrice($this, $isOutlet);
-    }
-
-    /**
-     * Calculates the absolute minimum total price a customer could pay for an order.
-     * Considers minimum area constraints, custom formats, and minimum order quantities (MOQ).
-     *
-     * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
-     * @return float The absolute minimum total price
-     */
-    public function getAbsoluteMinimumPrice(bool $skipCache = false, bool $isOutlet = false): float
-    {
-        return app(ProductStartingPriceService::class)->getAbsoluteMinimumPrice($this, $skipCache, $isOutlet);
-    }
-
-    /**
-     * Retrieves the lowest possible unit price for a new order.
-     * Useful for displaying "Starting from $X / piece" or "Starting from $X / sqm" in catalogs.
-     *
-     * @param  bool  $skipCache  If true, ignores the cached value and forces recalculation
-     * @return float The starting unit price
-     */
-    public function getStartingUnitPrice(bool $skipCache = false, bool $isOutlet = false): float
-    {
-        return app(ProductStartingPriceService::class)->getStartingUnitPrice($this, $skipCache, $isOutlet);
-    }
-
-    /**
-     * Get applicable quantity discounts for this product, including those
-     * from its category and all parent categories.
-     *
-     * @return Collection<int, CategoryQuantityDiscount>
-     */
-    public function getQuantityDiscounts(): Collection
-    {
-        if ($this->quantityDiscountsCache instanceof Collection) {
-            return $this->quantityDiscountsCache;
-        }
-
-        if (! $this->category_id) {
-            return $this->quantityDiscountsCache = collect();
-        }
-
-        $service = app(QuantityDiscountService::class);
-        $categoryIds = $service->getCategoryPathIds($this->category_id);
-
-        return $this->quantityDiscountsCache = CategoryQuantityDiscount::whereIn('category_id', $categoryIds, 'and', false)
-            ->where('min_quantity', '>', 1)
-            ->orderBy('min_quantity', 'asc')
-            ->get();
     }
 
     /**
@@ -1097,15 +499,6 @@ class Product extends Model implements HasMedia
         return $query->whereHas('skus', function (Builder $q) {
             $q->where('is_outlet', true);
         });
-    }
-
-    /**
-     * Recalculates and saves the cached starting prices to the database.
-     * Should be called after modifying the product, its pricing tiers, or its variants.
-     */
-    public function updateCachedPrices(): void
-    {
-        app(ProductStartingPriceService::class)->updateCachedPrices($this);
     }
 
     protected function casts(): array

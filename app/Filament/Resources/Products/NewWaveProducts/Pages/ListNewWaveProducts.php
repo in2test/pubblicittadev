@@ -9,11 +9,10 @@ use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductVariationOption;
-use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use App\Services\ProductAvailabilityService;
+use App\Services\ProductVariationTypeSynchronizer;
 use App\Support\SlugGenerator;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -133,9 +132,13 @@ class ListNewWaveProducts extends ListRecords
     {
         $imported = 0;
         $errors = [];
+        $existingSkus = Product::query()
+            ->whereIn('sku', array_keys($validSkus))
+            ->pluck('sku')
+            ->flip();
 
         foreach ($validSkus as $sku => $info) {
-            if (Product::where('sku', $sku)->exists()) {
+            if ($existingSkus->has($sku)) {
                 continue;
             }
 
@@ -143,6 +146,7 @@ class ListNewWaveProducts extends ListRecords
                 $product = $this->createProduct($sku, $info, $data);
                 SyncNewWaveProductJob::dispatch($product->id);
                 $imported++;
+                $existingSkus->put($sku, true);
             } catch (Throwable $exception) {
                 $errors[] = $sku.': '.$exception->getMessage();
             }
@@ -168,49 +172,9 @@ class ListNewWaveProducts extends ListRecords
             'is_active' => false,
         ]);
 
-        $this->attachVariationTypes($product, $data['variation_types'] ?? []);
+        app(ProductVariationTypeSynchronizer::class)->sync($product, $data['variation_types'] ?? []);
 
         return $product;
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $variationTypes
-     */
-    private function attachVariationTypes(Product $product, array $variationTypes): void
-    {
-        foreach ($variationTypes as $index => $variationData) {
-            $variationTypeId = $variationData['variation_type_id'] ?? null;
-            if (! $variationTypeId) {
-                continue;
-            }
-
-            $productVariationType = ProductVariationType::firstOrCreate([
-                'product_id' => $product->id,
-                'variation_type_id' => $variationTypeId,
-            ], [
-                'sort_order' => $index,
-                'has_images' => false,
-                'is_modifier' => true,
-            ]);
-
-            $this->attachVariationOptions(
-                $productVariationType,
-                $variationData['variation_option_ids'] ?? [],
-            );
-        }
-    }
-
-    /**
-     * @param  array<int, int|string>  $optionIds
-     */
-    private function attachVariationOptions(ProductVariationType $productVariationType, array $optionIds): void
-    {
-        foreach ($optionIds as $optionId) {
-            ProductVariationOption::firstOrCreate([
-                'product_variation_type_id' => $productVariationType->id,
-                'variation_option_id' => $optionId,
-            ]);
-        }
     }
 
     /**

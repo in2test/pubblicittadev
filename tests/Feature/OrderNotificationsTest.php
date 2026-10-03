@@ -6,8 +6,12 @@ use App\Mail\AdminOrderPaidNotification;
 use App\Mail\OrderPaidConfirmation;
 use App\Mail\OrderStatusChangedNotification;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductSku;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
@@ -43,6 +47,53 @@ it('sends confirmation emails to user and admins when payment is completed', fun
     Mail::assertNotSent(AdminOrderPaidNotification::class, fn ($mail) => $mail->hasTo($regularUser->email));
 
     Mail::assertNotSent(OrderPaidConfirmation::class, fn ($mail) => $mail->hasTo($regularUser->email));
+});
+
+it('decrements fallback SKU quantities with a single inventory lookup', function () {
+    Mail::fake();
+
+    $customer = User::factory()->create(['role' => 'user']);
+    $order = Order::factory()->for($customer)->create([
+        'payment_status' => 'pending',
+        'work_status' => 'pending',
+    ]);
+    $firstProduct = Product::factory()->create();
+    $firstSku = ProductSku::factory()->for($firstProduct)->create(['quantity' => 10]);
+    $unusedSku = ProductSku::factory()->for($firstProduct)->create(['quantity' => 20]);
+    $secondProduct = Product::factory()->create();
+    $secondSku = ProductSku::factory()->for($secondProduct)->create(['quantity' => 30]);
+
+    $order->items()->create([
+        'product_id' => $firstProduct->id,
+        'quantity' => 2,
+        'unit_price' => 5,
+        'subtotal' => 10,
+        'customization_json' => ['quantity' => 2],
+        'work_status' => 'processing',
+    ]);
+    $order->items()->create([
+        'product_id' => $secondProduct->id,
+        'quantity' => 3,
+        'unit_price' => 5,
+        'subtotal' => 15,
+        'customization_json' => ['quantity' => 3],
+        'work_status' => 'processing',
+    ]);
+
+    $productSkuSelectQueries = 0;
+    DB::listen(function (QueryExecuted $query) use (&$productSkuSelectQueries): void {
+        if (str_starts_with(strtolower(ltrim($query->sql)), 'select') && str_contains($query->sql, 'product_skus')) {
+            $productSkuSelectQueries++;
+        }
+    });
+
+    $order->completePayment('pi_inventory_test');
+    $inventoryLookupCount = $productSkuSelectQueries;
+
+    expect($firstSku->fresh()->quantity)->toBe(8)
+        ->and($unusedSku->fresh()->quantity)->toBe(20)
+        ->and($secondSku->fresh()->quantity)->toBe(27)
+        ->and($inventoryLookupCount)->toBe(1);
 });
 
 it('sends status changed emails to user and admins when order status is updated to shipped or cancelled', function () {

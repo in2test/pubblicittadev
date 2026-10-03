@@ -100,25 +100,44 @@ class ProductImageSynchronizer
      */
     private function persistRemoteImages(Product $product, array $remoteImages): void
     {
-        // Process all collected images in a single pass
+        if ($remoteImages === []) {
+            return;
+        }
+
+        $imageUrls = array_column($remoteImages, 'url');
+        $existingImages = Image::query()
+            ->where('product_id', $product->id)
+            ->whereIn('image_url', $imageUrls)
+            ->get()
+            ->keyBy(fn (Image $image): string => serialize([$image->image_url, $image->variation_option_id]));
+
+        $rows = [];
         $remoteImageOrder = 0;
         foreach ($remoteImages as $image) {
-            Image::updateOrCreate([
+            $identity = serialize([$image['url'], $image['variation_option_id']]);
+            $rows[$identity] = [
+                'id' => $existingImages->get($identity)?->id,
                 'product_id' => $product->id,
                 'image_url' => $image['url'],
                 'variation_option_id' => $image['variation_option_id'],
-            ], [
                 'order_by' => $remoteImageOrder++,
                 'image_description' => $product->name,
                 'thumbnail_url' => $image['thumb'] ?: null,
                 'medium_url' => $image['medium'] ?: null,
                 'large_url' => $image['large'] ?: null,
-            ]);
+            ];
             Log::info("Caching remote image for SKU {$product->sku}: {$image['url']}");
         }
 
-        if ($remoteImages !== []) {
-            Log::info('Cached '.count($remoteImages)." remote images to 'images' table for SKU {$product->sku}");
-        }
+        Image::query()->upsert(array_values($rows), ['id'], [
+            'order_by',
+            'image_description',
+            'thumbnail_url',
+            'medium_url',
+            'large_url',
+            'updated_at',
+        ]);
+
+        Log::info('Cached '.count($remoteImages)." remote images to 'images' table for SKU {$product->sku}");
     }
 }

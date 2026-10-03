@@ -349,8 +349,25 @@ class Order extends Model implements HasMedia
      */
     protected function decrementInventory(): void
     {
-        /** @var OrderItem $item */
-        foreach ($this->items as $item) {
+        /** @var OrderItem[] $items */
+        $items = $this->items;
+
+        $allSkuIds = $items->flatMap(
+            fn (OrderItem $item): array => array_keys($item->customization_json['quantities'] ?? []),
+        );
+        $fallbackProductIds = $items
+            ->filter(fn (OrderItem $item): bool => empty($item->customization_json['quantities'] ?? []))
+            ->pluck('product_id');
+
+        $skuMap = ProductSku::query()
+            ->where(function (Builder $query) use ($allSkuIds, $fallbackProductIds): void {
+                $query->whereIn('id', $allSkuIds->all())
+                    ->orWhereIn('product_id', $fallbackProductIds->all());
+            })
+            ->get()
+            ->keyBy('id');
+
+        foreach ($items as $item) {
             /** @var array{quantity?: int|string, quantities?: array<int|string, int|string>} $config */
             $config = $item->customization_json;
             $productId = $item->product_id;
@@ -358,15 +375,15 @@ class Order extends Model implements HasMedia
 
             if (empty($quantities)) {
                 // Fallback nel caso di singola quantità (senza array quantities)
-                ProductSku::where('product_id', $productId)
-                    ->first()
+                $skuMap->firstWhere('product_id', $productId)
                     ?->decrement('quantity', (int) ($config['quantity'] ?? 1));
 
                 continue;
             }
 
+            // Use in-memory lookup for all decrements
             foreach ($quantities as $skuId => $qty) {
-                ProductSku::find((int) $skuId)?->decrement('quantity', (int) $qty);
+                $skuMap->get((int) $skuId)?->decrement('quantity', (int) $qty);
             }
         }
     }

@@ -10,6 +10,7 @@ use App\Models\ProductVariationOption;
 use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,8 @@ class ProductSkuSynchronizer
 
         [$productColorType, $productSizeType] = $this->productVariationTypes($product, $colorType, $sizeType);
         $sizeOptionsCache = $sizeType->options()->get()->keyBy('value');
-        $skuData = $this->buildSkuData($product, $data['variations'], $sizeType, $colorOptionsCache, $sizeOptionsCache);
+        $this->cacheMissingSizeOptions($data['variations'], $sizeType, $sizeOptionsCache);
+        $skuData = $this->buildSkuData($product, $data['variations'], $colorOptionsCache, $sizeOptionsCache);
 
         $this->upsertSkus($skuData['skus']);
         $skuRecords = ProductSku::where('product_id', $product->id)->get()->keyBy('sku');
@@ -83,7 +85,6 @@ class ProductSkuSynchronizer
     private function buildSkuData(
         Product $product,
         array $variations,
-        VariationType $sizeType,
         Collection $colorOptionsCache,
         Collection $sizeOptionsCache,
     ): array {
@@ -106,7 +107,7 @@ class ProductSkuSynchronizer
             }
 
             foreach ($variation['skus'] ?? [] as $item) {
-                $sizeOption = $this->sizeOption($item, $sizeType, $sizeOptionsCache);
+                $sizeOption = $this->sizeOption($item, $sizeOptionsCache);
                 if ($sizeOption instanceof VariationOption) {
                     $usedSizeOptionIds[$sizeOption->id] = true;
                 }
@@ -136,26 +137,58 @@ class ProductSkuSynchronizer
      * @param  array<string, mixed>  $item
      * @param  Collection<string, VariationOption>  $sizeOptionsCache
      */
-    private function sizeOption(array $item, VariationType $sizeType, Collection $sizeOptionsCache): ?VariationOption
+    private function sizeOption(array $item, Collection $sizeOptionsCache): ?VariationOption
     {
-        $sizeName = $item['skuSize']['webtext'] ?? null;
         $sizeCode = (string) ($item['skuSize']['size'] ?? '');
         if ($sizeCode === '') {
             return null;
         }
 
-        /** @var VariationOption|null $sizeOption */
-        $sizeOption = $sizeOptionsCache->get($sizeCode);
-        if (! $sizeOption && $sizeName) {
-            $sizeOption = VariationOption::create([
-                'variation_type_id' => $sizeType->id,
-                'name' => $sizeName,
-                'value' => $sizeCode,
-            ]);
-            $sizeOptionsCache->put($sizeCode, $sizeOption);
+        return $sizeOptionsCache->get($sizeCode);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $variations
+     * @param  Collection<string, VariationOption>  $sizeOptionsCache
+     */
+    private function cacheMissingSizeOptions(
+        array $variations,
+        VariationType $sizeType,
+        Collection $sizeOptionsCache,
+    ): void {
+        $newSizeOptions = [];
+        foreach ($variations as $variation) {
+            foreach ($variation['skus'] ?? [] as $item) {
+                $sizeName = $item['skuSize']['webtext'] ?? null;
+                $sizeCode = (string) ($item['skuSize']['size'] ?? '');
+                if ($sizeCode === '' || ! $sizeName || $sizeOptionsCache->has($sizeCode)) {
+                    continue;
+                }
+
+                $newSizeOptions[$sizeCode] ??= [
+                    'variation_type_id' => $sizeType->id,
+                    'name' => $sizeName,
+                    'value' => $sizeCode,
+                    'created_at' => CarbonImmutable::now(),
+                    'updated_at' => CarbonImmutable::now(),
+                ];
+            }
         }
 
-        return $sizeOption;
+        if ($newSizeOptions === []) {
+            return;
+        }
+
+        VariationOption::query()->insert(array_values($newSizeOptions));
+        $insertedSizeOptions = VariationOption::query()
+            ->where('variation_type_id', $sizeType->id)
+            ->whereIn('value', array_keys($newSizeOptions))
+            ->get()
+            ->keyBy('value');
+
+        foreach ($insertedSizeOptions as $value => $sizeOption) {
+            $sizeOptionsCache->put($value, $sizeOption);
+        }
     }
 
     /**
@@ -188,18 +221,28 @@ class ProductSkuSynchronizer
         array $colorOptionIds,
         array $sizeOptionIds,
     ): void {
+        $timestamp = CarbonImmutable::now();
+        $productVariationOptions = [];
         foreach (array_keys($colorOptionIds) as $optionId) {
-            ProductVariationOption::firstOrCreate([
+            $productVariationOptions[$productColorType->id.'-'.$optionId] = [
                 'product_variation_type_id' => $productColorType->id,
                 'variation_option_id' => $optionId,
-            ]);
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
         }
 
         foreach (array_keys($sizeOptionIds) as $optionId) {
-            ProductVariationOption::firstOrCreate([
+            $productVariationOptions[$productSizeType->id.'-'.$optionId] = [
                 'product_variation_type_id' => $productSizeType->id,
                 'variation_option_id' => $optionId,
-            ]);
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
+        }
+
+        if ($productVariationOptions !== []) {
+            ProductVariationOption::query()->insertOrIgnore(array_values($productVariationOptions));
         }
     }
 

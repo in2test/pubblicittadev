@@ -8,7 +8,9 @@ use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
 use App\Services\QuantityDiscountService;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -84,4 +86,41 @@ it('walks up the category tree for discounts', function () {
     QuantityDiscountService::clearCache();
     $product = $product->fresh();
     expect($service->calculatePrice($product, 10))->toBe(80.00);
+});
+
+it('queries only discounts for the category tree in one query', function () {
+    $root = Category::factory()->create();
+    $parent = Category::factory()->create(['parent_id' => $root->id]);
+    $child = Category::factory()->create(['parent_id' => $parent->id]);
+    $unrelatedCategory = Category::factory()->create();
+
+    CategoryQuantityDiscount::create([
+        'category_id' => $root->id,
+        'min_quantity' => 5,
+        'discount_type' => 'percent',
+        'discount_value' => 10,
+    ]);
+    CategoryQuantityDiscount::create([
+        'category_id' => $unrelatedCategory->id,
+        'min_quantity' => 5,
+        'discount_type' => 'percent',
+        'discount_value' => 50,
+    ]);
+
+    $queries = [];
+    DB::listen(function (QueryExecuted $query) use (&$queries): void {
+        $queries[] = strtolower($query->sql);
+    });
+
+    $discount = app(QuantityDiscountService::class)->getDiscountForCategoryTree($child->id, 10);
+
+    $discountQueries = array_values(array_filter(
+        $queries,
+        fn (string $query): bool => str_contains($query, 'category_quantity_discounts'),
+    ));
+
+    expect($discount?->category_id)->toBe($root->id)
+        ->and($discountQueries)->toHaveCount(1)
+        ->and($discountQueries[0])->toContain('category_id')
+        ->and($discountQueries[0])->toContain('min_quantity');
 });
