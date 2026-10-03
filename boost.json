@@ -28,7 +28,6 @@
         "filament-development",
         "medialibrary-development",
         "truss-schema",
-        "debug-using-debugbar",
-        "deploying-laravel-cloud"
+        "debug-using-debugbar"
     ]
 }
