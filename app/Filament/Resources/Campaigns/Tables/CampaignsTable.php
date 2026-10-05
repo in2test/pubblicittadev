@@ -55,7 +55,9 @@ class CampaignsTable
             ->filters([
                 Filter::make('active')
                     ->label('Solo campagne attive')
-                    ->query(fn (Builder $query): Builder => $query->active()),
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where('starts_at', '<=', now())
+                        ->where('ends_at', '>=', now())),
             ])
             ->defaultSort('starts_at', 'desc')
             ->recordActions([

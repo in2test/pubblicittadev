@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Filament\Resources\Campaigns\Pages\CreateCampaign;
 use App\Filament\Resources\Campaigns\Pages\EditCampaign;
 use App\Filament\Resources\Campaigns\Pages\ListCampaigns;
+use App\Filament\Resources\Campaigns\RelationManagers\ProductsRelationManager;
 use App\Models\Campaign;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -157,4 +158,109 @@ it('offers only unassigned products and outlet variants in the creation form', f
             fn (Select $field): bool => $field->getSearchResultsFromRelationship('SKU')
                 === [$availableSku->getKey() => 'Available Outlet — AVAILABLE-SKU'],
         );
+});
+
+it('lists all products that have an offer or outlet variant in the relation manager', function (): void {
+    $campaign = Campaign::factory()->create();
+
+    $offerProduct = Product::factory()->create([
+        'name' => 'Offer Only Product',
+        'offer_price' => 25.00,
+    ]);
+
+    $outletProduct = Product::factory()->create([
+        'name' => 'Outlet Only Product',
+        'offer_price' => null,
+    ]);
+    ProductSku::factory()->for($outletProduct)->create([
+        'is_outlet' => true,
+        'override_price' => 15.00,
+    ]);
+
+    $regularProduct = Product::factory()->create([
+        'name' => 'Regular Product',
+        'offer_price' => null,
+    ]);
+    ProductSku::factory()->for($regularProduct)->create([
+        'is_outlet' => false,
+    ]);
+
+    Livewire::test(ProductsRelationManager::class, [
+        'ownerRecord' => $campaign,
+        'pageClass' => EditCampaign::class,
+    ])
+        ->assertCanSeeTableRecords([$offerProduct, $outletProduct])
+        ->assertCanNotSeeTableRecords([$regularProduct]);
+});
+
+it('associates and detaches product offer and all outlet skus with the campaign', function (): void {
+    $campaign = Campaign::factory()->create();
+
+    $product = Product::factory()->create([
+        'name' => 'Promo Combo Product',
+        'offer_price' => 30.00,
+    ]);
+    $outletSku1 = ProductSku::factory()->for($product)->create([
+        'sku' => 'COMBO-OUTLET-1',
+        'is_outlet' => true,
+        'override_price' => 20.00,
+    ]);
+    $outletSku2 = ProductSku::factory()->for($product)->create([
+        'sku' => 'COMBO-OUTLET-2',
+        'is_outlet' => true,
+        'override_price' => 22.00,
+    ]);
+    $standardSku = ProductSku::factory()->for($product)->create([
+        'sku' => 'COMBO-STANDARD',
+        'is_outlet' => false,
+    ]);
+
+    $component = Livewire::test(ProductsRelationManager::class, [
+        'ownerRecord' => $campaign,
+        'pageClass' => EditCampaign::class,
+    ]);
+
+    // Associate product
+    $component->callTableAction('associate', $product);
+
+    $campaign->refresh();
+    expect($campaign->products->modelKeys())->toContain($product->id)
+        ->and($campaign->outletSkus->modelKeys())->toContain($outletSku1->id)
+        ->and($campaign->outletSkus->modelKeys())->toContain($outletSku2->id)
+        ->and($campaign->outletSkus->modelKeys())->not->toContain($standardSku->id);
+
+    // Detach product
+    $component->callTableAction('detach', $product);
+
+    $campaign->refresh();
+    expect($campaign->products->modelKeys())->not->toContain($product->id)
+        ->and($campaign->outletSkus->modelKeys())->not->toContain($outletSku1->id)
+        ->and($campaign->outletSkus->modelKeys())->not->toContain($outletSku2->id);
+});
+
+it('bulk associates and bulk detaches selected products with the campaign', function (): void {
+    $campaign = Campaign::factory()->create();
+
+    $productA = Product::factory()->create(['offer_price' => 20.00]);
+    $skuA = ProductSku::factory()->for($productA)->create(['is_outlet' => true]);
+
+    $productB = Product::factory()->create(['offer_price' => 40.00]);
+    $skuB = ProductSku::factory()->for($productB)->create(['is_outlet' => true]);
+
+    $component = Livewire::test(ProductsRelationManager::class, [
+        'ownerRecord' => $campaign,
+        'pageClass' => EditCampaign::class,
+    ]);
+
+    $component->callTableBulkAction('associateSelected', [$productA, $productB]);
+
+    $campaign->refresh();
+    expect($campaign->products->modelKeys())->toEqualCanonicalizing([$productA->id, $productB->id])
+        ->and($campaign->outletSkus->modelKeys())->toEqualCanonicalizing([$skuA->id, $skuB->id]);
+
+    $component->callTableBulkAction('detachSelected', [$productA, $productB]);
+
+    $campaign->refresh();
+    expect($campaign->products)->toBeEmpty()
+        ->and($campaign->outletSkus)->toBeEmpty();
 });

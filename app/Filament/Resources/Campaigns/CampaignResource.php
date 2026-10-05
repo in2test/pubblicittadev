@@ -7,7 +7,6 @@ namespace App\Filament\Resources\Campaigns;
 use App\Filament\Resources\Campaigns\Pages\CreateCampaign;
 use App\Filament\Resources\Campaigns\Pages\EditCampaign;
 use App\Filament\Resources\Campaigns\Pages\ListCampaigns;
-use App\Filament\Resources\Campaigns\RelationManagers\OutletSkusRelationManager;
 use App\Filament\Resources\Campaigns\RelationManagers\ProductsRelationManager;
 use App\Filament\Resources\Campaigns\Schemas\CampaignForm;
 use App\Filament\Resources\Campaigns\Tables\CampaignsTable;
@@ -51,7 +50,6 @@ class CampaignResource extends Resource
     {
         return [
             ProductsRelationManager::class,
-            OutletSkusRelationManager::class,
         ];
     }
 

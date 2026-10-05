@@ -238,7 +238,9 @@ class Product extends Model implements HasMedia
     {
         return $this->skus()
             ->where('is_outlet', true)
-            ->whereHas('campaigns', fn (Builder $query) => $query->active());
+            ->whereHas('campaigns', fn (Builder $query) => $query
+                ->where('starts_at', '<=', now())
+                ->where('ends_at', '>=', now()));
     }
 
     public function hasActiveOfferCampaign(): bool

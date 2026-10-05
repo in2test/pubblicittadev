@@ -251,7 +251,9 @@ class ProductStartingPriceService
             $eligibleSkus = $product->skus()
                 ->where(function (Builder $query): void {
                     $query->where('is_outlet', false)
-                        ->orWhereHas('campaigns', fn (Builder $query) => $query->active());
+                        ->orWhereHas('campaigns', fn (Builder $query) => $query
+                            ->where('starts_at', '<=', now())
+                            ->where('ends_at', '>=', now()));
                 });
             $skuPrices = (clone $eligibleSkus)->whereNotNull('override_price')->pluck('override_price')->map(fn ($price) => (float) $price);
             $hasSkuWithoutOverride = (clone $eligibleSkus)->whereNull('override_price')->exists();
