@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Campaign;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Image;
 use App\Models\Product;
@@ -7,6 +8,7 @@ use App\Models\ProductSku;
 use App\Models\VariationOption;
 use App\Models\VariationType;
 use App\Services\QuantityDiscountService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -113,13 +115,21 @@ it('exports valid xml and the effective outlet sku price', function () {
         'discount_value' => 10,
     ]);
     QuantityDiscountService::clearCache();
-
     $sku = ProductSku::factory()->create([
         'product_id' => $product->id,
         'sku' => 'OUTLET-VARIANT',
         'is_outlet' => true,
         'override_price' => 50,
     ]);
+
+    $now = CarbonImmutable::now();
+    $campaign = Campaign::factory()->create([
+        'name' => 'Outlet Campaign',
+        'starts_at' => $now,
+        'ends_at' => $now->addHour(),
+    ]);
+    $campaign->products()->attach($product->id);
+    $campaign->outletSkus()->attach($sku->id);
 
     $imageUrl = 'https://images.example/product.jpg?width=600&fit=crop&w=1472';
     $additionalImageUrl = 'https://images.example/product-side.jpg?width=600&fit=crop&w=1472';

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Enums\ProductClass;
+use App\Models\Campaign;
 use App\Models\Product;
 use App\Services\ProductStartingPriceService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,6 +46,14 @@ test('it gets correct starting unit price for fixed pricing model', function () 
     expect($product->getStartingUnitPrice())->toBe(50.00);
 
     $product->update(['offer_price' => 45.00]);
+
+    $now = CarbonImmutable::now();
+    $campaign = Campaign::factory()->create([
+        'name' => 'Outlet Campaign',
+        'starts_at' => $now,
+        'ends_at' => $now->addHour(),
+    ]);
+    $campaign->products()->attach($product->id);
     expect($product->getStartingUnitPrice())->toBe(45.00);
 });
 
