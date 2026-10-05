@@ -1,11 +1,11 @@
 # Pubblicitta24 — Project Status and Implementation Plan
 
-**Repository snapshot:** 2026-10-03
+**Repository snapshot:** 2026-10-04
 **Status:** Core catalogue, pricing, quotation/order processing, Stripe checkout,
-NewWave integration, and Filament administration are implemented. Tests and
-`composer run format` were reported passing at this snapshot. A configured
-production deployment workflow exists; this document does not independently
-verify the live production environment.
+NewWave integration, date-driven offer/outlet campaigns, and Filament
+administration are implemented. Targeted campaign and pricing regression tests
+passed for this snapshot. A configured production deployment workflow exists;
+this document does not independently verify the live production environment.
 
 This file describes the implementation found in this repository. It replaces
 older plans and counts that no longer match the source. Items under
@@ -27,6 +27,8 @@ image-bearing options, and price modifiers.
 - Select SKU-backed product variants, availability, and quantities.
 - Calculate prices using product pricing tiers, SKU price overrides, category
   quantity discounts, and outlet pricing.
+- Campaign dates determine when assigned product offers and outlet SKUs are
+  active; campaign scheduling does not mutate product or SKU activation flags.
 - Support apparel/item-based and area-based products, including custom print
   dimensions and sheet/print area calculations.
 - Show outlet products and portfolio content.
@@ -112,7 +114,7 @@ The service layer includes focused components such as
 
 ## 3. Data model
 
-The repository contains 28 migration files. The application schema includes
+The repository contains 29 migration files. The application schema includes
 the following domain tables (the live schema can differ by environment):
 
 | Domain | Tables | Purpose |
@@ -121,6 +123,7 @@ the following domain tables (the live schema can differ by environment):
 | Catalogue | `categories`, `products`, `images`, `media` | Product/category hierarchy, legacy/remote images, and Media Library assets |
 | Variations and stock | `variation_types`, `variation_options`, `product_variation_types`, `product_variation_options`, `product_skus`, `product_sku_options` | Product options, modifier configuration, SKU availability and outlet overrides |
 | Pricing | `pricing_tiers`, `category_quantity_discounts`, `shipping_tiers` | Product/SKU quantity pricing, category discounts, and delivery rates |
+| Promotions | `campaigns`, `campaign_products`, `campaign_product_sku` | Scheduled campaigns and their exclusive product-offer and outlet-SKU assignments |
 | Orders | `orders`, `order_items`, `transporters` | Paid orders and quotations, customizations, fulfillment state, invoices and tracking |
 | Site content | `portfolio_items`, `newsletter_subscriptions` | Portfolio and newsletter subscribers |
 | Laravel infrastructure | `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations` | Framework cache, queue, session, auth, and migration state |
@@ -130,6 +133,12 @@ the following domain tables (the live schema can differ by environment):
 configuration; `design_file_path` and the `awaiting_file` work state support
 tracking jobs that still need production files. A complete customer-facing
 design-file upload workflow was not confirmed in the routes inspected.
+
+Campaigns are active when the current time falls between `starts_at` and
+`ends_at`. Products with an `offer_price` and outlet SKUs must be assigned to a
+campaign before their campaign pricing or outlet visibility is active. An
+assigned item remains associated after the campaign ends until an administrator
+removes it.
 
 The checked-in `.env.example` defaults to SQLite and a synchronous queue. Those
 are development defaults, not a statement about the production database or
@@ -158,7 +167,7 @@ authentication routes. The principal application routes are:
 | `/webhooks/stripe` | `WebhookController` | Stripe webhook receiver |
 | `/feed/google-merchant.xml` | `GoogleMerchantFeedController` | Google Merchant product feed |
 | `/sitemap.xml` | `SitemapController` | XML sitemap |
-| `/admin/*` | Filament | Product, category, variation, SKU/outlet, order, user, shipping, transporter, portfolio, and newsletter administration |
+| `/admin/*` | Filament | Campaign, product, category, variation, SKU/outlet, order, user, shipping, transporter, portfolio, and newsletter administration |
 | `/chi-siamo`, `/servizi`, `/contact` | Static Blade views | Informational pages |
 | `/privacy`, `/cookie-policy`, `/terms`, `/shipping-returns` | Static Blade views | Legal and policy pages |
 

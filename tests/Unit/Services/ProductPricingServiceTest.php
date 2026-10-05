@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Models\Campaign;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\PricingTier;
 use App\Models\Product;
@@ -24,6 +25,7 @@ final readonly class ProductPricingServiceTest
         $product = Product::factory()->create([
             'offer_price' => 19.99,
         ]);
+        Campaign::factory()->create()->products()->attach($product);
 
         $price = $this->service->getPriceForQuantity($product, 1);
 

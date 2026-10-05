@@ -17,6 +17,7 @@ class ProductOutletService
     {
         $outletSkusWithPrice = $product->skus()
             ->where('is_outlet', true)
+            ->whereHas('campaigns', fn ($query) => $query->active())
             ->whereNotNull('override_price')
             ->where('override_price', '>', 0)
             ->with('options')
@@ -46,8 +47,7 @@ class ProductOutletService
 
     public function getMinimumOutletPrice(Product $product): float
     {
-        $minimumPrice = $product->skus()
-            ->where('is_outlet', true)
+        $minimumPrice = $product->activeOutletSkus()
             ->whereNotNull('override_price')
             ->where('override_price', '>', 0)
             ->min('override_price');
@@ -57,8 +57,7 @@ class ProductOutletService
 
     public function hasValidOutletPrice(Product $product): bool
     {
-        return $product->skus()
-            ->where('is_outlet', true)
+        return $product->activeOutletSkus()
             ->whereNotNull('override_price')
             ->where('override_price', '>', 0)
             ->exists();

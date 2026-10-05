@@ -202,7 +202,10 @@ class CartController extends Controller
         );
 
         $activeSku = $product->getActiveSku($validated['selected_options'] ?? []) ?? $product->skus->first();
-        $baseSkuPrice = $activeSku && $activeSku->override_price !== null ? (float) $activeSku->override_price : (float) $product->price;
+        $baseSkuPrice = $activeSku && $activeSku->override_price !== null
+            && (! $activeSku->isOutlet() || $activeSku->hasActiveCampaign())
+            ? (float) $activeSku->override_price
+            : (float) $product->price;
 
         $basePrice = $product->product_class === ProductClass::AreaBased && $width > 0 && $height > 0
             ? $baseSkuPrice * $billedAreaPerUnit

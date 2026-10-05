@@ -224,6 +224,35 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * @return BelongsToMany<Campaign, $this>
+     */
+    public function campaigns(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_products');
+    }
+
+    /**
+     * @return HasMany<ProductSku, $this>
+     */
+    public function activeOutletSkus(): HasMany
+    {
+        return $this->skus()
+            ->where('is_outlet', true)
+            ->whereHas('campaigns', fn (Builder $query) => $query->active());
+    }
+
+    public function hasActiveOfferCampaign(): bool
+    {
+        if ($this->relationLoaded('campaigns')) {
+            return $this->campaigns->contains(
+                fn (Campaign $campaign): bool => $campaign->isActive(),
+            );
+        }
+
+        return $this->campaigns()->active()->exists();
+    }
+
+    /**
      * Get remote/synced images associated with this product.
      *
      * @return HasMany<Image, $this>
@@ -452,9 +481,7 @@ class Product extends Model implements HasMedia
     #[Scope]
     protected function hasOutletSkus(Builder $query): Builder
     {
-        return $query->whereHas('skus', function (Builder $q) {
-            $q->where('is_outlet', true);
-        });
+        return $query->whereHas('activeOutletSkus');
     }
 
     protected function casts(): array

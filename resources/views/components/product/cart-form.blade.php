@@ -260,7 +260,11 @@
                                 $option = $pvo->option;
                                 if (!$option) continue;
                                 $isActive = ($selectedOptions[$type->id] ?? null) == $option->id;
-                                $isOptionOutlet = $product->skus->filter(fn ($s) => $s->options->contains('id', $option->id) && $s->is_outlet)->isNotEmpty();
+                                $isOptionOutlet = $product->skus->filter(
+                                    fn ($sku) => $sku->options->contains('id', $option->id)
+                                        && $sku->isOutlet()
+                                        && $sku->hasActiveCampaign(),
+                                )->isNotEmpty();
                             @endphp
 
                             @if($type->presentation_type === 'color_swatch' || $type->pivot->has_images)

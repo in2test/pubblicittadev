@@ -96,6 +96,14 @@ class ProductSku extends Model
         return $this->hasMany(PricingTier::class);
     }
 
+    /**
+     * @return BelongsToMany<Campaign, $this>
+     */
+    public function campaigns(): BelongsToMany
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_product_sku');
+    }
+
     /** @return Attribute<never, mixed> */
     protected function quantity(): Attribute
     {
@@ -108,6 +116,17 @@ class ProductSku extends Model
     public function isOutlet(): bool
     {
         return (bool) $this->is_outlet;
+    }
+
+    public function hasActiveCampaign(): bool
+    {
+        if ($this->relationLoaded('campaigns')) {
+            return $this->campaigns->contains(
+                fn (Campaign $campaign): bool => $campaign->isActive(),
+            );
+        }
+
+        return $this->campaigns()->active()->exists();
     }
 
     protected function casts(): array

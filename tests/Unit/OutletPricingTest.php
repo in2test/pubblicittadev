@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Product;
@@ -50,6 +51,7 @@ class OutletPricingTest extends TestCase
             'is_outlet' => true,
             'override_price' => 50.0,
         ]);
+        Campaign::factory()->create()->outletSkus()->attach($sku);
 
         // Price for 1 unit
         $total = $this->calculator->calculateTotalPrice(
@@ -124,6 +126,7 @@ class OutletPricingTest extends TestCase
             'is_outlet' => true,
             'override_price' => 50.0, // outlet price
         ]);
+        Campaign::factory()->create()->outletSkus()->attach($sku);
 
         // 10 units of outlet SKU @ 50€ with 10% category discount = 50 * 0.9 * 10 = 450
         $total = $this->calculator->calculateTotalPrice(
@@ -161,6 +164,7 @@ class OutletPricingTest extends TestCase
             'pricing_model' => 'fixed',
             'is_active' => true,
         ]);
+        Campaign::factory()->create()->products()->attach($product);
 
         $product->load('skus');
 

@@ -107,6 +107,7 @@ class CartItemPresenter
 
         $activeSku = $product->getActiveSku($item['selected_options'] ?? []) ?? $product->skus->first();
         $basePrice = $activeSku && $activeSku->override_price !== null
+            && (! $activeSku->isOutlet() || $activeSku->hasActiveCampaign())
             ? (float) $activeSku->override_price
             : (float) $product->price;
 

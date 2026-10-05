@@ -21,7 +21,7 @@ class ProductPricingService
      */
     public function getPriceForQuantity(Product $product, int $quantity = 1, ?ProductSku $sku = null): float
     {
-        if ($product->offer_price > 0) {
+        if ($product->offer_price > 0 && $product->hasActiveOfferCampaign()) {
             // Apply category quantity discount on top of the offer price.
             return $this->applyQuantityDiscount($product, (float) $product->offer_price, $quantity);
         }
@@ -36,7 +36,7 @@ class ProductPricingService
 
     public function getSkuPriceForQuantity(Product $product, int $quantity = 1, ?ProductSku $sku = null): float
     {
-        if ($sku?->override_price !== null) {
+        if ($sku?->override_price !== null && (! $sku->isOutlet() || $sku->hasActiveCampaign())) {
             return $this->applyQuantityDiscount($product, (float) $sku->override_price, $quantity);
         }
 
@@ -150,6 +150,8 @@ class ProductPricingService
      */
     public function getPriceForAreaBasedProduct(Product $product): float
     {
-        return (float) $product->price;
+        return $product->offer_price > 0 && $product->hasActiveOfferCampaign()
+            ? (float) $product->offer_price
+            : (float) $product->price;
     }
 }

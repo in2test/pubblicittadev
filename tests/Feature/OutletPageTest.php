@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -30,13 +31,14 @@ class OutletPageTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductSku::create([
+        $outletSku = ProductSku::create([
             'product_id' => $outletProduct->id,
             'sku' => 'BASIC-T-WHITE-S',
             'is_available' => true,
             'is_outlet' => true,
             'override_price' => 9.90,
         ]);
+        Campaign::factory()->create()->outletSkus()->attach($outletSku);
 
         $regularProduct = Product::create([
             'name' => 'Regular Hoodie',
@@ -106,6 +108,7 @@ class OutletPageTest extends TestCase
 
         $skuYellowM = ProductSku::create(['product_id' => $product->id, 'sku' => 'BT-Y-M', 'is_outlet' => false, 'override_price' => null]);
         $skuYellowM->options()->attach([$colorYellow->id, $sizeM->id]);
+        Campaign::factory()->create()->outletSkus()->attach([$skuWhiteS->id, $skuWhiteM->id]);
 
         // Assert White SKUs are outlet with 8.00
         $this->assertTrue($skuWhiteS->is_outlet);
@@ -121,5 +124,34 @@ class OutletPageTest extends TestCase
 
         // Product starting unit price for outlet reflects 8.00
         $this->assertEquals(8.00, $product->getStartingUnitPrice(false, true));
+    }
+
+    public function test_outlet_page_hides_skus_without_an_active_campaign(): void
+    {
+        $category = Category::create(['name' => 'Abbigliamento', 'slug' => 'abbigliamento']);
+        $product = Product::create([
+            'name' => 'Ended Outlet Product',
+            'slug' => 'ended-outlet-product',
+            'price' => 15,
+            'category_id' => $category->id,
+            'type' => 'newwave',
+            'pricing_model' => 'fixed',
+            'is_active' => true,
+        ]);
+        $sku = ProductSku::create([
+            'product_id' => $product->id,
+            'sku' => 'ENDED-OUTLET',
+            'is_available' => true,
+            'is_outlet' => true,
+            'override_price' => 9.90,
+        ]);
+        Campaign::factory()->create([
+            'starts_at' => now()->subDays(2),
+            'ends_at' => now()->subDay(),
+        ])->outletSkus()->attach($sku);
+
+        $this->get(route('outlet'))
+            ->assertOk()
+            ->assertDontSee('Ended Outlet Product');
     }
 }

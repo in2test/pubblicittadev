@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Image;
 use App\Models\Product;
@@ -213,6 +214,35 @@ class ProductPageTest extends TestCase
         ])
             ->set('quantities', [$activeSku->id => 100])
             ->assertSet('totalPrice', 11.00);
+    }
+
+    public function test_livewire_product_uses_campaign_status_for_offer_and_outlet_prices(): void
+    {
+        $category = Category::factory()->create();
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'price' => 80,
+            'offer_price' => 55,
+        ]);
+        $outletSku = ProductSku::factory()->create([
+            'product_id' => $product->id,
+            'is_outlet' => true,
+            'override_price' => 40,
+        ]);
+
+        Livewire::test('⚡product', ['product' => $product, 'category' => $category])
+            ->assertSet('currentBasePrice', 80)
+            ->assertDontSee('Outlet');
+
+        $campaign = Campaign::factory()->create();
+        $campaign->products()->attach($product);
+        $campaign->outletSkus()->attach($outletSku);
+
+        $product = $product->fresh();
+
+        Livewire::test('⚡product', ['product' => $product, 'category' => $category])
+            ->assertSet('currentBasePrice', 40)
+            ->assertSee('Outlet');
     }
 
     public function test_livewire_product_custom_format(): void

@@ -123,7 +123,13 @@ class ProductPriceCalculator
     private function ensureRelationsLoaded(Product $product): void
     {
         if (! $product->relationLoaded('skus')) {
-            $product->loadMissing('skus.options', 'variationTypes');
+            $product->loadMissing('skus.options', 'skus.campaigns', 'variationTypes');
+        } elseif ($product->relationLoaded('skus')) {
+            $product->loadMissing('skus.campaigns');
+        }
+
+        if ($product->offer_price > 0) {
+            $product->loadMissing('campaigns');
         }
 
         if (! $product->relationLoaded('variationTypes') || ! $product->relationLoaded('productVariationTypes')) {
@@ -164,7 +170,8 @@ class ProductPriceCalculator
     {
         $activeSku = $this->variantResolver->getActiveSku($product, $selectedOptions) ?? $product->skus->first();
 
-        if ($activeSku && $activeSku->override_price !== null) {
+        if ($activeSku && $activeSku->override_price !== null
+            && (! $activeSku->isOutlet() || $activeSku->hasActiveCampaign())) {
             return (float) $activeSku->override_price;
         }
 
@@ -307,7 +314,8 @@ class ProductPriceCalculator
         // Check for override price on default SKU; still apply category quantity discount on top.
         if ($product->relationLoaded('skus') && $product->skus->first()) {
             $defaultSku = $product->skus->first();
-            if ($defaultSku->override_price !== null) {
+            if ($defaultSku->override_price !== null
+                && (! $defaultSku->isOutlet() || $defaultSku->hasActiveCampaign())) {
                 $unitPrice = $this->productPricingService->applyQuantityDiscount($product, (float) $defaultSku->override_price, $totalQuantity);
             }
         }

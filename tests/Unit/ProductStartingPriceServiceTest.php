@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Enums\ProductClass;
+use App\Models\Campaign;
 use App\Models\Product;
 use App\Models\VariationType;
 use App\Services\ProductStartingPriceService;
@@ -86,10 +87,11 @@ test('it uses outlet price when isOutlet flag is set', function () {
     ]);
 
     // Create an outlet SKU with lower price
-    $product->skus()->create([
+    $outletSku = $product->skus()->create([
         'is_outlet' => true,
         'override_price' => 35.00,
     ]);
+    Campaign::factory()->create()->outletSkus()->attach($outletSku);
 
     $service = app(ProductStartingPriceService::class);
 
@@ -175,6 +177,7 @@ test('it calculates starting price with multiple pricing tiers', function () {
         'price' => 100.00,
         'offer_price' => 70.00, // Set offer_price as the minimum tier price fallback
     ]);
+    Campaign::factory()->create()->products()->attach($product);
 
     $service = app(ProductStartingPriceService::class);
 
@@ -208,6 +211,7 @@ test('it uses offer_price as fallback when pricing tiers are empty', function ()
         'price' => 50.00,
         'offer_price' => 45.00,
     ]);
+    Campaign::factory()->create()->products()->attach($product);
 
     // Remove any existing pricing tiers
     $product->pricingTiers()->delete();

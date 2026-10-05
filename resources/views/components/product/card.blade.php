@@ -19,7 +19,7 @@
 
     $productUrlParams = ['category' => $product->category->slug ?? 'uncategorized', 'product' => $product->slug];
     if ($onOutletPage && $minOutletPrice !== null) {
-        $firstOutletSku = $product->skus()->where('is_outlet', true)->with('options.variationType')->first();
+        $firstOutletSku = $product->activeOutletSkus()->with('options.variationType')->first();
         if ($firstOutletSku) {
             foreach ($firstOutletSku->options as $opt) {
                 if ($opt->variationType?->expose_in_url) {
@@ -86,9 +86,6 @@
                                 </span>
                             </div>
                         </div>
-                    @elseif($product->offer_price > 0)
-                        {{-- Promo/Regular pricing --}}
-                        <span class="font-mono text-[10px] text-gray-700 font-bold">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
                     @else
                         <span class="font-mono text-[10px] text-gray-700 font-bold">€{{ number_format($product->getStartingUnitPrice(), 2, ',', '.') }}</span>
                     @endif

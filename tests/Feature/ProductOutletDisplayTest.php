@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Campaign;
 use App\Models\Product;
 use App\Models\ProductSku;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,12 +14,13 @@ test('product info shows outlet starting price without an explicit sku selection
         'pricing_model' => 'fixed',
     ]);
 
-    ProductSku::create([
+    $sku = ProductSku::create([
         'product_id' => $product->id,
         'sku' => 'OUTLET-SKU',
         'is_outlet' => true,
         'override_price' => 8,
     ]);
+    Campaign::factory()->create()->outletSkus()->attach($sku);
 
     ProductSku::create([
         'product_id' => $product->id,

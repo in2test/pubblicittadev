@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductSku;
@@ -8,6 +9,7 @@ use function Pest\Laravel\get;
 
 it('provides pagination to reach outlet products beyond the first twelve', function () {
     $category = Category::factory()->create();
+    $campaign = Campaign::factory()->create();
 
     foreach (range(1, 13) as $number) {
         $product = Product::factory()
@@ -20,12 +22,13 @@ it('provides pagination to reach outlet products beyond the first twelve', funct
                 'pricing_model' => 'fixed',
             ]);
 
-        ProductSku::factory()
+        $outletSku = ProductSku::factory()
             ->for($product)
             ->create([
                 'is_outlet' => true,
                 'override_price' => 9.90,
             ]);
+        $campaign->outletSkus()->attach($outletSku);
     }
 
     $firstPage = get(route('outlet'));

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\ProductClass;
+use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\PricingTier;
@@ -84,6 +85,7 @@ test('it uses product override price when set', function () {
         'price' => 50.00,
         'offer_price' => 45.00,
     ]);
+    Campaign::factory()->create()->products()->attach($product);
 
     $service = app(ProductPricingService::class);
 

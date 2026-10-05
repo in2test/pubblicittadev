@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\ProductClass;
 use App\Models\Product;
+use App\Models\ProductSku;
 use App\Models\ProductVariationType;
 use App\Models\VariationOption;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,7 +40,12 @@ class ProductStartingPriceService
 
     public function getAbsoluteMinimumPrice(Product $product, bool $skipCache = false, bool $isOutlet = false): float
     {
-        if (! $skipCache && ! $isOutlet && $product->cached_starting_price !== null) {
+        if (
+            ! $skipCache
+            && ! $isOutlet
+            && ! $this->hasCampaignManagedPricing($product)
+            && $product->cached_starting_price !== null
+        ) {
             return (float) $product->cached_starting_price;
         }
 
@@ -57,7 +63,7 @@ class ProductStartingPriceService
         }
 
         $unitPrice = $isOutlet
-            ? $product->skus()->where('is_outlet', true)->min('override_price') ?? $product->getPriceForQuantity($minQty)
+            ? $product->activeOutletSkus()->min('override_price') ?? $product->getPriceForQuantity($minQty)
             : $product->getPriceForQuantity($minQty);
 
         return $unitPrice * $minQty;
@@ -165,8 +171,7 @@ class ProductStartingPriceService
             return $product->calculateFinalUnitPrice($quantity);
         }
 
-        $skuPrice = $product->skus()
-            ->where('is_outlet', true)
+        $skuPrice = $product->activeOutletSkus()
             ->whereHas('options', fn ($query) => $query->where('id', $format->id))
             ->min('override_price');
 
@@ -175,18 +180,25 @@ class ProductStartingPriceService
 
     public function getStartingUnitPrice(Product $product, bool $skipCache = false, bool $isOutlet = false): float
     {
-        if (! $skipCache && ! $isOutlet && $product->cached_starting_unit_price !== null) {
+        if (
+            ! $skipCache
+            && ! $isOutlet
+            && ! $this->hasCampaignManagedPricing($product)
+            && $product->cached_starting_unit_price !== null
+        ) {
             return (float) $product->cached_starting_unit_price;
         }
 
-        $baseFallback = $product->offer_price > 0 ? (float) $product->offer_price : (float) $product->price;
+        $baseFallback = $product->offer_price > 0 && $product->hasActiveOfferCampaign()
+            ? (float) $product->offer_price
+            : (float) $product->price;
 
         if ($product->product_class === ProductClass::Apparel || $product->product_class === ProductClass::AreaBased) {
             $baseFallback = $this->minimumTierUnitPrice($product) ?? $baseFallback;
         }
 
         if ($isOutlet) {
-            $minSkuPrice = (float) $product->skus()->where('is_outlet', true)->min('override_price');
+            $minSkuPrice = (float) $product->activeOutletSkus()->min('override_price');
 
             return $minSkuPrice > 0 ? $minSkuPrice : $baseFallback;
         }
@@ -225,14 +237,24 @@ class ProductStartingPriceService
             $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
             $hasSkuWithoutOverride = $product->has_sku_without_override ?? false;
         } elseif ($product->relationLoaded('skus')) {
+            $activeOutletSkuIds = $product->activeOutletSkus()->pluck('product_skus.id')->all();
             $skuPrices = $product->skus
-                ->filter(fn ($sku) => $sku->override_price !== null)
+                ->filter(fn (ProductSku $sku): bool => $sku->override_price !== null
+                    && (! $sku->isOutlet() || in_array($sku->id, $activeOutletSkuIds, true)))
                 ->pluck('override_price')
                 ->map(fn ($price) => (float) $price);
-            $hasSkuWithoutOverride = $product->skus->filter(fn ($sku) => $sku->override_price === null)->isNotEmpty();
+            $hasSkuWithoutOverride = $product->skus->filter(
+                fn (ProductSku $sku): bool => $sku->override_price === null
+                    || ($sku->isOutlet() && ! in_array($sku->id, $activeOutletSkuIds, true)),
+            )->isNotEmpty();
         } else {
-            $skuPrices = $product->skus()->whereNotNull('override_price')->pluck('override_price')->map(fn ($price) => (float) $price);
-            $hasSkuWithoutOverride = $product->skus()->whereNull('override_price')->exists();
+            $eligibleSkus = $product->skus()
+                ->where(function (Builder $query): void {
+                    $query->where('is_outlet', false)
+                        ->orWhereHas('campaigns', fn (Builder $query) => $query->active());
+                });
+            $skuPrices = (clone $eligibleSkus)->whereNotNull('override_price')->pluck('override_price')->map(fn ($price) => (float) $price);
+            $hasSkuWithoutOverride = (clone $eligibleSkus)->whereNull('override_price')->exists();
         }
 
         return [
@@ -249,13 +271,27 @@ class ProductStartingPriceService
      */
     private function getMinimumValidOutletPrice(Product $product): ?float
     {
-        $minPrice = $product->skus()
-            ->where('is_outlet', true)
+        $minPrice = $product->activeOutletSkus()
             ->whereNotNull('override_price')
             ->where('override_price', '>', 0)
             ->min('override_price');
 
         return $minPrice > 0 ? (float) $minPrice : null;
+    }
+
+    private function hasCampaignManagedPricing(Product $product): bool
+    {
+        if ($product->offer_price > 0) {
+            return true;
+        }
+
+        if ($product->relationLoaded('skus')) {
+            return $product->skus->contains(
+                fn (ProductSku $sku): bool => $sku->isOutlet(),
+            );
+        }
+
+        return $product->skus()->where('is_outlet', true)->exists();
     }
 
     public function updateCachedPrices(Product $product): void

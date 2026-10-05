@@ -49,8 +49,12 @@ new class extends Component
         $this->product->loadMissing([
             'variationTypes',
             'skus.options',
+            'skus.campaigns',
             'pricingTiers',
         ]);
+        if ($this->product->offer_price > 0) {
+            $this->product->loadMissing('campaigns');
+        }
 
         $this->product->variationTypes->each(fn ($type) => $type->pivot->loadMissing('options.option'));
 
@@ -100,7 +104,10 @@ new class extends Component
         // Seleziona automaticamente le opzioni più economiche (se non già selezionate)
         if ($this->product->type !== 'newwave') {
             $lowestPriceSku = $this->product->skus
-                ->sortBy(fn ($sku) => $sku->override_price ?? $this->product->getPriceForQuantity(1))
+                ->sortBy(fn (ProductSku $sku) => $sku->override_price !== null
+                    && (! $sku->isOutlet() || $sku->hasActiveCampaign())
+                    ? (float) $sku->override_price
+                    : $this->product->getPriceForQuantity(1, $sku))
                 ->first();
 
             foreach ($this->product->variationTypes as $type) {
@@ -248,7 +255,10 @@ new class extends Component
     public function product(): Product
     {
         // Ricarichiamo le relazioni in caso il componente venga deidratato
-        $this->product->loadMissing(['variationTypes', 'skus.options']);
+        $this->product->loadMissing(['variationTypes', 'skus.options', 'skus.campaigns']);
+        if ($this->product->offer_price > 0) {
+            $this->product->loadMissing('campaigns');
+        }
         $this->product->variationTypes->each(fn ($type) => $type->pivot->loadMissing('options.option'));
 
         return $this->product;
@@ -352,7 +362,9 @@ new class extends Component
         $activeSku = $this->activeSku();
 
         $price = $product->getPriceForQuantity(1, $activeSku);
-        if ($activeSku instanceof \App\Models\ProductSku && $activeSku->override_price !== null) {
+        if ($activeSku instanceof ProductSku
+            && $activeSku->override_price !== null
+            && (! $activeSku->isOutlet() || $activeSku->hasActiveCampaign())) {
             $price = (float) $activeSku->override_price;
         }
 
@@ -772,7 +784,8 @@ new class extends Component
         <div class="lg:col-span-5 2xl:col-span-7 flex flex-col">
             @php
                 $activeSkuModel = $this->activeSku();
-                $isOutletSelected = $activeSkuModel?->is_outlet ?? false;
+                $isOutletSelected = $activeSkuModel?->isOutlet()
+                    && $activeSkuModel->hasActiveCampaign();
             @endphp
             <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" :hasExplicitSkuSelection="$hasExplicitSkuSelection" />
 
@@ -853,4 +866,3 @@ new class extends Component
         </div>
     @endif
 </div>
-
