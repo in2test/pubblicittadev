@@ -40,8 +40,8 @@ class GoogleMerchantFeedBuilder
 
         foreach ($products as $product) {
             $category = $categoryMap[$product->category_id] ?? null;
-            $categorySlug = $category?->slug ?? 'uncategorized';
-            $categoryName = $category?->name ?? 'Uncategorized';
+            $categorySlug = $category !== null ? $category->slug : 'uncategorized';
+            $categoryName = $category !== null ? $category->name : 'Uncategorized';
 
             $this->addProductItems($channel, $product, $categorySlug, $categoryName);
         }
