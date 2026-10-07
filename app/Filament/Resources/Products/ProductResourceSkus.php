@@ -89,7 +89,7 @@ final class ProductResourceSkus
                         }
 
                         // Order the options so the SKU is consistently generated.
-                        $options = VariationOption::whereIn('id', $state)->get()->sortBy('sort_order');
+                        $options = VariationOption::whereIn('id', $state)->orderBy('sort_order')->get();
                         $suffix = $options->map(function (VariationOption $option) {
                             $val = $option->value ?? $option->name;
 
