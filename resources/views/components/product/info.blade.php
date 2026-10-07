@@ -32,6 +32,10 @@
                                ($product->pricing_model === 'area' && abs($currentBasePrice - $outletMin) < 0.01);
         }
     }
+
+    // Determine active campaigns for display
+    $offerCampaign = $product->activeOfferCampaign();
+    $outletCampaign = $product->activeOutletCampaign();
 @endphp
 
 <div class="mb-2 flex items-center justify-between">
@@ -129,6 +133,12 @@
                     <flux:badge size="sm" variant="solid" color="orange" class="uppercase font-bold">Outlet</flux:badge>
                 @endif
                 <span class="text-xs font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">IVA INCLUSA</span>
+                @if($offerCampaign)
+                    <span class="text-sm text-gray-600">Offerta {{ $offerCampaign->validityLabel() }}</span>
+                @endif
+                @if($outletCampaign && $isOutletShowcase)
+                    <span class="text-sm text-gray-600">Outlet valido {{ $outletCampaign->validityLabel() }}</span>
+                @endif
             </div>
         @else
             <div class="flex items-baseline gap-4">
@@ -142,6 +152,12 @@
                     <flux:badge size="sm" variant="solid" color="orange" class="uppercase font-bold">Outlet</flux:badge>
                 @endif
                 <span class="text-xs font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">IVA INCLUSA / CAD.</span>
+                @if($offerCampaign)
+                    <span class="text-sm text-gray-600">Offerta {{ $offerCampaign->validityLabel() }}</span>
+                @endif
+                @if($outletCampaign && $currentIsOutlet)
+                    <span class="text-sm text-gray-600">Outlet valido {{ $outletCampaign->validityLabel() }}</span>
+                @endif
             </div>
         @endif
     @else
