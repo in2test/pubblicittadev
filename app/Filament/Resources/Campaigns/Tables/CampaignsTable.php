@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Campaigns\Tables;
 
 use App\Models\Campaign;
+use Carbon\CarbonImmutable;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -57,7 +58,17 @@ class CampaignsTable
             ->filters([
                 Filter::make('active')
                     ->label('Solo campagne attive')
-                    ->query(fn (Builder $query): Builder => $query->active()),
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where(function (Builder $q) {
+                            $now = CarbonImmutable::now();
+                            $q->whereNull('starts_at')
+                                ->orWhere('starts_at', '<=', $now);
+                        })
+                        ->where(function (Builder $q) {
+                            $now = CarbonImmutable::now();
+                            $q->whereNull('ends_at')
+                                ->orWhere('ends_at', '>=', $now);
+                        })),
             ])
             ->defaultSort('starts_at', 'desc')
             ->recordActions([

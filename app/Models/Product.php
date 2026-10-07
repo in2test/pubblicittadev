@@ -238,7 +238,17 @@ class Product extends Model implements HasMedia
     {
         return $this->skus()
             ->where('is_outlet', true)
-            ->whereHas('campaigns', fn (Builder $query) => $query->active());
+            ->whereHas('campaigns', function (Builder $q) {
+                $now = CarbonImmutable::now();
+                $q->where(function (Builder $sub) use ($now) {
+                    $sub->whereNull('starts_at')
+                        ->orWhere('starts_at', '<=', $now);
+                })
+                    ->where(function (Builder $sub) use ($now) {
+                        $sub->whereNull('ends_at')
+                            ->orWhere('ends_at', '>=', $now);
+                    });
+            });
     }
 
     public function hasActiveOfferCampaign(): bool
@@ -258,7 +268,18 @@ class Product extends Model implements HasMedia
             );
         }
 
-        return $this->campaigns()->active()->first();
+        return $this->campaigns()
+            ->where(function (Builder $q) {
+                $now = CarbonImmutable::now();
+                $q->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', $now);
+            })
+            ->where(function (Builder $q) {
+                $now = CarbonImmutable::now();
+                $q->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', $now);
+            })
+            ->first();
     }
 
     public function activeOutletCampaign(): ?Campaign

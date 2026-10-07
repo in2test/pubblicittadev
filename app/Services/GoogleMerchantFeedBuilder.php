@@ -98,8 +98,7 @@ class GoogleMerchantFeedBuilder
             $description .= "\nTaglia: ".$sizeOption->name;
         }
         if ($sku->isOutlet() && $sku->hasActiveCampaign()) {
-            $campaign = $sku->activeCampaign();
-            $description .= "\nCampagna valida fino al ".$campaign->validityLabel();
+            $description .= "\nCampagna valida fino al ".($sku->activeCampaign()?->validityLabel() ?? '');
         }
 
         $link = route('product', [$categorySlug, $product->slug]);

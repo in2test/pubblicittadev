@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\ProductVariationType;
 use App\Models\VariationOption;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -251,7 +252,17 @@ class ProductStartingPriceService
             $eligibleSkus = $product->skus()
                 ->where(function (Builder $query): void {
                     $query->where('is_outlet', false)
-                        ->orWhereHas('campaigns', fn (Builder $query) => $query->active());
+                        ->orWhereHas('campaigns', function (Builder $q) {
+                            $now = CarbonImmutable::now();
+                            $q->where(function (Builder $sub) use ($now) {
+                                $sub->whereNull('starts_at')
+                                    ->orWhere('starts_at', '<=', $now);
+                            })
+                                ->where(function (Builder $sub) use ($now) {
+                                    $sub->whereNull('ends_at')
+                                        ->orWhere('ends_at', '>=', $now);
+                                });
+                        });
                 });
             $skuPrices = (clone $eligibleSkus)->whereNotNull('override_price')->pluck('override_price')->map(fn ($price) => (float) $price);
             $hasSkuWithoutOverride = (clone $eligibleSkus)->whereNull('override_price')->exists();
