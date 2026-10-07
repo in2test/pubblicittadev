@@ -17,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * @property int $id
  * @property string $name
- * @property CarbonImmutable $starts_at
- * @property CarbonImmutable $ends_at
+ * @property CarbonImmutable|null $starts_at
+ * @property CarbonImmutable|null $ends_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Collection<int, Product> $products
@@ -56,26 +56,55 @@ class Campaign extends Model
         $now = CarbonImmutable::now();
 
         return $query
-            ->where('starts_at', '<=', $now)
-            ->where('ends_at', '>=', $now);
+            ->where(function (Builder $q) use ($now): void {
+                $q->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', $now);
+            })
+            ->where(function (Builder $q) use ($now): void {
+                $q->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', $now);
+            });
     }
 
     public function isActive(): bool
     {
         $now = CarbonImmutable::now();
 
-        return $this->starts_at <= $now && $this->ends_at >= $now;
+        $started = $this->starts_at === null || $this->starts_at <= $now;
+        $ended = $this->ends_at !== null && $this->ends_at < $now;
+
+        return $started && ! $ended;
     }
 
     public function statusLabel(): string
     {
         $now = CarbonImmutable::now();
 
-        if ($this->starts_at <= $now && $this->ends_at >= $now) {
+        if ($this->isActive()) {
             return 'Attiva';
         }
 
-        return $this->starts_at > $now ? 'Programmata' : 'Conclusa';
+        if ($this->starts_at !== null && $this->starts_at > $now) {
+            return 'Programmata';
+        }
+
+        return 'Conclusa';
+    }
+
+    public function validityLabel(string $prefix = 'Fino al'): string
+    {
+        if ($this->ends_at === null) {
+            return 'Fino ad esaurimento scorte';
+        }
+
+        $time = $this->ends_at->timezone('Europe/Rome')->format('H:i');
+        $date = $this->ends_at->timezone('Europe/Rome')->format('d/m/Y');
+
+        if ($time !== '00:00' && $time !== '23:59') {
+            return "{$prefix} {$date} alle {$time}";
+        }
+
+        return "{$prefix} {$date}";
     }
 
     protected function casts(): array

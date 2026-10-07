@@ -787,7 +787,7 @@ new class extends Component
                 $isOutletSelected = $activeSkuModel?->isOutlet()
                     && $activeSkuModel->hasActiveCampaign();
             @endphp
-            <x-product.info :product="$this->product()" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" :hasExplicitSkuSelection="$hasExplicitSkuSelection" />
+            <x-product.info :product="$this->product()" :activeSku="$activeSkuModel" :displaySku="$this->displaySku()" :displayTitle="$this->displayTitle()" :totalQuantity="$this->totalQuantity" :totalPrice="$this->totalPrice" :currentBasePrice="$this->currentBasePrice" :isOutletSelected="$isOutletSelected" :hasExplicitSkuSelection="$hasExplicitSkuSelection" />
 
             <!-- Quantity Discounts List -->
             @if ($product->getQuantityDiscounts()->isNotEmpty())

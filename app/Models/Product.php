@@ -238,20 +238,40 @@ class Product extends Model implements HasMedia
     {
         return $this->skus()
             ->where('is_outlet', true)
-            ->whereHas('campaigns', fn (Builder $query) => $query
-                ->where('starts_at', '<=', now())
-                ->where('ends_at', '>=', now()));
+            ->whereHas('campaigns', fn (Builder $query) => $query->active());
     }
 
     public function hasActiveOfferCampaign(): bool
     {
+        return $this->activeOfferCampaign() instanceof Campaign;
+    }
+
+    public function activeOfferCampaign(): ?Campaign
+    {
+        if ((float) $this->offer_price <= 0) {
+            return null;
+        }
+
         if ($this->relationLoaded('campaigns')) {
-            return $this->campaigns->contains(
+            return $this->campaigns->first(
                 fn (Campaign $campaign): bool => $campaign->isActive(),
             );
         }
 
-        return $this->campaigns()->active()->exists();
+        return $this->campaigns()->active()->first();
+    }
+
+    public function activeOutletCampaign(): ?Campaign
+    {
+        if ($this->relationLoaded('skus')) {
+            $sku = $this->skus->first(
+                fn (ProductSku $s): bool => $s->isOutlet() && $s->hasActiveCampaign(),
+            );
+
+            return $sku?->activeCampaign();
+        }
+
+        return $this->activeOutletSkus()->with('campaigns')->first()?->activeCampaign();
     }
 
     /**

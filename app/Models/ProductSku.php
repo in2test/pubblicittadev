@@ -120,13 +120,22 @@ class ProductSku extends Model
 
     public function hasActiveCampaign(): bool
     {
+        return $this->activeCampaign() instanceof Campaign;
+    }
+
+    public function activeCampaign(): ?Campaign
+    {
+        if (! $this->is_outlet) {
+            return null;
+        }
+
         if ($this->relationLoaded('campaigns')) {
-            return $this->campaigns->contains(
+            return $this->campaigns->first(
                 fn (Campaign $campaign): bool => $campaign->isActive(),
             );
         }
 
-        return $this->campaigns()->active()->exists();
+        return $this->campaigns()->active()->first();
     }
 
     protected function casts(): array

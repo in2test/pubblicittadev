@@ -35,11 +35,13 @@ class CampaignsTable
                 TextColumn::make('starts_at')
                     ->label('Inizio')
                     ->dateTime('d/m/Y H:i')
+                    ->placeholder('Immediata')
                     ->timezone('Europe/Rome')
                     ->sortable(),
                 TextColumn::make('ends_at')
                     ->label('Fine')
                     ->dateTime('d/m/Y H:i')
+                    ->placeholder('Indefinita')
                     ->timezone('Europe/Rome')
                     ->sortable(),
                 TextColumn::make('now')
@@ -55,9 +57,7 @@ class CampaignsTable
             ->filters([
                 Filter::make('active')
                     ->label('Solo campagne attive')
-                    ->query(fn (Builder $query): Builder => $query
-                        ->where('starts_at', '<=', now())
-                        ->where('ends_at', '>=', now())),
+                    ->query(fn (Builder $query): Builder => $query->active()),
             ])
             ->defaultSort('starts_at', 'desc')
             ->recordActions([

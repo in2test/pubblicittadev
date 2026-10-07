@@ -28,14 +28,16 @@ class CampaignForm
                             ->maxLength(255),
                         DateTimePicker::make('starts_at')
                             ->label('Inizio')
-                            ->required()
+                            ->nullable()
+                            ->helperText('Vuoto per attiva da subito')
                             ->locale('it')
                             ->displayFormat('d/m/Y H:i')
                             ->native()
                             ->timezone('Europe/Rome'),
                         DateTimePicker::make('ends_at')
                             ->label('Fine')
-                            ->required()
+                            ->nullable()
+                            ->helperText('Vuoto per attiva a tempo indeterminato')
                             ->locale('it')
                             ->displayFormat('d/m/Y H:i')
                             ->native()

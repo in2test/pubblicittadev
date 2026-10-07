@@ -264,3 +264,116 @@ it('bulk associates and bulk detaches selected products with the campaign', func
     expect($campaign->products)->toBeEmpty()
         ->and($campaign->outletSkus)->toBeEmpty();
 });
+
+it('handles null starts_at and ends_at as active indefinitely', function (): void {
+    $now = CarbonImmutable::now();
+
+    $indefiniteCampaign = Campaign::create([
+        'name' => 'Indefinite Campaign',
+        'starts_at' => null,
+        'ends_at' => null,
+    ]);
+
+    $startedIndefiniteCampaign = Campaign::create([
+        'name' => 'Started Indefinite',
+        'starts_at' => $now->subDay(),
+        'ends_at' => null,
+    ]);
+
+    $alreadyActiveUntilTomorrow = Campaign::create([
+        'name' => 'Already Active Until Tomorrow',
+        'starts_at' => null,
+        'ends_at' => $now->addDay(),
+    ]);
+
+    $scheduledIndefinite = Campaign::create([
+        'name' => 'Scheduled Indefinite',
+        'starts_at' => $now->addDay(),
+        'ends_at' => null,
+    ]);
+
+    $alreadyEndedCampaign = Campaign::create([
+        'name' => 'Already Ended',
+        'starts_at' => null,
+        'ends_at' => $now->subDay(),
+    ]);
+
+    $activeIds = Campaign::active()->pluck('id')->all();
+
+    expect($activeIds)
+        ->toContain($indefiniteCampaign->id)
+        ->toContain($startedIndefiniteCampaign->id)
+        ->toContain($alreadyActiveUntilTomorrow->id)
+        ->not->toContain($scheduledIndefinite->id)
+        ->not->toContain($alreadyEndedCampaign->id)
+        ->and($indefiniteCampaign->isActive())->toBeTrue()
+        ->and($indefiniteCampaign->statusLabel())->toBe('Attiva')
+        ->and($startedIndefiniteCampaign->isActive())->toBeTrue()
+        ->and($startedIndefiniteCampaign->statusLabel())->toBe('Attiva')
+        ->and($alreadyActiveUntilTomorrow->isActive())->toBeTrue()
+        ->and($alreadyActiveUntilTomorrow->statusLabel())->toBe('Attiva')
+        ->and($scheduledIndefinite->isActive())->toBeFalse()
+        ->and($scheduledIndefinite->statusLabel())->toBe('Programmata')
+        ->and($alreadyEndedCampaign->isActive())->toBeFalse()
+        ->and($alreadyEndedCampaign->statusLabel())->toBe('Conclusa');
+});
+
+it('creates a campaign with null dates in Filament form', function (): void {
+    Livewire::test(CreateCampaign::class)
+        ->fillForm([
+            'name' => 'Evergreen Campaign',
+            'starts_at' => null,
+            'ends_at' => null,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $campaign = Campaign::query()->where('name', 'Evergreen Campaign')->firstOrFail();
+
+    expect($campaign->starts_at)->toBeNull()
+        ->and($campaign->ends_at)->toBeNull()
+        ->and($campaign->isActive())->toBeTrue();
+});
+
+it('creates a campaign with null starts_at and populated ends_at in Filament form', function (): void {
+    $endsAt = CarbonImmutable::now()->addMonth();
+
+    Livewire::test(CreateCampaign::class)
+        ->fillForm([
+            'name' => 'Immediate Until Next Month',
+            'starts_at' => null,
+            'ends_at' => $endsAt->format('Y-m-d H:i:s'),
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $campaign = Campaign::query()->where('name', 'Immediate Until Next Month')->firstOrFail();
+
+    expect($campaign->starts_at)->toBeNull()
+        ->and($campaign->ends_at)->not->toBeNull()
+        ->and($campaign->isActive())->toBeTrue();
+});
+
+it('applies prices for products in indefinite campaigns', function (): void {
+    $product = Product::factory()->create([
+        'price' => 100,
+        'offer_price' => 50,
+    ]);
+    $sku = ProductSku::factory()->for($product)->create([
+        'is_outlet' => true,
+        'override_price' => 35,
+    ]);
+
+    $campaign = Campaign::create([
+        'name' => 'Indefinite Pricing',
+        'starts_at' => null,
+        'ends_at' => null,
+    ]);
+    $campaign->products()->attach($product);
+    $campaign->outletSkus()->attach($sku);
+
+    $pricing = app(ProductPricingService::class);
+
+    expect($pricing->getPriceForQuantity($product, 1))->toBe(50.0)
+        ->and($pricing->getSkuPriceForQuantity($product, 1, $sku))->toBe(35.0);
+});

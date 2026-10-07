@@ -15,11 +15,7 @@ class ProductOutletService
      */
     public function getOutletPricesPerOption(Product $product): array
     {
-        $outletSkusWithPrice = $product->skus()
-            ->where('is_outlet', true)
-            ->whereHas('campaigns', fn ($query) => $query
-                ->where('starts_at', '<=', now())
-                ->where('ends_at', '>=', now()))
+        $outletSkusWithPrice = $product->activeOutletSkus()
             ->whereNotNull('override_price')
             ->where('override_price', '>', 0)
             ->with('options')
