@@ -7,9 +7,13 @@ use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
 use App\Models\VariationType;
+use App\Services\GoogleMerchantFeedBuilder;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
+use DOMDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use function libxml_get_errors;
 
 uses(RefreshDatabase::class);
 
@@ -57,6 +61,29 @@ it('generates google merchant xml feed', function () {
     $item = $feed->channel->item[0]->children($merchantNamespace);
     expect((string) $item->image_link)->toBe($imageUrl)
         ->and((string) $item->additional_image_link[0])->toBe($additionalImageUrl);
+});
+
+it('validates the Google Merchant feed XML against the official product XSD', function () {
+    $builder = app(GoogleMerchantFeedBuilder::class);
+    $xml = $builder->build();
+
+    $doc = new DOMDocument;
+    $doc->preserveWhiteSpace = false;
+    $doc->formatOutput = false;
+    $doc->loadXML($xml);
+
+    libxml_use_internal_errors(true);
+    $xsdUrl = base_path('resources/xsd/google_product.xsd');
+    $valid = $doc->schemaValidate($xsdUrl);
+
+    if (! $valid) {
+        $errors = libxml_get_errors();
+        $msg = implode("\n", array_map(fn (LibXMLError $e) => trim($e->message)." (line {$e->line})", $errors));
+        libxml_clear_errors();
+        $this->fail("Google Merchant feed XML does not validate against the XSD:\n{$msg}");
+    }
+
+    expect($valid)->toBeTrue('Feed must conform to Google product XSD');
 });
 
 it('generates variants in google merchant xml feed', function () {
