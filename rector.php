@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\Renaming\Rector\Name\RenameClassRector;
+use Rector\CodingStyle\Rector\Ternary\TernaryToNullsafeCoalesceRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnTypeFromStrictTypedCallRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\ReturnUnionTypeRector;
@@ -34,6 +34,8 @@ return RectorConfig::configure()
             __DIR__.'/resources/views',
         ],
         AddArrowFunctionReturnTypeRector::class,
+        // Disable ternary‑to‑nullsafe transformation globally (helps PHPStan nullsafe.neverNull)
+        TernaryToNullsafeCoalesceRector::class,
     ])
     ->withPhpSets()
     ->withImportNames()
