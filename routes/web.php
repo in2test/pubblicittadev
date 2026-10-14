@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleMerchantFeedController;
 use App\Http\Controllers\HomePageController;
@@ -84,6 +85,8 @@ Route::post('/webhooks/stripe', [WebhookController::class, 'handle'])->name('web
 // dynamic routes for products and categories
 Route::get('/outlet', OutletProducts::class)->name('outlet');
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
+Route::get('/collezioni', [CollectionController::class, 'index'])->name('collections.index');
+Route::get('/collezioni/{collection:slug}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/catalogo/{category:slug}', [CategoryController::class, 'show'])->name('category');
 Route::get('/catalogo/{category:slug}/{product:slug}', [ProductController::class, 'show'])->name('product');

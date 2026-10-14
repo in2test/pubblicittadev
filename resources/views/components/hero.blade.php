@@ -65,6 +65,9 @@
                     @if($index === 0) fetchpriority="high" @else loading="lazy" @endif />
                 <!-- Overlay Elements -->
                 <div class="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent"></div>
+                @if(!empty($slide['url']))
+                    <a href="{{ $slide['url'] }}" class="absolute inset-0 z-10" aria-label="{{ $slide['label'] }}"></a>
+                @endif
                 <div class="absolute bottom-12 right-8 3xl:right-32 text-gray-50 text-right">
                     <div class="font-mono text-xs mb-2 opacity-60">{{ $slide['sub'] }}</div>
                     <div class="text-2xl font-black tracking-tight italic">{{ $slide['label'] }}</div>

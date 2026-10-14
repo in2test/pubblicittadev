@@ -31,15 +31,19 @@ class HomePageController extends Controller
     {
         $products = $this->featuredProducts();
         $portfolioItems = $this->portfolioItems();
-        $carouselProducts = $this->carouselProducts(6 - $portfolioItems->count());
+        $featuredCollections = $this->featuredCollections();
+        $neededCarouselProducts = max(1, 6 - $portfolioItems->count() - $featuredCollections->count());
+        $carouselProducts = $this->carouselProducts($neededCarouselProducts);
 
         $heroSlides = [
+            ...$this->collectionSlides($featuredCollections),
             ...$this->portfolioSlides($portfolioItems),
             ...$this->productSlides($carouselProducts),
         ];
 
         return view('welcome', [
             'products' => $products,
+            'collections' => $featuredCollections,
             'heroSlides' => $this->completeHeroSlides($heroSlides),
         ]);
     }
@@ -78,6 +82,58 @@ class HomePageController extends Controller
             ->orderByDesc('created_at')
             ->take(9)
             ->get();
+    }
+
+    /**
+     * @return Collection<int, \App\Models\Collection>
+     */
+    private function featuredCollections(): Collection
+    {
+        return \App\Models\Collection::query()
+            ->active()
+            ->featured()
+            ->with([
+                'media',
+                'products' => fn ($q) => $q->where('is_active', true)
+                    ->with(['media', 'images', 'category:id,name,slug'])
+                    ->take(4),
+            ])
+            ->withCount('products')
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->take(4)
+            ->get();
+    }
+
+    /**
+     * @param  Collection<int, \App\Models\Collection>  $collections
+     * @return array<int, array{img: string|null, label: string, sub: string, description: string, status: string, url: string}>
+     */
+    private function collectionSlides(Collection $collections): array
+    {
+        $collections->loadMissing(['media', 'products.media', 'products.images']);
+        $slides = [];
+        foreach ($collections as $item) {
+            $img = $item->getBannerUrl('large');
+            if (! $img && $item->products->isNotEmpty()) {
+                $firstProduct = $item->products->first();
+                $img = $firstProduct->getFirstMediaUrl('product_images', 'large') ?: $firstProduct->getFirstImageUrl('large');
+            }
+
+            if ($img) {
+                $img = str_replace('/standard/', '/largethumbnail/', $img);
+                $slides[] = [
+                    'img' => $img,
+                    'label' => mb_strtoupper((string) $item->name),
+                    'sub' => 'BUNDLE & KIT',
+                    'description' => Str::limit(strip_tags((string) $item->description), 100),
+                    'status' => 'SYSTEM_STATUS: BUNDLE',
+                    'url' => route('collections.show', $item->slug),
+                ];
+            }
+        }
+
+        return $slides;
     }
 
     /**

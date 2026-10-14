@@ -268,13 +268,7 @@ new class extends Component
     public function activeSku(): ?ProductSku
     {
         $product = $this->product();
-        $isCustomFormat = false;
-        foreach ($this->selectedOptions as $optionId) {
-            if ($optionId == 999999) {
-                $isCustomFormat = true;
-                break;
-            }
-        }
+        $isCustomFormat = array_any($this->selectedOptions, fn($optionId) => $optionId == 999999);
 
         $activeSku = null;
         if ($isCustomFormat && $this->width && $this->height) {
@@ -350,14 +344,7 @@ new class extends Component
     public function currentBasePrice(): float
     {
         $product = $this->product();
-
-        $isCustomFormat = false;
-        foreach ($this->selectedOptions as $optionId) {
-            if ($optionId == 999999) {
-                $isCustomFormat = true;
-                break;
-            }
-        }
+        $isCustomFormat = array_any($this->selectedOptions, fn($optionId) => $optionId == 999999);
 
         $activeSku = $this->activeSku();
 

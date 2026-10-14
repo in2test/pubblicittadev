@@ -27,6 +27,8 @@
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
                 href="{{ route('portfolio') }}">Portfolio Lavori</a>
             <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+                href="{{ route('collections.index') }}">Collezioni & Kit</a>
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
                 href="{{ route('contact') }}">Supporto</a>
         </div>
         <div class="flex flex-col space-y-4">

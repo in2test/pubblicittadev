@@ -130,7 +130,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product whereType($value)
  * @method static Builder<static>|Product whereUpdatedAt($value)
  *
- * @mixin \Eloquent
+ * @mixin Model
  */
 #[Fillable([
     'sku',
@@ -229,6 +229,17 @@ class Product extends Model implements HasMedia
     public function campaigns(): BelongsToMany
     {
         return $this->belongsToMany(Campaign::class, 'campaign_products');
+    }
+
+    /**
+     * @return BelongsToMany<\App\Models\Collection, $this>
+     */
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Collection::class, 'collection_product')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order')
+            ->withTimestamps();
     }
 
     /**
