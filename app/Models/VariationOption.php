@@ -38,14 +38,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property ModifierType $default_modifier_type
  * @property numeric $default_price_modifier
  * @property int $sort_order
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariationOption> $productVariationOptions
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, ProductVariationOption> $productVariationOptions
  * @property-read int|null $product_variation_options_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductSku> $skus
+ * @property-read Collection<int, ProductSku> $skus
  * @property-read int|null $skus_count
- * @property-read \App\Models\VariationType $type
- * @property-read \App\Models\VariationType $variationType
+ * @property-read VariationType $type
+ * @property-read VariationType $variationType
+ *
  * @method static \Database\Factories\VariationOptionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newQuery()
@@ -63,6 +64,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereVariationTypeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereWidth($value)
+ *
  * @mixin \Eloquent
  */
 class VariationOption extends Model

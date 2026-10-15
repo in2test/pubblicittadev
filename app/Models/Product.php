@@ -25,7 +25,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -76,42 +75,46 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $technical_specs
  * @property string|null $construction_features
  * @property string|null $customization_notes
- * @property-read Collection<int, \App\Models\ProductSku> $activeOutletSkus
+ * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $baseVariationTypes
+ * @property-read Collection<int, ProductVariationType> $baseVariationTypes
  * @property-read int|null $base_variation_types_count
  * @property-read string $brand
- * @property-read Collection<int, \App\Models\Campaign> $campaigns
+ * @property-read Collection<int, Campaign> $campaigns
  * @property-read int|null $campaigns_count
- * @property-read \App\Models\Category $category
+ * @property-read Category $category
  * @property-read Collection<int, \App\Models\Collection> $collections
  * @property-read int|null $collections_count
- * @property-read Collection<int, \App\Models\Image> $images
+ * @property-read Collection<int, Image> $images
  * @property-read int|null $images_count
  * @property-read string|null $material
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $modifierVariationTypes
+ * @property-read Collection<int, ProductVariationType> $modifierVariationTypes
  * @property-read int|null $modifier_variation_types_count
  * @property-read string|null $pattern
  * @property-read string $plain_description
- * @property-read Collection<int, \App\Models\PricingTier> $pricingTiers
+ * @property-read Collection<int, PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
- * @property-read Collection<int, \App\Models\ProductSku> $skus
+ * @property-read Collection<int, ProductSku> $skus
  * @property-read int|null $skus_count
  * @property-read mixed $url
- * @property-read \App\Models\ProductVariationType|null $pivot
- * @property-read Collection<int, \App\Models\VariationType> $variationTypes
+ * @property-read ProductVariationType|null $pivot
+ * @property-read Collection<int, VariationType> $variationTypes
  * @property-read int|null $variation_types_count
+ * @property-read numeric|null $pricing_tiers_min_quantity
+ * @property-read numeric|null $pricing_tiers_min_price_per_unit
+ * @property-read numeric|null $skus_min_override_price
+ *
  * @method static Builder<static>|Product active()
- * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ * @method static ProductFactory factory($count = null, $state = [])
  * @method static Builder<static>|Product hasOutletSkus()
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
- * @method static Builder<static>|Product visibleTo(?\App\Models\User $user = null)
+ * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
  * @method static Builder<static>|Product whereCachedStartingPrice($value)
@@ -150,6 +153,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product whereTechnicalSpecs($value)
  * @method static Builder<static>|Product whereType($value)
  * @method static Builder<static>|Product whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([
@@ -396,7 +400,7 @@ class Product extends Model implements HasMedia
     protected function brand(): Attribute
     {
         return Attribute::make(get: function (): string {
-            $nameLower = strtolower($this->name);
+            $nameLower = strtolower($this->name ?? '');
             if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
                 return 'NewWave';
             }
@@ -479,7 +483,7 @@ class Product extends Model implements HasMedia
          */
         return [
             'id' => (int) $this->id,
-            'name' => $this->name,
+            'name' => (string) $this->name,
             'sku' => (string) $this->sku,
             'description' => (string) $this->description,
         ];

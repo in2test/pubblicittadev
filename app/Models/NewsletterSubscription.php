@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\NewsletterSubscriptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,17 +15,19 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $email
  * @property bool $is_active
- * @property \Carbon\CarbonImmutable|null $created_at
- * @property \Carbon\CarbonImmutable|null $updated_at
- * @method static \Database\Factories\NewsletterSubscriptionFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|NewsletterSubscription whereUpdatedAt($value)
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ *
+ * @method static NewsletterSubscriptionFactory factory($count = null, $state = [])
+ * @method static Builder<static>|NewsletterSubscription newModelQuery()
+ * @method static Builder<static>|NewsletterSubscription newQuery()
+ * @method static Builder<static>|NewsletterSubscription query()
+ * @method static Builder<static>|NewsletterSubscription whereCreatedAt($value)
+ * @method static Builder<static>|NewsletterSubscription whereEmail($value)
+ * @method static Builder<static>|NewsletterSubscription whereId($value)
+ * @method static Builder<static>|NewsletterSubscription whereIsActive($value)
+ * @method static Builder<static>|NewsletterSubscription whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([

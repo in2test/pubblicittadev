@@ -14,7 +14,7 @@ class ProductSkuObserver
     public function saved(ProductSku $productSku): void
     {
         if ($productSku->wasRecentlyCreated || $productSku->wasChanged(['override_price'])) {
-            $productSku->product?->updateCachedPrices();
+            $productSku->product->updateCachedPrices();
         }
     }
 
@@ -24,7 +24,7 @@ class ProductSkuObserver
     public function deleted(ProductSku $productSku): void
     {
         if ($productSku->override_price !== null) {
-            $productSku->product?->updateCachedPrices();
+            $productSku->product->updateCachedPrices();
         }
     }
 

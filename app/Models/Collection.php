@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Carbon\CarbonImmutable;
 use Database\Factories\CollectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
@@ -16,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -25,16 +25,18 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * "Apertura attività" or "Golfing Kit" that can be promoted together
  * and featured on the homepage hero or banner sections.
  *
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read EloquentCollection<int, \App\Models\Product> $products
+ * @property-read EloquentCollection<int, Product> $products
  * @property-read int|null $products_count
+ *
  * @method static Builder<static>|Collection active()
- * @method static \Database\Factories\CollectionFactory factory($count = null, $state = [])
+ * @method static CollectionFactory factory($count = null, $state = [])
  * @method static Builder<static>|Collection featured()
  * @method static Builder<static>|Collection newModelQuery()
  * @method static Builder<static>|Collection newQuery()
  * @method static Builder<static>|Collection query()
+ *
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'is_featured', 'is_active', 'sort_order'])]

@@ -111,6 +111,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 ])]
 /**
  * @use HasFactory<OrderFactory>
+ *
  * @property int $id
  * @property int $user_id
  * @property string $order_number
@@ -132,14 +133,15 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int|null $transporter_id
  * @property string|null $tracking_code
  * @property string|null $tracking_url
- * @property-read \App\Models\Address|null $billingAddress
- * @property-read Collection<int, \App\Models\OrderItem> $items
+ * @property-read Address|null $billingAddress
+ * @property-read Collection<int, OrderItem> $items
  * @property-read int|null $items_count
- * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read \App\Models\Address|null $shippingAddress
- * @property-read \App\Models\Transporter|null $transporter
- * @property-read \App\Models\User $user
+ * @property-read Address|null $shippingAddress
+ * @property-read Transporter|null $transporter
+ * @property-read User $user
+ *
  * @method static \Database\Factories\OrderFactory factory($count = null, $state = [])
  * @method static Builder<static>|Order newModelQuery()
  * @method static Builder<static>|Order newQuery()
@@ -165,6 +167,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static Builder<static>|Order whereUpdatedAt($value)
  * @method static Builder<static>|Order whereUserId($value)
  * @method static Builder<static>|Order whereWorkStatus($value)
+ *
  * @mixin \Eloquent
  */
 class Order extends Model implements HasMedia

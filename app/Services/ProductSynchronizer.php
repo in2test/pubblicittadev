@@ -37,6 +37,10 @@ class ProductSynchronizer
      */
     public function syncProduct(Product $product): void
     {
+        if ($product->sku === null) {
+            return;
+        }
+
         $data = $this->apiClient->getFullProductData($product->sku);
 
         if (! $data) {

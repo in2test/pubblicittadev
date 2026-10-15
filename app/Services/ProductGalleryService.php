@@ -193,7 +193,7 @@ class ProductGalleryService
     {
         $image = $this->getFirstImage($product, $variationOptionId);
         if (! $image) {
-            return 'https://placehold.co/600x800?text='.urlencode($product->name);
+            return 'https://placehold.co/600x800?text='.urlencode($product->name ?? '');
         }
 
         $attributes = (array) $image;

@@ -12,6 +12,7 @@ use App\Services\CartManager;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use Mockery;
+use Mockery\MockInterface;
 use Stripe\ApiRequestor;
 use Stripe\HttpClient\ClientInterface;
 use Tests\TestCase;
@@ -51,7 +52,7 @@ class CheckoutTest extends TestCase
         ]);
 
         // Mock Stripe's HTTP Client to intercept the API call made by Session::create()
-        /** @var \Mockery\MockInterface&ClientInterface $mockHttpClient */
+        /** @var MockInterface&ClientInterface $mockHttpClient */
         $mockHttpClient = Mockery::mock(ClientInterface::class);
         $mockHttpClient->shouldReceive('request')
             ->once()
@@ -157,7 +158,7 @@ class CheckoutTest extends TestCase
         $product = Product::factory()->create(['price' => 10.00]);
         $address = Address::factory()->create(['user_id' => $user->id]);
 
-        /** @var \Mockery\MockInterface&CartManager $mockCartManager */
+        /** @var MockInterface&CartManager $mockCartManager */
         $mockCartManager = Mockery::mock(CartManager::class);
         $mockCartManager->shouldReceive('isEmpty')->andReturn(false);
         $mockCartManager->shouldReceive('total')->andReturn(10.00);

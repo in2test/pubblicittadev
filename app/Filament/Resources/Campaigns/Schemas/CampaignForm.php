@@ -82,7 +82,7 @@ class CampaignForm
                                         }
                                     }),
                             )
-                            ->getOptionLabelFromRecordUsing(fn (ProductSku $record): string => "{$record->product?->name} — {$record->sku}")
+                            ->getOptionLabelFromRecordUsing(fn (ProductSku $record): string => "{$record->product->name} — {$record->sku}")
                             ->multiple()
                             ->searchable()
                             ->preload(),
