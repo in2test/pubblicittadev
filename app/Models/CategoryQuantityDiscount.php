@@ -53,6 +53,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 /**
  * @use HasFactory<CategoryQuantityDiscountFactory>
+ * @property int $id
+ * @property int $category_id
+ * @property int $min_quantity
+ * @property int|null $max_quantity
+ * @property string $discount_type
+ * @property numeric $discount_value
+ * @property string|null $description
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read \App\Models\Category $category
+ * @method static Builder<static>|CategoryQuantityDiscount newModelQuery()
+ * @method static Builder<static>|CategoryQuantityDiscount newQuery()
+ * @method static Builder<static>|CategoryQuantityDiscount query()
+ * @method static Builder<static>|CategoryQuantityDiscount whereCategoryId($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereCreatedAt($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereDescription($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereDiscountType($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereDiscountValue($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereId($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereMaxQuantity($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereMinQuantity($value)
+ * @method static Builder<static>|CategoryQuantityDiscount whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class CategoryQuantityDiscount extends Model
 {

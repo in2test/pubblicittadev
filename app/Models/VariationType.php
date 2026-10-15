@@ -19,26 +19,30 @@ use Override;
  * @property int $id
  * @property string $name
  * @property string $presentation_type
+ * @property string|null $default_modifier_type
+ * @property bool $allow_multiple
+ * @property bool $expose_in_url
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, VariationOption> $options
+ * @property-read Collection<int, \App\Models\VariationOption> $options
  * @property-read int|null $options_count
- * @property-read Collection<int, ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, \App\Models\ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
- * @property-read ProductVariationType|null $pivot
- * @property-read Collection<int, Product> $products
+ * @property-read \App\Models\ProductVariationType|null $pivot
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- *
- * @method static VariationTypeFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\VariationTypeFactory factory($count = null, $state = [])
  * @method static Builder<static>|VariationType newModelQuery()
  * @method static Builder<static>|VariationType newQuery()
  * @method static Builder<static>|VariationType query()
+ * @method static Builder<static>|VariationType whereAllowMultiple($value)
  * @method static Builder<static>|VariationType whereCreatedAt($value)
+ * @method static Builder<static>|VariationType whereDefaultModifierType($value)
+ * @method static Builder<static>|VariationType whereExposeInUrl($value)
  * @method static Builder<static>|VariationType whereId($value)
  * @method static Builder<static>|VariationType whereName($value)
  * @method static Builder<static>|VariationType wherePresentationType($value)
  * @method static Builder<static>|VariationType whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([

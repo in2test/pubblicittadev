@@ -73,6 +73,46 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'variation_option_id', 'order_by'])]
 /**
  * @use HasFactory<ImageFactory>
+ * @property int $id
+ * @property string|null $image_path
+ * @property string|null $thumbnail_path
+ * @property string|null $medium_path
+ * @property string|null $large_path
+ * @property string|null $image_url
+ * @property string|null $thumbnail_url
+ * @property string|null $medium_url
+ * @property string|null $large_url
+ * @property string|null $image_description
+ * @property int|null $product_id
+ * @property int|null $category_id
+ * @property int|null $variation_option_id
+ * @property int|null $order_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read \App\Models\Category|null $category
+ * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\VariationOption|null $variationOption
+ * @method static \Database\Factories\ImageFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Image newModelQuery()
+ * @method static Builder<static>|Image newQuery()
+ * @method static Builder<static>|Image query()
+ * @method static Builder<static>|Image whereCategoryId($value)
+ * @method static Builder<static>|Image whereCreatedAt($value)
+ * @method static Builder<static>|Image whereId($value)
+ * @method static Builder<static>|Image whereImageDescription($value)
+ * @method static Builder<static>|Image whereImagePath($value)
+ * @method static Builder<static>|Image whereImageUrl($value)
+ * @method static Builder<static>|Image whereLargePath($value)
+ * @method static Builder<static>|Image whereLargeUrl($value)
+ * @method static Builder<static>|Image whereMediumPath($value)
+ * @method static Builder<static>|Image whereMediumUrl($value)
+ * @method static Builder<static>|Image whereOrderBy($value)
+ * @method static Builder<static>|Image whereProductId($value)
+ * @method static Builder<static>|Image whereThumbnailPath($value)
+ * @method static Builder<static>|Image whereThumbnailUrl($value)
+ * @method static Builder<static>|Image whereUpdatedAt($value)
+ * @method static Builder<static>|Image whereVariationOptionId($value)
+ * @mixin \Eloquent
  */
 class Image extends Model
 {

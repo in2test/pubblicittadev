@@ -27,33 +27,42 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'default_price_modifier',
 ])]
 /**
- * @property string $name
- * @property VariationType|null $type
- * @property VariationType|null $variationType
  * @property int $id
  * @property int $variation_type_id
+ * @property string $name
  * @property string|null $value
+ * @property string|null $description
  * @property string|null $color_hex
- * @property float|null $width
- * @property float|null $height
- * @property int $sort_order
- * @property ModifierType|null $default_modifier_type
+ * @property numeric|null $width
+ * @property numeric|null $height
+ * @property ModifierType $default_modifier_type
  * @property numeric $default_price_modifier
+ * @property int $sort_order
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductVariationOption> $productVariationOptions
  * @property-read int|null $product_variation_options_count
- *
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProductSku> $skus
+ * @property-read int|null $skus_count
+ * @property-read \App\Models\VariationType $type
+ * @property-read \App\Models\VariationType $variationType
  * @method static \Database\Factories\VariationOptionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereColorHex($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereDefaultModifierType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereDefaultPriceModifier($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereHeight($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereSortOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereVariationTypeId($value)
- *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|VariationOption whereWidth($value)
  * @mixin \Eloquent
  */
 class VariationOption extends Model

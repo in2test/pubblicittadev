@@ -21,8 +21,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property CarbonImmutable|null $ends_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, Product> $products
- * @property-read Collection<int, ProductSku> $outletSkus
+ * @property-read Collection<int, \App\Models\ProductSku> $outletSkus
+ * @property-read int|null $outlet_skus_count
+ * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read int|null $products_count
+ * @method static Builder<static>|Campaign active()
+ * @method static \Database\Factories\CampaignFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Campaign newModelQuery()
+ * @method static Builder<static>|Campaign newQuery()
+ * @method static Builder<static>|Campaign query()
+ * @method static Builder<static>|Campaign whereCreatedAt($value)
+ * @method static Builder<static>|Campaign whereEndsAt($value)
+ * @method static Builder<static>|Campaign whereId($value)
+ * @method static Builder<static>|Campaign whereName($value)
+ * @method static Builder<static>|Campaign whereStartsAt($value)
+ * @method static Builder<static>|Campaign whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 #[Fillable(['name', 'starts_at', 'ends_at'])]
 class Campaign extends Model

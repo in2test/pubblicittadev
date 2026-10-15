@@ -25,26 +25,17 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * "Apertura attività" or "Golfing Kit" that can be promoted together
  * and featured on the homepage hero or banner sections.
  *
- * @property int $id
- * @property string $name
- * @property string $slug
- * @property string|null $description
- * @property bool $is_featured
- * @property bool $is_active
- * @property int $sort_order
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property-read EloquentCollection<int, Product> $products
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read EloquentCollection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- *
- * @method static CollectionFactory factory($count = null, $state = [])
  * @method static Builder<static>|Collection active()
+ * @method static \Database\Factories\CollectionFactory factory($count = null, $state = [])
  * @method static Builder<static>|Collection featured()
  * @method static Builder<static>|Collection newModelQuery()
  * @method static Builder<static>|Collection newQuery()
  * @method static Builder<static>|Collection query()
- *
- * @mixin Model
+ * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'is_featured', 'is_active', 'sort_order'])]
 #[RouteKey('slug')]

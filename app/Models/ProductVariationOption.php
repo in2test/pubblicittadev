@@ -26,25 +26,25 @@ use Illuminate\Support\Facades\Log;
  * @property int $product_variation_type_id
  * @property int $variation_option_id
  * @property ModifierType $modifier_type
- * @property numeric|null $price_modifier Null = inherit global default
+ * @property numeric|null $price_modifier
+ * @property int $sort_order
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read VariationOption $option
- * @property-read ProductVariationType $productVariationType
- * @property-read int|null $options_count
- *
- * @method static ProductVariationOptionFactory factory($count = null, $state = [])
+ * @property-read \App\Models\VariationOption $option
+ * @property-read \App\Models\ProductVariationType $productVariationType
+ * @method static \Database\Factories\ProductVariationOptionFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductVariationOption newModelQuery()
  * @method static Builder<static>|ProductVariationOption newQuery()
  * @method static Builder<static>|ProductVariationOption query()
  * @method static Builder<static>|ProductVariationOption whereCreatedAt($value)
  * @method static Builder<static>|ProductVariationOption whereId($value)
+ * @method static Builder<static>|ProductVariationOption whereModifierType($value)
  * @method static Builder<static>|ProductVariationOption wherePriceModifier($value)
  * @method static Builder<static>|ProductVariationOption whereProductVariationTypeId($value)
+ * @method static Builder<static>|ProductVariationOption whereSortOrder($value)
  * @method static Builder<static>|ProductVariationOption whereUpdatedAt($value)
  * @method static Builder<static>|ProductVariationOption whereVariationOptionId($value)
- *
- * @mixin Model
+ * @mixin \Eloquent
  */
 #[Fillable([
     'product_variation_type_id',

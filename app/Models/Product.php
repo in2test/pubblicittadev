@@ -39,98 +39,118 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * or synced from the NewWave API.
  *
  * @property int $id
- * @property string $name
+ * @property string $type
+ * @property ProductClass|null $product_class
+ * @property string $pricing_model
+ * @property float|null $min_area
+ * @property numeric|null $max_width
+ * @property numeric|null $max_height
+ * @property float|null $sheet_width
+ * @property float|null $sheet_height
+ * @property bool $allows_custom_size
+ * @property float|null $min_custom_width
+ * @property float|null $max_custom_width
+ * @property float|null $min_custom_height
+ * @property float|null $max_custom_height
+ * @property SyncStatus $sync_status
+ * @property array<array-key, mixed>|null $remote_images
+ * @property int $sync_progress
+ * @property CarbonImmutable|null $synced_at
+ * @property bool $is_active
+ * @property string|null $sku
+ * @property string|null $name
  * @property string $slug
- * @property string $sku
- * @property string $description
- * @property float $price
- * @property float $offer_price
+ * @property string|null $description
+ * @property bool $override_description
+ * @property numeric|null $price
+ * @property numeric|null $offer_price
+ * @property numeric|null $cached_base_price
+ * @property numeric|null $cached_starting_price
+ * @property numeric|null $cached_starting_unit_price
+ * @property bool $override_price
  * @property bool $is_featured
  * @property int $category_id
- * @property string $type
- * @property SyncStatus|null $sync_status
- * @property Carbon $synced_at
- * @property bool $is_active
- * @property int $sync_progress
- * @property bool $override_price
- * @property bool $override_description
- * @property array<string, mixed> $remote_images
- * @property ProductClass|null $product_class
- * @property float|null $min_area
- * @property float|null $max_width Maximum printable width in cm (null = unlimited)
- * @property float|null $max_height Maximum printable height in cm (null = unlimited)
- * @property float|null $skus_min_override_price
- * @property bool|null $has_sku_without_override
- * @property float|null $pricing_tiers_min_price_per_unit
- * @property int|null $pricing_tiers_min_quantity
- * @property-read Category $category
- * @property-read Collection<int, VariationType> $variationTypes
- * @property-read Collection<int, ProductSku> $skus
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, Image> $images
+ * @property string|null $certifications
+ * @property string|null $technical_specs
+ * @property string|null $construction_features
+ * @property string|null $customization_notes
+ * @property-read Collection<int, \App\Models\ProductSku> $activeOutletSkus
+ * @property-read int|null $active_outlet_skus_count
+ * @property-read Collection<int, \App\Models\ProductVariationType> $baseVariationTypes
+ * @property-read int|null $base_variation_types_count
+ * @property-read string $brand
+ * @property-read Collection<int, \App\Models\Campaign> $campaigns
+ * @property-read int|null $campaigns_count
+ * @property-read \App\Models\Category $category
+ * @property-read Collection<int, \App\Models\Collection> $collections
+ * @property-read int|null $collections_count
+ * @property-read Collection<int, \App\Models\Image> $images
  * @property-read int|null $images_count
+ * @property-read string|null $material
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, PricingTier> $pricingTiers
+ * @property-read Collection<int, \App\Models\ProductVariationType> $modifierVariationTypes
+ * @property-read int|null $modifier_variation_types_count
+ * @property-read string|null $pattern
+ * @property-read string $plain_description
+ * @property-read Collection<int, \App\Models\PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read Collection<int, ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, \App\Models\ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
+ * @property-read Collection<int, \App\Models\ProductSku> $skus
  * @property-read int|null $skus_count
- * @property-read ProductVariationType|null $pivot
+ * @property-read mixed $url
+ * @property-read \App\Models\ProductVariationType|null $pivot
+ * @property-read Collection<int, \App\Models\VariationType> $variationTypes
  * @property-read int|null $variation_types_count
- * @property string $pricing_model The pricing model (e.g., standard, area-based)
- * @property float|null $sheet_width The physical width of the print sheet in mm
- * @property float|null $sheet_height The physical height of the print sheet in mm
- * @property bool $allows_custom_size Indicates if the product allows custom sizing
- * @property float|null $min_custom_width Minimum allowed custom width
- * @property float|null $max_custom_width Maximum allowed custom width
- * @property float|null $min_custom_height Minimum allowed custom height
- * @property float|null $max_custom_height Maximum allowed custom height
- * @property array<mixed>|null $certifications JSON array of product certifications
- * @property array<mixed>|null $technical_specs JSON array of technical specifications
- * @property array<mixed>|null $construction_features JSON array of construction features
- * @property string|null $customization_notes Optional customization notes
- * @property float|null $cached_base_price Cached base price
- * @property float|null $cached_starting_price Cached minimum starting price
- * @property float|null $cached_starting_unit_price Cached minimum starting unit price
- * @property-read string $brand Resolved brand name derived from product name
- * @property-read string $plain_description Plain-text version of the description
- * @property-read string $url Public URL for this product
- * @property-read string|null $material Material attribute from linked variation option
- * @property-read string|null $pattern Pattern (motivo) attribute from linked variation option
- *
  * @method static Builder<static>|Product active()
- * @method static ProductFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Product hasOutletSkus()
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
- * @method static Builder<static>|Product visibleTo(?User $user = null)
+ * @method static Builder<static>|Product visibleTo(?\App\Models\User $user = null)
+ * @method static Builder<static>|Product whereAllowsCustomSize($value)
+ * @method static Builder<static>|Product whereCachedBasePrice($value)
+ * @method static Builder<static>|Product whereCachedStartingPrice($value)
+ * @method static Builder<static>|Product whereCachedStartingUnitPrice($value)
  * @method static Builder<static>|Product whereCategoryId($value)
+ * @method static Builder<static>|Product whereCertifications($value)
+ * @method static Builder<static>|Product whereConstructionFeatures($value)
  * @method static Builder<static>|Product whereCreatedAt($value)
+ * @method static Builder<static>|Product whereCustomizationNotes($value)
  * @method static Builder<static>|Product whereDescription($value)
  * @method static Builder<static>|Product whereId($value)
  * @method static Builder<static>|Product whereIsActive($value)
  * @method static Builder<static>|Product whereIsFeatured($value)
+ * @method static Builder<static>|Product whereMaxCustomHeight($value)
+ * @method static Builder<static>|Product whereMaxCustomWidth($value)
  * @method static Builder<static>|Product whereMaxHeight($value)
  * @method static Builder<static>|Product whereMaxWidth($value)
  * @method static Builder<static>|Product whereMinArea($value)
+ * @method static Builder<static>|Product whereMinCustomHeight($value)
+ * @method static Builder<static>|Product whereMinCustomWidth($value)
  * @method static Builder<static>|Product whereName($value)
  * @method static Builder<static>|Product whereOfferPrice($value)
  * @method static Builder<static>|Product whereOverrideDescription($value)
  * @method static Builder<static>|Product whereOverridePrice($value)
  * @method static Builder<static>|Product wherePrice($value)
  * @method static Builder<static>|Product wherePricingModel($value)
+ * @method static Builder<static>|Product whereProductClass($value)
  * @method static Builder<static>|Product whereRemoteImages($value)
+ * @method static Builder<static>|Product whereSheetHeight($value)
+ * @method static Builder<static>|Product whereSheetWidth($value)
  * @method static Builder<static>|Product whereSku($value)
  * @method static Builder<static>|Product whereSlug($value)
  * @method static Builder<static>|Product whereSyncProgress($value)
  * @method static Builder<static>|Product whereSyncStatus($value)
  * @method static Builder<static>|Product whereSyncedAt($value)
+ * @method static Builder<static>|Product whereTechnicalSpecs($value)
  * @method static Builder<static>|Product whereType($value)
  * @method static Builder<static>|Product whereUpdatedAt($value)
- *
- * @mixin Model
+ * @mixin \Eloquent
  */
 #[Fillable([
     'sku',

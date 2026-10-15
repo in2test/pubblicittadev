@@ -111,6 +111,61 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 ])]
 /**
  * @use HasFactory<OrderFactory>
+ * @property int $id
+ * @property int $user_id
+ * @property string $order_number
+ * @property string $payment_status
+ * @property string $work_status
+ * @property numeric $items_total
+ * @property numeric $shipping_cost
+ * @property string $shipping_method
+ * @property numeric $total_price
+ * @property int $total_items
+ * @property int|null $shipping_address_id
+ * @property int|null $billing_address_id
+ * @property string|null $stripe_session_id
+ * @property string|null $stripe_payment_intent_id
+ * @property CarbonImmutable|null $paid_at
+ * @property string|null $notes
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property int|null $transporter_id
+ * @property string|null $tracking_code
+ * @property string|null $tracking_url
+ * @property-read \App\Models\Address|null $billingAddress
+ * @property-read Collection<int, \App\Models\OrderItem> $items
+ * @property-read int|null $items_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, \Spatie\MediaLibrary\MediaCollections\Models\Media> $media
+ * @property-read int|null $media_count
+ * @property-read \App\Models\Address|null $shippingAddress
+ * @property-read \App\Models\Transporter|null $transporter
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\OrderFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Order newModelQuery()
+ * @method static Builder<static>|Order newQuery()
+ * @method static Builder<static>|Order query()
+ * @method static Builder<static>|Order whereBillingAddressId($value)
+ * @method static Builder<static>|Order whereCreatedAt($value)
+ * @method static Builder<static>|Order whereId($value)
+ * @method static Builder<static>|Order whereItemsTotal($value)
+ * @method static Builder<static>|Order whereNotes($value)
+ * @method static Builder<static>|Order whereOrderNumber($value)
+ * @method static Builder<static>|Order wherePaidAt($value)
+ * @method static Builder<static>|Order wherePaymentStatus($value)
+ * @method static Builder<static>|Order whereShippingAddressId($value)
+ * @method static Builder<static>|Order whereShippingCost($value)
+ * @method static Builder<static>|Order whereShippingMethod($value)
+ * @method static Builder<static>|Order whereStripePaymentIntentId($value)
+ * @method static Builder<static>|Order whereStripeSessionId($value)
+ * @method static Builder<static>|Order whereTotalItems($value)
+ * @method static Builder<static>|Order whereTotalPrice($value)
+ * @method static Builder<static>|Order whereTrackingCode($value)
+ * @method static Builder<static>|Order whereTrackingUrl($value)
+ * @method static Builder<static>|Order whereTransporterId($value)
+ * @method static Builder<static>|Order whereUpdatedAt($value)
+ * @method static Builder<static>|Order whereUserId($value)
+ * @method static Builder<static>|Order whereWorkStatus($value)
+ * @mixin \Eloquent
  */
 class Order extends Model implements HasMedia
 {

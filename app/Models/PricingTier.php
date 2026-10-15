@@ -49,6 +49,30 @@ use Override;
 ])]
 /**
  * @use HasFactory<PricingTierFactory>
+ * @property int $id
+ * @property int $product_id
+ * @property int|null $product_sku_id
+ * @property bool $is_custom_price
+ * @property int $min_quantity
+ * @property int|null $max_quantity
+ * @property numeric $price_per_unit
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read \App\Models\Product $product
+ * @property-read \App\Models\ProductSku|null $productSku
+ * @method static Builder<static>|PricingTier newModelQuery()
+ * @method static Builder<static>|PricingTier newQuery()
+ * @method static Builder<static>|PricingTier query()
+ * @method static Builder<static>|PricingTier whereCreatedAt($value)
+ * @method static Builder<static>|PricingTier whereId($value)
+ * @method static Builder<static>|PricingTier whereIsCustomPrice($value)
+ * @method static Builder<static>|PricingTier whereMaxQuantity($value)
+ * @method static Builder<static>|PricingTier whereMinQuantity($value)
+ * @method static Builder<static>|PricingTier wherePricePerUnit($value)
+ * @method static Builder<static>|PricingTier whereProductId($value)
+ * @method static Builder<static>|PricingTier whereProductSkuId($value)
+ * @method static Builder<static>|PricingTier whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class PricingTier extends Model
 {

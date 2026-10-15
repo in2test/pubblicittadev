@@ -60,6 +60,34 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[RouteKey('slug')]
 /**
  * @use HasFactory<CategoryFactory>
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int|null $parent_id
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Collection<int, Category> $children
+ * @property-read int|null $children_count
+ * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
+ * @property-read Category|null $parent
+ * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read int|null $products_count
+ * @property-read Collection<int, \App\Models\CategoryQuantityDiscount> $quantityDiscounts
+ * @property-read int|null $quantity_discounts_count
+ * @method static \Database\Factories\CategoryFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Category newModelQuery()
+ * @method static Builder<static>|Category newQuery()
+ * @method static Builder<static>|Category query()
+ * @method static Builder<static>|Category whereCreatedAt($value)
+ * @method static Builder<static>|Category whereDescription($value)
+ * @method static Builder<static>|Category whereId($value)
+ * @method static Builder<static>|Category whereName($value)
+ * @method static Builder<static>|Category whereParentId($value)
+ * @method static Builder<static>|Category whereSlug($value)
+ * @method static Builder<static>|Category whereUpdatedAt($value)
+ * @mixin \Eloquent
  */
 class Category extends Model implements HasMedia
 {

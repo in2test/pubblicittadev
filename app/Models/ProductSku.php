@@ -21,30 +21,32 @@ use ReturnTypeWillChange;
  * @property int $id
  * @property int $product_id
  * @property string|null $sku
- * @property int $quantity
+ * @property mixed|null $quantity
  * @property bool $is_available
+ * @property bool $is_outlet
  * @property numeric|null $override_price
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Product|null $product
- * @property-read Collection<int, VariationOption> $options
+ * @property-read Collection<int, \App\Models\Campaign> $campaigns
+ * @property-read int|null $campaigns_count
+ * @property-read Collection<int, \App\Models\VariationOption> $options
  * @property-read int|null $options_count
- * @property-read Collection<int, PricingTier> $pricingTiers
+ * @property-read Collection<int, \App\Models\PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- *
- * @method static ProductSkuFactory factory($count = null, $state = [])
+ * @property-read \App\Models\Product $product
+ * @method static \Database\Factories\ProductSkuFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductSku newModelQuery()
  * @method static Builder<static>|ProductSku newQuery()
  * @method static Builder<static>|ProductSku query()
  * @method static Builder<static>|ProductSku whereCreatedAt($value)
  * @method static Builder<static>|ProductSku whereId($value)
  * @method static Builder<static>|ProductSku whereIsAvailable($value)
+ * @method static Builder<static>|ProductSku whereIsOutlet($value)
  * @method static Builder<static>|ProductSku whereOverridePrice($value)
  * @method static Builder<static>|ProductSku whereProductId($value)
  * @method static Builder<static>|ProductSku whereQuantity($value)
  * @method static Builder<static>|ProductSku whereSku($value)
  * @method static Builder<static>|ProductSku whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([
