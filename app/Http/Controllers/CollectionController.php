@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
@@ -40,7 +41,7 @@ class CollectionController extends Controller
      */
     public function show(Collection $collection): View
     {
-        abort_unless($collection->is_active || auth()->check(), 404);
+        abort_unless($collection->is_active || Auth::check(), 404);
 
         $collection->load([
             'media',

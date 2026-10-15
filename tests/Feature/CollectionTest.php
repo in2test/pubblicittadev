@@ -7,6 +7,8 @@ use App\Models\Collection;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
+use function Pest\Laravel\get;
+
 uses(RefreshDatabase::class);
 
 test('can view collections index page with active collections', function () {
@@ -22,7 +24,7 @@ test('can view collections index page with active collections', function () {
     $product = Product::factory()->create(['category_id' => $category->id, 'is_active' => true]);
     $activeCollection->products()->attach($product->id);
 
-    $response = $this->get(route('collections.index'));
+    $response = get(route('collections.index'));
 
     $response->assertOk();
     $response->assertSee('Apertura Attività');
@@ -42,7 +44,7 @@ test('can view collection show page and see associated products', function () {
     $product2 = Product::factory()->create(['name' => 'Cargo Pants Golf', 'category_id' => $category->id, 'is_active' => true]);
     $collection->products()->attach([$product1->id, $product2->id]);
 
-    $response = $this->get(route('collections.show', $collection->slug));
+    $response = get(route('collections.show', $collection->slug));
 
     $response->assertOk();
     $response->assertSee('Golfing Kit');
@@ -56,7 +58,7 @@ test('inactive collection returns 404 for guests', function () {
         'slug' => 'inactive-bundle',
     ]);
 
-    $response = $this->get(route('collections.show', $collection->slug));
+    $response = get(route('collections.show', $collection->slug));
 
     $response->assertNotFound();
 });
@@ -71,7 +73,7 @@ test('homepage includes featured collections in view data and hero slides', func
     ]);
     $featuredCollection->products()->attach($product->id);
 
-    $response = $this->get(route('home'));
+    $response = get(route('home'));
 
     $response->assertOk();
     $response->assertViewHas('collections');

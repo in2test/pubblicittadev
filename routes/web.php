@@ -18,8 +18,8 @@ use App\Http\Controllers\WebhookController;
 use App\Livewire\OutletProducts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Livewire\Volt\Volt;
 
 // template routes for inspiration purposes only, these will be replaced with dynamic routes in the future
 
@@ -65,14 +65,14 @@ require __DIR__.'/settings.php';
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', function (): Redirector|RedirectResponse {
-        auth()->logout();
+        Auth::logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
 
         return redirect('/');
     })->name('logout');
 
-    Volt::route('/checkout', 'pages.checkout')->name('checkout');
+    Route::livewire('/checkout', 'pages::checkout')->name('checkout');
     Route::post('/checkout/session', [CheckoutController::class, 'createSession'])->name('checkout.session');
     Route::post('/checkout/quotation', [CheckoutController::class, 'requestQuotation'])->name('checkout.quotation');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');

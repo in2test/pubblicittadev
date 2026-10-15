@@ -10,7 +10,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\CartManager;
 use Illuminate\Support\Facades\Mail;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Mockery;
 use Stripe\ApiRequestor;
 use Stripe\HttpClient\ClientInterface;
@@ -51,6 +51,7 @@ class CheckoutTest extends TestCase
         ]);
 
         // Mock Stripe's HTTP Client to intercept the API call made by Session::create()
+        /** @var \Mockery\MockInterface&ClientInterface $mockHttpClient */
         $mockHttpClient = Mockery::mock(ClientInterface::class);
         $mockHttpClient->shouldReceive('request')
             ->once()
@@ -91,7 +92,7 @@ class CheckoutTest extends TestCase
         ]);
 
         // Verify notification service was used (not Mail facade)
-        $order = Order::where('user_id', $user->id)->latest()->first();
+        $order = Order::query()->where('user_id', $user->id)->latest()->first();
         $this->assertNotNull($order);
     }
 
@@ -156,6 +157,7 @@ class CheckoutTest extends TestCase
         $product = Product::factory()->create(['price' => 10.00]);
         $address = Address::factory()->create(['user_id' => $user->id]);
 
+        /** @var \Mockery\MockInterface&CartManager $mockCartManager */
         $mockCartManager = Mockery::mock(CartManager::class);
         $mockCartManager->shouldReceive('isEmpty')->andReturn(false);
         $mockCartManager->shouldReceive('total')->andReturn(10.00);
@@ -172,7 +174,7 @@ class CheckoutTest extends TestCase
 
         $this->actingAs($user);
 
-        Volt::test('pages.checkout')
+        Livewire::test('pages.checkout')
             ->assertSee('Checkout')
             ->assertSee($address->name)
             ->assertHasNoErrors();
@@ -222,7 +224,7 @@ class CheckoutTest extends TestCase
         $this->assertEmpty($this->cartManager->getItems());
 
         // Verify order was created with quotation status (notifications handled via service)
-        $quotationOrder = Order::where('user_id', $user->id)->where('payment_status', 'quotation')->first();
+        $quotationOrder = Order::query()->where('user_id', $user->id)->where('payment_status', 'quotation')->first();
         $this->assertNotNull($quotationOrder);
     }
 
@@ -265,7 +267,7 @@ class CheckoutTest extends TestCase
         $this->assertEmpty($this->cartManager->getItems());
 
         // Verify order was created with quotation status (notifications handled via service)
-        $quotationOrder = Order::where('user_id', $user->id)->where('payment_status', 'quotation')->first();
+        $quotationOrder = Order::query()->where('user_id', $user->id)->where('payment_status', 'quotation')->first();
         $this->assertNotNull($quotationOrder);
     }
 }
