@@ -52,8 +52,8 @@
         </div>
 
         {{-- Product Image --}}
-        <div class="aspect-5/6 relative bg-white border border-gray-100 overflow-hidden">
-            <img class="w-full h-full object-contain grayscale-40 group-hover:grayscale-0 transition-all duration-400 ease-in-out group-hover:scale-90"
+        <div class="aspect-5/6 relative bg-gray-200 border border-gray-100 overflow-hidden">
+            <img class="w-full h-full object-contain grayscale-40 group-hover:grayscale-0 transition-all duration-400 ease-in-out group-hover:scale-110 "
                 src="{{ $imageUrl }}" alt="{{ $product->name }}" width="350" height="420" decoding="async"
                 @if($index === 0) loading="eager" fetchpriority="high" @else loading="lazy" @endif />
         </div>

@@ -20,7 +20,7 @@
         @if($bannerUrl)
             <div class="absolute inset-0 z-0">
                 <img src="{{ $bannerUrl }}" alt="{{ $collection->name }}" class="w-full h-full object-cover opacity-25">
-                <div class="absolute inset-0 bg-linear-to-r from-gray-950 via-gray-950/90 to-gray-950/60"></div>
+                <div class="absolute inset-0 bg-linear-to-r from-gray-50 via-gray-50/90 to-gray-50/60"></div>
             </div>
         @endif
 
@@ -30,7 +30,7 @@
                 <span class="text-gray-600">/</span>
                 <a class="hover:text-accent-500 transition-colors" href="{{ route('collections.index') }}">Collezioni</a>
                 <span class="text-gray-600">/</span>
-                <span class="text-gray-100 font-bold truncate">{{ $collection->name }}</span>
+                <span class="text-gray-950 font-bold truncate">{{ $collection->name }}</span>
             </nav>
 
             <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -42,12 +42,12 @@
                 </span>
             </div>
 
-            <h1 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-gray-50 mb-6 leading-[0.95]">
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tighter text-gray-950 mb-6 leading-[0.95]">
                 {{ $collection->name }}
             </h1>
 
             @if($collection->description)
-                <p class="text-base sm:text-lg text-gray-300 font-sans leading-relaxed max-w-3xl mb-8">
+                <p class="text-base sm:text-lg text-gray-700 font-sans leading-relaxed max-w-3xl mb-8">
                     {{ $collection->description }}
                 </p>
             @endif

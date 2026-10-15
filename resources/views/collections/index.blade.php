@@ -49,7 +49,7 @@
                         $bannerUrl = $collection->getBannerUrl('large') 
                             ?? ($collection->products->first()?->getFirstImageUrl('large'));
                     @endphp
-                    <article class="group bg-white border-2 border-gray-950 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                    <article class="group bg-gray-50 border-2 border-gray-950  -hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
                         <div>
                             <div class="aspect-16/9 bg-gray-950 relative overflow-hidden border-b-2 border-gray-950">
                                 @if($bannerUrl)

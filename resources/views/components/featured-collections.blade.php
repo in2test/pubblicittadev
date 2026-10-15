@@ -26,10 +26,10 @@
                         $bannerUrl = $collection->getBannerUrl('large') 
                             ?? ($collection->products->first()?->getFirstImageUrl('large'));
                     @endphp
-                    <article class="group relative bg-white border-2 border-gray-950 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                    <article class="group relative bg-gray-50 border-2 border-gray-100 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
                         <div>
                             {{-- Banner Visual --}}
-                            <div class="relative aspect-21/9 bg-gray-950 overflow-hidden border-b-2 border-gray-950">
+                            <div class="relative aspect-21/9 bg-gray-50 overflow-hidden border-b-2 border-gray-100">
                                 @if($bannerUrl)
                                     <img src="{{ $bannerUrl }}" 
                                          alt="{{ $collection->name }}" 
@@ -40,7 +40,7 @@
                                         <span class="material-symbols-outlined text-5xl">auto_awesome_motion</span>
                                     </div>
                                 @endif
-                                <div class="absolute inset-0 bg-linear-to-t from-gray-950/80 via-transparent to-transparent"></div>
+                                <div class="absolute inset-0 bg-linear-to-t from-gray-50/80 via-transparent to-transparent"></div>
                                 <div class="absolute top-4 left-4 flex gap-2">
                                     <span class="bg-accent-500 text-gray-950 text-[10px] font-black uppercase tracking-widest px-3 py-1">
                                         BUNDLE SPECIAL
