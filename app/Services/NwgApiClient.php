@@ -34,6 +34,7 @@ class NwgApiClient
                 productName
                 productCatalogText
                 productBrand
+
                 productGender {
                     value
                     key
@@ -49,23 +50,52 @@ class NwgApiClient
                 variations {
                     itemColorCode
                     itemWebColor
-                    pictures {
-                        thumbnailUrl
-                        largeThumbnailUrl
-                        standardUrl
+                    itemColorName
+                    shadeColor {
+                        value
+                        key
                     }
-                    skus {
-                        availability
-                        sku
-                        skuSize {
-                            webtext
-                            size
-                        }
-                      }
+                    itemNumber
+                    outlet
+                    productNumber
+                    retailSeason
+                    sizes
+                    itemActiveForCompany {
+                        value
+                        key
+                    }
+                    filterColor {
+                        value
+                        key
                     }
                 }
+                productFeature {
+                  value
+                  key
+                }
+                productFabrics
+                productCertifications {
+                  value
+                  key
+                }
+                productCareInstructions {
+                  value
+                  key
+                }
+                documents {
+                  resourceFileName
+                  resourceFileId
+                  thumbnailUrl
+                  standardUrl
+                  resourcePictureType
+                  resourcePictureAngle
+                  largeThumbnailUrl
+                  imageUrl
+                  imageSource
+                  highResUrl
+                }
             }
-
+            }
         GRAPHQL;
 
         return $this->fetchProductData($query, $productNumber, 'it', 'full product data');
