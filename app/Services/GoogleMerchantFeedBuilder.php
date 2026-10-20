@@ -132,7 +132,7 @@ class GoogleMerchantFeedBuilder
         $item->addChild('g:price', number_format($skuPrice, 2, '.', '').' EUR', 'http://base.google.com/ns/1.0');
         $item->addChild('g:availability', $sku->is_available ? 'in_stock' : 'out_of_stock', 'http://base.google.com/ns/1.0');
         $item->addChild('g:condition', 'new', 'http://base.google.com/ns/1.0');
-        $item->addChild('g:brand', 'CLIQUE', 'http://base.google.com/ns/1.0');
+        $item->addChild('g:brand', $product->brand, 'http://base.google.com/ns/1.0');
         $item->addChild('g:item_group_id', $product->sku, 'http://base.google.com/ns/1.0');
         $this->itemWriter->addCategoryAndDemographics($item, $product, $categorySlug, $categoryName);
     }
@@ -172,7 +172,7 @@ class GoogleMerchantFeedBuilder
         $item->addChild('g:price', $price.' EUR', 'http://base.google.com/ns/1.0');
         $item->addChild('g:availability', 'in_stock', 'http://base.google.com/ns/1.0');
         $item->addChild('g:condition', 'new', 'http://base.google.com/ns/1.0');
-        $item->addChild('g:brand', 'CLIQUE', 'http://base.google.com/ns/1.0');
+        $item->addChild('g:brand', $product->brand, 'http://base.google.com/ns/1.0');
         $this->itemWriter->addCategoryAndDemographics($item, $product, $categorySlug, $categoryName);
     }
 

@@ -172,7 +172,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'sync_status',
     'synced_at',
     'is_active',
-    'sync_progress',
+    'brand_id',
     'override_price',
     'override_description',
     'remote_images',
@@ -221,9 +221,24 @@ class Product extends Model implements HasMedia
      *
      * @return BelongsTo<Category, $this>
      */
+    /**
+    * Get the category that this product belongs to.
+    *
+    * @return BelongsTo<Category, $this>
+    */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+    * Get the brand associated with this product.
+    *
+    * @return BelongsTo<Brand, $this>
+    */
+    public function brand_relation(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     /**
@@ -404,6 +419,10 @@ class Product extends Model implements HasMedia
     protected function brand(): Attribute
     {
         return Attribute::make(get: function (): string {
+            if ($this->brand_id) {
+                return $this->brand_relation?->name ?? '';
+            }
+
             $nameLower = strtolower($this->name ?? '');
             if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
                 return 'NewWave';
@@ -490,6 +509,7 @@ class Product extends Model implements HasMedia
             'name' => (string) $this->name,
             'sku' => (string) $this->sku,
             'description' => (string) $this->description,
+            'brand_id' => (int) $this->brand_id,
         ];
     }
 
