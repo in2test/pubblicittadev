@@ -108,6 +108,7 @@ class GoogleMerchantFeedBuilder
         if ($sku->isOutlet() && $sku->hasActiveCampaign()) {
             $description .= "\nCampagna valida fino al ".($sku->activeCampaign()?->validityLabel() ?? '');
         }
+        $description = $this->appendProductExtendedInfo($description, $product);
 
         $link = route('product', [$categorySlug, $product->slug]);
         if ($options['queryParams'] !== []) {
@@ -147,6 +148,7 @@ class GoogleMerchantFeedBuilder
         if ($colorOptions !== '') {
             $description .= "\nColori: ".$colorOptions;
         }
+        $description = $this->appendProductExtendedInfo($description, $product);
 
         if ($product->sku === null) {
             return;
@@ -213,5 +215,27 @@ class GoogleMerchantFeedBuilder
             'sizeOption' => $sizeOption,
             'queryParams' => $queryParams,
         ];
+    }
+
+    private function appendProductExtendedInfo(string $description, Product $product): string
+    {
+        if (! empty($product->technical_specs)) {
+            $description .= "\nComposizione: ".trim(strip_tags((string) $product->technical_specs));
+        }
+
+        if (! empty($product->construction_features)) {
+            $description .= "\nCaratteristiche: ".trim(strip_tags((string) $product->construction_features));
+        }
+
+        if (! empty($product->certifications)) {
+            $description .= "\nCertificazioni: ".trim(strip_tags((string) $product->certifications));
+        }
+
+        if (! empty($product->customization_notes)) {
+            $prefix = $product->type === Product::TYPE_NEWWAVE ? 'Cura del capo: ' : 'Note: ';
+            $description .= "\n".$prefix.trim(strip_tags((string) $product->customization_notes));
+        }
+
+        return $description;
     }
 }

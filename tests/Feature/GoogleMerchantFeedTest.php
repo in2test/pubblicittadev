@@ -210,3 +210,53 @@ it('sets kids age group for junior products in feed', function () {
         ->toContain('<g:brand>CLIQUE</g:brand>')
         ->toContain('<g:age_group>kids</g:age_group>');
 });
+
+it('includes extended apparel details (material, highlights, details, italian description) in Google Merchant feed', function () {
+    $product = Product::factory()->create([
+        'is_active' => true,
+        'type' => Product::TYPE_NEWWAVE,
+        'sku' => 'NWG-FEED-TEST',
+        'name' => 'Giacca Tecnica Softshell',
+        'description' => 'Giacca versatile antivento e traspirante.',
+        'technical_specs' => '100% poliestere ring-spun traspirante',
+        'construction_features' => 'Etichetta strappabile (Easy cut), Asciugatura rapida',
+        'certifications' => 'Oeko-Tex Standard 100, Protezione UV',
+        'customization_notes' => 'Lavaggio in lavatrice a 40°C, Non candeggiare, Stirare a max 110°C',
+    ]);
+
+    $imageUrl = 'https://images.example/nwg-product.jpg?width=600';
+    Image::create([
+        'product_id' => $product->id,
+        'image_url' => $imageUrl,
+        'large_url' => $imageUrl,
+        'order_by' => 1,
+    ]);
+
+    $response = $this->get('/feed/google-merchant.xml');
+    $response->assertStatus(200);
+
+    $xml = $response->getContent();
+
+    expect($xml)
+        ->toContain('<g:id>NWG-FEED-TEST</g:id>')
+        ->toContain('<g:material>100% poliestere ring-spun traspirante</g:material>')
+        ->toContain('<g:product_highlight>Materiale: 100% poliestere ring-spun traspirante</g:product_highlight>')
+        ->toContain('<g:product_highlight>Certificazione: Oeko-Tex Standard 100</g:product_highlight>')
+        ->toContain('<g:product_detail>')
+        ->toContain('<g:attribute_name>Materiale</g:attribute_name>')
+        ->toContain('<g:attribute_name>Certificazioni</g:attribute_name>')
+        ->toContain('Composizione: 100% poliestere ring-spun traspirante')
+        ->toContain('Certificazioni: Oeko-Tex Standard 100, Protezione UV')
+        ->toContain('Cura del capo: Lavaggio in lavatrice a 40°C');
+
+    // Also assert it validates against the official XSD
+    $doc = new DOMDocument;
+    $doc->preserveWhiteSpace = false;
+    $doc->formatOutput = false;
+    $doc->loadXML($xml);
+
+    libxml_use_internal_errors(true);
+    $xsdUrl = base_path('resources/xsd/google_product.xsd');
+    $valid = $doc->schemaValidate($xsdUrl);
+    expect($valid)->toBeTrue();
+});

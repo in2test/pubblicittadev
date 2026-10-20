@@ -165,8 +165,33 @@
     @endif
 </div>
 
-<div class="mb-8 p-6 bg-surface-container-low border-l-4 border-primary">
+<div class="mb-6 p-6 bg-surface-container-low border-l-4 border-primary">
     <p class="text-sm text-gray-800 leading-relaxed">
         {{ $product->description }}
     </p>
 </div>
+
+@php
+    $quickHighlights = [];
+    if (! empty($product->certifications)) {
+        foreach ($product->getCertificationsDetails() as $cert) {
+            $quickHighlights[] = ['label' => $cert['short'], 'icon' => $cert['icon'], 'color' => 'emerald'];
+        }
+    }
+    if (! empty($product->construction_features)) {
+        foreach ($product->getConstructionFeaturesDetails() as $feat) {
+            $quickHighlights[] = ['label' => $feat['short'], 'icon' => $feat['icon'], 'color' => 'sky'];
+        }
+    }
+@endphp
+
+@if (! empty($quickHighlights))
+    <div class="mb-8 flex flex-wrap gap-2 items-center">
+        @foreach ($quickHighlights as $hl)
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $hl['color'] === 'emerald' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-sky-50 text-sky-800 border border-sky-200' }}">
+                <span class="material-symbols-outlined text-sm">{{ $hl['icon'] }}</span>
+                {{ $hl['label'] }}
+            </span>
+        @endforeach
+    </div>
+@endif

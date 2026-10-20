@@ -205,6 +205,28 @@ class NewWaveProductForm
                             ]),
                     ]),
 
+                Section::make('Dettagli Tecnici & Certificazioni')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Textarea::make('technical_specs')
+                                    ->label('Composizione & Materiali (Specifiche Tecniche)')
+                                    ->rows(3)
+                                    ->helperText('Sincronizzato da API NewWave o modificabile manualmente.'),
+                                Textarea::make('certifications')
+                                    ->label('Certificazioni (es. Oeko-Tex Standard 100, Protezione UV)')
+                                    ->rows(3)
+                                    ->helperText('Valori separati da virgola.'),
+                                Textarea::make('construction_features')
+                                    ->label('Caratteristiche Costruttive (es. Etichetta strappabile, Asciugatura rapida)')
+                                    ->rows(3)
+                                    ->helperText('Valori separati da virgola.'),
+                                Textarea::make('customization_notes')
+                                    ->label('Istruzioni di Lavaggio e Cura / Note')
+                                    ->rows(3)
+                                    ->helperText('Istruzioni per la cura del capo o note di personalizzazione.'),
+                            ]),
+                    ]),
             ]);
     }
 

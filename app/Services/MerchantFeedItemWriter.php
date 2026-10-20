@@ -46,6 +46,103 @@ class MerchantFeedItemWriter
 
         $item->addChild('g:link', $link, self::MERCHANT_NAMESPACE);
         $this->addImageLinks($item, $product, $colorOption);
+        $this->addExtendedAttributes($item, $product);
+    }
+
+    public function addExtendedAttributes(SimpleXMLElement $item, Product $product): void
+    {
+        if (! empty($product->technical_specs)) {
+            $cleanMaterial = trim(preg_replace('/\s+/', ' ', strip_tags((string) $product->technical_specs)) ?? '');
+            if ($cleanMaterial !== '') {
+                $item->addChild('g:material', htmlspecialchars($cleanMaterial), self::MERCHANT_NAMESPACE);
+            }
+        }
+
+        $highlights = $this->collectProductHighlights($product);
+        foreach ($highlights as $highlight) {
+            $item->addChild('g:product_highlight', htmlspecialchars($highlight), self::MERCHANT_NAMESPACE);
+        }
+
+        $this->addProductDetails($item, $product);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function collectProductHighlights(Product $product): array
+    {
+        $highlights = [];
+
+        if (! empty($product->technical_specs)) {
+            $clean = trim(preg_replace('/\s+/', ' ', strip_tags((string) $product->technical_specs)) ?? '');
+            if ($clean !== '') {
+                $highlights[] = 'Materiale: '.$clean;
+            }
+        }
+
+        if (! empty($product->certifications)) {
+            $certs = array_filter(array_map(trim(...), explode(',', (string) $product->certifications)));
+            foreach ($certs as $cert) {
+                $highlights[] = 'Certificazione: '.$cert;
+            }
+        }
+
+        if (! empty($product->construction_features)) {
+            $feats = array_filter(array_map(trim(...), explode(',', (string) $product->construction_features)));
+            foreach ($feats as $feat) {
+                $highlights[] = $feat;
+            }
+        }
+
+        if (! empty($product->customization_notes)) {
+            $careItems = array_filter(array_map(trim(...), explode(',', (string) $product->customization_notes)));
+            if ($careItems !== []) {
+                $prefix = $product->type === Product::TYPE_NEWWAVE ? 'Cura del capo: ' : 'Note: ';
+                $highlights[] = $prefix.implode(', ', array_slice($careItems, 0, 3));
+            }
+        }
+
+        return array_slice(
+            array_filter($highlights, fn (string $h): bool => mb_strlen($h) >= 2 && mb_strlen($h) <= 150),
+            0,
+            10,
+        );
+    }
+
+    private function addProductDetails(SimpleXMLElement $item, Product $product): void
+    {
+        if (! empty($product->technical_specs)) {
+            $clean = trim(preg_replace('/\s+/', ' ', strip_tags((string) $product->technical_specs)) ?? '');
+            if ($clean !== '') {
+                $detail = $item->addChild('g:product_detail', null, self::MERCHANT_NAMESPACE);
+                $detail->addChild('g:section_name', 'Specifiche', self::MERCHANT_NAMESPACE);
+                $detail->addChild('g:attribute_name', 'Materiale', self::MERCHANT_NAMESPACE);
+                $detail->addChild('g:attribute_value', htmlspecialchars($clean), self::MERCHANT_NAMESPACE);
+            }
+        }
+
+        if (! empty($product->certifications)) {
+            $detail = $item->addChild('g:product_detail', null, self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:section_name', 'Qualità', self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_name', 'Certificazioni', self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_value', htmlspecialchars(trim(strip_tags((string) $product->certifications))), self::MERCHANT_NAMESPACE);
+        }
+
+        if (! empty($product->construction_features)) {
+            $detail = $item->addChild('g:product_detail', null, self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:section_name', 'Caratteristiche', self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_name', 'Dettagli costruttivi', self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_value', htmlspecialchars(trim(strip_tags((string) $product->construction_features))), self::MERCHANT_NAMESPACE);
+        }
+
+        if (! empty($product->customization_notes)) {
+            $section = $product->type === Product::TYPE_NEWWAVE ? 'Manutenzione' : 'Personalizzazione';
+            $attrName = $product->type === Product::TYPE_NEWWAVE ? 'Istruzioni lavaggio' : 'Note';
+            $detail = $item->addChild('g:product_detail', null, self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:section_name', $section, self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_name', $attrName, self::MERCHANT_NAMESPACE);
+            $detail->addChild('g:attribute_value', htmlspecialchars(trim(strip_tags((string) $product->customization_notes))), self::MERCHANT_NAMESPACE);
+        }
     }
 
     public function addCategoryAndDemographics(

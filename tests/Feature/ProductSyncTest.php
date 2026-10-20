@@ -130,3 +130,60 @@ it('synchronizes NewWave SKU availability through the dedicated synchronizer', f
 
     expect($product->skus()->first()->quantity)->toBe(4);
 });
+
+it('synchronizes NewWave extended metadata into Italian technical specs, features, certifications, and care instructions', function () {
+    $category = Category::factory()->create();
+    $product = Product::factory()->create([
+        'sku' => 'NWG-METADATA-SKU',
+        'type' => Product::TYPE_NEWWAVE,
+        'category_id' => $category->id,
+    ]);
+
+    $apiData = [
+        'productName' => 'NewWave Technical Shirt',
+        'retailPrice' => ['price' => 29.90],
+        'productCatalogText' => 'Descrizione maglietta tecnica.',
+        'productFabrics' => "100% cotone ring-spun (colore 95: 15% viscosa;\n 955: 40% poliestere)",
+        'productFeature' => [
+            ['key' => 'Easycut', 'value' => null],
+            ['key' => 'QuickDry', 'value' => 'Quick Dry'],
+        ],
+        'productCertifications' => [
+            ['key' => 'OekoTex', 'value' => 'Oeko-Tex'],
+            ['key' => 'UV', 'value' => 'UV protected'],
+        ],
+        'productCareInstructions' => [
+            ['key' => 'MachineWash60', 'value' => null],
+            ['key' => 'DoNotBleach', 'value' => null],
+            ['key' => 'IroningMediumTemp', 'value' => null],
+            ['key' => 'DoNotTumble', 'value' => null],
+        ],
+        'variations' => [],
+    ];
+
+    $mockClient = Mockery::mock(NwgApiClient::class);
+    $mockClient->shouldReceive('getFullProductData')
+        ->once()
+        ->with('NWG-METADATA-SKU')
+        ->andReturn($apiData);
+    $this->app->instance(NwgApiClient::class, $mockClient);
+
+    app(ProductSynchronizer::class)->syncProduct($product);
+
+    $product->refresh();
+
+    expect($product->technical_specs)->toBe('100% cotone ring-spun (colore 95: 15% viscosa; 955: 40% poliestere)')
+        ->and($product->construction_features)->toContain('Etichetta strappabile')
+        ->and($product->construction_features)->toContain('asciugatura rapida')
+        ->and($product->certifications)->toContain('Oeko-Tex Standard 100')
+        ->and($product->certifications)->toContain('Protezione dai raggi solari UV')
+        ->and($product->customization_notes)->toContain('Lavaggio in lavatrice a 60°C')
+        ->and($product->customization_notes)->toContain('Non candeggiare')
+        ->and($product->customization_notes)->toContain('Stirare a media temperatura');
+
+    expect($product->hasExtendedDetails())->toBeTrue()
+        ->and($product->isCareInstructionNotes())->toBeTrue()
+        ->and($product->getCareInstructionsDetails())->toHaveCount(4)
+        ->and($product->getConstructionFeaturesDetails())->toHaveCount(2)
+        ->and($product->getCertificationsDetails())->toHaveCount(2);
+});

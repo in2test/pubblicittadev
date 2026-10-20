@@ -533,4 +533,40 @@ class ProductPageTest extends TestCase
         $response->assertDontSeeHtml('<link rel="canonical" href="'.$product->url.'?colore=99">');
         $response->assertSeeHtml('<meta property="og:url" content="'.$product->url.'?colore=99">');
     }
+
+    public function test_product_page_displays_newwave_extended_details_with_icons_and_italian_text(): void
+    {
+        $category = Category::create(['name' => 'T-Shirts', 'slug' => 't-shirts', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'type' => Product::TYPE_NEWWAVE,
+            'name' => 'Basic T-Shirt Soft',
+            'slug' => 'basic-t-shirt-soft',
+            'category_id' => $category->id,
+            'technical_specs' => '100% cotone pettinato biologico',
+            'construction_features' => 'Etichetta strappabile Tear-away (Easy cut), Tecnologia traspirante ad alta espulsione dell\'umidità',
+            'certifications' => 'Oeko-Tex Standard 100 (Assenza di sostanze nocive), Protezione dai raggi solari UV',
+            'customization_notes' => 'Lavaggio in lavatrice a 40°C, Non candeggiare, Stirare a media temperatura (max 150°C), Non asciugare a mezzo di asciugatrice',
+        ]);
+
+        $response = $this->get(route('product', [
+            'category' => $category->slug,
+            'product' => $product->slug,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Specifiche e Dettagli del Capo');
+        $response->assertSee('Composizione & Materiali', false);
+        $response->assertSee('100% cotone pettinato biologico');
+        $response->assertSee('Caratteristiche del Capo');
+        $response->assertSee('Etichetta strappabile');
+        $response->assertSee('Certificazioni di Qualità');
+        $response->assertSee('Oeko-Tex Standard 100');
+        $response->assertSee('Protezione dai raggi solari UV');
+        $response->assertSee('Istruzioni di Lavaggio e Cura');
+        $response->assertSee('Lavaggio 40°C');
+        $response->assertSee('Non candeggiare');
+        $response->assertSee('Stiro max 150°C');
+        $response->assertSee('No asciugatrice');
+    }
 }

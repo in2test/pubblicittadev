@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Concerns\HasProductExtendedDetails;
 use App\Concerns\HasProductGallery;
 use App\Concerns\HasProductOutletPricing;
 use App\Concerns\HasProductPricing;
@@ -12,6 +13,7 @@ use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
 use App\Services\ProductVariationDisplayService;
+use App\Support\NewWaveProductAttributes;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -114,6 +116,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
+ * @method bool update(array $attributes = [], array $options = [])
  * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
@@ -198,6 +201,7 @@ class Product extends Model implements HasMedia
      */
     use HasFactory;
 
+    use HasProductExtendedDetails;
     use HasProductGallery;
     use HasProductOutletPricing;
     use HasProductPricing;

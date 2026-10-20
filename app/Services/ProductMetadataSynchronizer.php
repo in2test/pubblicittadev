@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Product;
-use Illuminate\Support\Arr;
+use App\Support\NewWaveProductAttributes;
 
 class ProductMetadataSynchronizer
 {
@@ -32,19 +32,24 @@ class ProductMetadataSynchronizer
             $updateData['description'] = $data['productCatalogText'] ?? $product->description;
         }
 
-        // New fields from NewWave API
-        $updateData['material'] = $data['productFabrics'] ?? $product->material;
+        // New fields from NewWave API formatted in Italian
+        if (isset($data['productFabrics'])) {
+            $updateData['technical_specs'] = NewWaveProductAttributes::formatFabrics((string) $data['productFabrics']) ?? $product->technical_specs;
+        }
 
         if (isset($data['productFeature']) && is_array($data['productFeature'])) {
-            $updateData['construction_features'] = implode(', ', array_column($data['productFeature'], 'value')) ?? $product->construction_features;
+            $features = NewWaveProductAttributes::formatFeatures($data['productFeature']);
+            $updateData['construction_features'] = $features !== [] ? implode(', ', $features) : $product->construction_features;
         }
 
         if (isset($data['productCertifications']) && is_array($data['productCertifications'])) {
-            $updateData['certifications'] = implode(', ', array_column($data['productCertifications'], 'value')) ?? $product->certifications;
+            $certifications = NewWaveProductAttributes::formatCertifications($data['productCertifications']);
+            $updateData['certifications'] = $certifications !== [] ? implode(', ', $certifications) : $product->certifications;
         }
 
         if (isset($data['productCareInstructions']) && is_array($data['productCareInstructions'])) {
-            $updateData['customization_notes'] = implode(', ', array_column($data['productCareInstructions'], 'value')) ?? $product->customization_notes;
+            $careInstructions = NewWaveProductAttributes::formatCareInstructions($data['productCareInstructions']);
+            $updateData['customization_notes'] = $careInstructions !== [] ? implode(', ', $careInstructions) : $product->customization_notes;
         }
 
         $updateData['sync_progress'] = 20;
