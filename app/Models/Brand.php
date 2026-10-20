@@ -49,7 +49,7 @@ class Brand extends Model implements HasMedia
      *
      * @return void
      */
-    public function boot()
+    public static function boot()
     {
         parent::boot();
 

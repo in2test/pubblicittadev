@@ -165,6 +165,38 @@
     @endif
 </div>
 
+@if ($product->brand_id)
+    <div class="mb-6 flex items-center gap-3 p-4 bg-surface-container-low border-l-4 border-primary">
+        @if ($product->brand_relation && $product->brand_relation->hasMedia('images')->first())
+            <img src="{{ $product->brand_relation->getFirstMediaUrl('images') }}" alt="{{ $product->brand_relation->name }}" class="h-12 w-auto object-contain">
+        @else
+            <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <flux:icon name="brand-mark" />
+            </div>
+        @endif
+        <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Brand</p>
+            <p class="text-xl font-black text-gray-950">{{ $product->brand }}</p>
+        </div>
+    </div>
+@endif
+
+@if ($product->brand_id)
+    <div class="mb-6 flex items-center gap-3 p-4 bg-surface-container-low border-l-4 border-primary">
+        @if ($product->brand_relation && $product->brand_relation->hasMedia('images')->first())
+            <img src="{{ $product->brand_relation->getFirstMediaUrl('images') }}" alt="{{ $product->brand_relation->name }}" class="h-12 w-auto object-contain">
+        @else
+            <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                <flux:icon name="brand-mark" />
+            </div>
+        @endif
+        <div>
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Brand</p>
+            <p class="text-xl font-black text-gray-950">{{ $product->brand }}</p>
+        </div>
+    </div>
+@endif
+
 <div class="mb-6 p-6 bg-surface-container-low border-l-4 border-primary">
     <p class="text-sm text-gray-800 leading-relaxed">
         {{ $product->description }}
