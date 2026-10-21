@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\NewWaveProducts\Pages;
 
+use App\Enums\SyncLevel;
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
@@ -28,6 +29,8 @@ class CreateNewWaveProduct extends CreateRecord
     {
         /** @var Product $record */
         $record = $this->record;
-        SyncNewWaveProductJob::dispatch($record->id);
+
+        // A new product has no SKU rows yet, so it needs the full sync to build them.
+        SyncNewWaveProductJob::dispatch($record->id, SyncLevel::Full);
     }
 }

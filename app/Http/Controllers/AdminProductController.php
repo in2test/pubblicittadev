@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\SyncLevel;
 use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AdminProductController extends Controller
 {
@@ -19,11 +22,17 @@ class AdminProductController extends Controller
         return redirect()->back();
     }
 
-    public function sync(Product $product): RedirectResponse
+    public function sync(Product $product, Request $request): RedirectResponse
     {
         $this->authorize('sync', $product);
 
-        SyncNewWaveProductJob::dispatch($product->id);
+        $validated = $request->validate([
+            'level' => ['nullable', 'string', Rule::enum(SyncLevel::class)],
+        ]);
+
+        $level = SyncLevel::tryFrom($validated['level'] ?? '') ?? SyncLevel::Full;
+
+        SyncNewWaveProductJob::dispatch($product->id, $level);
 
         return redirect()->back();
     }

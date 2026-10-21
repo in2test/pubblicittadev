@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\NewWaveProducts\Pages;
 
+use App\Enums\SyncLevel;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
-use App\Jobs\SyncNewWaveProductJob;
+use App\Filament\Resources\Products\NewWaveProducts\NewWaveSyncLevelPicker;
 use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -32,14 +33,20 @@ class EditNewWaveProduct extends EditRecord
                 ->label('Sincronizza da API')
                 ->icon('heroicon-o-cloud-arrow-down')
                 ->color('success')
-                ->action(function () {
+                ->modalHeading('Sincronizza da API')
+                ->modalDescription('Scegli il livello di sincronizzazione da eseguire.')
+                ->modalSubmitActionLabel('Sincronizza')
+                ->schema(NewWaveSyncLevelPicker::make())
+                ->action(function (array $data): void {
                     /** @var Product $record */
                     $record = $this->record;
-                    SyncNewWaveProductJob::dispatch($record->id);
+                    $level = SyncLevel::tryFrom((string) ($data['level'] ?? '')) ?? SyncLevel::Full;
+
+                    NewWaveSyncLevelPicker::dispatch([$record], $level);
 
                     Notification::make()
                         ->title('Sincronizzazione in coda')
-                        ->body('La sincronizzazione avverrà in background. Ricarica la pagina per vedere i risultati.')
+                        ->body("La sincronizzazione ({$level->getLabel()}) avverrà in background. Ricarica la pagina per vedere i risultati.")
                         ->success()
                         ->send();
                 }),

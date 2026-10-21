@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\SyncLevel;
 use App\Models\Product;
 
 class ProductAvailabilityService
@@ -104,5 +105,17 @@ class ProductAvailabilityService
     public function syncAvailability(Product $product): void
     {
         $this->availabilitySynchronizer->sync($product);
+    }
+
+    /**
+     * Synchronize the product at the requested level.
+     */
+    public function syncByLevel(Product $product, SyncLevel $level): void
+    {
+        match ($level) {
+            SyncLevel::Full => $this->syncProduct($product),
+            SyncLevel::Meta => $this->synchronizer->syncMetadata($product),
+            SyncLevel::Availability => $this->syncAvailability($product),
+        };
     }
 }

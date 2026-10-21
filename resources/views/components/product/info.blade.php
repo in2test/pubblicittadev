@@ -105,8 +105,20 @@
                 </flux:button>
             </form>
 
-            <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline m-0">
+            <form method="POST" action="{{ route('admin.products.sync', $product) }}" class="inline m-0 flex items-center gap-2">
                 @csrf
+                <label for="sync-level-{{ $product->id }}" class="sr-only">Livello di sincronizzazione</label>
+                <select
+                    id="sync-level-{{ $product->id }}"
+                    name="level"
+                    class="rounded-md border-2 border-gray-950 bg-gray-50 px-2 py-1 text-xs font-bold uppercase tracking-wider focus:border-secondary focus:ring-0"
+                >
+                    @foreach (\App\Enums\SyncLevel::cases() as $syncLevel)
+                        <option value="{{ $syncLevel->value }}" @selected($syncLevel === \App\Enums\SyncLevel::Full)>
+                            {{ $syncLevel->getLabel() }}
+                        </option>
+                    @endforeach
+                </select>
                 <flux:button type="submit" size="sm" color="gray">
                     Sincronizza
                 </flux:button>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\SyncLevel;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
 use Illuminate\Console\Attributes\Description;
@@ -22,6 +23,7 @@ class SyncProductQuantities extends Command
         $productSku = $this->option('product');
 
         $products = Product::query()
+            ->where('type', Product::TYPE_NEWWAVE)
             ->when($productSku, fn ($query) => $query->where('sku', $productSku))
             ->get();
 
@@ -36,7 +38,7 @@ class SyncProductQuantities extends Command
         foreach ($products as $product) {
             $this->info("Syncing product: {$product->sku} ({$product->name})");
 
-            $availabilityService->syncProduct($product);
+            $availabilityService->syncByLevel($product, SyncLevel::Availability);
         }
 
         $this->info('Synchronization completed.');

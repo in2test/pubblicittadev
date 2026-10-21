@@ -113,6 +113,24 @@ class ProductSynchronizer
     }
 
     /**
+     * Synchronize only the product metadata, leaving variations and images untouched.
+     */
+    public function syncMetadata(Product $product): void
+    {
+        if ($product->type !== Product::TYPE_NEWWAVE || $product->sku === null) {
+            return;
+        }
+
+        $data = $this->apiClient->getProductMetadata($product->sku);
+
+        if (! $data) {
+            return;
+        }
+
+        $this->metadataSynchronizer->sync($product, $data);
+    }
+
+    /**
      * Fast synchronization of just the quantities for all variations.
      */
     public function syncAvailability(Product $product): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\NewWaveProducts\Pages;
 
+use App\Enums\SyncLevel;
 use App\Enums\SyncStatus;
 use App\Filament\Resources\Products\NewWaveProducts\NewWaveProductResource;
 use App\Jobs\SyncNewWaveProductJob;
@@ -144,7 +145,9 @@ class ListNewWaveProducts extends ListRecords
 
             try {
                 $product = $this->createProduct($sku, $info, $data);
-                SyncNewWaveProductJob::dispatch($product->id);
+
+                // Imported products have no SKU rows yet, so they need the full sync.
+                SyncNewWaveProductJob::dispatch($product->id, SyncLevel::Full);
                 $imported++;
                 $existingSkus->put($sku, true);
             } catch (Throwable $exception) {

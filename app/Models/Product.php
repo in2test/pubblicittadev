@@ -13,7 +13,6 @@ use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
 use App\Services\ProductAdminUrlService;
 use App\Services\ProductVariationDisplayService;
-use App\Support\NewWaveProductAttributes;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -170,6 +169,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'category_id',
     'type',
     'sync_status',
+    'sync_progress',
     'synced_at',
     'is_active',
     'brand_id',
@@ -222,20 +222,20 @@ class Product extends Model implements HasMedia
      * @return BelongsTo<Category, $this>
      */
     /**
-    * Get the category that this product belongs to.
-    *
-    * @return BelongsTo<Category, $this>
-    */
+     * Get the category that this product belongs to.
+     *
+     * @return BelongsTo<Category, $this>
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
     /**
-    * Get the brand associated with this product.
-    *
-    * @return BelongsTo<Brand, $this>
-    */
+     * Get the brand associated with this product.
+     *
+     * @return BelongsTo<Brand, $this>
+     */
     public function brand_relation(): BelongsTo
     {
         return $this->belongsTo(Brand::class);

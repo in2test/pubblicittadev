@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\SyncLevel;
 use App\Enums\SyncStatus;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
@@ -24,18 +25,20 @@ class SyncNewWaveProductJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(public Product|int $productId) {}
+    public function __construct(
+        public Product|int $productId,
+        public SyncLevel $level = SyncLevel::Full,
+    ) {}
 
     /**
      * Execute the job.
      */
     public function handle(ProductAvailabilityService $service): void
     {
-        /** @var Product|null $product */
-        $product = Product::find($this->productId);
+        $product = $this->resolveProduct();
 
         if (! $product) {
-            Log::warning("SyncNewWaveProductJob: Product {$this->productId} not found, skipping.");
+            Log::warning("SyncNewWaveProductJob: Product {$this->productKey()} not found, skipping.");
 
             return;
         }
@@ -43,7 +46,7 @@ class SyncNewWaveProductJob implements ShouldQueue
         $product->update(['sync_status' => SyncStatus::Syncing, 'sync_progress' => 0]);
 
         try {
-            $service->syncProduct($product);
+            $service->syncByLevel($product, $this->level);
 
             $product->update([
                 'sync_status' => SyncStatus::Synced,
@@ -58,11 +61,27 @@ class SyncNewWaveProductJob implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
-        /** @var Product|null $product */
-        $product = Product::find($this->productId);
+        $product = $this->resolveProduct();
 
         if ($product) {
             $product->update(['sync_status' => SyncStatus::Failed, 'sync_progress' => 0]);
         }
+    }
+
+    /**
+     * Resolve the product the job works on.
+     *
+     * A Product instance is accepted for convenience, but the lookup always goes
+     * through the primary key: passing a model to find() would be interpreted as
+     * a list of attributes and resolve to the wrong record.
+     */
+    private function resolveProduct(): ?Product
+    {
+        return Product::find($this->productKey());
+    }
+
+    private function productKey(): int|string
+    {
+        return $this->productId instanceof Product ? $this->productId->getKey() : $this->productId;
     }
 }

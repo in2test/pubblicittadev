@@ -68,6 +68,19 @@ class NwgApiClient
                         value
                         key
                     }
+                    pictures {
+                        thumbnailUrl
+                        largeThumbnailUrl
+                        standardUrl
+                    }
+                    skus {
+                        availability
+                        sku
+                        skuSize {
+                            webtext
+                            size
+                        }
+                    }
                 }
                 productFeature {
                   value
@@ -124,6 +137,47 @@ class NwgApiClient
         GRAPHQL;
 
         return $this->fetchProductData($query, $productNumber, 'it', 'basic product data');
+    }
+
+    /**
+     * Get product metadata only, without variations, images or availability.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getProductMetadata(string $productNumber): ?array
+    {
+        $query = <<<'GRAPHQL'
+            query getProductMetadata($productNumber: String!, $language: String!) {
+            productById(productNumber: $productNumber, language: $language) {
+                productName
+                productCatalogText
+                productBrand
+
+                productGender {
+                    value
+                    key
+                }
+                retailPrice {
+                    price
+                }
+                productFeature {
+                  value
+                  key
+                }
+                productFabrics
+                productCertifications {
+                  value
+                  key
+                }
+                productCareInstructions {
+                  value
+                  key
+                }
+            }
+            }
+        GRAPHQL;
+
+        return $this->fetchProductData($query, $productNumber, 'it', 'product metadata');
     }
 
     /**

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Products\NewWaveProducts\Tables;
 
+use App\Enums\SyncLevel;
 use App\Enums\SyncStatus;
+use App\Filament\Resources\Products\NewWaveProducts\NewWaveSyncLevelPicker;
 use App\Filament\Resources\Products\NewWaveProducts\Pages\EditNewWaveProduct;
-use App\Jobs\SyncNewWaveProductJob;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
@@ -134,16 +135,15 @@ class NewWaveProductsTable
                         ->label('Sincronizza')
                         ->icon('heroicon-o-arrow-path')
                         ->color('info')
-                        ->action(function (Collection $records) {
-                            $records->each(function ($record) {
-                                /** @var Product $record */
-                                SyncNewWaveProductJob::dispatch($record);
-                            });
+                        ->schema(NewWaveSyncLevelPicker::make())
+                        ->action(function (Collection $records, array $data): void {
+                            $level = SyncLevel::tryFrom((string) ($data['level'] ?? '')) ?? SyncLevel::Full;
+
+                            NewWaveSyncLevelPicker::dispatch($records, $level);
                         })
-                        ->requiresConfirmation()
                         ->modalHeading('Sincronizza prodotti')
-                        ->modalDescription('Sei sicuro di voler sincronizzare i prodotti selezionati?')
-                        ->modalButton('Sincronizza'),
+                        ->modalDescription('Scegli il livello di sincronizzazione da applicare ai prodotti selezionati.')
+                        ->modalSubmitActionLabel('Sincronizza'),
                     DeleteBulkAction::make(),
                 ]),
             ]);
