@@ -160,6 +160,7 @@ class NewWaveProductForm
                                             ->label('Nome Prodotto')
                                             ->disabled()
                                             ->dehydrated(),
+                                        ProductBrandField::getBrandField('Sincronizzato automaticamente dall\'API NewWave.'),
                                         TextInput::make('price')
                                             ->label('Prezzo Base (€)')
                                             ->disabled(fn (Get $get) => ! $get('override_price'))

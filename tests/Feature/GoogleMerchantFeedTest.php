@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\Brand;
 use App\Models\Campaign;
+use App\Models\Category;
 use App\Models\CategoryQuantityDiscount;
 use App\Models\Image;
+use App\Models\PricingTier;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
@@ -12,17 +15,26 @@ use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
 use DOMDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 use function libxml_get_errors;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    Cache::store((string) config('services.google.feed_cache_store'))->flush();
+});
+
 it('generates google merchant xml feed', function () {
+    $brand = Brand::factory()->create(['name' => 'Clique']);
+
     $product = Product::factory()->create([
         'is_active' => true,
         'sku' => 'TEST-123',
         'name' => 'Test Product',
         'description' => 'Test description',
+        'brand_id' => $brand->id,
     ]);
     $imageUrl = 'https://images.example/main.jpg?width=600&fit=crop';
     $additionalImageUrl = 'https://images.example/detail.jpg?width=600&fit=crop';
@@ -51,7 +63,7 @@ it('generates google merchant xml feed', function () {
         ->toContain('<g:id>TEST-123</g:id>')
         ->toContain('<g:title>Test Product</g:title>')
         ->toContain('<g:price>')
-        ->toContain('<g:brand>CLIQUE</g:brand>')
+        ->toContain('<g:brand>Clique</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
 
     $feed = simplexml_load_string($xml);
@@ -87,11 +99,14 @@ it('validates the Google Merchant feed XML against the official product XSD', fu
 });
 
 it('generates variants in google merchant xml feed', function () {
+    $brand = Brand::factory()->create(['name' => 'Clique']);
+
     $product = Product::factory()->create([
         'is_active' => true,
         'sku' => 'PARENT-SKU',
         'name' => 'Parent Apparel',
         'description' => 'Great parent product',
+        'brand_id' => $brand->id,
     ]);
 
     $type = VariationType::factory()->create([
@@ -124,7 +139,7 @@ it('generates variants in google merchant xml feed', function () {
         ->toContain('<g:item_group_id>PARENT-SKU</g:item_group_id>')
         ->toContain('<g:gender>unisex</g:gender>')
         ->toContain('<g:age_group>adult</g:age_group>')
-        ->toContain('<g:brand>CLIQUE</g:brand>')
+        ->toContain('<g:brand>Clique</g:brand>')
         ->toContain('<g:google_product_category>Apparel &amp; Accessories &gt; Clothing</g:google_product_category>');
 });
 
@@ -192,11 +207,14 @@ it('exports valid xml and the effective outlet sku price', function () {
 });
 
 it('sets kids age group for junior products in feed', function () {
+    $brand = Brand::factory()->create(['name' => 'Clique']);
+
     Product::factory()->create([
         'is_active' => true,
         'sku' => 'KID-123',
         'name' => 'T-shirt Junior Basic',
         'description' => 'Junior kids apparel',
+        'brand_id' => $brand->id,
     ]);
 
     $response = $this->get('/feed/google-merchant.xml');
@@ -207,7 +225,7 @@ it('sets kids age group for junior products in feed', function () {
     expect($xml)
         ->toContain('<g:id>KID-123</g:id>')
         ->toContain('<g:title>T-shirt Junior Basic</g:title>')
-        ->toContain('<g:brand>CLIQUE</g:brand>')
+        ->toContain('<g:brand>Clique</g:brand>')
         ->toContain('<g:age_group>kids</g:age_group>');
 });
 
@@ -259,4 +277,52 @@ it('includes extended apparel details (material, highlights, details, italian de
     $xsdUrl = base_path('resources/xsd/google_product.xsd');
     $valid = $doc->schemaValidate($xsdUrl);
     expect($valid)->toBeTrue();
+});
+
+it('builds the feed without a query per product and per sku', function () {
+    $category = Category::factory()->create();
+    $campaign = Campaign::factory()->create();
+
+    foreach (range(1, 5) as $index) {
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'category_id' => $category->id,
+            'sku' => 'PERF-'.$index,
+        ]);
+
+        PricingTier::create([
+            'product_id' => $product->id,
+            'product_sku_id' => null,
+            'min_quantity' => 1,
+            'price_per_unit' => 10.00,
+        ]);
+
+        foreach (range(1, 4) as $skuIndex) {
+            $sku = ProductSku::factory()->create([
+                'product_id' => $product->id,
+                'sku' => 'PERF-'.$index.'-'.$skuIndex,
+                'is_available' => true,
+                'is_outlet' => true,
+            ]);
+
+            PricingTier::create([
+                'product_id' => $product->id,
+                'product_sku_id' => $sku->id,
+                'min_quantity' => 1,
+                'price_per_unit' => 9.00,
+            ]);
+
+            $sku->campaigns()->attach($campaign->id);
+        }
+    }
+
+    DB::enableQueryLog();
+
+    app(GoogleMerchantFeedBuilder::class)->build();
+
+    $queryCount = count(DB::getQueryLog());
+
+    // The feed used to issue one query per SKU for images, pricing tiers and
+    // campaigns, which made the request exceed the maximum execution time.
+    expect($queryCount)->toBeLessThan(40);
 });

@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Concerns\HasProductCampaigns;
 use App\Concerns\HasProductExtendedDetails;
 use App\Concerns\HasProductGallery;
 use App\Concerns\HasProductOutletPricing;
+use App\Concerns\HasProductPresentation;
 use App\Concerns\HasProductPricing;
 use App\Concerns\HasProductVariationDisplay;
 use App\Enums\ProductClass;
 use App\Enums\SyncStatus;
-use App\Services\ProductAdminUrlService;
-use App\Services\ProductVariationDisplayService;
 use Carbon\CarbonImmutable;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -115,7 +114,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
- * @method bool update(array $attributes = [], array $options = [])
  * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
@@ -201,9 +199,11 @@ class Product extends Model implements HasMedia
      */
     use HasFactory;
 
+    use HasProductCampaigns;
     use HasProductExtendedDetails;
     use HasProductGallery;
     use HasProductOutletPricing;
+    use HasProductPresentation;
     use HasProductPricing;
     use HasProductVariationDisplay;
     use InteractsWithMedia;
@@ -234,11 +234,14 @@ class Product extends Model implements HasMedia
     /**
      * Get the brand associated with this product.
      *
+     * The relation name does not match the column name, so the foreign key is
+     * given explicitly: without it Laravel would guess "brand_relation_id".
+     *
      * @return BelongsTo<Brand, $this>
      */
     public function brand_relation(): BelongsTo
     {
-        return $this->belongsTo(Brand::class);
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     /**
@@ -283,70 +286,6 @@ class Product extends Model implements HasMedia
             ->withPivot('sort_order')
             ->orderByPivot('sort_order')
             ->withTimestamps();
-    }
-
-    /**
-     * @return HasMany<ProductSku, $this>
-     */
-    public function activeOutletSkus(): HasMany
-    {
-        return $this->skus()
-            ->where('is_outlet', true)
-            ->whereHas('campaigns', function (Builder $q) {
-                $now = CarbonImmutable::now();
-                $q->where(function (Builder $sub) use ($now) {
-                    $sub->whereNull('starts_at')
-                        ->orWhere('starts_at', '<=', $now);
-                })
-                    ->where(function (Builder $sub) use ($now) {
-                        $sub->whereNull('ends_at')
-                            ->orWhere('ends_at', '>=', $now);
-                    });
-            });
-    }
-
-    public function hasActiveOfferCampaign(): bool
-    {
-        return $this->activeOfferCampaign() instanceof Campaign;
-    }
-
-    public function activeOfferCampaign(): ?Campaign
-    {
-        if ((float) $this->offer_price <= 0) {
-            return null;
-        }
-
-        if ($this->relationLoaded('campaigns')) {
-            return $this->campaigns->first(
-                fn (Campaign $campaign): bool => $campaign->isActive(),
-            );
-        }
-
-        return $this->campaigns()
-            ->where(function (Builder $q) {
-                $now = CarbonImmutable::now();
-                $q->whereNull('starts_at')
-                    ->orWhere('starts_at', '<=', $now);
-            })
-            ->where(function (Builder $q) {
-                $now = CarbonImmutable::now();
-                $q->whereNull('ends_at')
-                    ->orWhere('ends_at', '>=', $now);
-            })
-            ->first();
-    }
-
-    public function activeOutletCampaign(): ?Campaign
-    {
-        if ($this->relationLoaded('skus')) {
-            $sku = $this->skus->first(
-                fn (ProductSku $s): bool => $s->isOutlet() && $s->hasActiveCampaign(),
-            );
-
-            return $sku?->activeCampaign();
-        }
-
-        return $this->activeOutletSkus()->with('campaigns')->first()?->activeCampaign();
     }
 
     /**
@@ -409,88 +348,6 @@ class Product extends Model implements HasMedia
     public function isOnRequest(): bool
     {
         return $this->price <= 0 && $this->offer_price <= 0;
-    }
-
-    /**
-     * Get the brand of the product based on its name.
-     *
-     * @return Attribute<string, never>
-     */
-    protected function brand(): Attribute
-    {
-        return Attribute::make(get: function (): string {
-            if ($this->brand_id) {
-                return $this->brand_relation?->name ?? '';
-            }
-
-            $nameLower = strtolower($this->name ?? '');
-            if (str_contains($nameLower, 'newwave') || str_contains($nameLower, 'new wave')) {
-                return 'NewWave';
-            }
-            if (str_contains($nameLower, 'projob')) {
-                return 'ProJob';
-            }
-            if (str_contains($nameLower, 'clique')) {
-                return 'Clique';
-            }
-            if (str_contains($nameLower, 'craft')) {
-                return 'Craft';
-            }
-
-            return 'Pubblicittà24';
-        });
-    }
-
-    /**
-     * Get the plain text version of the description.
-     *
-     * @return Attribute<string, never>
-     */
-    protected function plainDescription(): Attribute
-    {
-        return Attribute::make(get: function (): string {
-            $plain = trim(strip_tags($this->description ?? ''));
-            if ($plain !== '') {
-                return $plain;
-            }
-            $brandName = $this->brand ? " {$this->brand}" : '';
-
-            return "{$this->name}{$brandName} - Abbigliamento promozionale e da lavoro personalizzato.";
-        });
-    }
-
-    /**
-     * Get the public URL for the product.
-     *
-     * @return Attribute<string, never>
-     */
-    protected function url(): Attribute
-    {
-        return Attribute::make(get: fn () => route('product', [
-            'category' => $this->category->slug ?? 'uncategorized',
-            'product' => $this->slug,
-        ]));
-    }
-
-    /**
-     * Helper Methods for Views
-     */
-
-    /**
-     * Get the Filament admin edit URL for this product
-     */
-    public function getAdminEditUrl(): string
-    {
-        // Keep URL generation outside the model so Filament routing does not become a model concern.
-        return app(ProductAdminUrlService::class)->resolve($this);
-    }
-
-    /**
-     * @return array{display: \Illuminate\Support\Collection<int, VariationOption>, remaining: int, total: int}
-     */
-    public function getPreviewColors(int $limit = 8): array
-    {
-        return app(ProductVariationDisplayService::class)->getPreviewColors($this, $limit);
     }
 
     /**

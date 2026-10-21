@@ -556,7 +556,7 @@ class ProductPageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Specifiche e Dettagli del Capo');
-        $response->assertSee('Composizione & Materiali', false);
+        $response->assertSeeHtml('Composizione & Materiali');
         $response->assertSee('100% cotone pettinato biologico');
         $response->assertSee('Caratteristiche del Capo');
         $response->assertSee('Etichetta strappabile');

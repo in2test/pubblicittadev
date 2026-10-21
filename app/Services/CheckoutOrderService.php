@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingTier;
 use App\Models\User;
+use App\Support\CheckoutOrderDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -38,12 +39,22 @@ class CheckoutOrderService
         /** @var User $user */
         $user = $request->user();
 
+        $details = new CheckoutOrderDetails(
+            itemsTotal: $this->cartManager->total(),
+            shippingCost: $this->shippingCost(
+                $request->input('shipping_method', 'delivery'),
+                $this->cartManager->total(),
+            ),
+            shippingMethod: (string) $request->input('shipping_method', 'delivery'),
+            shippingAddressId: $shippingId,
+            billingAddressId: $billingId,
+            isQuotation: $isQuotation,
+        );
+
         return DB::transaction(fn (): Order => $this->persistOrderFromCart(
             $request,
             $items,
-            $shippingId,
-            $billingId,
-            $isQuotation,
+            $details,
             $products,
             $user,
         ));
@@ -56,26 +67,11 @@ class CheckoutOrderService
     private function persistOrderFromCart(
         Request $request,
         array $items,
-        ?int $shippingId,
-        ?int $billingId,
-        bool $isQuotation,
+        CheckoutOrderDetails $details,
         Collection $products,
         User $user,
     ): Order {
-        $itemsTotal = $this->cartManager->total();
-        $shippingMethod = $request->input('shipping_method', 'delivery');
-        $shippingCost = $this->shippingCost($shippingMethod, $itemsTotal);
-
-        $order = $this->createOrderRecord(
-            $request,
-            $user,
-            $itemsTotal,
-            $shippingCost,
-            $shippingMethod,
-            $shippingId,
-            $billingId,
-            $isQuotation,
-        );
+        $order = $this->createOrderRecord($request, $user, $details);
 
         foreach ($items as $item) {
             $product = $products->get((int) $item['product_id']);
@@ -105,26 +101,21 @@ class CheckoutOrderService
     private function createOrderRecord(
         Request $request,
         User $user,
-        float $itemsTotal,
-        float $shippingCost,
-        mixed $shippingMethod,
-        ?int $shippingId,
-        ?int $billingId,
-        bool $isQuotation,
+        CheckoutOrderDetails $details,
     ): Order {
         return Order::create([
             'user_id' => $user->id,
             'order_number' => 'ORD-'.strtoupper((string) Str::ulid()),
-            'payment_status' => $isQuotation ? 'quotation' : 'pending',
+            'payment_status' => $details->isQuotation ? 'quotation' : 'pending',
             'work_status' => 'pending',
-            'items_total' => $itemsTotal,
-            'shipping_cost' => $shippingCost,
-            'shipping_method' => $shippingMethod,
-            'total_price' => $itemsTotal + $shippingCost,
+            'items_total' => $details->itemsTotal,
+            'shipping_cost' => $details->shippingCost,
+            'shipping_method' => $details->shippingMethod,
+            'total_price' => $details->total(),
             'total_items' => $this->cartManager->count(),
-            'shipping_address_id' => $shippingId ?? $request->input('shipping_address_id'),
-            'billing_address_id' => $billingId ?? $request->input('billing_address_id'),
-            'notes' => ($shippingMethod === 'pickup' ? "[Ritiro in negozio]\n" : '').$request->input('notes'),
+            'shipping_address_id' => $details->shippingAddressId ?? $request->input('shipping_address_id'),
+            'billing_address_id' => $details->billingAddressId ?? $request->input('billing_address_id'),
+            'notes' => ($details->shippingMethod === 'pickup' ? "[Ritiro in negozio]\n" : '').$request->input('notes'),
         ]);
     }
 

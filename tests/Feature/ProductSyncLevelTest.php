@@ -152,7 +152,7 @@ it('runs the job at the requested sync level', function () {
     $mockClient->shouldNotReceive('getProductAvailability');
     $this->app->instance(NwgApiClient::class, $mockClient);
 
-    (new SyncNewWaveProductJob($product->id, SyncLevel::Meta))
+    new SyncNewWaveProductJob($product->id, SyncLevel::Meta)
         ->handle(app(ProductAvailabilityService::class));
 
     $product->refresh();
@@ -177,7 +177,7 @@ it('resolves the product when the job is given a model instance', function () {
         ->andReturn(['productName' => 'Resolved from model']);
     $this->app->instance(NwgApiClient::class, $mockClient);
 
-    (new SyncNewWaveProductJob($product, SyncLevel::Meta))
+    new SyncNewWaveProductJob($product, SyncLevel::Meta)
         ->handle(app(ProductAvailabilityService::class));
 
     expect($product->refresh()->name)->toBe('Resolved from model');

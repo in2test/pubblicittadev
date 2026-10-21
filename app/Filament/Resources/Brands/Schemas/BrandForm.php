@@ -6,11 +6,11 @@ namespace App\Filament\Resources\Brands\Schemas;
 
 use App\Models\Brand;
 use App\Support\SlugGenerator;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Schema;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
 class BrandForm
@@ -38,7 +38,7 @@ class BrandForm
                             ->imagePreviewHeight('300')
                             ->maxFiles(1)
                             ->columnSpanFull(),
-                    ])
+                    ]),
             ]);
     }
 }

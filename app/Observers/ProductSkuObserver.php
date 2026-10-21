@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\ProductSku;
+use App\Services\GoogleMerchantFeedCache;
 
 class ProductSkuObserver
 {
@@ -16,6 +17,8 @@ class ProductSkuObserver
         if ($productSku->wasRecentlyCreated || $productSku->wasChanged(['override_price'])) {
             $productSku->product->updateCachedPrices();
         }
+
+        $this->scheduleFeedRefresh();
     }
 
     /**
@@ -26,6 +29,8 @@ class ProductSkuObserver
         if ($productSku->override_price !== null) {
             $productSku->product->updateCachedPrices();
         }
+
+        $this->scheduleFeedRefresh();
     }
 
     /**
@@ -33,7 +38,7 @@ class ProductSkuObserver
      */
     public function restored(ProductSku $productSku): void
     {
-        //
+        $this->scheduleFeedRefresh();
     }
 
     /**
@@ -41,6 +46,14 @@ class ProductSkuObserver
      */
     public function forceDeleted(ProductSku $productSku): void
     {
-        //
+        $this->scheduleFeedRefresh();
+    }
+
+    /**
+     * The feed lists one item per SKU, so a SKU change alters the feed.
+     */
+    private function scheduleFeedRefresh(): void
+    {
+        app(GoogleMerchantFeedCache::class)->scheduleRefresh();
     }
 }

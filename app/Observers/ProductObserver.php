@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\Product;
+use App\Services\GoogleMerchantFeedCache;
 
 class ProductObserver
 {
@@ -17,6 +18,8 @@ class ProductObserver
         if ($product->wasRecentlyCreated || $product->wasChanged(['price', 'offer_price', 'product_class', 'min_area', 'allows_custom_size', 'min_custom_width', 'min_custom_height', 'is_active'])) {
             $product->updateCachedPrices();
         }
+
+        $this->forgetCachedFeed();
     }
 
     /**
@@ -24,7 +27,7 @@ class ProductObserver
      */
     public function deleted(Product $product): void
     {
-        //
+        $this->forgetCachedFeed();
     }
 
     /**
@@ -32,7 +35,7 @@ class ProductObserver
      */
     public function restored(Product $product): void
     {
-        //
+        $this->forgetCachedFeed();
     }
 
     /**
@@ -40,6 +43,14 @@ class ProductObserver
      */
     public function forceDeleted(Product $product): void
     {
-        //
+        $this->forgetCachedFeed();
+    }
+
+    /**
+     * The cached feed no longer matches the catalogue once a product changes.
+     */
+    private function forgetCachedFeed(): void
+    {
+        app(GoogleMerchantFeedCache::class)->scheduleRefresh();
     }
 }

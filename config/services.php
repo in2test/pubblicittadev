@@ -48,6 +48,8 @@ return [
         'badge_position' => env('GOOGLE_REVIEWS_BADGE_POSITION', 'BOTTOM_RIGHT'),
         'badge_region' => env('GOOGLE_REVIEWS_BADGE_REGION', 'IT'),
         'delivery_days' => (int) env('GOOGLE_REVIEWS_DELIVERY_DAYS', 7),
+        'feed_cache_store' => env('GOOGLE_MERCHANT_FEED_CACHE_STORE', 'file'),
+        'feed_cache_ttl' => (int) env('GOOGLE_MERCHANT_FEED_CACHE_TTL', 21600),
     ],
 
 ];

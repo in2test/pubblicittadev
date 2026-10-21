@@ -5,20 +5,14 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Brands\Tables;
 
 use App\Models\Brand;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\ManageRecordsFilter;
-use Filament\Tables\Filters\SearchableFilter;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActions\DeleteBulkAction;
-use Filament\Tables\Actions\BulkActions\DeleteBulkAction as BulkDeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class BrandsTable
 {
@@ -27,14 +21,16 @@ class BrandsTable
         return $table
             ->columns([
                 ImageColumn::make('logo')
-                    ->collection('logos')
+                    ->label('Logo')
+                    ->state(fn (Brand $record): ?string => $record->getFirstMediaUrl('logos', 'thumbnail') ?: null)
+                    ->disk('public')
                     ->circular()
-                    ->width(40),
+                    ->size(40),
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('slug')
-                    ->toggleable(isToggledHidden: true),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('products_count')
                     ->counts('products')
                     ->sortable(),
@@ -42,15 +38,15 @@ class BrandsTable
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
                     EditAction::make(),
                     DeleteAction::make(),
                 ])->icon('heroicon-m-pencil-square'),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkDeleteAction::make(),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

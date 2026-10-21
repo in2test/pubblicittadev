@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\VariationOption;
+use App\Support\MerchantFeedItem;
 use SimpleXMLElement;
 
 /**
@@ -21,30 +22,25 @@ class MerchantFeedItemWriter
 
     public function addItemDetails(
         SimpleXMLElement $item,
-        string $id,
-        string $title,
-        string $description,
-        string $link,
-        ?string $color,
-        ?string $size,
+        MerchantFeedItem $feedItem,
         Product $product,
-        ?VariationOption $colorOption,
+        ?VariationOption $colorOption = null,
     ): void {
-        $item->addChild('g:id', $id, self::MERCHANT_NAMESPACE);
-        $item->addChild('g:title', htmlspecialchars($title), self::MERCHANT_NAMESPACE);
+        $item->addChild('g:id', $feedItem->id, self::MERCHANT_NAMESPACE);
+        $item->addChild('g:title', htmlspecialchars($feedItem->title), self::MERCHANT_NAMESPACE);
         $item->addChild('g:language', 'it', self::MERCHANT_NAMESPACE);
         $item->addChild('g:target_country', 'IT', self::MERCHANT_NAMESPACE);
-        $item->addChild('g:description', htmlspecialchars($description), self::MERCHANT_NAMESPACE);
+        $item->addChild('g:description', htmlspecialchars($feedItem->description), self::MERCHANT_NAMESPACE);
 
-        if ($color !== null) {
-            $item->addChild('g:color', htmlspecialchars($color), self::MERCHANT_NAMESPACE);
+        if ($feedItem->color !== null) {
+            $item->addChild('g:color', htmlspecialchars($feedItem->color), self::MERCHANT_NAMESPACE);
         }
 
-        if ($size !== null) {
-            $item->addChild('g:size', htmlspecialchars($size), self::MERCHANT_NAMESPACE);
+        if ($feedItem->size !== null) {
+            $item->addChild('g:size', htmlspecialchars($feedItem->size), self::MERCHANT_NAMESPACE);
         }
 
-        $item->addChild('g:link', $link, self::MERCHANT_NAMESPACE);
+        $item->addChild('g:link', $feedItem->link, self::MERCHANT_NAMESPACE);
         $this->addImageLinks($item, $product, $colorOption);
         $this->addExtendedAttributes($item, $product);
     }

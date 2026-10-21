@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\BrandFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\RouteKey;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\RouteKey;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Support\Str;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Brand Model
@@ -21,9 +26,12 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $name
  * @property string $slug
- * @property \Illuminate\Database\Eloquent\Relations\HasMany $products
+ * @property-read Collection<int, Product> $products
+ * @property-read int|null $products_count
+ * @property-read MediaCollection<int, Media> $media
+ * @property-read int|null $media_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder<static> factory($count = null, $state = [])
+ * @method static Builder<static> factory($count = null, $state = [])
  */
 #[Fillable([
     'name',
@@ -32,6 +40,9 @@ use Illuminate\Support\Str;
 #[RouteKey('slug')]
 class Brand extends Model implements HasMedia
 {
+    /**
+     * @use HasFactory<BrandFactory>
+     */
     use HasFactory, InteractsWithMedia;
 
     /**
@@ -45,11 +56,36 @@ class Brand extends Model implements HasMedia
     }
 
     /**
-     * Boot the model.
-     *
-     * @return void
+     * Media Library Setup
      */
-    public static function boot()
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logos')
+            ->useDisk('public');
+    }
+
+    /**
+     * Media Library Setup
+     */
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumbnail')
+            ->width(150)
+            ->height(150)
+            ->sharpen(10)
+            ->format('png');
+
+        $this->addMediaConversion('medium')
+            ->width(600)
+            ->height(600)
+            ->sharpen(10)
+            ->format('png');
+    }
+
+    /**
+     * Boot the model.
+     */
+    public static function boot(): void
     {
         parent::boot();
 

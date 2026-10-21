@@ -17,10 +17,12 @@ use App\Observers\ProductObserver;
 use App\Observers\ProductSkuObserver;
 use App\Observers\UserObserver;
 use App\Services\CartManager;
+use App\Services\GoogleMerchantFeedCache;
 use App\Services\NwgApiClient;
 use App\Services\OrderNotificationService;
 use App\Services\OrderPaymentNotificationService;
 use App\Services\ProductAvailabilityService;
+use App\Services\ProductGalleryService;
 use App\Services\ProductSynchronizer;
 use App\Services\QuantityDiscountService;
 use Carbon\CarbonImmutable;
@@ -48,6 +50,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(QuantityDiscountService::class);
         $this->app->singleton(ProductAvailabilityService::class);
         $this->app->singleton(ProductSynchronizer::class);
+
+        // Memoizes the image lists of the products it has already resolved
+        $this->app->singleton(ProductGalleryService::class);
+
+        // Keeps track of the pending rebuild of the Google Merchant feed
+        $this->app->singleton(GoogleMerchantFeedCache::class);
 
         $this->app->singleton(OrderNotificationService::class);
         $this->app->singleton(OrderPaymentNotificationService::class);

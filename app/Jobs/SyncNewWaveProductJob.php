@@ -37,7 +37,7 @@ class SyncNewWaveProductJob implements ShouldQueue
     {
         $product = $this->resolveProduct();
 
-        if (! $product) {
+        if (! $product instanceof Product) {
             Log::warning("SyncNewWaveProductJob: Product {$this->productKey()} not found, skipping.");
 
             return;
@@ -63,7 +63,7 @@ class SyncNewWaveProductJob implements ShouldQueue
     {
         $product = $this->resolveProduct();
 
-        if ($product) {
+        if ($product instanceof Product) {
             $product->update(['sync_status' => SyncStatus::Failed, 'sync_progress' => 0]);
         }
     }

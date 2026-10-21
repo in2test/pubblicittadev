@@ -52,6 +52,7 @@ class ProductForm
                                             static::getSlugField(),
                                             static::getSkuField(),
                                             static::getCategoryField(),
+                                            ProductBrandField::getBrandField(),
                                             static::getDescriptionField(),
                                         ]),
                                     Section::make('Prezzi e Stato')

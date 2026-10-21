@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductSku;
 use App\Models\VariationOption;
+use App\Support\MerchantFeedItem;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
 
@@ -31,9 +32,13 @@ class GoogleMerchantFeedBuilder
             ->with([
                 'media',
                 'images',
+                'pricingTiers',
+                'campaigns',
                 'skus.options.variationType',
+                'skus.campaigns',
                 'variationTypes',
                 'productVariationTypes.options.option',
+                'brand_relation',
             ])
             ->get();
 
@@ -118,12 +123,15 @@ class GoogleMerchantFeedBuilder
         $item = $channel->addChild('item');
         $this->itemWriter->addItemDetails(
             $item,
-            $sku->sku ?? ($product->sku.'_'.$sku->id),
-            (string) $variantTitle,
-            $description,
-            htmlspecialchars($link),
-            $colorOption?->name,
-            $sizeOption?->name,
+            MerchantFeedItem::forVariant(
+                $product,
+                $sku->sku ?? ($product->sku.'_'.$sku->id),
+                (string) $variantTitle,
+                $description,
+                htmlspecialchars($link),
+                $colorOption,
+                $sizeOption,
+            ),
             $product,
             $colorOption,
         );
@@ -157,14 +165,13 @@ class GoogleMerchantFeedBuilder
         $item = $channel->addChild('item');
         $this->itemWriter->addItemDetails(
             $item,
-            $product->sku,
-            (string) $product->name,
-            $description,
-            route('product', [$categorySlug, $product->slug]),
-            $colorOptions !== '' ? $colorOptions : null,
-            null,
+            MerchantFeedItem::forProduct(
+                $product,
+                $description,
+                route('product', [$categorySlug, $product->slug]),
+                $colorOptions !== '' ? $colorOptions : null,
+            ),
             $product,
-            null,
         );
 
         $priceData = $product->getDisplayPriceData();

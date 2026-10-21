@@ -35,6 +35,7 @@ class ProductController extends Controller
             'variationTypes',
             'skus.options',
             'media',
+            'brand_relation',
         ]);
 
         if (! $product->is_active && ! auth()->user()?->isAdmin()) {

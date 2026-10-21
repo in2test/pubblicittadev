@@ -315,15 +315,7 @@ class NewWaveProductAttributes
 
                 continue;
             }
-
-            // Reverse match from Italian description
-            $matchedKey = null;
-            foreach (self::CARE_INSTRUCTIONS_MAP as $key => $info) {
-                if (stripos($str, $info['short']) !== false || stripos($str, $info['label']) !== false) {
-                    $matchedKey = $key;
-                    break;
-                }
-            }
+            $matchedKey = array_find_key(self::CARE_INSTRUCTIONS_MAP, fn ($info) => stripos($str, $info['short']) !== false || stripos($str, $info['label']) !== false);
 
             if ($matchedKey !== null) {
                 $data = self::CARE_INSTRUCTIONS_MAP[$matchedKey];
@@ -404,14 +396,7 @@ class NewWaveProductAttributes
 
                 continue;
             }
-
-            $matchedKey = null;
-            foreach ($map as $key => $info) {
-                if (stripos($str, $info['short']) !== false || stripos($str, $key) !== false) {
-                    $matchedKey = $key;
-                    break;
-                }
-            }
+            $matchedKey = array_find_key($map, fn ($info, $key) => stripos($str, $info['short']) !== false || stripos($str, $key) !== false);
 
             if ($matchedKey !== null) {
                 $data = $map[$matchedKey];
@@ -433,8 +418,6 @@ class NewWaveProductAttributes
 
         return $details;
     }
-
-
 
     /**
      * Check if customization_notes looks like care instructions.

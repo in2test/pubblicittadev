@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Brand;
 use App\Models\Product;
 use App\Support\NewWaveProductAttributes;
 
 class ProductMetadataSynchronizer
 {
+    public function __construct(
+        private readonly BrandResolver $brandResolver,
+    ) {}
+
     /**
-     * Synchronize basic product metadata (name, price, description) from API data.
+     * Synchronize basic product metadata (name, price, description, brand) from API data.
      *
      * @param  array<string, mixed>  $data
      */
@@ -30,6 +35,12 @@ class ProductMetadataSynchronizer
 
         if (! $product->override_description) {
             $updateData['description'] = $data['productCatalogText'] ?? $product->description;
+        }
+
+        $brand = $this->brandResolver->resolve($this->extractBrandName($data));
+
+        if ($brand instanceof Brand) {
+            $updateData['brand_id'] = $brand->id;
         }
 
         // New fields from NewWave API formatted in Italian
@@ -55,5 +66,21 @@ class ProductMetadataSynchronizer
         $updateData['sync_progress'] = 20;
 
         $product->update($updateData);
+    }
+
+    /**
+     * Read the brand name out of an API payload.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function extractBrandName(array $data): ?string
+    {
+        $brand = $data['productBrand'] ?? null;
+
+        if (! is_string($brand)) {
+            return null;
+        }
+
+        return $brand;
     }
 }

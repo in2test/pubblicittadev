@@ -20,9 +20,19 @@
     'availableVariationTypes',
 
     /**
+     * Brands available for the current catalog query.
+     */
+    'availableBrands',
+
+    /**
      * Array of selected variation option IDs.
      */
     'selectedOptions' => [],
+
+    /**
+     * Array of selected brand IDs.
+     */
+    'selectedBrands' => [],
 
     /**
      * Whether any active filters are applied.
@@ -46,13 +56,19 @@
             :category="$category"
         />
 
-        {{-- 2. Attribute Filters (Colors, Sizes, etc.) --}}
+        {{-- 2. Brand Filter --}}
+        <x-catalog.brand-filter
+            :available-brands="$availableBrands"
+            :selected-brands="$selectedBrands"
+        />
+
+        {{-- 3. Attribute Filters (Colors, Sizes, etc.) --}}
         <x-catalog.filters
             :available-variation-types="$availableVariationTypes"
             :selected-options="$selectedOptions"
         />
 
-        {{-- 3. Reset Filters Action --}}
+        {{-- 4. Reset Filters Action --}}
         @if($isFiltering)
             <div class="pt-10">
                 <button 

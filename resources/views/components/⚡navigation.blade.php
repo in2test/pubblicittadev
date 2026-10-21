@@ -5,6 +5,7 @@ use Livewire\Attributes\Computed;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartManager;
+use App\Services\ProductSearchService;
 use Illuminate\Support\Facades\Auth;
 
 new class extends Component {
@@ -36,10 +37,11 @@ new class extends Component {
             return collect();
         }
 
-        return Product::search($queryStr)
-            ->query(fn ($query) => $query->active()->with(['category'])->orderBy('name', 'asc'))
-            ->take(5)
-            ->get();
+        return app(ProductSearchService::class)->search(
+            $queryStr,
+            Product::query()->active()->with(['category'])->orderBy('name', 'asc'),
+            5,
+        );
     }
 };
 ?>

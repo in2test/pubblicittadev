@@ -3,9 +3,11 @@
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\VariationType;
+use App\Services\ProductSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -16,6 +18,8 @@ new class extends Component {
     #[\Livewire\Attributes\Url(except: '')]
     public string $search = '';
     public array $selectedOptions = [];
+    #[\Livewire\Attributes\Url(except: '')]
+    public array $selectedBrands = [];
     #[\Livewire\Attributes\Url(except: 'name')]
     public string $sort = 'name';
     public bool $isFiltering = false;
@@ -31,7 +35,7 @@ new class extends Component {
 
     public function updating(string $property): void
     {
-        if (in_array($property, ['search', 'selectedOptions', 'categorySlug'])) {
+        if (in_array($property, ['search', 'selectedOptions', 'selectedBrands', 'categorySlug'])) {
             $this->resetPage();
         }
     }
@@ -62,9 +66,18 @@ new class extends Component {
         }
     }
 
+    public function toggleBrand(int $id): void
+    {
+        if (in_array($id, $this->selectedBrands)) {
+            $this->selectedBrands = array_values(array_diff($this->selectedBrands, [$id]));
+        } else {
+            $this->selectedBrands[] = $id;
+        }
+    }
+
     public function resetFilters(): void
     {
-        $this->reset(['search', 'selectedOptions']);
+        $this->reset(['search', 'selectedOptions', 'selectedBrands']);
     }
 
     #[Computed]
@@ -81,7 +94,9 @@ new class extends Component {
 
     public function getIsFiltering(): bool
     {
-        return $this->search !== '' && $this->search !== '0' || $this->selectedOptions !== [];
+        return $this->search !== '' && $this->search !== '0'
+            || $this->selectedOptions !== []
+            || $this->selectedBrands !== [];
     }
 
     #[Computed]
@@ -98,7 +113,18 @@ new class extends Component {
         }])->get();
     }
 
-    protected function getBaseFilteredQuery(): Builder
+    #[Computed]
+    public function availableBrands(): Collection
+    {
+        $productQuery = $this->getBaseFilteredQuery(applyBrandFilter: false);
+
+        return Brand::query()
+            ->whereIn('id', $productQuery->whereNotNull('brand_id')->select('brand_id'))
+            ->orderBy('name')
+            ->get();
+    }
+
+    protected function getBaseFilteredQuery(bool $applyBrandFilter = true): Builder
     {
         $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
@@ -109,19 +135,10 @@ new class extends Component {
                 $ids = $category->children->pluck('id')->push($category->id);
                 $q->whereIn('category_id', $ids);
             })
-            ->when($this->search !== '' && $this->search !== '0', function ($q) {
-                $searchTerm = $this->search;
-                $words = preg_split('/\s+/', trim($searchTerm), -1, PREG_SPLIT_NO_EMPTY);
-
-                foreach ($words as $word) {
-                    $q->where(function ($sq) use ($word) {
-                        $sq->where('name', 'like', "%{$word}%")
-                            ->orWhere('sku', 'like', "%{$word}%")
-                            ->orWhere('description', 'like', "%{$word}%")
-                            ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$word}%"));
-                    });
-                }
+            ->when($this->search !== '' && $this->search !== '0', function (\Illuminate\Database\Eloquent\Builder $q) {
+                app(ProductSearchService::class)->applySearchTerm($q, $this->search);
             })
+            ->when($applyBrandFilter && $this->selectedBrands !== [], fn ($q) => $q->whereIn('brand_id', $this->selectedBrands))
             ->when($this->selectedOptions !== [], function ($q) {
                 $optionsGroupedByType = \App\Models\VariationOption::whereIn('id', $this->selectedOptions)
                     ->get()
@@ -150,12 +167,14 @@ new class extends Component {
                     ->select([
                         'id', 'name', 'slug', 'sku', 'description', 'price', 
                         'offer_price', 'pricing_model', 'is_featured', 'is_active', 
-                        'category_id', 'cached_starting_price', 'cached_starting_unit_price'
+                        'category_id', 'cached_starting_price', 'cached_starting_unit_price',
+                        'brand_id'
                     ])
                     ->with([
                         'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
                         'images' => fn($q) => $q->orderBy('order_by')->limit(1),
                         'category:id,name,slug', 
+                        'brand_relation:id,name,slug',
                         'productVariationTypes' => fn($q) => $q->where('has_images', true)->select('id', 'product_id', 'variation_type_id', 'has_images'),
                         'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
                         'productVariationTypes.options.option:id,name,value,color_hex'
@@ -175,12 +194,14 @@ new class extends Component {
                 ->select([
                     'id', 'name', 'slug', 'sku', 'description', 'price', 
                     'offer_price', 'pricing_model', 'is_featured', 'is_active', 
-                    'category_id', 'cached_starting_price', 'cached_starting_unit_price'
+                    'category_id', 'cached_starting_price', 'cached_starting_unit_price',
+                    'brand_id'
                 ])
                 ->with([
                     'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
                     'images' => fn($q) => $q->orderBy('order_by')->limit(1),
                     'category:id,name,slug', 
+                    'brand_relation:id,name,slug',
                     'productVariationTypes' => fn($q) => $q->where('has_images', true)->select('id', 'product_id', 'variation_type_id', 'has_images'),
                     'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
                     'productVariationTypes.options.option:id,name,value,color_hex'
@@ -207,12 +228,14 @@ new class extends Component {
                     ->select([
                         'id', 'name', 'slug', 'sku', 'description', 'price', 
                         'offer_price', 'pricing_model', 'is_featured', 'is_active', 
-                        'category_id', 'cached_starting_price', 'cached_starting_unit_price'
+                        'category_id', 'cached_starting_price', 'cached_starting_unit_price',
+                        'brand_id'
                     ])
                     ->with([
                         'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
                         'images' => fn($q) => $q->orderBy('order_by')->limit(1),
                         'category:id,name,slug', 
+                        'brand_relation:id,name,slug',
                         'productVariationTypes' => fn($q) => $q->where('has_images', true)->select('id', 'product_id', 'variation_type_id', 'has_images'),
                         'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
                         'productVariationTypes.options.option:id,name,value,color_hex'
@@ -236,12 +259,14 @@ new class extends Component {
             ->select([
                 'id', 'name', 'slug', 'sku', 'description', 'price', 
                 'offer_price', 'pricing_model', 'is_featured', 'is_active', 
-                'category_id', 'cached_starting_price', 'cached_starting_unit_price'
+                'category_id', 'cached_starting_price', 'cached_starting_unit_price',
+                'brand_id'
             ])
             ->with([
                 'media' => fn($q) => $q->where('collection_name', 'images')->orderBy('order_column')->limit(1), 
                 'images' => fn($q) => $q->orderBy('order_by')->limit(1),
                 'category:id,name,slug', 
+                'brand_relation:id,name,slug',
                 'productVariationTypes' => fn($q) => $q->where('has_images', true)->select('id', 'product_id', 'variation_type_id', 'has_images'),
                 'productVariationTypes.options:id,product_variation_type_id,variation_option_id,sort_order',
                 'productVariationTypes.options.option:id,name,value,color_hex'
@@ -274,7 +299,9 @@ new class extends Component {
         :category-slug="$categorySlug"
         :category="$this->category"
         :available-variation-types="$this->availableVariationTypes"
+        :available-brands="$this->availableBrands"
         :selected-options="$selectedOptions"
+        :selected-brands="$selectedBrands"
         :is-filtering="$this->getIsFiltering()"
     />
 

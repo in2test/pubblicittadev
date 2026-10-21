@@ -12,20 +12,30 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductGalleryService
 {
+    /**
+     * Memoized image lists, keyed by product id and variation option.
+     *
+     * The feed resolves the images of a product once per SKU, and building the
+     * list walks the whole media collection, so the result is cached for the
+     * lifetime of the request.
+     *
+     * @var array<string, Collection<int, object>>
+     */
+    private array $imageCache = [];
+
     /** @return Collection<int, object> */
     public function getImagesForOption(Product $product, ?int $variationOptionId): Collection
     {
+        $cacheKey = $product->getKey().'-'.($variationOptionId ?? 'generic');
+
+        if (isset($this->imageCache[$cacheKey])) {
+            return $this->imageCache[$cacheKey];
+        }
+
         $localMedia = $this->localMediaImages($product, $variationOptionId, true);
         $images = $localMedia['images'];
 
-        $remoteQuery = $product->images()->orderBy('order_by', 'asc');
-        if ($variationOptionId !== null) {
-            $remoteQuery->where('variation_option_id', $variationOptionId);
-        } else {
-            $remoteQuery->whereNull('variation_option_id');
-        }
-
-        foreach ($remoteQuery->get() as $remote) {
+        foreach ($this->remoteImagesForOption($product, $variationOptionId) as $remote) {
             if (in_array($remote->image_url, $localMedia['remote_urls'])) {
                 continue;
             }
@@ -33,12 +43,49 @@ class ProductGalleryService
             $images[] = $this->remoteImage($remote);
         }
 
-        return collect($images)->sortBy('order')->values();
+        return $this->imageCache[$cacheKey] = collect($images)->sortBy('order')->values();
+    }
+
+    /**
+     * The remote images of a product, filtered by variation option.
+     *
+     * The eager loaded relation is reused when available: the feed walks every
+     * variant of every product, so querying per variant turns into thousands
+     * of round trips.
+     *
+     * @return Collection<int, Image>
+     */
+    private function remoteImagesForOption(Product $product, ?int $variationOptionId): Collection
+    {
+        if (! $product->relationLoaded('images')) {
+            $query = $product->images()->orderBy('order_by', 'asc');
+
+            if ($variationOptionId !== null) {
+                $query->where('variation_option_id', $variationOptionId);
+            } else {
+                $query->whereNull('variation_option_id');
+            }
+
+            return $query->get();
+        }
+
+        return $product->images
+            ->filter(fn (Image $image): bool => $variationOptionId === null
+                ? $image->variation_option_id === null
+                : (int) $image->variation_option_id === $variationOptionId)
+            ->sortBy('order_by')
+            ->values();
     }
 
     /** @return Collection<int, object> */
     public function getAllImages(Product $product): Collection
     {
+        $cacheKey = $product->getKey().'-all';
+
+        if (isset($this->imageCache[$cacheKey])) {
+            return $this->imageCache[$cacheKey];
+        }
+
         $localMedia = $this->localMediaImages($product);
         $images = $localMedia['images'];
 
@@ -55,7 +102,7 @@ class ProductGalleryService
             $images[] = $this->remoteImage($remote);
         }
 
-        return collect($images)->sortBy('order')->values();
+        return $this->imageCache[$cacheKey] = collect($images)->sortBy('order')->values();
     }
 
     /**
