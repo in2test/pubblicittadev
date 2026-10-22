@@ -4,9 +4,13 @@
 
 **Abbigliamento Personalizzato** - Custom Apparel E-commerce Platform
 
-- **Purpose**: Quote-based custom apparel ordering system (no online payments)
-- **Target Users**: Customers browse catalog -> create quotes -> admin processes manually
-- **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11
+- **Purpose**: Catalogue and ordering platform for custom-printed apparel and signage. Supports **both** Stripe Checkout payment and quotation requests; a quotation is an order with `payment_status = quotation`, not a separate entity.
+- **Target Users**: Customers browse catalogue -> configure a product -> cart -> checkout (pay or request a quote) -> admin fulfils via Filament
+- **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11
+
+**Read `ARCHITECTURE.md` first.** It covers the domain vocabulary (product classes, pricing precedence, campaigns, collections vs categories, order state), the layer map, where each subsystem lives, and the conventions the tooling enforces.
+
+**Read `PIANO_IMPLEMENTAZIONE.md`** for project status, the `master` -> `production` release model, and the prioritised backlog.
 
 ## Investigation Workflow
 
