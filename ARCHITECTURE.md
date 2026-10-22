@@ -516,7 +516,7 @@ unavailable, not as absent.
 
 | Question | Source of truth |
 | --- | --- |
-| What is built, what is planned, what is broken | `PIANO_IMPLEMENTAZIONE.md` — but see the staleness note below |
+| What is built, what is planned, what is broken | `PIANO_IMPLEMENTAZIONE.md` — current as of 2026-10-22 |
 | How to work in this repo (tools, skills, MCP) | `CLAUDE.md` / `AGENTS.md` |
 | Path-scoped coding rules | `.ai/rules/*.md`, indexed by `.ai/rules/index.md` |
 | Live database structure | `php artisan truss:export --format=llm --compact` |
@@ -526,17 +526,27 @@ unavailable, not as absent.
 
 ### Staleness found in `PIANO_IMPLEMENTAZIONE.md`
 
-Verified against this clone on 2026-10-22; worth correcting there:
+Six items in `PIANO_IMPLEMENTAZIONE.md` were verified as stale against this
+clone on 2026-10-22 and have been **corrected in that file** — if you read a
+copy predating that date, disregard:
 
-- §0 says `production` is "2 commits behind `master`" and that the collection
-  index is "uncommitted … not on either branch". It is **1** commit behind, and
-  the collection index is **committed on `master`** (`886e0f7`); `production`
-  sits at `32597c6`.
-- §6's "the ide-helper Composer plugin rewrites `composer.json`" no longer
-  applies at v3.7.0 (see §5).
-- §7's "cap the collection index to the first N siblings" is already done.
-- §6's "400 tests" is now 405.
+- §0 said `production` was "2 commits behind `master`" and that the collection
+  index was "uncommitted … not on either branch". It is now stated as **3
+  commits behind** (`production` sits at `32597c6`; `master` has since added
+  `886e0f7`, `7f1c251` and `5dc4b09`), and the collection index is recorded
+  as **committed on `master`**.
 - §0's topic branches (`dark-mode`, `newwave-products-implementation`, …) are
-  not present in this clone.
-- §7's "design-file upload" and other open items remain accurate, as do the
-  correctness bugs listed in §10 above.
+  now recorded as **absent from this clone** — only `master` and `production`
+  exist.
+- §6's "400 tests" is now **405 tests, 1142 assertions**.
+- §6's "the ide-helper Composer plugin rewrites `composer.json`" no longer
+  applies at v3.7.0 (see §5) and has been replaced with the correct behaviour
+  plus a note on why the `format` pipeline converges.
+- §7's "cap the collection index to the first N siblings" is now marked
+  **done** (`PRODUCTS_PER_COLLECTION = 8`).
+- §2's claim of "no `@phpstan-ignore` comments" now names the three reasoned
+  inline suppressions that actually exist, and §3 now flags the stale local
+  database artefacts.
+
+The remaining open items in §7 (design-file upload and the rest) are accurate,
+as are the correctness bugs listed in §10 above.

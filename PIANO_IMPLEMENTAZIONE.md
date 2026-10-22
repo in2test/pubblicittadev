@@ -5,7 +5,7 @@
 NewWave integration, date-driven offer/outlet campaigns, curated collections
 (kits & bundles), a brand catalogue synced from NewWave, a unified product
 search, a cached Google Merchant feed, and Filament administration are
-implemented. The full test suite (400 tests), PHPStan, Pint, and Sloppy pass at
+implemented. The full test suite (405 tests), PHPStan, Pint, and Sloppy pass at
 this snapshot. A configured production deployment workflow exists; this document
 does not independently verify the live production environment.
 
@@ -27,15 +27,16 @@ already available.
   release action: it is what makes a reviewed change deployable. `production`
   therefore lags `master` by design between releases, and the gap is expected
   rather than a sign of lost work.
-- At this snapshot `production` is **2 commits behind `master`**: the newest
-  `master` commits (brand synchronisation, unified search, cached merchant
-  feed) are not yet deployed. The uncommitted product-collection index described
-  in section 1 is also not on either branch.
-- Long-lived topic branches (`newwave-products-implementation`, `dark-mode`,
-  `opencode/*`, `scratch/*`) exist for work in progress. They are not release
-  branches and are not merged into `production` directly.
-- The `dark-mode` branch holds the UI/UX redesign described in section 7; it
-  has **not** been merged into `master`.
+- At this snapshot `production` is **3 commits behind `master`**: it sits at
+  `32597c6` (brand synchronisation, unified search, cached merchant feed),
+  while `master` has since added the product-collection index (`886e0f7`), the
+  IDE-helper/format-pipeline fix (`7f1c251`), and this agent orientation guide
+  (`5dc4b09`). None of the three are deployed yet.
+- The only branches in this repository are `master` and `production` (plus their
+  remote counterparts). The long-lived topic branches described in earlier
+  drafts (`newwave-products-implementation`, `dark-mode`, `opencode/*`,
+  `scratch/*`) are **not present** in this clone, so any work recorded against
+  them is not reachable from here.
 
 ## 1. Product and customer workflows
 
@@ -86,7 +87,10 @@ quotation. It is not a quotation-only storefront.
   out, and each group links to its collection page. The data is assembled by
   `App\Services\ProductCollectionIndexService` and rendered by the
   `x-product.collection-index` Blade component, reusing the shared product card
-  and grid components.
+  and grid components. Each group is capped at
+  `ProductCollectionIndexService::PRODUCTS_PER_COLLECTION` (8) products; the
+  component shows “N di M articoli” and a “Vedi Tutti gli Articoli della
+  Collezione” link to the full collection.
 
 ### Brands
 
@@ -143,7 +147,7 @@ Versions below reflect the installed project dependencies at this snapshot.
 
 | Area | Package / runtime | Version |
 | --- | --- | --- |
-| PHP | PHP | 8.5 |
+| PHP | PHP | 8.4.1+ (8.4 and 8.5 in CI) |
 | Backend framework | `laravel/framework` | 13.37.0 |
 | Admin panel | `filament/filament` | 5.10.2 |
 | Reactive UI | `livewire/livewire` | 4.4.7 |
@@ -151,7 +155,7 @@ Versions below reflect the installed project dependencies at this snapshot.
 | UI components | `livewire/flux` | 2.20.1 |
 | CSS/build | Tailwind CSS | 4.x |
 | Asset bundler | Vite | 8.x |
-| Search | `laravel/scout` | 11.9.0 |
+| Search (installed, not used by the application) | `laravel/scout` | 11.9.0 |
 | Media | `spatie/laravel-medialibrary` | 11.23.10 |
 | Payments | `stripe/stripe-php` | 20.3.1 |
 | Tests | Pest | 5.3.3 |
@@ -161,6 +165,11 @@ The project also uses Fortify for authentication, Laravel Boost for agent and
 development tooling, Rector, Pint, Sloppy, Sheath, and the Laravel IDE helper.
 Exact dependency constraints are in `composer.json` and `package.json`;
 `composer.lock` and `package-lock.json` record the resolved versions.
+
+`laravel/scout` is installed and configured, but no application code calls
+`::search(`: catalogue search runs through `ProductSearchService`, which
+matches on name, SKU, description, category and brand in SQL. Treat Scout as
+unused until a search implementation actually depends on it.
 
 ### Main code boundaries
 
@@ -206,11 +215,15 @@ after the Volt/Livewire 4 upgrade.
   the analyser and keeps working for any relation type. The collection index
   service (`App\Services\ProductCollectionIndexService`) originally used the
   narrower type and had to be changed for this reason.
-- **Fix a PHPStan finding at its cause, never with a suppression.** No
-  `@phpstan-ignore` comments, no baseline entries, and no inline `@var` or
-  casts that exist only to silence the analyser. The repository must stay at
-  0 PHPStan errors, so a new finding is a change to write, not a rule to
-  silence.
+- **Fix a PHPStan finding at its cause, never with a suppression.** There is
+  no PHPStan baseline and no active `ignoreErrors` entry in `phpstan.neon`.
+  The only suppressions are three inline `@phpstan-ignore-next-line`
+  comments, each carrying the reason it exists (a false-positive match
+  expression in `app/Enums/WorkStatus.php`, a Filament scaffold constant in
+  `OrderItemCustomizationDetails.php`, and a wrong vendor stub return type in
+  `ProductVariationFields.php`). A new suppression must do the same: state
+  why, and be reviewable. The repository must stay at 0 PHPStan errors, so a
+  new finding is a change to write, not a rule to silence.
 
 ## 3. Data model
 
@@ -251,6 +264,13 @@ of the products inside a collection.
 The checked‑in `.env.example` defaults to SQLite and a synchronous queue. Those
 are development defaults, not a statement about the production database or
 queue configuration.
+
+**The local database artefacts are stale and must not be used as the schema.**
+`database/database.sqlite` (32 tables) predates the `brands`, `collections`
+and `collection_product` tables, and `database/localhost.sql` (28 tables)
+predates those and every `campaigns*` table. Read the migrations, or export
+the live structure with `php artisan truss:export --format=llm --compact`,
+before reasoning about the schema.
 
 ## 4. Current routes and surfaces
 
@@ -340,7 +360,7 @@ inferred from the workflow file alone.
 - Tests use Pest and are organized under `tests/Architecture`, `tests/Feature`,
   and `tests/Unit`.
 - At this snapshot, the repository contains 79 files named `*Test.php`.
-- The full suite passes: **400 tests, 1125 assertions**. Two warnings are
+- The full suite passes: **405 tests, 1142 assertions**. Two warnings are
   reported and are not failures.
 - PHPStan/Larastan reports **0 errors** (it was 17 before the recent
   refactoring of the feed writer and checkout service).
@@ -348,17 +368,24 @@ inferred from the workflow file alone.
   diff, with a score of 100/100. The `format` Composer script runs the IDE
   helper generators (`ide-helper:generate`, `ide-helper:meta`,
   `ide-helper:models -RW`), Rector, Pint, Sloppy, and PHPStan/Larastan.
-- **The `barryvdh/laravel-ide-helper` Composer plugin rewrites `composer.json`
-  on its own; this is expected, not an accidental edit.** The project enables
-  the plugin's auto-initialise mode, so activating the plugin rewrites the
-  `format` script in `composer.json` to add the three `ide-helper:*` commands.
-  Plugin activation happens on any Composer command, including read-only ones
-  such as `composer show`, so the file can change without anyone editing it
-  by hand. A `composer.json` diff that touches only the `scripts.format`
-  array should be treated as expected noise: either commit it along with the
-  change, or revert it with `git checkout composer.json`. Do not spend a
-  review cycle on it, and do not accidentally commit an unrelated
-  `composer.lock` regeneration with it.
+- **The IDE helper is a plain Composer library, not a plugin, and it does not
+  touch `composer.json`.** At `barryvdh/laravel-ide-helper` v3.7.0 the package
+  declares no Composer plugin class and is not listed in `config.allow-plugins`,
+  so no Composer command — including read-only ones such as `composer show` —
+  can rewrite the file. The three `ide-helper:*` commands in `scripts.format`
+  were added by hand and are stable. **Any `composer.json` diff is therefore a
+  real change**: review it, and never commit an unrelated `composer.lock`
+  regeneration alongside it.
+- **The `format` pipeline converges; it is not a loop.** The oscillation
+  between `ide-helper:models -RW` and Rector came from Rector's
+  `withImportNames()` default, which enables `removeUnusedImports` and deleted
+  the `use` statements the IDE helper had just written into the model
+  docblocks. `rector.php` now passes `removeUnusedImports: false`
+  explicitly, and the two tools agree: the model files are byte-identical
+  after repeated runs. `ide-helper:models -RW` is the command that keeps the
+  `@property`/`@method` overrides on the models current;
+  `ide-helper:generate` and `ide-helper:meta` do **not** produce them, so
+  running only those leaves the model docblocks stale.
 - GitHub Actions has separate test and lint workflows. The test workflow runs
   against PHP 8.4 and 8.5, installs Node 22 dependencies, builds assets, and runs
   Pest. The production workflow builds with Node 24 and PHP 8.5.
@@ -447,10 +474,10 @@ php artisan truss:export --format=llm --compact
    benefits rather than generic duplicated copy. Add relevant metadata,
    canonical/internal links and sitemap entries, and test product membership and
    invalid sector slugs.
-3. **Decide the role of the collection index on the product page.** The index
-   currently lists every sibling product of a collection. Consider capping it
-   to the first N siblings with a “see all” link, and confirm the behaviour
-   for large collections.
+3. ~~**Decide the role of the collection index on the product page.**~~ **Done.**
+   The index is capped: `ProductCollectionIndexService::PRODUCTS_PER_COLLECTION`
+   is `8`, and the product page shows “N di M articoli” with a
+   “Vedi Tutti gli Articoli della Collezione” link to the full collection.
 4. **Validate B2B volume pricing and quotation presentation.** The application
    already has pricing tiers and category quantity discounts. Confirm these
    cover approved bulk‑price rules; if not, implement missing rules and a clear
