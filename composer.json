@@ -111,6 +111,7 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan ide-helper:generate",
             "@php artisan ide-helper:meta",
+            "@php artisan ide-helper:models -RW",
             "@php artisan boost:update --discover"
         ],
         "post-root-package-install": [

@@ -75,6 +75,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $technical_specs
  * @property string|null $construction_features
  * @property string|null $customization_notes
+ * @property int|null $brand_id
  * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
  * @property-read Collection<int, ProductVariationType> $baseVariationTypes
@@ -114,6 +115,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product query()
  * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
+ * @method static Builder<static>|Product whereBrandId($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
  * @method static Builder<static>|Product whereCachedStartingPrice($value)
  * @method static Builder<static>|Product whereCachedStartingUnitPrice($value)

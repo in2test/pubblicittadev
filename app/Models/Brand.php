@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\BrandFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
@@ -23,6 +24,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * Represents a brand associated with products.
  *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
  * @property-read Collection<int, Product> $products
@@ -32,6 +38,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Brand newModelQuery()
  * @method static Builder<static>|Brand newQuery()
  * @method static Builder<static>|Brand query()
+ * @method static Builder<static>|Brand whereCreatedAt($value)
+ * @method static Builder<static>|Brand whereId($value)
+ * @method static Builder<static>|Brand whereName($value)
+ * @method static Builder<static>|Brand whereSlug($value)
+ * @method static Builder<static>|Brand whereUpdatedAt($value)
  *
  * @mixin \Eloquent
  */

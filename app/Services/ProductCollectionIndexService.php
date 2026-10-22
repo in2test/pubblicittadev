@@ -20,7 +20,7 @@ class ProductCollectionIndexService
     /**
      * How many sibling products are listed for each collection.
      */
-    private const PRODUCTS_PER_COLLECTION = 8;
+    private const int PRODUCTS_PER_COLLECTION = 8;
 
     /**
      * The active collections the product belongs to, each with its sibling products.
