@@ -70,6 +70,9 @@
             "npm run build"
         ],
         "format": [
+            "php artisan ide-helper:generate",
+            "php artisan ide-helper:meta",
+            "php artisan ide-helper:models -RW",
             "vendor/bin/rector",
             "vendor/bin/pint",
             "vendor/bin/sloppy",

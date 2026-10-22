@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\CollectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
@@ -25,6 +26,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * "Apertura attività" or "Golfing Kit" that can be promoted together
  * and featured on the homepage hero or banner sections.
  *
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property bool $is_featured
+ * @property bool $is_active
+ * @property int $sort_order
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
  * @property-read EloquentCollection<int, Product> $products
@@ -36,6 +46,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Collection newModelQuery()
  * @method static Builder<static>|Collection newQuery()
  * @method static Builder<static>|Collection query()
+ * @method static Builder<static>|Collection whereCreatedAt($value)
+ * @method static Builder<static>|Collection whereDescription($value)
+ * @method static Builder<static>|Collection whereId($value)
+ * @method static Builder<static>|Collection whereIsActive($value)
+ * @method static Builder<static>|Collection whereIsFeatured($value)
+ * @method static Builder<static>|Collection whereName($value)
+ * @method static Builder<static>|Collection whereSlug($value)
+ * @method static Builder<static>|Collection whereSortOrder($value)
+ * @method static Builder<static>|Collection whereUpdatedAt($value)
  *
  * @mixin \Eloquent
  */

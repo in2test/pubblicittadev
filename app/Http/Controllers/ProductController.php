@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\ProductAvailabilityService;
+use App\Services\ProductCollectionIndexService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -61,6 +62,7 @@ class ProductController extends Controller
             'product' => $product,
             'category' => $category,
             'jobId' => $request->query('job_id'),
+            'relatedCollections' => app(ProductCollectionIndexService::class)->forProduct($product),
         ]);
     }
 }

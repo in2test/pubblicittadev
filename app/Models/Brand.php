@@ -23,15 +23,17 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * Represents a brand associated with products.
  *
- * @property int $id
- * @property string $name
- * @property string $slug
- * @property-read Collection<int, Product> $products
- * @property-read int|null $products_count
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
+ * @property-read Collection<int, Product> $products
+ * @property-read int|null $products_count
  *
- * @method static Builder<static> factory($count = null, $state = [])
+ * @method static BrandFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Brand newModelQuery()
+ * @method static Builder<static>|Brand newQuery()
+ * @method static Builder<static>|Brand query()
+ *
+ * @mixin \Eloquent
  */
 #[Fillable([
     'name',

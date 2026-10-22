@@ -80,6 +80,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Collection<int, ProductVariationType> $baseVariationTypes
  * @property-read int|null $base_variation_types_count
  * @property-read string $brand
+ * @property-read Brand|null $brand_relation
  * @property-read Collection<int, Campaign> $campaigns
  * @property-read int|null $campaigns_count
  * @property-read Category $category
@@ -104,9 +105,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read ProductVariationType|null $pivot
  * @property-read Collection<int, VariationType> $variationTypes
  * @property-read int|null $variation_types_count
- * @property-read numeric|null $pricing_tiers_min_quantity
- * @property-read numeric|null $pricing_tiers_min_price_per_unit
- * @property-read numeric|null $skus_min_override_price
  *
  * @method static Builder<static>|Product active()
  * @method static ProductFactory factory($count = null, $state = [])

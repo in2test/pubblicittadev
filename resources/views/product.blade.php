@@ -7,7 +7,8 @@
     <x-slot:ogUrl> {{ request()->query() ? request()->fullUrl() : $product->url }} </x-slot:ogUrl>
     <x-slot:ogType> product </x-slot:ogType>
     <x-slot:ogImage> {{ $product->getFirstImageUrl('large') }} </x-slot:ogImage>
-    <livewire:product :product="$product" :category="$category" :jobId="$jobId" /> 
+    <livewire:product :product="$product" :category="$category" :jobId="$jobId" />
+    <x-product.collection-index :collections="$relatedCollections" />
     @php
         $schemaPrice = (float) ($product->getStartingPrice() ?: 0);
         $applicableTier = \App\Models\ShippingTier::where('min_order_total', '<=', $schemaPrice)->orderBy('min_order_total', 'desc')->first();
