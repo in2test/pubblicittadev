@@ -49,7 +49,6 @@ use Override;
 ])]
 /**
  * @use HasFactory<PricingTierFactory>
- *
  * @property int $id
  * @property int $product_id
  * @property int|null $product_sku_id
@@ -59,9 +58,8 @@ use Override;
  * @property numeric $price_per_unit
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Product $product
- * @property-read ProductSku|null $productSku
- *
+ * @property-read \App\Models\Product $product
+ * @property-read \App\Models\ProductSku|null $productSku
  * @method static Builder<static>|PricingTier newModelQuery()
  * @method static Builder<static>|PricingTier newQuery()
  * @method static Builder<static>|PricingTier query()
@@ -74,7 +72,6 @@ use Override;
  * @method static Builder<static>|PricingTier whereProductId($value)
  * @method static Builder<static>|PricingTier whereProductSkuId($value)
  * @method static Builder<static>|PricingTier whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 class PricingTier extends Model

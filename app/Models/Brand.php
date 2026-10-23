@@ -31,10 +31,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, Product> $products
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- *
- * @method static BrandFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\BrandFactory factory($count = null, $state = [])
  * @method static Builder<static>|Brand newModelQuery()
  * @method static Builder<static>|Brand newQuery()
  * @method static Builder<static>|Brand query()
@@ -43,7 +42,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Brand whereName($value)
  * @method static Builder<static>|Brand whereSlug($value)
  * @method static Builder<static>|Brand whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([

@@ -61,7 +61,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[RouteKey('slug')]
 /**
  * @use HasFactory<CategoryFactory>
- *
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -74,11 +73,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
  * @property-read Category|null $parent
- * @property-read Collection<int, Product> $products
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- * @property-read Collection<int, CategoryQuantityDiscount> $quantityDiscounts
+ * @property-read Collection<int, \App\Models\CategoryQuantityDiscount> $quantityDiscounts
  * @property-read int|null $quantity_discounts_count
- *
  * @method static \Database\Factories\CategoryFactory factory($count = null, $state = [])
  * @method static Builder<static>|Category newModelQuery()
  * @method static Builder<static>|Category newQuery()
@@ -90,7 +88,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Category whereParentId($value)
  * @method static Builder<static>|Category whereSlug($value)
  * @method static Builder<static>|Category whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 class Category extends Model implements HasMedia
