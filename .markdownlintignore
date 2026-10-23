@@ -1,0 +1,5 @@
+# Generated/concatenated agent-guideline files.
+# These embed large appended rule sets (laravel-boost-guidelines) whose
+# structure intentionally uses multiple top-level headings and inline tags.
+AGENTS.md
+CLAUDE.md

@@ -32,7 +32,7 @@
                 {{-- Left Column: Fabrics & Features --}}
                 <div class="lg:col-span-7 flex flex-col gap-8">
                     @if ($hasFabrics)
-                        <div class="bg-white p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                                 <span class="material-symbols-outlined text-primary text-2xl">layers</span>
                                 <div>
@@ -49,7 +49,7 @@
                     @endif
 
                     @if ($hasFeatures)
-                        <div class="bg-white p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                                 <span class="material-symbols-outlined text-primary text-2xl">construction</span>
                                 <div>
@@ -73,7 +73,7 @@
                     @endif
 
                     @if ($hasCustomization)
-                        <div class="bg-white p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                                 <span class="material-symbols-outlined text-primary text-2xl">draw</span>
                                 <div>
@@ -93,7 +93,7 @@
                 {{-- Right Column: Certifications & Care Instructions --}}
                 <div class="lg:col-span-5 flex flex-col gap-8">
                     @if ($hasCerts)
-                        <div class="bg-white p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                                 <span class="material-symbols-outlined text-emerald-600 text-2xl">verified</span>
                                 <div>
@@ -120,7 +120,7 @@
                     @endif
 
                     @if ($hasCare)
-                        <div class="bg-white p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                                 <span class="material-symbols-outlined text-primary text-2xl">local_laundry_service</span>
                                 <div>
@@ -134,7 +134,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach ($careDetails as $care)
                                     <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100 transition-colors hover:bg-gray-100/60" title="{{ $care['label'] }}">
-                                        <div class="w-9 h-9 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-900 shrink-0 shadow-xs">
+                                        <div class="w-9 h-9 rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-900 shrink-0 shadow-xs">
                                             <x-icons.care-symbol :symbol="$care['symbol']" class="w-5 h-5 text-gray-800" />
                                         </div>
                                         <div class="min-w-0">

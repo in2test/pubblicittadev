@@ -4,9 +4,13 @@
 
 **Abbigliamento Personalizzato** - Custom Apparel E-commerce Platform
 
-- **Purpose**: Quote-based custom apparel ordering system (no online payments)
-- **Target Users**: Customers browse catalog -> create quotes -> admin processes manually
-- **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11, Laravel Scout 11
+- **Purpose**: Catalogue and ordering platform for custom-printed apparel and signage. Supports **both** Stripe Checkout payment and quotation requests; a quotation is an order with `payment_status = quotation`, not a separate entity.
+- **Target Users**: Customers browse catalogue -> configure a product -> cart -> checkout (pay or request a quote) -> admin fulfils via Filament
+- **Tech Stack**: Laravel 13, Livewire 4, Filament 5, Tailwind CSS 4, Spatie Media Library 11
+
+**Read `ARCHITECTURE.md` first.** It covers the domain vocabulary (product classes, pricing precedence, campaigns, collections vs categories, order state), the layer map, where each subsystem lives, and the conventions the tooling enforces.
+
+**Read `PIANO_IMPLEMENTAZIONE.md`** for project status, the `master` -> `production` release model, and the prioritised backlog.
 
 ## Investigation Workflow
 
@@ -55,7 +59,16 @@
 
 ## Critical Patterns
 
-### Laravel Scout (v11)
+### Theming / color tokens
+
+The app ships a light/dark theme toggled by `.dark` and a custom color scale
+defined in `resources/css/app.css` (each `--color-*` scale is re-inverted under
+`.dark`). Always use theme-aware utility classes such as `bg-gray-50`,
+`text-gray-950`, `border-gray-200`, and the `*-primary`/`*-secondary` tokens
+defined there. Never hardcode `bg-white`, `bg-black`, `text-white`, `text-black`
+or `border-black/10` for surfaces/borders: those CSS colors do not flip with the
+theme and stay fixed light/dark. Use white (`text-white`) only for text on
+solid brand backgrounds that are designed to stay constant.
 
 When using Scout's `query()` method for eager loading, the callback receives `Illuminate\Database\Eloquent\Builder`, NOT `Laravel\Scout\Builder`:
 

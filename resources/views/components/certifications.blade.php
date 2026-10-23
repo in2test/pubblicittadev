@@ -8,21 +8,21 @@
                 WhatsApp per maggiori informazioni.</p>
         </div>
         <div class="xl:w-2/3 flex flex-wrap justify-between gap-8 w-full">
-            <a href="https://wa.me/390775520273" target="_blank" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
+            <a href="https://wa.me/390775520273" target="_blank" class="flex items-center gap-4 bg-gray-50/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-gray-50 transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">phone</span>
                 <div>
                     <div class="font-bold text-xs">WhatsApp</div>
                     <div class="text-[10px] font-mono text-secondary">+39 0775 520 273</div>
                 </div>
             </a>
-            <a href="mailto:info@pubblicitta24.it" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
+            <a href="mailto:info@pubblicitta24.it" class="flex items-center gap-4 bg-gray-50/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-gray-50 transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">mail</span>
                 <div>
                     <div class="font-bold text-xs">Email</div>
                     <div class="text-[10px] font-mono text-secondary">info@pubblicitta24.it</div>
                 </div>
             </a>
-            <a href="https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679!16s%2Fg%2F11b6jgf95v?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="flex items-center gap-4 bg-white/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-white transition-colors">
+            <a href="https://www.google.com/maps/place/PubbliCitta'+24+srls/@41.7723226,13.269293,1417m/data=!3m2!1e3!4b1!4m6!3m5!1s0x132558ae53356aa1:0xd87cadd6464c2404!8m2!3d41.7723186!4d13.2718679!16s%2Fg%2F11b6jgf95v?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="flex items-center gap-4 bg-gray-50/50 px-6 py-4 flex-1 min-w-[280px] hover:bg-gray-50 transition-colors">
                 <span class="material-symbols-outlined text-4xl text-on-surface opacity-30">pin</span>
                 <div>
                     <div class="font-bold text-xs">Sede</div>

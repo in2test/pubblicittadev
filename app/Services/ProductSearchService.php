@@ -12,10 +12,12 @@ use Illuminate\Support\Str;
 /**
  * Single source of truth for product search.
  *
- * The search semantics are word based: the query is split on whitespace and
- * every word must match, on its own, one of the searchable columns. This is
- * what the catalog page does, and the header search box uses the same service
- * so both surfaces always return the same products.
+ * Search is backed by Laravel Scout: each search word is handed to
+ * ``Product::search()`` and the resulting matching IDs are then applied to
+ * whatever Eloquent builder the caller is already working on. The per-word
+ * results are intersected, so every word of the term must match. Catalog
+ * filters (category, brand, variations, active flag, ...) stay intact because
+ * Scout only decides which products match.
  */
 class ProductSearchService
 {
@@ -27,14 +29,18 @@ class ProductSearchService
      */
     public function applySearchTerm(Builder $query, ?string $term): Builder
     {
-        foreach ($this->splitIntoWords($term) as $word) {
-            $query->where(function (Builder $scoped) use ($word): void {
-                $scoped->where('name', 'like', "%{$word}%")
-                    ->orWhere('sku', 'like', "%{$word}%")
-                    ->orWhere('description', 'like', "%{$word}%")
-                    ->orWhereHas('category', fn (Builder $categoryQuery) => $categoryQuery->where('name', 'like', "%{$word}%"))
-                    ->orWhereHas('brand_relation', fn (Builder $brandQuery) => $brandQuery->where('name', 'like', "%{$word}%"));
-            });
+        $words = $this->splitIntoWords($term);
+
+        if ($words === []) {
+            return $query;
+        }
+
+        $ids = $this->resolveIds($words);
+
+        if ($ids === []) {
+            $query->whereRaw('1 = 0');
+        } else {
+            $query->whereIn('id', $ids);
         }
 
         return $query;
@@ -50,13 +56,63 @@ class ProductSearchService
     {
         $query ??= Product::query();
 
-        $this->applySearchTerm($query, $term);
+        $words = $this->splitIntoWords($term);
+
+        if ($words !== []) {
+            $ids = $this->resolveIds($words);
+
+            if ($ids === []) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereIn('id', $ids);
+            }
+        }
 
         if ($limit !== null) {
             $query->limit($limit);
         }
 
         return $query->get();
+    }
+
+    /**
+     * Resolve the product IDs matching every word of the term.
+     *
+     * @param  array<int, string>  $words
+     * @return array<int, int>
+     */
+    protected function resolveIds(array $words): array
+    {
+        $matchingSets = [];
+
+        $products = Product::with(['category:id,name', 'brand_relation:id,name'])->get();
+
+        foreach ($words as $word) {
+            $lowerWord = Str::lower($word);
+
+            $ids = collect(Product::search($word)->keys());
+
+            $extraIds = $products->filter(
+                fn (Product $product): bool => str_contains(Str::lower((string) $product->category->name), $lowerWord)
+                    || str_contains(Str::lower((string) $product->brand_relation?->name), $lowerWord)
+            )->pluck('id');
+
+            $ids = $ids->merge($extraIds);
+
+            $matchingSets[] = $ids->map(fn ($id) => (int) $id)->unique()->values()->all();
+        }
+
+        if ($matchingSets === []) {
+            return [];
+        }
+
+        $result = $matchingSets[0];
+
+        foreach (array_slice($matchingSets, 1) as $set) {
+            $result = array_values(array_intersect($result, $set));
+        }
+
+        return $result;
     }
 
     /**

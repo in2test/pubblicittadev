@@ -24,10 +24,10 @@
         <x-google-customer-reviews-optin :order="$order ?? null" />
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <a href="{{ route('dashboard.orders') }}" class="bg-gray-900 text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">
+            <a href="{{ route('dashboard.orders') }}" class="bg-gray-900 text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-950 transition-colors">
                 I tuoi ordini
             </a>
-            <a href="{{ route('catalog') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">
+            <a href="{{ route('catalog') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-950 transition-colors">
                 Continua lo shopping
             </a>
         </div>

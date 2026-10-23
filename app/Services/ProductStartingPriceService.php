@@ -19,7 +19,7 @@ class ProductStartingPriceService
     {
         if ($product->product_class !== ProductClass::AreaBased) {
             if (array_key_exists('pricing_tiers_min_quantity', $product->getAttributes())) {
-                $minTierQty = $product->pricing_tiers_min_quantity;
+                $minTierQty = $product->getAttributes()['pricing_tiers_min_quantity'];
             } elseif ($product->relationLoaded('pricingTiers')) {
                 $minTierQty = $product->pricingTiers->min('min_quantity');
             } else {
@@ -218,7 +218,7 @@ class ProductStartingPriceService
     private function minimumTierUnitPrice(Product $product): ?float
     {
         if (array_key_exists('pricing_tiers_min_price_per_unit', $product->getAttributes())) {
-            $minTierPrice = $product->pricing_tiers_min_price_per_unit;
+            $minTierPrice = $product->getAttributes()['pricing_tiers_min_price_per_unit'];
         } elseif ($product->relationLoaded('pricingTiers')) {
             $minTierPrice = $product->pricingTiers->min('price_per_unit');
         } else {
@@ -234,9 +234,9 @@ class ProductStartingPriceService
     private function skuOverridePrices(Product $product): array
     {
         if (array_key_exists('skus_min_override_price', $product->getAttributes())) {
-            $minSkuOverride = $product->skus_min_override_price;
+            $minSkuOverride = $product->getAttributes()['skus_min_override_price'];
             $skuPrices = $minSkuOverride !== null ? collect([(float) $minSkuOverride]) : collect();
-            $hasSkuWithoutOverride = $product->has_sku_without_override ?? false;
+            $hasSkuWithoutOverride = (bool) ($product->getAttributes()['has_sku_without_override'] ?? false);
         } elseif ($product->relationLoaded('skus')) {
             $activeOutletSkuIds = $product->activeOutletSkus()->pluck('product_skus.id')->all();
             $skuPrices = $product->skus

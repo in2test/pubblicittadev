@@ -115,7 +115,7 @@
 
                 @if($order->hasMedia('invoices'))
                     <div class="pt-4 border-t-2 border-dashed border-gray-250">
-                        <a href="{{ $order->getFirstMediaUrl('invoices') }}" target="_blank" class="w-full bg-white text-gray-950 py-3.5 px-2 border-2 border-gray-950 font-black uppercase tracking-widest hover:bg-gray-100 transition-colors text-xs flex justify-center items-center gap-2">
+                        <a href="{{ $order->getFirstMediaUrl('invoices') }}" target="_blank" class="w-full bg-gray-50 text-gray-950 py-3.5 px-2 border-2 border-gray-950 font-black uppercase tracking-widest hover:bg-gray-100 transition-colors text-xs flex justify-center items-center gap-2">
                             <span class="material-symbols-outlined text-sm">receipt</span>
                             Scarica Fattura
                         </a>

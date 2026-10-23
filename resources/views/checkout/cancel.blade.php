@@ -10,7 +10,7 @@
             <a href="{{ route('cart') }}" class="bg-primary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-primary-container transition-colors">
                 Torna al carrello
             </a>
-            <a href="{{ route('contact') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-black transition-colors">
+            <a href="{{ route('contact') }}" class="bg-secondary text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-gray-950 transition-colors">
                 Contatta assistenza
             </a>
         </div>

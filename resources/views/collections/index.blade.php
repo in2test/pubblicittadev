@@ -19,7 +19,7 @@
                     <span class="text-gray-300">/</span>
                     <span class="text-on-surface font-bold">Collezioni & Kit</span>
                 </nav>
-                <h1 class="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter text-on-background uppercase break-words">
+                <h1 class="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter text-on-background uppercase wrap-break-words">
                     <span class="text-primary">Collezioni</span> & Kit
                 </h1>
                 <p class="mt-4 text-gray-600 font-sans max-w-2xl text-base leading-relaxed">
@@ -51,7 +51,7 @@
                     @endphp
                     <article class="group bg-gray-50 border-2 border-gray-950  -hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
                         <div>
-                            <div class="aspect-16/9 bg-gray-950 relative overflow-hidden border-b-2 border-gray-950">
+                            <div class="aspect-video bg-gray-950 relative overflow-hidden border-b-2 border-gray-950">
                                 @if($bannerUrl)
                                     <img src="{{ $bannerUrl }}" 
                                          alt="{{ $collection->name }}" 

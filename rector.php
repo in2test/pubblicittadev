@@ -39,7 +39,12 @@ return RectorConfig::configure()
         TernaryToNullsafeCoalesceRector::class,
     ])
     ->withPhpSets()
-    ->withImportNames()
+    ->withImportNames(
+        importNames: true,
+        importDocBlockNames: true,
+        importShortClasses: true,
+        removeUnusedImports: false,
+    )
     ->withComposerBased(laravel: true)
     ->withPreparedSets(
         deadCode: true,

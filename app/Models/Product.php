@@ -75,11 +75,13 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $technical_specs
  * @property string|null $construction_features
  * @property string|null $customization_notes
+ * @property int|null $brand_id
  * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
  * @property-read Collection<int, ProductVariationType> $baseVariationTypes
  * @property-read int|null $base_variation_types_count
  * @property-read string $brand
+ * @property-read Brand|null $brand_relation
  * @property-read Collection<int, Campaign> $campaigns
  * @property-read int|null $campaigns_count
  * @property-read Category $category
@@ -104,9 +106,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read ProductVariationType|null $pivot
  * @property-read Collection<int, VariationType> $variationTypes
  * @property-read int|null $variation_types_count
- * @property-read numeric|null $pricing_tiers_min_quantity
- * @property-read numeric|null $pricing_tiers_min_price_per_unit
- * @property-read numeric|null $skus_min_override_price
  *
  * @method static Builder<static>|Product active()
  * @method static ProductFactory factory($count = null, $state = [])
@@ -116,6 +115,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product query()
  * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
+ * @method static Builder<static>|Product whereBrandId($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
  * @method static Builder<static>|Product whereCachedStartingPrice($value)
  * @method static Builder<static>|Product whereCachedStartingUnitPrice($value)
@@ -357,10 +357,6 @@ class Product extends Model implements HasMedia
      */
     public function toSearchableArray(): array
     {
-        /**
-         * Only index products that are active and synced (for NewWave products)
-         * This ensures that only ready-to-sell products appear in search results.
-         */
         return [
             'id' => (int) $this->id,
             'name' => (string) $this->name,
