@@ -59,7 +59,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'type', 'name', 'street', 'city', 'state', 'zip', 'country', 'phone', 'vat_number', 'fiscal_code', 'sdi_code', 'pec_email', 'is_default'])]
 /**
  * @use HasFactory<AddressFactory>
- *
  * @property int $id
  * @property int $user_id
  * @property string $type
@@ -77,8 +76,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $is_default
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read User $user
- *
+ * @property-read \App\Models\User $user
  * @method static \Database\Factories\AddressFactory factory($count = null, $state = [])
  * @method static Builder<static>|Address newModelQuery()
  * @method static Builder<static>|Address newQuery()
@@ -100,7 +98,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Address whereUserId($value)
  * @method static Builder<static>|Address whereVatNumber($value)
  * @method static Builder<static>|Address whereZip($value)
- *
  * @mixin \Eloquent
  */
 class Address extends Model
