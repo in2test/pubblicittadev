@@ -59,7 +59,16 @@
 
 ## Critical Patterns
 
-### Laravel Scout (v11)
+### Theming / color tokens
+
+The app ships a light/dark theme toggled by `.dark` and a custom color scale
+defined in `resources/css/app.css` (each `--color-*` scale is re-inverted under
+`.dark`). Always use theme-aware utility classes such as `bg-gray-50`,
+`text-gray-950`, `border-gray-200`, and the `*-primary`/`*-secondary` tokens
+defined there. Never hardcode `bg-white`, `bg-black`, `text-white`, `text-black`
+or `border-black/10` for surfaces/borders: those CSS colors do not flip with the
+theme and stay fixed light/dark. Use white (`text-white`) only for text on
+solid brand backgrounds that are designed to stay constant.
 
 When using Scout's `query()` method for eager loading, the callback receives `Illuminate\Database\Eloquent\Builder`, NOT `Laravel\Scout\Builder`:
 

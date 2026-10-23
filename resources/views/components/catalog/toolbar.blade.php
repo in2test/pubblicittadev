@@ -19,7 +19,7 @@
     a structured sort selector. Designed with a robust, industrial,
     high-contrast border layout that integrates seamlessly on all viewports.
 --}}
-<div class="flex flex-col md:flex-row justify-between items-stretch gap-0 mb-16 border border-gray-200 bg-white">
+<div class="flex flex-col md:flex-row justify-between items-stretch gap-0 mb-16 border border-gray-200 bg-gray-50">
     {{-- Search Input Section --}}
     <div class="flex items-center gap-0 w-full md:w-auto flex-1 border-b md:border-b-0 md:border-r border-gray-200">
         <form action="{{ route('search') }}" method="GET" class="flex w-full items-center">

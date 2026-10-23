@@ -8,7 +8,7 @@
 @endphp
 
 @if ($collections->isNotEmpty())
-    <section class="mt-16 px-8 py-16 3xl:px-32 bg-white border-t-4 border-gray-950">
+    <section class="mt-16 px-8 py-16 3xl:px-32 bg-gray-50 border-t-4 border-gray-950">
         <div class="max-w-7xl mx-auto">
             <div class="mb-12">
                 <div class="inline-flex items-center gap-2 px-3 py-1 bg-gray-200 text-gray-800 text-[11px] font-mono uppercase tracking-widest rounded mb-3">

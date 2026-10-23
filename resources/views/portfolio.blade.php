@@ -15,7 +15,7 @@
         @else
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($portfolioItems as $item)
-                    <div class="group border-2 border-gray-950 bg-white overflow-hidden hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
+                    <div class="group border-2 border-gray-950 bg-gray-50 overflow-hidden hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
                         <div class="aspect-video w-full bg-gray-200 border-b-2 border-gray-950 overflow-hidden relative">
                             @if($item->hasMedia('images'))
                                 <img src="{{ $item->getFirstMediaUrl('images') }}" alt="{{ $item->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">

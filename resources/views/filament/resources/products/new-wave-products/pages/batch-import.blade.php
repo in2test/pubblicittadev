@@ -3,7 +3,7 @@
 
     <div>
         @if (!$validated && !$imported)
-            <div class="bg-white rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
+            <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Inserisci codici SKU
                 </h3>
@@ -36,7 +36,7 @@
         @endif
 
         @if ($validated && !empty($validatedProducts))
-            <div class="bg-white rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
+            <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Risultati verifica ({{ count($validatedProducts) }} prodotti)
                 </h3>
@@ -116,7 +116,7 @@
         @endif
 
         @if ($imported && !empty($importResults))
-            <div class="bg-white rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
+            <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Importazione completata
                 </h3>

@@ -278,17 +278,16 @@ CSRF is exempted for `webhooks/stripe` in `bootstrap/app.php`.
 
 ## 5. Things that will bite you
 
-**Search is not Scout.** `Product` still imports `Laravel\Scout\Searchable` and
-implements `toSearchableArray()`, and `config/scout.php` is still configured
-(`driver => database`), but nothing calls `::search()` anywhere in `app/`.
-`ProductSearchService` runs a plain Eloquent query that ANDs the search
-words across `name`, `sku`, `description`, `category.name` and
-`brand_relation.name`. The header search box and the catalogue page both go
-through this one service, so they cannot drift apart — `ProductSearchParityTest`
-guards exactly that. Treat the Scout trait as dead weight, not as the search
-implementation.
+**Search uses Scout.** `Product` imports `Laravel\Scout\Searchable` and
+implements `toSearchableArray()`; `ProductSearchService` uses `Product::search()`
+(Scout) per word and intersects the results, merging in category and brand name
+matches, so the header search and catalogue page share the same matching.
 
-**`brand_relation`, not `brand`.** The `Product` relation to `Brand` is named
+**Theming is token-based.** Colors come from `resources/css/app.css`, where
+each color scale is re-inverted under `.dark`. Use theme-aware utility classes
+such as `bg-gray-50`, `text-gray-950`, `border-gray-200` and the brand tokens;
+never hardcode `bg-white`/`bg-black`/`text-white`/`text-black` for surfaces or
+borders — those do not flip between light and dark. The `Product` relation to `Brand` is named
 `brand_relation` and declares its foreign key explicitly
 (`belongsTo(Brand::class, 'brand_id')`) because the relation name no longer
 matches the column — without the explicit key Laravel would guess

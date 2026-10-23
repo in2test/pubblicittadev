@@ -69,7 +69,7 @@
                                     ? 'background:linear-gradient(135deg,'.$item['color_hexes'][0].' 50%,'.$item['color_hexes'][1].' 50%)'
                                     : 'background-color:'.$item['color_hexes'][0];
                                 @endphp
-                                <span class="w-4 h-4 rounded-sm border border-black/10 shrink-0 inline-block"
+                                <span class="w-4 h-4 rounded-sm border border-gray-200 shrink-0 inline-block"
                                     style="{{ $swatchCss }}"></span>
                                 @endif
                                 <span class="font-mono text-xs text-secondary">{{ $item['color_name'] }}</span>
@@ -128,7 +128,7 @@
                                     class="w-7 h-7 flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
                                     <span class="material-symbols-outlined text-sm">remove</span>
                                 </button>
-                                <div class="w-10 h-7 flex items-center justify-center font-mono text-sm font-bold border-x border-outline-variant/20 bg-white">
+                                <div class="w-10 h-7 flex items-center justify-center font-mono text-sm font-bold border-x border-outline-variant/20 bg-gray-50">
                                     {{ $row['qty'] }}
                                 </div>
                                 <button type="submit" name="quantity" value="{{ $row['qty'] + 1 }}"
@@ -155,7 +155,7 @@
                                 class="w-7 h-7 flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
                                 <span class="material-symbols-outlined text-sm">remove</span>
                             </button>
-                            <div class="w-10 h-7 flex items-center justify-center font-mono text-sm font-bold border-x border-outline-variant/20 bg-white">
+                            <div class="w-10 h-7 flex items-center justify-center font-mono text-sm font-bold border-x border-outline-variant/20 bg-gray-50">
                                 {{ $item['qty'] }}
                             </div>
                             <button type="submit" name="quantity" value="{{ $item['qty'] + 1 }}"
@@ -287,7 +287,7 @@
                     <div class="space-y-3">
                         <form action="{{ route('checkout') }}" method="GET">
                             <input type="hidden" name="notes" :value="orderNotes">
-                            <button type="submit" class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-base hover:bg-black transition-all flex items-center justify-center gap-2">
+                            <button type="submit" class="w-full bg-secondary text-white py-4 font-black uppercase tracking-tighter text-base hover:bg-gray-950 transition-all flex items-center justify-center gap-2">
                                 Procedi al Pagamento
                                 <span class="material-symbols-outlined text-base">payments</span>
                             </button>

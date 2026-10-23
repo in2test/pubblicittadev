@@ -52,7 +52,7 @@
                             <div class="flex gap-2 justify-end">
                                 @if($order->hasMedia('invoices'))
                                     <a href="{{ $order->getFirstMediaUrl('invoices') }}" target="_blank"
-                                       class="inline-block px-3 py-1 bg-white text-gray-950 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-100 transition-colors">
+                                       class="inline-block px-3 py-1 bg-gray-50 text-gray-950 text-[10px] font-black uppercase tracking-widest border-2 border-gray-950 hover:bg-gray-100 transition-colors">
                                         Fattura
                                     </a>
                                 @endif

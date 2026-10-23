@@ -51,8 +51,11 @@ quotation. It is not a quotation-only storefront.
 - Search through a shared search service. The header search box and the
   catalogue page use the same word-based matching over product name, SKU,
   description, category name, and brand name, so both surfaces return the same
-  products. The header no longer uses Scout for this path, because Scout
-  treated the whole query as one literal string.
+  products. The header search box and the catalogue page both go
+  through the shared `ProductSearchService`, which uses Laravel Scout
+  (`Product::search()`) per word and merges in category and brand name
+  matches, so both surfaces share the same Scout-backed matching while
+  keeping catalog filters intact.
 - Configure variation types and options, including exposed URL selections,
   image-bearing options, and price modifiers.
 - Select SKU-backed product variants, availability, and quantities.
@@ -166,12 +169,15 @@ development tooling, Rector, Pint, Sloppy, Sheath, and the Laravel IDE helper.
 Exact dependency constraints are in `composer.json` and `package.json`;
 `composer.lock` and `package-lock.json` record the resolved versions.
 
-`laravel/scout` is installed and configured, but no application code calls
-`::search(`: catalogue search runs through `ProductSearchService`, which
-matches on name, SKU, description, category and brand in SQL. Treat Scout as
-unused until a search implementation actually depends on it.
+`laravel/scout` is used for catalogue search: `ProductSearchService` hands each
+search word to `Product::search()` (Scout) and intersects the per-word results,
+then merges category and brand matches. Catalogue filters stay in SQL.
 
-### Main code boundaries
+- Theming is token-based: colors and inversion live in `resources/css/app.css`
+  (`--color-*` scales are re-inverted under `.dark`). Use theme-aware utility
+  classes such as `bg-gray-50`/`text-gray-950`/`border-gray-200`; never
+  hardcode `bg-white`/`bg-black`/`text-white`/`text-black` for surfaces or
+  borders, because those do not flip between light and dark.
 
 - `app/Http/Controllers` handles HTTP request/response coordination.
 - `app/Http/Requests` contains request validation for cart operations.

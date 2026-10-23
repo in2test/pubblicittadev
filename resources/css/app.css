@@ -186,9 +186,11 @@
 }
 
 .bg-grid-subtle {
-    background-image: radial-gradient(circle,
-            var(--color-gray-100) 1px,
-            transparent 1px);
+    background-image: radial-gradient(
+        circle,
+        var(--color-gray-100) 1px,
+        transparent 1px
+    );
     background-size: 32px 32px;
 }
 
@@ -215,7 +217,7 @@
     }
 
     .mega-nav-row {
-        @apply flex justify-between items-center py-0 w-full min-h-[64px] lg:grid lg:grid-cols-[1fr_auto_1fr];
+        @apply flex justify-between items-center py-0 w-full min-h-16 lg:grid lg:grid-cols-[1fr_auto_1fr];
     }
 
     .mega-logo {
@@ -227,7 +229,7 @@
     }
 
     .mega-trigger {
-        @apply inline-flex items-center gap-1.5 h-[64px] px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
+        @apply inline-flex items-center gap-1.5 h-16 px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
     }
 
     .mega-trigger-icon {
@@ -272,7 +274,7 @@
     }
 
     .mega-simple-link {
-        @apply inline-flex items-center h-[64px] px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
+        @apply inline-flex items-center h-16 px-3 font-semibold text-gray-700 hover:text-gray-950 transition-colors cursor-pointer border-b-2 border-transparent;
     }
 
     .mega-mobile-backdrop {
@@ -303,6 +305,6 @@ nav[role="navigation"] a:hover {
 
 /* Hide scrollbar for IE, Edge, and Firefox */
 .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }

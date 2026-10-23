@@ -357,10 +357,6 @@ class Product extends Model implements HasMedia
      */
     public function toSearchableArray(): array
     {
-        /**
-         * Only index products that are active and synced (for NewWave products)
-         * This ensures that only ready-to-sell products appear in search results.
-         */
         return [
             'id' => (int) $this->id,
             'name' => (string) $this->name,
