@@ -35,6 +35,15 @@
                             @if($item->description)
                                 <p class="text-sm text-gray-600 line-clamp-3">{{ $item->description }}</p>
                             @endif
+                            @if($item->products->isNotEmpty())
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach($item->products as $product)
+                                        <a href="{{ $product->url }}" class="inline-block px-2 py-1 text-[10px] font-black uppercase tracking-widest bg-white border border-gray-950 hover:bg-gray-950 hover:text-white transition-colors">
+                                            {{ $product->name }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

@@ -76,36 +76,39 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $construction_features
  * @property string|null $customization_notes
  * @property int|null $brand_id
- * @property-read Collection<int, \App\Models\ProductSku> $activeOutletSkus
+ * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $baseVariationTypes
+ * @property-read Collection<int, ProductVariationType> $baseVariationTypes
  * @property-read int|null $base_variation_types_count
  * @property-read string $brand
- * @property-read \App\Models\Brand|null $brand_relation
- * @property-read Collection<int, \App\Models\Campaign> $campaigns
+ * @property-read Brand|null $brand_relation
+ * @property-read Collection<int, Campaign> $campaigns
  * @property-read int|null $campaigns_count
- * @property-read \App\Models\Category $category
+ * @property-read Category $category
  * @property-read Collection<int, \App\Models\Collection> $collections
  * @property-read int|null $collections_count
- * @property-read Collection<int, \App\Models\Image> $images
+ * @property-read Collection<int, Image> $images
  * @property-read int|null $images_count
  * @property-read string|null $material
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $modifierVariationTypes
+ * @property-read Collection<int, ProductVariationType> $modifierVariationTypes
  * @property-read int|null $modifier_variation_types_count
  * @property-read string|null $pattern
  * @property-read string $plain_description
- * @property-read Collection<int, \App\Models\PricingTier> $pricingTiers
+ * @property-read Collection<int, PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
- * @property-read Collection<int, \App\Models\ProductSku> $skus
+ * @property-read Collection<int, ProductSku> $skus
  * @property-read int|null $skus_count
  * @property-read mixed $url
- * @property-read \App\Models\ProductVariationType|null $pivot
- * @property-read Collection<int, \App\Models\VariationType> $variationTypes
+ * @property-read ProductVariationType|null $pivot
+ * @property-read Collection<int, VariationType> $variationTypes
  * @property-read int|null $variation_types_count
+ * @property-read Collection<int, PortfolioItem> $portfolioItems
+ * @property-read int|null $portfolio_items_count
+ *
  * @method static Builder<static>|Product active()
  * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
  * @method static Builder<static>|Product hasOutletSkus()
@@ -152,6 +155,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product whereTechnicalSpecs($value)
  * @method static Builder<static>|Product whereType($value)
  * @method static Builder<static>|Product whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([
@@ -287,6 +291,19 @@ class Product extends Model implements HasMedia
     }
 
     /**
+     * Get portfolio items that showcase this product.
+     *
+     * @return BelongsToMany<PortfolioItem, $this>
+     */
+    public function portfolioItems(): BelongsToMany
+    {
+        return $this->belongsToMany(PortfolioItem::class, 'portfolio_item_product')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    /**
      * Get remote/synced images associated with this product.
      *
      * @return HasMany<Image, $this>
@@ -343,6 +360,14 @@ class Product extends Model implements HasMedia
      *
      * @return bool True if both price and offer_price are <= 0.
      */
+    /**
+     * Combined label used by Filament attach selects so both name and SKU are searchable client-side.
+     */
+    public function getAttachSelectLabelAttribute(): string
+    {
+        return trim(($this->name ?? '').' — '.($this->sku ?? ''));
+    }
+
     public function isOnRequest(): bool
     {
         return $this->price <= 0 && $this->offer_price <= 0;

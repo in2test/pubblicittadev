@@ -8,6 +8,36 @@
     <x-slot:ogType> product </x-slot:ogType>
     <x-slot:ogImage> {{ $product->getFirstImageUrl('large') }} </x-slot:ogImage>
     <livewire:product :product="$product" :category="$category" :jobId="$jobId" />
+
+    @if($product->portfolioItems->isNotEmpty())
+        <section class="max-w-7xl mx-auto px-6 py-12">
+            <h2 class="text-2xl font-black uppercase tracking-tight text-on-surface mb-6">Lavori realizzati con questo prodotto</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($product->portfolioItems as $item)
+                    <a href="{{ $item->link ?: route('portfolio') }}" class="group block border-2 border-gray-950 bg-gray-50 overflow-hidden hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
+                        <div class="aspect-video w-full bg-gray-200 border-b-2 border-gray-950 overflow-hidden relative">
+                            @if($item->hasMedia('portfolio_images'))
+                                <img src="{{ $item->getFirstMediaUrl('portfolio_images', 'medium') ?: $item->getFirstMediaUrl('portfolio_images') }}" alt="{{ $item->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            @elseif($item->hasMedia('images'))
+                                <img src="{{ $item->getFirstMediaUrl('images', 'medium') ?: $item->getFirstMediaUrl('images') }}" alt="{{ $item->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <span class="material-symbols-outlined text-4xl">image</span>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-black uppercase tracking-tight text-gray-950">{{ $item->title }}</h3>
+                            @if($item->description)
+                                <p class="text-sm text-gray-600 line-clamp-2 mt-1">{{ $item->description }}</p>
+                            @endif
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <x-product.collection-index :collections="$relatedCollections" />
     @php
         $schemaPrice = (float) ($product->getStartingPrice() ?: 0);

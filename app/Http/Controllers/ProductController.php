@@ -37,6 +37,7 @@ class ProductController extends Controller
             'skus.options',
             'media',
             'brand_relation',
+            'portfolioItems.media',
         ]);
 
         if (! $product->is_active && ! auth()->user()?->isAdmin()) {

@@ -7,6 +7,7 @@ namespace App\Filament\Resources\PortfolioItems;
 use App\Filament\Resources\PortfolioItems\Pages\CreatePortfolioItem;
 use App\Filament\Resources\PortfolioItems\Pages\EditPortfolioItem;
 use App\Filament\Resources\PortfolioItems\Pages\ListPortfolioItems;
+use App\Filament\Resources\PortfolioItems\RelationManagers\ProductsRelationManager;
 use App\Filament\Resources\PortfolioItems\Schemas\PortfolioItemForm;
 use App\Filament\Resources\PortfolioItems\Tables\PortfolioItemsTable;
 use App\Models\PortfolioItem;
@@ -50,7 +51,7 @@ class PortfolioItemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ProductsRelationManager::class,
         ];
     }
 

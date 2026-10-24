@@ -12,6 +12,7 @@ class PortfolioController extends Controller
     public function index(): View
     {
         $portfolioItems = PortfolioItem::query()
+            ->with('products')
             ->orderBy('sort_order')
             ->orderBy('created_at', 'desc')
             ->get();

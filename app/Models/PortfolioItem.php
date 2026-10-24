@@ -8,8 +8,10 @@ use Carbon\CarbonImmutable;
 use Database\Factories\PortfolioItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
@@ -26,6 +28,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
+ * @property-read Collection<int, Product> $products
+ * @property-read int|null $products_count
+ *
  * @method static \Database\Factories\PortfolioItemFactory factory($count = null, $state = [])
  * @method static Builder<static>|PortfolioItem newModelQuery()
  * @method static Builder<static>|PortfolioItem newQuery()
@@ -38,6 +43,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|PortfolioItem whereSortOrder($value)
  * @method static Builder<static>|PortfolioItem whereTitle($value)
  * @method static Builder<static>|PortfolioItem whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([
@@ -53,6 +59,17 @@ class PortfolioItem extends Model implements HasMedia
     use HasFactory;
 
     use InteractsWithMedia;
+
+    /**
+     * @return BelongsToMany<Product, $this>
+     */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'portfolio_item_product')
+            ->withPivot('sort_order')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
 
     public function registerMediaConversions(?Media $media = null): void
     {

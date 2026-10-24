@@ -8,6 +8,7 @@ use App\Enums\ProductClass;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\RelationManagers\PortfolioItemsRelationManager;
 use App\Filament\Resources\Products\RelationManagers\SkusRelationManager;
 use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Category;
@@ -172,6 +173,7 @@ class ProductResource extends Resource
     {
         return [
             SkusRelationManager::class,
+            PortfolioItemsRelationManager::class,
         ];
     }
 
