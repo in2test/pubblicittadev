@@ -31,7 +31,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
  *
- * @method static \Database\Factories\PortfolioItemFactory factory($count = null, $state = [])
+ * @method static PortfolioItemFactory factory($count = null, $state = [])
  * @method static Builder<static>|PortfolioItem newModelQuery()
  * @method static Builder<static>|PortfolioItem newQuery()
  * @method static Builder<static>|PortfolioItem query()
@@ -69,6 +69,12 @@ class PortfolioItem extends Model implements HasMedia
             ->withPivot('sort_order')
             ->withTimestamps()
             ->orderByPivot('sort_order');
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('portfolio_images')->useDisk('public');
+        $this->addMediaCollection('images')->useDisk('public');
     }
 
     public function registerMediaConversions(?Media $media = null): void

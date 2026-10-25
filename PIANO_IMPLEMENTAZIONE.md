@@ -294,8 +294,8 @@ and the Livewire/Volt internals). The principal application routes are:
 | `/collezioni/{collection:slug}` | `CollectionController` | Collection detail and its products |
 | `/search` | `SearchController` | Catalogue search |
 | `/outlet` | `OutletProducts` (Livewire) | Outlet listing |
-| `/portfolio` | `PortfolioController` | Portfolio |
-| `/cart`, `/cart/*` | `CartController` | Cart, mutations, and `/cart/price` preview |
+| `/portfolio` | `PortfolioController` | Portfolio index |
+| `/portfolio/{portfolioItem}` | `PortfolioController` | Portfolio detail || `/cart`, `/cart/*` | `CartController` | Cart, mutations, and `/cart/price` preview |
 | `/checkout` | Livewire component (`pages::checkout`) | Authenticated checkout |
 | `/checkout/session` | `CheckoutController` | Authenticated Stripe checkout or quotation creation |
 | `/checkout/quotation` | `CheckoutController` | Authenticated direct quotation request |

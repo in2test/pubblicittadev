@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -78,6 +79,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int|null $brand_id
  * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
+ * @property-read mixed $attach_select_label
  * @property-read Collection<int, ProductVariationType> $baseVariationTypes
  * @property-read int|null $base_variation_types_count
  * @property-read string $brand
@@ -96,6 +98,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read int|null $modifier_variation_types_count
  * @property-read string|null $pattern
  * @property-read string $plain_description
+ * @property-read Collection<int, PortfolioItem> $portfolioItems
+ * @property-read int|null $portfolio_items_count
  * @property-read Collection<int, PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
  * @property-read Collection<int, ProductVariationType> $productVariationTypes
@@ -106,16 +110,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read ProductVariationType|null $pivot
  * @property-read Collection<int, VariationType> $variationTypes
  * @property-read int|null $variation_types_count
- * @property-read Collection<int, PortfolioItem> $portfolioItems
- * @property-read int|null $portfolio_items_count
  *
  * @method static Builder<static>|Product active()
- * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
+ * @method static ProductFactory factory($count = null, $state = [])
  * @method static Builder<static>|Product hasOutletSkus()
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
- * @method static Builder<static>|Product visibleTo(?\App\Models\User $user = null)
+ * @method static Builder<static>|Product visibleTo(?User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
  * @method static Builder<static>|Product whereBrandId($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)
@@ -356,16 +358,13 @@ class Product extends Model implements HasMedia
     }
 
     /**
-     * Check if the product requires a custom quote (on request).
-     *
-     * @return bool True if both price and offer_price are <= 0.
-     */
-    /**
      * Combined label used by Filament attach selects so both name and SKU are searchable client-side.
+     *
+     * @return Attribute<string, never>
      */
-    public function getAttachSelectLabelAttribute(): string
+    protected function attachSelectLabel(): Attribute
     {
-        return trim(($this->name ?? '').' — '.($this->sku ?? ''));
+        return Attribute::make(get: fn () => trim(($this->name ?? '').' — '.($this->sku ?? '')));
     }
 
     public function isOnRequest(): bool

@@ -18,7 +18,10 @@ class PortfolioItemFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'title' => fake()->sentence(3),
+            'description' => fake()->paragraph(),
+            'is_featured' => false,
+            'sort_order' => 0,
         ];
     }
 }

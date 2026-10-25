@@ -417,7 +417,7 @@ not implemented** — customers currently use an external file-transfer service.
 | `/collezioni`, `/collezioni/{collection:slug}` | `CollectionController` |
 | `/search` | `SearchController` |
 | `/outlet` | `OutletProducts` (Livewire) |
-| `/portfolio` | `PortfolioController` |
+| `/portfolio` | `PortfolioController` — index, detail (`/portfolio/{portfolioItem}`) |
 | `/cart` | `CartController` — index |
 | `/cart/add` (POST), `/cart/update` (PUT), `/cart/remove` (DELETE), `/cart/remove-multiple` (DELETE), `/cart/clear` (POST) | `CartController` — mutations |
 | `/cart/price` | `CartController` — server-side price preview |

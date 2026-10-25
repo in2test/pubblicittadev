@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property numeric $shipping_cost
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ *
  * @method static Builder<static>|ShippingTier newModelQuery()
  * @method static Builder<static>|ShippingTier newQuery()
  * @method static Builder<static>|ShippingTier query()
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder<static>|ShippingTier whereName($value)
  * @method static Builder<static>|ShippingTier whereShippingCost($value)
  * @method static Builder<static>|ShippingTier whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([

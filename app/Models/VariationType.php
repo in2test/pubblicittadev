@@ -24,14 +24,15 @@ use Override;
  * @property bool $expose_in_url
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, \App\Models\VariationOption> $options
+ * @property-read Collection<int, VariationOption> $options
  * @property-read int|null $options_count
- * @property-read Collection<int, \App\Models\ProductVariationType> $productVariationTypes
+ * @property-read Collection<int, ProductVariationType> $productVariationTypes
  * @property-read int|null $product_variation_types_count
- * @property-read \App\Models\ProductVariationType|null $pivot
- * @property-read Collection<int, \App\Models\Product> $products
+ * @property-read ProductVariationType|null $pivot
+ * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
- * @method static \Database\Factories\VariationTypeFactory factory($count = null, $state = [])
+ *
+ * @method static VariationTypeFactory factory($count = null, $state = [])
  * @method static Builder<static>|VariationType newModelQuery()
  * @method static Builder<static>|VariationType newQuery()
  * @method static Builder<static>|VariationType query()
@@ -43,6 +44,7 @@ use Override;
  * @method static Builder<static>|VariationType whereName($value)
  * @method static Builder<static>|VariationType wherePresentationType($value)
  * @method static Builder<static>|VariationType whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([

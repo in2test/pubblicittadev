@@ -31,6 +31,7 @@ Route::view('/cookie-policy', 'cookie-policy')->name('cookie-policy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/shipping-returns', 'shipping-returns')->name('shipping-returns');
 Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
+Route::get('/portfolio/{portfolioItem}', [PortfolioController::class, 'show'])->name('portfolio.show');
 Route::view('/palette', 'palette')->name('palette');
 
 // Cart routes

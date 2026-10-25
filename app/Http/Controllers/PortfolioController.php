@@ -19,4 +19,11 @@ class PortfolioController extends Controller
 
         return view('portfolio', ['portfolioItems' => $portfolioItems]);
     }
+
+    public function show(PortfolioItem $portfolioItem): View
+    {
+        $portfolioItem->load(['media', 'products.media', 'products.images', 'products.category']);
+
+        return view('portfolio.show', ['portfolioItem' => $portfolioItem]);
+    }
 }

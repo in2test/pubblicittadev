@@ -17,7 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @method static \Database\Factories\NewsletterSubscriptionFactory factory($count = null, $state = [])
+ *
+ * @method static NewsletterSubscriptionFactory factory($count = null, $state = [])
  * @method static Builder<static>|NewsletterSubscription newModelQuery()
  * @method static Builder<static>|NewsletterSubscription newQuery()
  * @method static Builder<static>|NewsletterSubscription query()
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder<static>|NewsletterSubscription whereId($value)
  * @method static Builder<static>|NewsletterSubscription whereIsActive($value)
  * @method static Builder<static>|NewsletterSubscription whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable([

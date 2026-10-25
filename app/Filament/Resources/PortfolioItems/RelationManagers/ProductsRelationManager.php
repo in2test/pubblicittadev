@@ -43,9 +43,8 @@ class ProductsRelationManager extends RelationManager
             ->headerActions([
                 AttachAction::make()
                     ->recordTitle(fn ($record) => trim(($record->name ?? '').' — '.($record->sku ?? '')))
-                    ->recordSelectSearchColumns(['name', 'sku'])
                     ->preloadRecordSelect()
-                    ->recordSelect(fn ($select) => $select->optionsLimit(500)),
+                    ->recordSelect(fn ($select) => $select->searchable(false)->optionsLimit(500)),
             ])
             ->actions([
                 DetachAction::make(),

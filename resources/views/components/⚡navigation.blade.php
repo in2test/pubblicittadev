@@ -136,6 +136,11 @@ new class extends Component {
                         <a href="{{ route('dashboard.orders') }}" class="block px-4 py-2 text-[11px] uppercase tracking-widest text-gray-700 hover:bg-gray-100">
                             I TUOI ORDINI
                         </a>
+                        @if ($this->authUser?->isAdmin())
+                        <a href="{{ url('/admin') }}" class="block px-4 py-2 text-[11px] uppercase tracking-widest text-gray-700 hover:bg-gray-100">
+                            ADMIN
+                        </a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}" class="block">
                             @csrf
                             <button type="submit"
@@ -249,6 +254,9 @@ new class extends Component {
                     <div class="text-[10px]">
                         <div class="font-bold text-gray-900 leading-none uppercase">{{ $this->authUser->name }}</div>
                         <a href="{{ route('dashboard') }}" class="text-gray-500 hover:text-accent-500 transition-colors uppercase tracking-widest mt-1 block">DASHBOARD</a>
+                                    @if ($this->authUser?->isAdmin())
+                                    <a href="{{ url('/admin') }}" class="text-gray-500 hover:text-accent-500 transition-colors uppercase tracking-widest mt-1 block">ADMIN</a>
+                                    @endif
                     </div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">

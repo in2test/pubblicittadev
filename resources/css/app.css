@@ -108,7 +108,7 @@
 }
 
 @layer theme {
-    .dark {
+:root.dark, html.dark, .dark {
         /*Highstyle*/
         --color-highstyle-950: #eeeff7;
         --color-highstyle-900: #dce0ef;

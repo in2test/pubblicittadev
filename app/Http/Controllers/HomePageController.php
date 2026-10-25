@@ -31,6 +31,7 @@ class HomePageController extends Controller
     {
         $products = $this->featuredProducts();
         $portfolioItems = $this->portfolioItems();
+        $portfolioSectionItems = $this->portfolioSectionItems();
         $featuredCollections = $this->featuredCollections();
         $neededCarouselProducts = max(1, 6 - $portfolioItems->count() - $featuredCollections->count());
         $carouselProducts = $this->carouselProducts($neededCarouselProducts);
@@ -44,6 +45,7 @@ class HomePageController extends Controller
         return view('welcome', [
             'products' => $products,
             'collections' => $featuredCollections,
+            'portfolioItems' => $portfolioSectionItems,
             'heroSlides' => $this->completeHeroSlides($heroSlides),
         ]);
     }
@@ -145,6 +147,19 @@ class HomePageController extends Controller
             ->orderBy('sort_order')
             ->orderByDesc('created_at')
             ->take(3)
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, PortfolioItem>
+     */
+    private function portfolioSectionItems(): Collection
+    {
+        return PortfolioItem::query()
+            ->with('media')
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->take(10)
             ->get();
     }
 

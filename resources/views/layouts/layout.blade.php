@@ -198,6 +198,18 @@
     @if(isset($heroLcpImage) && !empty((string) $heroLcpImage))
     <link rel="preload" as="image" href="{{ trim((string) $heroLcpImage) }}" fetchpriority="high">
     @endif
+    <script>
+        (function () {
+            try {
+                var mode = localStorage.getItem("theme") || "system";
+                localStorage.setItem("flux.appearance", mode);
+                var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                if (mode === "dark" || (mode === "system" && prefersDark)) {
+                    document.documentElement.classList.add("dark");
+                }
+            } catch (e) {}
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" media="print" onload="this.media='all'">

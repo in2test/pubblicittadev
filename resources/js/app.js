@@ -98,12 +98,15 @@ function showIcon(which) {
 }
 
 function applyTheme(mode) {
-    if (mode === "dark") {
-        root.classList.add("dark");
-    } else {
-        root.classList.remove("dark");
-    }
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = mode === "dark" || (mode === "system" && prefersDark);
+
+    root.classList.toggle("dark", isDark);
     localStorage.setItem("theme", mode);
+    localStorage.setItem("flux.appearance", mode);
+    if (window.Flux && typeof window.Flux.applyAppearance === "function") {
+        window.Flux.applyAppearance(mode);
+    }
     showIcon(mode);
 }
 

@@ -1,0 +1,17 @@
+{
+    "schema": 1,
+    "tool": "sloppy",
+    "generated_at": "2026-10-25T09:09:59+00:00",
+    "score": 100,
+    "total": 1,
+    "entries": [
+        {
+            "id": "c7e35f3a4a3fd5a5",
+            "rule": "SL217",
+            "file": "database/migrations/0001_01_01_000000_create_users_table.php",
+            "fingerprint": "user_id",
+            "count": 1,
+            "message": "user_id is created with foreignId() but never constrained to the table it refers to."
+        }
+    ]
+}
