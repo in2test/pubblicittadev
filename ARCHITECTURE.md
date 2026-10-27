@@ -458,6 +458,8 @@ size, and do not add a relation access inside that loop.
 
 ## 9. Commands
 
+Before `git add`, commit, or release: run `npm run build` whenever any Blade, CSS, JavaScript, or front-end build input changed, then include the regenerated `public/build` assets in the same commit.
+
 ```powershell
 php artisan test --compact                    # full suite
 vendor/bin/pest --filter=testName             # one test
