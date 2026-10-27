@@ -25,6 +25,15 @@
     'availableBrands',
 
     /**
+     * Materials available for the current catalog query.
+     */
+    'availableMaterials',
+
+    /**
+     * Genders available for the current catalog query.
+     */
+    'availableGenders',
+    /**
      * Array of selected variation option IDs.
      */
     'selectedOptions' => [],
@@ -33,6 +42,28 @@
      * Array of selected brand IDs.
      */
     'selectedBrands' => [],
+
+    /**
+     * Array of selected material IDs.
+     */
+    'selectedMaterials' => [],
+
+    /**
+     * Array of selected gender filters.
+     */
+    'selectedGenders' => [],
+
+    /**
+     * Whether to restrict results to outlet products.
+     */
+    'onlyOutlet' => false,
+
+    /**
+     * Whether to restrict results to discounted/offer products.
+     */
+    'onlyOffers' => false,
+    'hasOutletProducts' => false,
+    'hasOfferProducts' => false,
 
     /**
      * Whether any active filters are applied.
@@ -61,6 +92,52 @@
             :available-brands="$availableBrands"
             :selected-brands="$selectedBrands"
         />
+
+        {{-- 2b. Material Filter --}}
+        <x-catalog.material-filter
+            :available-materials="$availableMaterials"
+            :selected-materials="$selectedMaterials"
+        />
+
+        {{-- 2c. Gender Filter --}}
+        <x-catalog.gender-filter
+            :available-genders="$availableGenders"
+            :selected-genders="$selectedGenders"
+        />
+
+        {{-- 2d. Quick toggles --}}
+        @if ($hasOutletProducts || $hasOfferProducts)
+            <div class="pt-6 border-t border-gray-200">
+                <div class="flex flex-wrap gap-2">
+                    @if ($hasOutletProducts)
+                        <button
+                            wire:click="toggleOutlet"
+                            type="button"
+                            @class([
+                                'border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center px-3 py-2',
+                                'bg-primary text-white border-primary' => $onlyOutlet,
+                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => ! $onlyOutlet,
+                            ])
+                        >
+                            Outlet
+                        </button>
+                    @endif
+                    @if ($hasOfferProducts)
+                        <button
+                            wire:click="toggleOffers"
+                            type="button"
+                            @class([
+                                'border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center px-3 py-2',
+                                'bg-primary text-white border-primary' => $onlyOffers,
+                                'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => ! $onlyOffers,
+                            ])
+                        >
+                            Offerte
+                        </button>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         {{-- 3. Attribute Filters (Colors, Sizes, etc.) --}}
         <x-catalog.filters

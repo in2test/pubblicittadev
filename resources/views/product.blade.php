@@ -28,9 +28,6 @@
                         </div>
                         <div class="p-4">
                             <h3 class="font-black uppercase tracking-tight text-gray-950">{{ $item->title }}</h3>
-                            @if($item->description)
-                                <p class="text-sm text-gray-600 line-clamp-2 mt-1">{{ $item->description }}</p>
-                            @endif
                         </div>
                     </a>
                 @endforeach

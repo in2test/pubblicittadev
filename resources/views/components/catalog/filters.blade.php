@@ -64,8 +64,8 @@
                                     wire:key="filter-option-{{ $option->id }}"
                                     @class([
                                         'w-8 h-8 border transition-all duration-200 flex items-center justify-center relative group rounded overflow-hidden shadow-sm',
-                                        'border-primary ring-2 ring-primary ring-offset-2 scale-105' => $isActive,
-                                        'border-gray-200 hover:border-gray-400 hover:scale-105' => !$isActive
+                                        'border-primary ring-2 ring-primary ring-offset-2' => $isActive,
+                                        'border-gray-200 hover:border-gray-400' => !$isActive
                                     ])
                                     @style([$swatchStyle])
                                     title="{{ $option->name }}"
@@ -90,8 +90,8 @@
                                     wire:key="filter-option-{{ $option->id }}"
                                     @class([
                                         'border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center px-3 py-2',
-                                        'bg-primary text-white border-primary scale-105' => $isActive,
-                                        'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface hover:scale-105' => !$isActive
+                                        'bg-primary text-white border-primary' => $isActive,
+                                        'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
                                     ])
                                     aria-label="Filtra per: {{ $option->name }}"
                                     aria-pressed="{{ $isActive ? 'true' : 'false' }}"

@@ -54,7 +54,7 @@ class ProductAvailabilityService
             'price' => $data['retailPrice']['price'] ?? null,
             'description' => $data['productCatalogText'] ?? null,
             'brand' => $data['productBrand'] ?? null,
-            'gender' => $data['productGender']['value'] ?? null,
+            'gender' => is_array($data['productGender'] ?? null) ? ($data['productGender'][0]['value'] ?? null) : ($data['productGender']['value'] ?? null),
         ];
     }
 

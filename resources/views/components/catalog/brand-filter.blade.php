@@ -52,8 +52,8 @@
                         wire:key="filter-brand-{{ $brand->id }}"
                         @class([
                             'border text-[10px] font-mono font-bold uppercase text-center transition-all duration-200 flex items-center justify-center px-3 py-2',
-                            'bg-primary text-white border-primary scale-105' => $isActive,
-                            'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface hover:scale-105' => !$isActive
+                            'bg-primary text-white border-primary' => $isActive,
+                            'bg-gray-50 border-gray-200 text-on-surface hover:border-on-surface' => !$isActive
                         ])
                         aria-label="Filtra per brand: {{ $brand->name }}"
                         aria-pressed="{{ $isActive ? 'true' : 'false' }}"

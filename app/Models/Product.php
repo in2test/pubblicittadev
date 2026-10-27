@@ -77,6 +77,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $construction_features
  * @property string|null $customization_notes
  * @property int|null $brand_id
+ * @property array<array-key, mixed>|null $genders
  * @property-read Collection<int, ProductSku> $activeOutletSkus
  * @property-read int|null $active_outlet_skus_count
  * @property-read mixed $attach_select_label
@@ -129,6 +130,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Product whereCreatedAt($value)
  * @method static Builder<static>|Product whereCustomizationNotes($value)
  * @method static Builder<static>|Product whereDescription($value)
+ * @method static Builder<static>|Product whereGenders($value)
  * @method static Builder<static>|Product whereId($value)
  * @method static Builder<static>|Product whereIsActive($value)
  * @method static Builder<static>|Product whereIsFeatured($value)
@@ -175,6 +177,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
     'synced_at',
     'is_active',
     'brand_id',
+    'genders',
     'override_price',
     'override_description',
     'remote_images',
@@ -476,6 +479,7 @@ class Product extends Model implements HasMedia
             'override_price' => 'boolean',
             'override_description' => 'boolean',
             'remote_images' => 'array',
+            'genders' => 'array',
             'min_area' => 'float',
             'sheet_width' => 'float',
             'sheet_height' => 'float',

@@ -20,15 +20,15 @@
         </div>
         <div class="flex flex-col space-y-4">
             <span class="font-mono text-[10px] uppercase tracking-widest text-accent-500 mb-2">Esplora</span>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors {{ request()->routeIs('about') ? 'text-accent-700 font-bold' : '' }}"
                 href="{{ route('about') }}">Chi Siamo</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors {{ request()->routeIs('services') ? 'text-accent-700 font-bold' : '' }}"
                 href="{{ route('services') }}">Servizi</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+            <a class="font-mono text-xs uppercase tracking-widest transition-colors {{ request()->routeIs('portfolio*') ? 'text-accent-500 font-bold underline underline-offset-4' : 'text-gray-700 hover:text-accent-700' }}"
                 href="{{ route('portfolio') }}">Portfolio Lavori</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors {{ request()->routeIs('collections.index') ? 'text-accent-700 font-bold' : '' }}"
                 href="{{ route('collections.index') }}">Collezioni & Kit</a>
-            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+            <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors {{ request()->routeIs('contact') ? 'text-accent-700 font-bold' : '' }}"
                 href="{{ route('contact') }}">Supporto</a>
         </div>
         <div class="flex flex-col space-y-4">
@@ -37,7 +37,7 @@
                 $footerCategories = \Illuminate\Support\Facades\Cache::remember('footer_root_categories', 3600, fn () => \App\Models\Category::whereNull('parent_id')->get(['name', 'slug'])->toArray());
             @endphp
             @foreach($footerCategories as $category)
-                <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors"
+                <a class="font-mono text-xs uppercase tracking-widest text-gray-700 hover:text-accent-700 transition-colors {{ (request()->routeIs('category') && request()->route('category') === $category['slug']) ? 'text-accent-700 font-bold' : '' }}"
                     href="{{ route('category', $category['slug']) }}">{{ $category['name'] }}</a>
             @endforeach
         </div>
