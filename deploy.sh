@@ -13,7 +13,11 @@ echo "==> Updating code from ${REMOTE}/${BRANCH}"
 git pull "${REMOTE}" "${BRANCH}"
 
 echo "==> Installing production dependencies"
-composer install --no-dev --optimize-autoloader
+if command -v composer >/dev/null 2>&1; then
+    composer install --no-dev --optimize-autoloader
+else
+    php composer.phar install --no-dev --optimize-autoloader
+fi
 
 echo "==> Running migrations"
 php artisan migrate --force
