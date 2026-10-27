@@ -28,10 +28,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, Product> $products
+ * @property-read Collection<int, \App\Models\Product> $products
  * @property-read int|null $products_count
- *
- * @method static PortfolioItemFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\PortfolioItemFactory factory($count = null, $state = [])
  * @method static Builder<static>|PortfolioItem newModelQuery()
  * @method static Builder<static>|PortfolioItem newQuery()
  * @method static Builder<static>|PortfolioItem query()
@@ -43,7 +42,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|PortfolioItem whereSortOrder($value)
  * @method static Builder<static>|PortfolioItem whereTitle($value)
  * @method static Builder<static>|PortfolioItem whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([

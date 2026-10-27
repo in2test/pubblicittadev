@@ -336,7 +336,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ## Frontend Bundling
 
 - If a frontend change doesn't show in the UI or you get a "Unable to locate file in Vite manifest" error, run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
-- Before `git add`, commit, and push, first run `npm run build` whenever any templates, Blade, CSS, or JavaScript changed, then include the generated `public/build` assets in the same commit.
 
 ## Documentation Files
 

@@ -55,7 +55,6 @@ use Override;
  */
 /**
  * @use HasFactory<OrderItemFactory>
- *
  * @property int $id
  * @property int $order_id
  * @property int $product_id
@@ -67,9 +66,8 @@ use Override;
  * @property string $work_status
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Order $order
- * @property-read Product $product
- *
+ * @property-read \App\Models\Order $order
+ * @property-read \App\Models\Product $product
  * @method static \Database\Factories\OrderItemFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem newQuery()
@@ -85,7 +83,6 @@ use Override;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUnitPrice($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|OrderItem whereWorkStatus($value)
- *
  * @mixin \Eloquent
  */
 class OrderItem extends Model
