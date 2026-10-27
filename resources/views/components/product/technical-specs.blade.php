@@ -12,9 +12,29 @@
     $hasCerts = ! empty($certDetails);
     $hasCare = $isCareNotes && ! empty($careDetails);
     $hasCustomization = ! $isCareNotes && ! empty($product->customization_notes);
+
+    $genderLabels = [
+        'woman' => 'Donna',
+        'man' => 'Uomo',
+        'baby' => 'Bambino',
+        'unisex' => 'Unisex',
+    ];
+
+    $genderKeys = is_array($product->genders) ? $product->genders : [];
+    if ($genderKeys === []) {
+        $name = (string) $product->name;
+        if (str_contains($name, 'Women') || str_contains($name, 'Donna') || str_contains($name, 'Lady') || str_contains($name, 'Ladies')) {
+            $genderKeys = ['woman'];
+        } elseif (str_contains($name, 'Junior') || str_contains($name, 'Bambin') || str_contains($name, 'Kid')) {
+            $genderKeys = ['baby'];
+        } else {
+            $genderKeys = ['unisex'];
+        }
+    }
+    $hasGender = ! empty($genderKeys);
 @endphp
 
-@if ($hasFabrics || $hasFeatures || $hasCerts || $hasCare || $hasCustomization)
+@if ($hasFabrics || $hasFeatures || $hasCerts || $hasCare || $hasCustomization || $hasGender)
     <section class="mt-16 px-8 py-16 3xl:px-32 bg-gray-50 border-t-4 border-gray-950">
         <div class="max-w-7xl mx-auto">
             <div class="mb-12">
@@ -31,6 +51,27 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {{-- Left Column: Fabrics & Features --}}
                 <div class="lg:col-span-7 flex flex-col gap-8">
+                    @if ($hasGender)
+                        <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
+                            <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
+                                <span class="material-symbols-outlined text-primary text-2xl">person</span>
+                                <div>
+                                    <h3 class="text-xs font-mono uppercase tracking-widest text-secondary font-bold">
+                                        Genere
+                                    </h3>
+                                    <p class="text-sm font-semibold text-gray-900">Per chi è pensato</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($genderKeys as $genderKey)
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-bold uppercase tracking-wider">
+                                        {{ $genderLabels[$genderKey] ?? ucfirst($genderKey) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($hasFabrics)
                         <div class="bg-gray-50 p-6 lg:p-8 rounded-lg border border-gray-200 shadow-xs">
                             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">

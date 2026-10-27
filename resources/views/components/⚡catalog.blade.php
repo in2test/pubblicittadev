@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\VariationType;
+use App\Models\VariationOption;
 use App\Services\ProductSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -17,9 +18,28 @@ new class extends Component {
     public ?string $categorySlug = null;
     #[\Livewire\Attributes\Url(except: '')]
     public string $search = '';
+    public bool $outletOnly = false;
+
+    public function toggleOutlet(): void
+    {
+        $this->onlyOutlet = ! $this->onlyOutlet;
+    }
+
+    public function toggleOffers(): void
+    {
+        $this->onlyOffers = ! $this->onlyOffers;
+    }
     public array $selectedOptions = [];
     #[\Livewire\Attributes\Url(except: '')]
     public array $selectedBrands = [];
+    #[\Livewire\Attributes\Url(except: '')]
+    public array $selectedMaterials = [];
+    #[\Livewire\Attributes\Url(except: '')]
+    public array $selectedGenders = [];
+    #[\Livewire\Attributes\Url(except: false)]
+    public bool $onlyOutlet = false;
+    #[\Livewire\Attributes\Url(except: false)]
+    public bool $onlyOffers = false;
     #[\Livewire\Attributes\Url(except: 'name')]
     public string $sort = 'name';
     public bool $isFiltering = false;
@@ -27,6 +47,9 @@ new class extends Component {
     public function mount(?string $categorySlug = null): void
     {
         $this->categorySlug = $categorySlug;
+        if (request()->routeIs('outlet')) {
+            $this->outletOnly = true;
+        }
         if ($this->search === '' || $this->search === '0') {
             $searchQuery = request()->query('search');
             $this->search = is_string($searchQuery) ? $searchQuery : '';
@@ -35,7 +58,7 @@ new class extends Component {
 
     public function updating(string $property): void
     {
-        if (in_array($property, ['search', 'selectedOptions', 'selectedBrands', 'categorySlug'])) {
+        if (in_array($property, ['search', 'selectedOptions', 'selectedBrands', 'selectedMaterials', 'selectedGenders', 'onlyOutlet', 'onlyOffers', 'categorySlug'])) {
             $this->resetPage();
         }
     }
@@ -75,9 +98,27 @@ new class extends Component {
         }
     }
 
+    public function toggleMaterial(int $id): void
+    {
+        if (in_array($id, $this->selectedMaterials)) {
+            $this->selectedMaterials = array_values(array_diff($this->selectedMaterials, [$id]));
+        } else {
+            $this->selectedMaterials[] = $id;
+        }
+    }
+
+    public function toggleGender(string $gender): void
+    {
+        if (in_array($gender, $this->selectedGenders)) {
+            $this->selectedGenders = array_values(array_diff($this->selectedGenders, [$gender]));
+        } else {
+            $this->selectedGenders[] = $gender;
+        }
+    }
+
     public function resetFilters(): void
     {
-        $this->reset(['search', 'selectedOptions', 'selectedBrands']);
+        $this->reset(['search', 'selectedOptions', 'selectedBrands', 'selectedMaterials', 'selectedGenders', 'onlyOutlet', 'onlyOffers']);
     }
 
     #[Computed]
@@ -96,7 +137,11 @@ new class extends Component {
     {
         return $this->search !== '' && $this->search !== '0'
             || $this->selectedOptions !== []
-            || $this->selectedBrands !== [];
+            || $this->selectedBrands !== []
+            || $this->selectedMaterials !== []
+            || $this->selectedGenders !== []
+            || $this->onlyOutlet
+            || $this->onlyOffers;
     }
 
     #[Computed]
@@ -124,13 +169,57 @@ new class extends Component {
             ->get();
     }
 
-    protected function getBaseFilteredQuery(bool $applyBrandFilter = true): Builder
+    #[Computed]
+    public function availableMaterials(): Collection
+    {
+        $materialType = VariationType::where('name', VariationType::MATERIALE)->first();
+
+        if (! $materialType) {
+            return collect();
+        }
+
+        $productQuery = $this->getBaseFilteredQuery(applyMaterialFilter: false);
+
+        return VariationOption::query()
+            ->where('variation_type_id', $materialType->id)
+            ->whereHas('productVariationOptions.productVariationType', function ($q) use ($productQuery) {
+                $q->whereIn('product_id', $productQuery->select('id'));
+            })
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[Computed]
+    public function availableGenders(): array
+    {
+        return ['woman', 'man', 'baby', 'unisex'];
+    }
+
+    #[Computed]
+    public function hasOutletProducts(): bool
+    {
+        return $this->getBaseFilteredQuery()->hasOutletSkus()->exists();
+    }
+
+    #[Computed]
+    public function hasOfferProducts(): bool
+    {
+        return $this->getBaseFilteredQuery()->whereNotNull('offer_price')->where('offer_price', '>', 0)->exists();
+    }
+
+    protected function getBaseFilteredQuery(bool $applyBrandFilter = true, bool $applyMaterialFilter = true, bool $applyGenderFilter = true): Builder
     {
         $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
 
+        $materialType = VariationType::where('name', VariationType::MATERIALE)->first();
+
         return Product::query()
             ->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
+            ->when($this->outletOnly, fn ($q) => $q->hasOutletSkus())
+            ->when($this->onlyOutlet, fn ($q) => $q->hasOutletSkus())
+            ->when($this->onlyOffers, fn ($q) => $q->whereNotNull('offer_price')->where('offer_price', '>', 0))
             ->when($category, function ($q) use ($category) {
                 $ids = $category->children->pluck('id')->push($category->id);
                 $q->whereIn('category_id', $ids);
@@ -139,6 +228,73 @@ new class extends Component {
                 app(ProductSearchService::class)->applySearchTerm($q, $this->search);
             })
             ->when($applyBrandFilter && $this->selectedBrands !== [], fn ($q) => $q->whereIn('brand_id', $this->selectedBrands))
+            ->when($applyMaterialFilter && $materialType && $this->selectedMaterials !== [], function ($q) use ($materialType) {
+                $q->whereHas('productVariationTypes', function ($sq) use ($materialType) {
+                    $sq->where('variation_type_id', $materialType->id)
+                       ->whereHas('options', function ($ssq) {
+                           $ssq->whereIn('variation_option_id', $this->selectedMaterials);
+                       });
+                });
+            })
+            ->when($applyGenderFilter && $this->selectedGenders !== [], function ($q) {
+                $selectedKeys = array_map(fn ($gender) => strtolower((string) $gender), $this->selectedGenders);
+                $candidateIds = $this->getBaseFilteredQuery(applyGenderFilter: false)
+                    ->get()
+                    ->filter(function (Product $product) use ($selectedKeys): bool {
+                        $genders = is_array($product->genders) ? $product->genders : null;
+                        foreach ($selectedKeys as $key) {
+                            if ($genders !== null) {
+                                if (in_array($key, ['woman', 'women', 'donna', 'female'], true) || str_contains($key, 'woman') || str_contains($key, 'donna')) {
+                                    if (in_array('woman', $genders, true)) {
+                                        return true;
+                                    }
+                                } elseif (in_array($key, ['man', 'uomo', 'male'], true) || str_contains($key, 'man') || str_contains($key, 'uomo')) {
+                                    if (in_array('man', $genders, true)) {
+                                        return true;
+                                    }
+                                } elseif (in_array($key, ['baby', 'bambino', 'bambina', 'junior', 'kid', 'kids'], true) || str_contains($key, 'baby') || str_contains($key, 'bambin') || str_contains($key, 'junior')) {
+                                    if (in_array('baby', $genders, true)) {
+                                        return true;
+                                    }
+                                } elseif ($key === 'unisex') {
+                                    if (in_array('unisex', $genders, true)
+                                        || (in_array('woman', $genders, true) && in_array('man', $genders, true))) {
+                                        return true;
+                                    }
+                                }
+                            } else {
+                                $name = $product->name ?? '';
+                                if (in_array($key, ['woman', 'women', 'donna', 'female'], true) || str_contains($key, 'woman') || str_contains($key, 'donna')) {
+                                    if (str_contains($name, 'Women') || str_contains($name, 'Donna') || str_contains($name, 'Lady') || str_contains($name, 'Ladies')) {
+                                        return true;
+                                    }
+                                } elseif (in_array($key, ['man', 'uomo', 'male'], true) || str_contains($key, 'man') || str_contains($key, 'uomo')) {
+                                    if (! str_contains($name, 'Women') && ! str_contains($name, 'Donna') && ! str_contains($name, 'Junior') && ! str_contains($name, 'Girl') && ! str_contains($name, 'Bambin')) {
+                                        return true;
+                                    }
+                                } elseif (in_array($key, ['baby', 'bambino', 'bambina', 'junior', 'kid', 'kids'], true) || str_contains($key, 'baby') || str_contains($key, 'bambin') || str_contains($key, 'junior')) {
+                                    if (str_contains($name, 'Junior') || str_contains($name, 'Bambin') || str_contains($name, 'Kid')) {
+                                        return true;
+                                    }
+                                } elseif ($key === 'unisex') {
+                                    if (! str_contains($name, 'Women') && ! str_contains($name, 'Donna') && ! str_contains($name, 'Junior') && ! str_contains($name, 'Bambin') && ! str_contains($name, 'Kid')) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+
+                        return false;
+                    })
+                    ->pluck('id')
+                    ->all();
+
+                if ($candidateIds === []) {
+                    $q->whereRaw('1 = 0');
+                } else {
+                    $q->whereIn('id', $candidateIds);
+                }
+            })
             ->when($this->selectedOptions !== [], function ($q) {
                 $optionsGroupedByType = \App\Models\VariationOption::whereIn('id', $this->selectedOptions)
                     ->get()
@@ -154,6 +310,7 @@ new class extends Component {
                     });
                 }
             });
+
     }
 
     #[Computed]
@@ -161,7 +318,7 @@ new class extends Component {
     {
         $category = $this->category;
         $showInactive = auth()->check() && auth()->user()?->isAdmin() === true;
-        if (! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
+        if (! $this->outletOnly && ! $this->getIsFiltering() && $category && $category->children->isNotEmpty()) {
             $category->children->load(['products' => function ($query) use ($showInactive) {
                 $query->when(! $showInactive, fn ($q) => $q->where('is_active', '=', true, 'and'))
                     ->select([
@@ -214,7 +371,7 @@ new class extends Component {
             ];
         }
 
-        if (! $this->getIsFiltering() && ! $category) {
+        if (! $this->outletOnly && ! $this->getIsFiltering() && ! $category) {
             $rootCategories = Category::whereNull('parent_id')->with('children')->get();
             $groups = $rootCategories->map(function ($root) use ($showInactive): array {
                 $categoryIds = $root->children->pluck('id')->push($root->id);
@@ -272,7 +429,9 @@ new class extends Component {
                 'productVariationTypes.options.option:id,name,value,color_hex'
             ])
             ->orderBy(
-                $this->sort === 'price_asc' ? 'price' : ($this->sort === 'price_desc' ? 'price' : 'name'),
+                ($this->outletOnly && $this->sort === 'name')
+                    ? 'id'
+                    : ($this->sort === 'price_asc' ? 'price' : ($this->sort === 'price_desc' ? 'price' : 'name')),
                 $this->sort === 'price_desc' ? 'desc' : 'asc'
             )
             ->paginate(12);
@@ -300,8 +459,16 @@ new class extends Component {
         :category="$this->category"
         :available-variation-types="$this->availableVariationTypes"
         :available-brands="$this->availableBrands"
+        :available-materials="$this->availableMaterials"
+        :available-genders="$this->availableGenders"
         :selected-options="$selectedOptions"
         :selected-brands="$selectedBrands"
+        :selected-materials="$selectedMaterials"
+        :selected-genders="$selectedGenders"
+        :only-outlet="$onlyOutlet"
+        :only-offers="$onlyOffers"
+        :has-outlet-products="$this->hasOutletProducts"
+        :has-offer-products="$this->hasOfferProducts"
         :is-filtering="$this->getIsFiltering()"
     />
 

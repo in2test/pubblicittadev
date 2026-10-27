@@ -55,7 +55,7 @@ new class extends Component {
             <ul class="mega-menu-root">
                 <!-- Dropdown item for Catalog -->
                 <li class="mega-item" @click.away="megaMenuOpen = false">
-                    <button class="mega-trigger" type="button" aria-label="Menu Catalogo" :aria-expanded="megaMenuOpen ? 'true' : 'false'" @click="megaMenuOpen = !megaMenuOpen; searchOpen = false" :class="megaMenuOpen ? 'border-b-accent-500 text-gray-950' : ''">
+                    <button class="mega-trigger" type="button" aria-label="Menu Catalogo" :aria-expanded="megaMenuOpen ? 'true' : 'false'" @click="megaMenuOpen = !megaMenuOpen; searchOpen = false" :class="megaMenuOpen ? 'border-b-accent-500 text-gray-950' : '{{ request()->routeIs('catalog', 'category', 'product', 'search') ? 'border-b-accent-500 text-gray-950' : '' }}'">
                         CATALOGO
                         <span class="mega-trigger-icon material-symbols-outlined transition-transform duration-300" :class="megaMenuOpen ? 'rotate-180 text-accent-500' : ''">expand_more</span>
                     </button>
@@ -84,11 +84,11 @@ new class extends Component {
                     </div>
                 </li>
 
-                <li><a href="{{ route('portfolio') }}" class="mega-simple-link">PORTFOLIO</a></li>
-                <li><a href="{{ route('outlet') }}" class="mega-simple-link text-red-600 font-bold">OUTLET</a></li>
-                <li><a href="{{ route('about') }}" class="mega-simple-link">CHI SIAMO</a></li>
-                <li><a href="{{ route('services') }}" class="mega-simple-link">SERVIZI</a></li>
-                <li><a href="{{ route('contact') }}" class="mega-simple-link">CONTATTI</a></li>
+                <li><a href="{{ route('portfolio') }}" class="mega-simple-link {{ request()->routeIs('portfolio*') ? 'text-accent-500 border-accent-500' : '' }}">PORTFOLIO</a></li>
+                <li><a href="{{ route('outlet') }}" class="mega-simple-link text-red-600 font-bold {{ request()->routeIs('outlet') ? 'border-accent-500' : '' }}">OUTLET</a></li>
+                <li><a href="{{ route('about') }}" class="mega-simple-link {{ request()->routeIs('about') ? 'text-accent-500 border-accent-500' : '' }}">CHI SIAMO</a></li>
+                <li><a href="{{ route('services') }}" class="mega-simple-link {{ request()->routeIs('services') ? 'text-accent-500 border-accent-500' : '' }}">SERVIZI</a></li>
+                <li><a href="{{ route('contact') }}" class="mega-simple-link {{ request()->routeIs('contact') ? 'text-accent-500 border-accent-500' : '' }}">CONTATTI</a></li>
             </ul>
 
             <!-- Center Section: Centered Logo -->

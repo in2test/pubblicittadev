@@ -63,6 +63,26 @@ class ProductMetadataSynchronizer
             $updateData['customization_notes'] = $careInstructions !== [] ? implode(', ', $careInstructions) : $product->customization_notes;
         }
 
+        if (isset($data['productGender']) && is_array($data['productGender'])) {
+            $genders = [];
+            foreach ($data['productGender'] as $gender) {
+                $key = strtolower((string) ($gender['key'] ?? ''));
+                $canonical = match ($key) {
+                    'women' => 'woman',
+                    'men' => 'man',
+                    'junior' => 'baby',
+                    'unisex' => 'unisex',
+                    default => $key,
+                };
+
+                if ($canonical !== '') {
+                    $genders[] = $canonical;
+                }
+            }
+
+            $updateData['genders'] = array_values(array_unique($genders));
+        }
+
         $updateData['sync_progress'] = 20;
 
         $product->update($updateData);

@@ -15,7 +15,6 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WebhookController;
-use App\Livewire\OutletProducts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
@@ -84,7 +83,7 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/webhooks/stripe', [WebhookController::class, 'handle'])->name('webhooks.stripe');
 
 // dynamic routes for products and categories
-Route::get('/outlet', OutletProducts::class)->name('outlet');
+Route::get('/outlet', fn () => view('outlet'))->name('outlet');
 Route::get('/catalogo', [CategoryController::class, 'index'])->name('catalog');
 Route::get('/collezioni', [CollectionController::class, 'index'])->name('collections.index');
 Route::get('/collezioni/{collection:slug}', [CollectionController::class, 'show'])->name('collections.show');
