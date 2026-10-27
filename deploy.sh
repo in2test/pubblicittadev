@@ -16,7 +16,9 @@ echo "==> Installing production dependencies"
 if command -v composer >/dev/null 2>&1; then
     composer install --no-dev --optimize-autoloader
 else
+    rm -rf vendor
     php -d error_reporting=0 composer.phar install --no-dev --optimize-autoloader
+    php -d error_reporting=0 composer.phar dump-autoload --optimize
 fi
 
 echo "==> Running migrations"
