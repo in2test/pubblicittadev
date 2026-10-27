@@ -27,15 +27,14 @@ use ReturnTypeWillChange;
  * @property numeric|null $override_price
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Collection<int, Campaign> $campaigns
+ * @property-read Collection<int, \App\Models\Campaign> $campaigns
  * @property-read int|null $campaigns_count
- * @property-read Collection<int, VariationOption> $options
+ * @property-read Collection<int, \App\Models\VariationOption> $options
  * @property-read int|null $options_count
- * @property-read Collection<int, PricingTier> $pricingTiers
+ * @property-read Collection<int, \App\Models\PricingTier> $pricingTiers
  * @property-read int|null $pricing_tiers_count
- * @property-read Product $product
- *
- * @method static ProductSkuFactory factory($count = null, $state = [])
+ * @property-read \App\Models\Product $product
+ * @method static \Database\Factories\ProductSkuFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductSku newModelQuery()
  * @method static Builder<static>|ProductSku newQuery()
  * @method static Builder<static>|ProductSku query()
@@ -48,7 +47,6 @@ use ReturnTypeWillChange;
  * @method static Builder<static>|ProductSku whereQuantity($value)
  * @method static Builder<static>|ProductSku whereSku($value)
  * @method static Builder<static>|ProductSku whereUpdatedAt($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([

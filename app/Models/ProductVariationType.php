@@ -38,10 +38,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read Collection<int, ProductVariationOption> $options
+ * @property-read Collection<int, \App\Models\ProductVariationOption> $options
  * @property-read int|null $options_count
- * @property-read VariationType $type
- *
+ * @property-read \App\Models\VariationType $type
  * @method static Builder<static>|ProductVariationType newModelQuery()
  * @method static Builder<static>|ProductVariationType newQuery()
  * @method static Builder<static>|ProductVariationType query()
@@ -53,7 +52,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|ProductVariationType whereSortOrder($value)
  * @method static Builder<static>|ProductVariationType whereUpdatedAt($value)
  * @method static Builder<static>|ProductVariationType whereVariationTypeId($value)
- *
  * @mixin \Eloquent
  */
 #[Fillable([

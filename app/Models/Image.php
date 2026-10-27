@@ -73,7 +73,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 #[Fillable(['image_path', 'thumbnail_path', 'medium_path', 'large_path', 'image_url', 'thumbnail_url', 'medium_url', 'large_url', 'image_description', 'product_id', 'category_id', 'variation_option_id', 'order_by'])]
 /**
  * @use HasFactory<ImageFactory>
- *
  * @property int $id
  * @property string|null $image_path
  * @property string|null $thumbnail_path
@@ -90,10 +89,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int|null $order_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read Category|null $category
- * @property-read Product|null $product
- * @property-read VariationOption|null $variationOption
- *
+ * @property-read \App\Models\Category|null $category
+ * @property-read \App\Models\Product|null $product
+ * @property-read \App\Models\VariationOption|null $variationOption
  * @method static \Database\Factories\ImageFactory factory($count = null, $state = [])
  * @method static Builder<static>|Image newModelQuery()
  * @method static Builder<static>|Image newQuery()
@@ -114,7 +112,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Image whereThumbnailUrl($value)
  * @method static Builder<static>|Image whereUpdatedAt($value)
  * @method static Builder<static>|Image whereVariationOptionId($value)
- *
  * @mixin \Eloquent
  */
 class Image extends Model
