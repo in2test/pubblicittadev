@@ -410,6 +410,8 @@ php artisan route:list --except-vendor
 php artisan truss:export --format=llm --compact
 ```
 
+Release checklist: run `npm run build` before `git add`, commit, and push whenever any Blade/CSS/JavaScript or front-end build input changed, and include the regenerated `public/build` assets in the same commit.
+
 ## 7. Remaining work and operational checks: TO DO
 
 ### Priority correctness, payment, and fulfillment work
