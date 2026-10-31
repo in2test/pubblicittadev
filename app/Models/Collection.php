@@ -37,10 +37,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property CarbonImmutable|null $updated_at
  * @property-read MediaCollection<int, Media> $media
  * @property-read int|null $media_count
- * @property-read EloquentCollection<int, \App\Models\Product> $products
+ * @property-read EloquentCollection<int, Product> $products
  * @property-read int|null $products_count
+ *
  * @method static Builder<static>|Collection active()
- * @method static \Database\Factories\CollectionFactory factory($count = null, $state = [])
+ * @method static CollectionFactory factory($count = null, $state = [])
  * @method static Builder<static>|Collection featured()
  * @method static Builder<static>|Collection newModelQuery()
  * @method static Builder<static>|Collection newQuery()
@@ -54,6 +55,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static Builder<static>|Collection whereSlug($value)
  * @method static Builder<static>|Collection whereSortOrder($value)
  * @method static Builder<static>|Collection whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug', 'description', 'is_featured', 'is_active', 'sort_order'])]

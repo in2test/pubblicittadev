@@ -53,6 +53,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 /**
  * @use HasFactory<CategoryQuantityDiscountFactory>
+ *
  * @property int $id
  * @property int $category_id
  * @property int $min_quantity
@@ -62,7 +63,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $description
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read \App\Models\Category $category
+ * @property-read Category $category
+ *
  * @method static Builder<static>|CategoryQuantityDiscount newModelQuery()
  * @method static Builder<static>|CategoryQuantityDiscount newQuery()
  * @method static Builder<static>|CategoryQuantityDiscount query()
@@ -75,6 +77,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|CategoryQuantityDiscount whereMaxQuantity($value)
  * @method static Builder<static>|CategoryQuantityDiscount whereMinQuantity($value)
  * @method static Builder<static>|CategoryQuantityDiscount whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class CategoryQuantityDiscount extends Model
