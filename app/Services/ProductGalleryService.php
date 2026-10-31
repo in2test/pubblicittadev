@@ -152,7 +152,11 @@ class ProductGalleryService
         $colorIds = $media->getCustomProperty('color_ids');
         $colorId = $media->getCustomProperty('color_id');
 
-        return is_array($colorIds) && $colorIds !== [] ? $colorIds : ($colorId ? [$colorId] : []);
+        if (is_array($colorIds) && $colorIds !== []) {
+            return $colorIds;
+        }
+
+        return $colorId ? [$colorId] : [];
     }
 
     /**
