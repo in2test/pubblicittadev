@@ -37,15 +37,20 @@ not as a current green build.
 ## 2. Release model
 
 - Develop and review changes on `master`.
-- `production` is deployment-only; pushes to it trigger the configured
-  production workflow in `.github/workflows/deploy-production.yml`.
-- Release through a reviewed merge from `master` to `production`.
-- Branches and remotes can change. Inspect the current Git graph and workflow
-  triggers before describing what is deployed or how far branches differ; do
-  not preserve fixed ahead/behind counts in this document.
-- A successful workflow run does not prove that production database
-  migrations, queue workers, secrets, backups or recovery procedures are
-  correct. Verify these in the deployment environment.
+- Develop and review changes on `master`; publish the approved release by
+  merging or fast-forwarding `master` into `production`.
+- Pushing to `production` publishes source but does **not** deploy the
+  application. Deployment is manually initiated on the production server by
+  running `./deploy.sh` (which defaults to pulling `origin/production`).
+- Do not run `deploy.sh` from a development workstation as part of routine
+  validation. Confirm the deployment result and production health on the
+  server.
+- Branches and remotes can change. Inspect the current Git graph before
+  describing what is deployed or how far branches differ; do not preserve
+  fixed ahead/behind counts in this document.
+- A successful deployment command does not by itself prove production health,
+  queue operation, backups or recovery capability. Verify these in the
+  deployment environment.
 
 ## 3. Priority 0 — correctness, payment and fulfilment
 
