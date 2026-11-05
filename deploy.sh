@@ -7,10 +7,13 @@ REMOTE="${REMOTE:-origin}"
 cd "$(dirname "$0")"
 
 echo "==> Putting application into maintenance mode"
-php artisan down
+php artisan down --retry=120 --refresh=120
 
 echo "==> Updating code from ${REMOTE}/${BRANCH}"
 git pull "${REMOTE}" "${BRANCH}"
+
+echo "==> Preparing the maintenance page"
+php artisan down --render='errors::503' --retry=120 --refresh=120
 
 echo "==> Installing production dependencies"
 if command -v composer >/dev/null 2>&1; then
