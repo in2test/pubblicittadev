@@ -45,20 +45,27 @@ class ProductVariationDisplayService
 
         if ($productVariationType->relationLoaded('options')) {
             $options = $productVariationType->options
+                ->sortBy([
+                    ['sort_order', 'asc'],
+                    ['id', 'asc'],
+                ])
                 ->map(fn (ProductVariationOption $productVariationOption) => $productVariationOption->relationLoaded('option')
                     ? $productVariationOption->option
                     : null)
                 ->filter()
-                ->sortBy('sort_order')
                 ->values();
         } else {
             $productVariationTypeId = $productVariationType->id;
-            $options = VariationOption::query()
-                ->whereHas('productVariationOptions', function (Builder $query) use ($productVariationTypeId) {
-                    $query->where('product_variation_type_id', $productVariationTypeId);
-                })
+            $options = ProductVariationOption::query()
+                ->where('product_variation_type_id', $productVariationTypeId)
+                ->with('option')
                 ->orderBy('sort_order')
+                ->orderBy('id')
                 ->get();
+            $options = $options
+                ->map(fn (ProductVariationOption $productVariationOption) => $productVariationOption->option)
+                ->filter()
+                ->values();
         }
 
         return [

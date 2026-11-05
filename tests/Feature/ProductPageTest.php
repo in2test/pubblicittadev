@@ -153,10 +153,15 @@ class ProductPageTest extends TestCase
             ['variation_option_id' => $firstColor->id, 'sort_order' => 0],
         ]);
 
+        $product->load('productVariationTypes.options.option:id,name,value,color_hex');
+
+        expect($product->getPreviewColors()['display']->pluck('name')->all())
+            ->toBe(['Second color', 'First color']);
+
         $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
 
         $response->assertOk()
-            ->assertSeeInOrder(['title="First color"', 'title="Second color"']);
+            ->assertSeeInOrder(['title="Second color"', 'title="First color"']);
     }
 
     public function test_product_page_with_no_variations(): void
