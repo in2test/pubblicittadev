@@ -72,7 +72,9 @@
                         } else {
                             $nearestFormatId = $product->getNearestFormatOptionId($width, $height);
                             if (!$nearestFormatId) {
-                                $firstPvo = $type->pivot->options->sortBy('sort_order')->first();
+                                $firstPvo = $type->pivot->options
+                                    ->sortBy(fn ($pvo) => $pvo->option?->sort_order ?? $pvo->sort_order)
+                                    ->first();
                                 if ($firstPvo) {
                                     $nearestFormatId = $firstPvo->variation_option_id;
                                 }
@@ -161,7 +163,8 @@
         @php
             $isFormatType = $type->presentation_type === 'dimensions' || stripos($type->name, 'format') !== false || stripos($type->name, 'dimension') !== false || stripos($type->name, 'misure') !== false;
 
-            $productOptions = $type->pivot->options->sortBy('sort_order');
+            $productOptions = $type->pivot->options
+                ->sortBy(fn ($pvo) => $pvo->option?->sort_order ?? $pvo->sort_order);
 
             if ($product->allows_custom_size && $isFormatType) {
                 // Create a virtual ProductVariationOption wrapper

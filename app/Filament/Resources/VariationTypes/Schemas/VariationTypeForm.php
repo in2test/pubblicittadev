@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\VariationTypes\Schemas;
 
 use App\Enums\ModifierType;
+use App\Models\VariationOption;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -101,7 +102,6 @@ class VariationTypeForm
                                             ColorPicker::make('color_hex')
                                                 ->label('Colore (HEX)')
                                                 ->visible(fn (Get $get) => $get('../../presentation_type') === 'color_swatch')
-                                                ->required(fn (Get $get) => $get('../../presentation_type') === 'color_swatch')
                                                 ->columnSpan([
                                                     'default' => 12,
                                                     'md' => 4,
@@ -148,7 +148,29 @@ class VariationTypeForm
                                     ->reorderable(true)
                                     ->cloneable() // Provides a quick way to duplicate an existing option
                                     ->collapsible() // Keeps the UI clean by allowing options to be collapsed
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null), // Dynamically shows the option name as the repeater item label
+                                    ->itemLabel(function (array $state, string $key, Schema $item): ?string {
+                                        $name = $state['name'] ?? null;
+                                        $value = $state['value'] ?? null;
+
+                                        if ($name === null) {
+                                            return null;
+                                        }
+
+                                        if (! is_string($value) || $value === '') {
+                                            $record = $item->getRecord(false);
+                                            $value = $record instanceof VariationOption ? $record->value : null;
+                                        }
+
+                                        if (is_string($value) && $value !== '') {
+                                            return "{$value} {$name}";
+                                        }
+
+                                        if (! str_starts_with($key, 'record-')) {
+                                            return $name;
+                                        }
+
+                                        return substr($key, 7).' '.$name;
+                                    }),
                             ]),
                     ])
                     ->columnSpanFull(),

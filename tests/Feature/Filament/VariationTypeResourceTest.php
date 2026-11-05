@@ -69,6 +69,7 @@ it('can edit variation type details and options', function () {
     Livewire::test(EditVariationType::class, [
         'record' => $variationType->getKey(),
     ])
+        ->assertSee("{$option->id} M")
         ->fillForm([
             'name' => 'Taglia Abbigliamento',
             'options' => [
@@ -92,5 +93,62 @@ it('can edit variation type details and options', function () {
         'id' => $option->id,
         'name' => 'M - Medium',
         'default_price_modifier' => 1.50,
+    ]);
+});
+
+it('shows option values in item labels when the value field is hidden', function () {
+    $variationType = VariationType::factory()->create([
+        'name' => 'Colore',
+        'presentation_type' => 'color_swatch',
+    ]);
+
+    $option = $variationType->options()->create([
+        'name' => 'Bianco',
+        'value' => '00',
+        'sort_order' => 1,
+        'default_modifier_type' => 'flat',
+        'default_price_modifier' => 0.00,
+    ]);
+    $otherOption = $variationType->options()->create([
+        'name' => 'Beige',
+        'value' => '02',
+        'color_hex' => '#f5f5dc',
+        'sort_order' => 2,
+        'default_modifier_type' => 'flat',
+        'default_price_modifier' => 0.00,
+    ]);
+
+    Livewire::test(EditVariationType::class, [
+        'record' => $variationType->getKey(),
+    ])
+        ->fillForm([
+            'options' => [
+                'record-'.$option->id => [
+                    'name' => 'Bianco modificato',
+                    'color_hex' => null,
+                    'sort_order' => 1,
+                    'default_modifier_type' => 'flat',
+                    'default_price_modifier' => 0.00,
+                ],
+                'record-'.$otherOption->id => [
+                    'name' => 'Beige',
+                    'color_hex' => '#f5f5dc',
+                    'sort_order' => 2,
+                    'default_modifier_type' => 'flat',
+                    'default_price_modifier' => 0.00,
+                ],
+            ],
+        ])
+        ->assertSee('00 Bianco')
+        ->assertSee('02 Beige')
+        ->assertDontSee(" {$option->id} Bianco ")
+        ->assertDontSee(" {$otherOption->id} Beige ")
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $this->assertDatabaseHas('variation_options', [
+        'id' => $option->id,
+        'name' => 'Bianco modificato',
+        'color_hex' => null,
     ]);
 });

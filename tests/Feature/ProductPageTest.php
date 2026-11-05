@@ -115,6 +115,50 @@ class ProductPageTest extends TestCase
         // The 'type' relationship was removed from eager-loading for performance reasons as it's not used in views.
     }
 
+    public function test_product_page_orders_color_swatches_like_catalog_index(): void
+    {
+        $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
+        $product = Product::factory()->create([
+            'is_active' => true,
+            'slug' => 'ordered-colors',
+            'category_id' => $category->id,
+        ]);
+        $colorType = VariationType::create([
+            'name' => 'Colore',
+            'presentation_type' => 'color_swatch',
+        ]);
+        $productVariationType = ProductVariationType::create([
+            'product_id' => $product->id,
+            'variation_type_id' => $colorType->id,
+            'has_images' => true,
+            'is_modifier' => false,
+            'sort_order' => 0,
+        ]);
+
+        $secondColor = VariationOption::create([
+            'variation_type_id' => $colorType->id,
+            'name' => 'Second color',
+            'value' => '02',
+            'sort_order' => 2,
+        ]);
+        $firstColor = VariationOption::create([
+            'variation_type_id' => $colorType->id,
+            'name' => 'First color',
+            'value' => '01',
+            'sort_order' => 1,
+        ]);
+
+        $productVariationType->options()->createMany([
+            ['variation_option_id' => $secondColor->id, 'sort_order' => 0],
+            ['variation_option_id' => $firstColor->id, 'sort_order' => 0],
+        ]);
+
+        $response = $this->get(route('product', ['category' => $category->slug, 'product' => $product->slug]));
+
+        $response->assertOk()
+            ->assertSeeInOrder(['title="First color"', 'title="Second color"']);
+    }
+
     public function test_product_page_with_no_variations(): void
     {
         $category = Category::create(['name' => 'Apparel', 'slug' => 'apparel', 'description' => null]);
