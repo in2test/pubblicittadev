@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property-read int|null $products_count
  *
  * @method static Builder<static>|Campaign active()
- * @method static CampaignFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\CampaignFactory factory($count = null, $state = [])
  * @method static Builder<static>|Campaign newModelQuery()
  * @method static Builder<static>|Campaign newQuery()
  * @method static Builder<static>|Campaign query()

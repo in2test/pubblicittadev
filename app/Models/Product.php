@@ -113,12 +113,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read int|null $variation_types_count
  *
  * @method static Builder<static>|Product active()
- * @method static ProductFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\ProductFactory factory($count = null, $state = [])
  * @method static Builder<static>|Product hasOutletSkus()
  * @method static Builder<static>|Product newModelQuery()
  * @method static Builder<static>|Product newQuery()
  * @method static Builder<static>|Product query()
- * @method static Builder<static>|Product visibleTo(?User $user = null)
+ * @method static Builder<static>|Product visibleTo(?\App\Models\User $user = null)
  * @method static Builder<static>|Product whereAllowsCustomSize($value)
  * @method static Builder<static>|Product whereBrandId($value)
  * @method static Builder<static>|Product whereCachedBasePrice($value)

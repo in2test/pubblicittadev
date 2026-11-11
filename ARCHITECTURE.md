@@ -188,6 +188,9 @@ credentials and endpoint configuration come from the environment.
   catalogue filters applied by the application.
 - Product and category media use Spatie Media Library alongside NewWave
   remote imagery where applicable.
+- During NewWave sync, remote image records missing from the latest supplier
+  response are removed. This cleanup only targets records without a local
+  `image_path`, so already-downloaded images are preserved.
 - The Google Merchant feed is rendered and cached by dedicated services.
   Product/SKU observers invalidate relevant cache. Keep relation access in
   feed loops bounded; avoid introducing per-product queries.
@@ -228,15 +231,15 @@ relying on a version-specific API.
 
 | Area | Package | Resolved version recorded in this snapshot |
 | --- | --- | --- |
-| Framework | `laravel/framework` | 13.40.0 |
-| Admin panel | `filament/filament` | 5.11.1 |
+| Framework | `laravel/framework` | 13.42.0 |
+| Admin panel | `filament/filament` | 5.11.2 |
 | Reactive UI | `livewire/livewire` | 4.4.8 |
 | Single-file components | `livewire/volt` | 1.11.2 |
 | UI kit | `livewire/flux` | 2.21.0 |
-| Search | `laravel/scout` | 11.9.0 |
-| Media | `spatie/laravel-medialibrary` | 11.23.11 |
+| Search | `laravel/scout` | 11.10.0 |
+| Media | `spatie/laravel-medialibrary` | 11.23.12 |
 | Payments | `stripe/stripe-php` | 20.3.2 |
-| Authentication | `laravel/fortify` | 1.41.0 |
+| Authentication | `laravel/fortify` | 1.42.0 |
 | Tests | `pestphp/pest` | 5.3.5 |
 | Static analysis | `larastan/larastan` | 3.10.0 |
-| Formatting/refactoring | `laravel/pint`, `rector/rector` | 1.32.1, 2.8.4 |
+| Formatting/refactoring | `laravel/pint`, `rector/rector` | 1.32.2, 2.8.4 |

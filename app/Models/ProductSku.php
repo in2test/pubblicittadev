@@ -35,7 +35,7 @@ use ReturnTypeWillChange;
  * @property-read int|null $pricing_tiers_count
  * @property-read Product $product
  *
- * @method static ProductSkuFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\ProductSkuFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductSku newModelQuery()
  * @method static Builder<static>|ProductSku newQuery()
  * @method static Builder<static>|ProductSku query()

@@ -100,23 +100,43 @@ class ProductImageSynchronizer
      */
     private function persistRemoteImages(Product $product, array $remoteImages): void
     {
+        $existingRemoteImages = Image::query()
+            ->where('product_id', $product->id)
+            ->where(fn ($query) => $query->whereNull('image_path')->orWhere('image_path', ''))
+            ->get();
+
+        $validIdentities = [];
+        foreach ($remoteImages as $image) {
+            $validIdentities[serialize([$image['url'], $image['variation_option_id']])] = true;
+        }
+
+        $obsoleteImageIds = [];
+        $matchedExistingImages = collect();
+
+        foreach ($existingRemoteImages as $existing) {
+            $identity = serialize([$existing->image_url, $existing->variation_option_id]);
+            if (isset($validIdentities[$identity])) {
+                $matchedExistingImages->put($identity, $existing);
+            } else {
+                $obsoleteImageIds[] = $existing->id;
+            }
+        }
+
+        if ($obsoleteImageIds !== []) {
+            Image::query()->whereIn('id', $obsoleteImageIds)->delete();
+            Log::info('Pruned '.count($obsoleteImageIds)." obsolete remote images for SKU {$product->sku}");
+        }
+
         if ($remoteImages === []) {
             return;
         }
-
-        $imageUrls = array_column($remoteImages, 'url');
-        $existingImages = Image::query()
-            ->where('product_id', $product->id)
-            ->whereIn('image_url', $imageUrls)
-            ->get()
-            ->keyBy(fn (Image $image): string => serialize([$image->image_url, $image->variation_option_id]));
 
         $rows = [];
         $remoteImageOrder = 0;
         foreach ($remoteImages as $image) {
             $identity = serialize([$image['url'], $image['variation_option_id']]);
             $rows[$identity] = [
-                'id' => $existingImages->get($identity)?->id,
+                'id' => $matchedExistingImages->get($identity)?->id,
                 'product_id' => $product->id,
                 'image_url' => $image['url'],
                 'variation_option_id' => $image['variation_option_id'],

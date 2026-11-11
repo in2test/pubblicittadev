@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Log;
  * @property-read VariationOption $option
  * @property-read ProductVariationType $productVariationType
  *
- * @method static ProductVariationOptionFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\ProductVariationOptionFactory factory($count = null, $state = [])
  * @method static Builder<static>|ProductVariationOption newModelQuery()
  * @method static Builder<static>|ProductVariationOption newQuery()
  * @method static Builder<static>|ProductVariationOption query()

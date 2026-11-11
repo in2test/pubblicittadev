@@ -31,7 +31,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
  *
- * @method static PortfolioItemFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\PortfolioItemFactory factory($count = null, $state = [])
  * @method static Builder<static>|PortfolioItem newModelQuery()
  * @method static Builder<static>|PortfolioItem newQuery()
  * @method static Builder<static>|PortfolioItem query()

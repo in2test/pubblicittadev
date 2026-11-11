@@ -41,7 +41,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property-read int|null $products_count
  *
  * @method static Builder<static>|Collection active()
- * @method static CollectionFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\CollectionFactory factory($count = null, $state = [])
  * @method static Builder<static>|Collection featured()
  * @method static Builder<static>|Collection newModelQuery()
  * @method static Builder<static>|Collection newQuery()

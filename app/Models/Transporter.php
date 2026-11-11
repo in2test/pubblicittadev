@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  *
- * @method static TransporterFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\TransporterFactory factory($count = null, $state = [])
  * @method static Builder<static>|Transporter newModelQuery()
  * @method static Builder<static>|Transporter newQuery()
  * @method static Builder<static>|Transporter query()

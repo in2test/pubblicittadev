@@ -32,7 +32,7 @@ use Override;
  * @property-read Collection<int, Product> $products
  * @property-read int|null $products_count
  *
- * @method static VariationTypeFactory factory($count = null, $state = [])
+ * @method static \Database\Factories\VariationTypeFactory factory($count = null, $state = [])
  * @method static Builder<static>|VariationType newModelQuery()
  * @method static Builder<static>|VariationType newQuery()
  * @method static Builder<static>|VariationType query()

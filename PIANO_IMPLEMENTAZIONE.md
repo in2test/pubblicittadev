@@ -36,7 +36,6 @@ not as a current green build.
 
 ## 2. Release model
 
-- Develop and review changes on `master`.
 - Develop and review changes on `master`; publish the approved release by
   merging or fast-forwarding `master` into `production`.
 - Pushing to `production` publishes source but does **not** deploy the

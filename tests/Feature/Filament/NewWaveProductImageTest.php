@@ -100,6 +100,42 @@ it('assigns a remote variation image to its color when syncing NewWave data', fu
     expect($image->variationOption->value)->toBe('99');
 });
 
+it('removes obsolete remote images when syncing NewWave data while preserving local downloaded images', function () {
+    $product = Product::factory()->create([
+        'sku' => 'TESTSKU',
+        'type' => Product::TYPE_NEWWAVE,
+        'sync_status' => SyncStatus::Pending,
+    ]);
+
+    // An obsolete remote image that the supplier removed (image_path is null)
+    $obsoleteImage = Image::factory()->create([
+        'product_id' => $product->id,
+        'image_url' => 'https://example.com/old-deleted-by-supplier.jpg',
+        'image_path' => null,
+    ]);
+
+    // A local downloaded image (image_path is set)
+    $localImage = Image::factory()->create([
+        'product_id' => $product->id,
+        'image_url' => 'https://example.com/already-downloaded.jpg',
+        'image_path' => 'products/local-kept.webp',
+    ]);
+
+    $synchronizer = new ProductSynchronizer(new FakeNwgApiClient);
+    $synchronizer->syncProduct($product);
+
+    // Obsolete remote image should be deleted
+    expect(Image::where('id', $obsoleteImage->id)->exists())->toBeFalse();
+
+    // Local image should be preserved
+    expect(Image::where('id', $localImage->id)->exists())->toBeTrue();
+
+    // New remote image from API should be present
+    expect(Image::where('product_id', $product->id)
+        ->where('image_url', 'https://example.com/variation-99.jpg')
+        ->exists())->toBeTrue();
+});
+
 it('syncs remote image urls through the dedicated product media sync service', function () {
     $product = Product::factory()->create([
         'type' => Product::TYPE_NEWWAVE,
